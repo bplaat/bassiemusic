@@ -345,7 +345,7 @@ func tracksShow(response http.ResponseWriter, request *http.Request) {
 
 func notFound(response http.ResponseWriter, request *http.Request) {
 	response.WriteHeader(http.StatusNotFound)
-	fmt.Fprint(response, "404 Not Found")
+	fmt.Fprint(response, "404 page not found\n");
 }
 
 func startServer() {
