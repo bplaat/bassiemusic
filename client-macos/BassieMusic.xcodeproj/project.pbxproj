@@ -10,6 +10,9 @@
 		EA3031D32871C67300BF33CD /* BassieMusicApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA3031D22871C67300BF33CD /* BassieMusicApp.swift */; };
 		EA3031D52871C67300BF33CD /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA3031D42871C67300BF33CD /* ContentView.swift */; };
 		EA3031D72871C67500BF33CD /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = EA3031D62871C67500BF33CD /* Assets.xcassets */; };
+		EA66DF702871EC9400F60D23 /* ArtistsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA66DF6F2871EC9400F60D23 /* ArtistsView.swift */; };
+		EA66DF722871ECAB00F60D23 /* AlbumsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA66DF712871ECAB00F60D23 /* AlbumsView.swift */; };
+		EA66DF742871ECD500F60D23 /* TracksView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA66DF732871ECD500F60D23 /* TracksView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -18,6 +21,9 @@
 		EA3031D42871C67300BF33CD /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		EA3031D62871C67500BF33CD /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		EA3031DB2871C67500BF33CD /* BassieMusic.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = BassieMusic.entitlements; sourceTree = "<group>"; };
+		EA66DF6F2871EC9400F60D23 /* ArtistsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArtistsView.swift; sourceTree = "<group>"; };
+		EA66DF712871ECAB00F60D23 /* AlbumsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumsView.swift; sourceTree = "<group>"; };
+		EA66DF732871ECD500F60D23 /* TracksView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TracksView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -52,6 +58,9 @@
 			children = (
 				EA3031D22871C67300BF33CD /* BassieMusicApp.swift */,
 				EA3031D42871C67300BF33CD /* ContentView.swift */,
+				EA66DF732871ECD500F60D23 /* TracksView.swift */,
+				EA66DF712871ECAB00F60D23 /* AlbumsView.swift */,
+				EA66DF6F2871EC9400F60D23 /* ArtistsView.swift */,
 				EA3031D62871C67500BF33CD /* Assets.xcassets */,
 				EA3031DB2871C67500BF33CD /* BassieMusic.entitlements */,
 			);
@@ -127,7 +136,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EA66DF702871EC9400F60D23 /* ArtistsView.swift in Sources */,
+				EA66DF742871ECD500F60D23 /* TracksView.swift in Sources */,
 				EA3031D52871C67300BF33CD /* ContentView.swift in Sources */,
+				EA66DF722871ECAB00F60D23 /* AlbumsView.swift in Sources */,
 				EA3031D32871C67300BF33CD /* BassieMusicApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
