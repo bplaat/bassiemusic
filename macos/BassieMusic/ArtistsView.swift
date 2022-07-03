@@ -1,5 +1,5 @@
 //
-//  AlbumsView.swift
+//  ArtistsView.swift
 //  BassieMusic
 //
 //  Created by Bastiaan van der Plaat on 03/07/2022.
@@ -7,23 +7,26 @@
 
 import SwiftUI
 
-struct Album : Identifiable, Decodable {
+struct Artist : Identifiable, Decodable {
     var id: String
-    var title: String
-    var cover: String
+    var name: String
+    var image: String
+    var albums: [Album]?
+    var created_at: String
+    var updated_at: String
 }
 
-class FetchAlbums: ObservableObject {
-    @Published var albums = [Album]()
+class FetchArtists: ObservableObject {
+    @Published var artists = [Artist]()
 
     init() {
-        let url = URL(string: "http://localhost:8080/api/albums")!
+        let url = URL(string: "http://localhost:8080/api/artists")!
         URLSession.shared.dataTask(with: url) {(data, response, error) in
             do {
                 if let todoData = data {
-                    let decodedData = try JSONDecoder().decode([Album].self, from: todoData)
+                    let decodedData = try JSONDecoder().decode([Artist].self, from: todoData)
                     DispatchQueue.main.async {
-                        self.albums = decodedData
+                        self.artists = decodedData
                     }
                 } else {
                     print("No data")
@@ -35,8 +38,8 @@ class FetchAlbums: ObservableObject {
     }
 }
 
-struct AlbumsView: View {
-    @ObservedObject var fetchAlbums = FetchAlbums()
+struct ArtistsView: View {
+    @ObservedObject var fetchArtists = FetchArtists()
 
     var layout = [
         GridItem(.adaptive(minimum: 160))
@@ -45,9 +48,9 @@ struct AlbumsView: View {
     var body: some View {
         ScrollView {
             LazyVGrid(columns: layout, spacing: 16) {
-                ForEach(fetchAlbums.albums, id: \.id) { album in
+                ForEach(fetchArtists.artists, id: \.id) { artist in
                     VStack {
-                        AsyncImage(url: URL(string: album.cover)) { image in
+                        AsyncImage(url: URL(string: artist.image)) { image in
                             image.resizable().scaledToFit()
                         } placeholder: {
                             Color.accentColor.opacity(0.1)
@@ -56,8 +59,10 @@ struct AlbumsView: View {
                         .mask(RoundedRectangle(cornerRadius: 6))
                         .shadow(radius: 8)
                         
-                        Text(album.title)
+                        Text(artist.name)
                             .bold()
+                        
+                        Text("Albums: \(artist.albums != nil ? artist.albums!.count : 0)")
                     }
                 }
             }.padding(16)
@@ -65,8 +70,8 @@ struct AlbumsView: View {
     }
 }
 
-struct AlbumsView_Previews: PreviewProvider {
+struct ArtistsView_Previews: PreviewProvider {
     static var previews: some View {
-        AlbumsView().frame(width: 800, height: 600)
+        ArtistsView().frame(width: 800, height: 600)
     }
 }

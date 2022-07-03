@@ -1,5 +1,5 @@
 //
-//  ArtistsView.swift
+//  AlbumsView.swift
 //  BassieMusic
 //
 //  Created by Bastiaan van der Plaat on 03/07/2022.
@@ -7,23 +7,27 @@
 
 import SwiftUI
 
-struct Artist : Identifiable, Decodable {
+struct Album : Identifiable, Decodable {
     var id: String
-    var name: String
-    var image: String
+    var title: String
+    var released_at: String
+    var cover: String
+    var artists: [Artist]?
+    var created_at: String
+    var updated_at: String
 }
 
-class FetchArtists: ObservableObject {
-    @Published var artists = [Artist]()
+class FetchAlbums: ObservableObject {
+    @Published var albums = [Album]()
 
     init() {
-        let url = URL(string: "http://localhost:8080/api/artists")!
+        let url = URL(string: "http://localhost:8080/api/albums")!
         URLSession.shared.dataTask(with: url) {(data, response, error) in
             do {
                 if let todoData = data {
-                    let decodedData = try JSONDecoder().decode([Artist].self, from: todoData)
+                    let decodedData = try JSONDecoder().decode([Album].self, from: todoData)
                     DispatchQueue.main.async {
-                        self.artists = decodedData
+                        self.albums = decodedData
                     }
                 } else {
                     print("No data")
@@ -35,8 +39,8 @@ class FetchArtists: ObservableObject {
     }
 }
 
-struct ArtistsView: View {
-    @ObservedObject var fetchArtists = FetchArtists()
+struct AlbumsView: View {
+    @ObservedObject var fetchAlbums = FetchAlbums()
 
     var layout = [
         GridItem(.adaptive(minimum: 160))
@@ -45,9 +49,9 @@ struct ArtistsView: View {
     var body: some View {
         ScrollView {
             LazyVGrid(columns: layout, spacing: 16) {
-                ForEach(fetchArtists.artists, id: \.id) { artist in
-                    VStack {
-                        AsyncImage(url: URL(string: artist.image)) { image in
+                ForEach(fetchAlbums.albums, id: \.id) { album in
+                    VStack(alignment: .leading) {
+                        AsyncImage(url: URL(string: album.cover)) { image in
                             image.resizable().scaledToFit()
                         } placeholder: {
                             Color.accentColor.opacity(0.1)
@@ -56,8 +60,10 @@ struct ArtistsView: View {
                         .mask(RoundedRectangle(cornerRadius: 6))
                         .shadow(radius: 8)
                         
-                        Text(artist.name)
+                        Text(album.title)
                             .bold()
+                        
+                        Text(album.artists!.map(\.name).joined(separator: ", "))
                     }
                 }
             }.padding(16)
@@ -65,8 +71,8 @@ struct ArtistsView: View {
     }
 }
 
-struct ArtistsView_Previews: PreviewProvider {
+struct AlbumsView_Previews: PreviewProvider {
     static var previews: some View {
-        ArtistsView().frame(width: 800, height: 600)
+        AlbumsView().frame(width: 800, height: 600)
     }
 }
