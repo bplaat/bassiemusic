@@ -15,15 +15,17 @@ import (
 const TRACK_DURATION_SLACK int = 5
 
 func createArtist(name string) {
-	artists := dbQuery("SELECT * FROM `artists` WHERE `name` = ?", name)
+	artists, err := db.Query("SELECT * FROM `artists` WHERE `name` = ?", name)
+	if err != nil {
+		log.Fatalln(err)
+	}
 	defer artists.Close()
 	if !artists.Next() {
 		var artistSearch DeezerArtistSearch
 		fetchJson(fmt.Sprintf("https://api.deezer.com/search/artist?q=%s", url.QueryEscape(name)), &artistSearch)
 
 		artistId := uuid.NewV4()
-		q := dbQuery("INSERT INTO `artists` (`id`, `name`) VALUES (UUID_TO_BIN(?), ?)", artistId.String(), name)
-		defer q.Close()
+		db.Exec("INSERT INTO `artists` (`id`, `name`) VALUES (UUID_TO_BIN(?), ?)", artistId.String(), name)
 
 		fetchFile(artistSearch.Data[0].PictureXl, fmt.Sprintf("storage/artists/%s.jpg", artistId.String()))
 	}
@@ -35,16 +37,18 @@ func downloadAlbum(id int) {
 
 	// Create album row
 	albumId := uuid.NewV4()
-	q := dbQuery("INSERT INTO `albums` (`id`, `title`, `released_at`) VALUES (UUID_TO_BIN(?), ?, ?)",
+	db.Exec("INSERT INTO `albums` (`id`, `title`, `released_at`) VALUES (UUID_TO_BIN(?), ?, ?)",
 		albumId.String(), album.Title, album.ReleaseDate)
-	defer q.Close()
 	fmt.Printf("%s by %s\n", album.Title, album.Artist.Name)
 
 	// Create album artists bindings
 	for _, artist := range album.Contributors {
 		createArtist(artist.Name)
 
-		artists := dbQuery("SELECT BIN_TO_UUID(`id`) `id` FROM `artists` WHERE `name` = ?", artist.Name)
+		artists, err := db.Query("SELECT BIN_TO_UUID(`id`) `id` FROM `artists` WHERE `name` = ?", artist.Name)
+		if err != nil {
+			log.Fatalln(err)
+		}
 		defer artists.Close()
 		if artists.Next() {
 			var artistId string
@@ -54,8 +58,7 @@ func downloadAlbum(id int) {
 			}
 
 			albumArtistId := uuid.NewV4()
-			q := dbQuery("INSERT INTO `album_artist` (`id`, `album_id`, `artist_id`) VALUES (UUID_TO_BIN(?), UUID_TO_BIN(?), UUID_TO_BIN(?))", albumArtistId.String(), albumId.String(), artistId)
-			defer q.Close()
+			db.Exec("INSERT INTO `album_artist` (`id`, `album_id`, `artist_id`) VALUES (UUID_TO_BIN(?), UUID_TO_BIN(?), UUID_TO_BIN(?))", albumArtistId.String(), albumId.String(), artistId)
 		}
 	}
 
@@ -67,15 +70,17 @@ func downloadAlbum(id int) {
 		fetchJson(fmt.Sprintf("https://api.deezer.com/track/%d", incompleteTrack.ID), &track)
 
 		trackId := uuid.NewV4()
-		q := dbQuery("INSERT INTO `tracks` (`id`, `album_id`, `title`, `disk`, `position`, `duration`) VALUES (UUID_TO_BIN(?), UUID_TO_BIN(?), ?, ?, ?, ?)",
+		db.Exec("INSERT INTO `tracks` (`id`, `album_id`, `title`, `disk`, `position`, `duration`) VALUES (UUID_TO_BIN(?), UUID_TO_BIN(?), ?, ?, ?, ?)",
 			trackId.String(), albumId.String(), track.Title, track.DiskNumber, track.TrackPosition, track.Duration)
-		defer q.Close()
 
 		// Create track artists bindings
 		for _, artist := range track.Contributors {
 			createArtist(artist.Name)
 
-			artists := dbQuery("SELECT BIN_TO_UUID(`id`) `id` FROM `artists` WHERE `name` = ?", artist.Name)
+			artists, err := db.Query("SELECT BIN_TO_UUID(`id`) `id` FROM `artists` WHERE `name` = ?", artist.Name)
+			if err != nil {
+				log.Fatalln(err)
+			}
 			defer artists.Close()
 			if artists.Next() {
 				var artistId string
@@ -85,8 +90,7 @@ func downloadAlbum(id int) {
 				}
 
 				trackArtistId := uuid.NewV4()
-				q := dbQuery("INSERT INTO `track_artist` (`id`, `track_id`, `artist_id`) VALUES (UUID_TO_BIN(?), UUID_TO_BIN(?), UUID_TO_BIN(?))", trackArtistId.String(), trackId.String(), artistId)
-				defer q.Close()
+				db.Exec("INSERT INTO `track_artist` (`id`, `track_id`, `artist_id`) VALUES (UUID_TO_BIN(?), UUID_TO_BIN(?), UUID_TO_BIN(?))", trackArtistId.String(), trackId.String(), artistId)
 			}
 		}
 

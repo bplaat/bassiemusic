@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"encoding/json"
 	"io"
 	"io/ioutil"
@@ -9,8 +8,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-
-	_ "github.com/go-sql-driver/mysql"
 )
 
 func fetch(url string) []byte {
@@ -45,14 +42,6 @@ func fetchFile(url string, path string) {
 	if err != nil {
 		log.Fatalln(err)
 	}
-}
-
-func dbQuery(query string, args ...any) *sql.Rows {
-	rows, err := db.Query(query, args...)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	return rows
 }
 
 type NeuteredFileSystem struct {
