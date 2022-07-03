@@ -1,6 +1,7 @@
 CREATE TABLE `artists` (
     `id` BINARY(16) NOT NULL,
     `name` VARCHAR(255) NOT NULL,
+    `deezer_id` BIGINT UNSIGNED NOT NULL,
     `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     `deleted_at` TIMESTAMP NULL,
@@ -11,6 +12,7 @@ CREATE TABLE `albums` (
     `id` BINARY(16) NOT NULL,
     `title` VARCHAR(255) NOT NULL,
     `released_at` DATE NOT NULL,
+    `deezer_id` BIGINT UNSIGNED NOT NULL,
     `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     `deleted_at` TIMESTAMP NULL,
@@ -26,6 +28,25 @@ CREATE TABLE `album_artist` (
     FOREIGN KEY (`artist_id`) REFERENCES `artists`(`id`)
 );
 
+CREATE TABLE `genres` (
+    `id` BINARY(16) NOT NULL,
+    `name` VARCHAR(255) NOT NULL,
+    `deezer_id` BIGINT UNSIGNED NOT NULL,
+    `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `deleted_at` TIMESTAMP NULL,
+    PRIMARY KEY (`id`)
+);
+
+CREATE TABLE `album_genre` (
+    `id` BINARY(16) NOT NULL,
+    `album_id` BINARY(16) NOT NULL,
+    `genre_id` BINARY(16) NOT NULL,
+    PRIMARY KEY (`id`),
+    FOREIGN KEY (`album_id`) REFERENCES `albums`(`id`),
+    FOREIGN KEY (`genre_id`) REFERENCES `genres`(`id`)
+);
+
 CREATE TABLE `tracks` (
     `id` BINARY(16) NOT NULL,
     `album_id` BINARY(16) NOT NULL,
@@ -33,6 +54,8 @@ CREATE TABLE `tracks` (
     `disk` INT UNSIGNED NOT NULL,
     `position` INT UNSIGNED NOT NULL,
     `duration` INT UNSIGNED NOT NULL,
+    `deezer_id` BIGINT UNSIGNED NOT NULL,
+    `youtube_id` VARCHAR(16) NOT NULL,
     `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     `deleted_at` TIMESTAMP NULL,

@@ -25,10 +25,19 @@ type Album struct {
 	Title      string    `json:"title"`
 	ReleasedAt time.Time `json:"released_at"`
 	Cover      string    `json:"cover"`
+	Genres     []Genre   `json:"genres,omitempty"`
 	Artists    []Artist  `json:"artists,omitempty"`
 	Tracks     []Track   `json:"tracks,omitempty"`
 	CreatedAt  time.Time `json:"created_at"`
 	UpdatedAt  time.Time `json:"updated_at"`
+}
+
+type Genre struct {
+	ID        string    `json:"id"`
+	Name      string    `json:"name"`
+	Albums    []Album   `json:"albums,omitempty"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 type Track struct {
@@ -168,6 +177,18 @@ func albumsIndex(response http.ResponseWriter, request *http.Request) {
 		albumsQuery.Scan(&album.ID, &album.Title, &album.ReleasedAt, &album.CreatedAt, &album.UpdatedAt)
 		album.Cover = fmt.Sprintf("http://%s/storage/albums/%s.jpg", request.Host, album.ID)
 
+		// Album genres
+		genresQuery, err := db.Query("SELECT BIN_TO_UUID(`id`), `name`, `created_at`, `updated_at` FROM `genres` WHERE `deleted_at` IS NULL AND `id` IN (SELECT `genre_id` FROM `album_genre` WHERE `album_id` = UUID_TO_BIN(?)) ORDER BY LOWER(`name`)", album.ID)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		defer genresQuery.Close()
+		for genresQuery.Next() {
+			var genre Genre
+			genresQuery.Scan(&genre.ID, &genre.Name, &genre.CreatedAt, &genre.UpdatedAt)
+			album.Genres = append(album.Genres, genre)
+		}
+
 		// Album artists
 		artistsQuery, err := db.Query("SELECT BIN_TO_UUID(`id`), `name`, `created_at`, `updated_at` FROM `artists` WHERE `deleted_at` IS NULL AND `id` IN (SELECT `artist_id` FROM `album_artist` WHERE `album_id` = UUID_TO_BIN(?)) ORDER BY LOWER(`name`)", album.ID)
 		if err != nil {
@@ -207,6 +228,18 @@ func albumsShow(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 	album.Cover = fmt.Sprintf("http://%s/storage/albums/%s.jpg", request.Host, album.ID)
+
+	// Album genres
+	genresQuery, err := db.Query("SELECT BIN_TO_UUID(`id`), `name`, `created_at`, `updated_at` FROM `genres` WHERE `deleted_at` IS NULL AND `id` IN (SELECT `genre_id` FROM `album_genre` WHERE `album_id` = UUID_TO_BIN(?)) ORDER BY LOWER(`name`)", album.ID)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer genresQuery.Close()
+	for genresQuery.Next() {
+		var genre Genre
+		genresQuery.Scan(&genre.ID, &genre.Name, &genre.CreatedAt, &genre.UpdatedAt)
+		album.Genres = append(album.Genres, genre)
+	}
 
 	// Album artists
 	artistsQuery, err := db.Query("SELECT BIN_TO_UUID(`id`), `name`, `created_at`, `updated_at` FROM `artists` WHERE `deleted_at` IS NULL AND `id` IN (SELECT `artist_id` FROM `album_artist` WHERE `album_id` = UUID_TO_BIN(?)) ORDER BY LOWER(`name`)", album.ID)
@@ -253,11 +286,83 @@ func albumsShow(response http.ResponseWriter, request *http.Request) {
 	response.Write(albumJson)
 }
 
+func genresIndex(response http.ResponseWriter, request *http.Request) {
+	query, page, limit := parseIndexVars(request)
+
+	// Genres
+	genresQuery, err := db.Query("SELECT BIN_TO_UUID(`id`), `name`, `created_at`, `updated_at` FROM `genres` WHERE `deleted_at` IS NULL AND `name` LIKE ? ORDER BY LOWER(`name`) LIMIT ?, ?", "%"+query+"%", (page-1)*limit, limit)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer genresQuery.Close()
+
+	genres := []Genre{}
+	for genresQuery.Next() {
+		var genre Genre
+		genresQuery.Scan(&genre.ID, &genre.Name, &genre.CreatedAt, &genre.UpdatedAt)
+
+		// Genre albums
+		albumsQuery, err := db.Query("SELECT BIN_TO_UUID(`id`), `title`, `released_at`, `created_at`, `updated_at` FROM `albums` WHERE `deleted_at` IS NULL AND `id` IN (SELECT `album_id` FROM `album_genre` WHERE `genre_id` = UUID_TO_BIN(?)) ORDER BY `released_at`", genre.ID)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		defer albumsQuery.Close()
+		for albumsQuery.Next() {
+			var album Album
+			albumsQuery.Scan(&album.ID, &album.Title, &album.ReleasedAt, &album.CreatedAt, &album.UpdatedAt)
+			album.Cover = fmt.Sprintf("http://%s/storage/albums/%s.jpg", request.Host, album.ID)
+			genre.Albums = append(genre.Albums, album)
+		}
+
+		genres = append(genres, genre)
+	}
+
+	response.Header().Set("Content-Type", "application/json")
+	genresJson, _ := json.Marshal(genres)
+	response.Write(genresJson)
+}
+
+func genresShow(response http.ResponseWriter, request *http.Request) {
+	vars := mux.Vars(request)
+
+	// Genre
+	genreQuery, err := db.Query("SELECT BIN_TO_UUID(`id`), `name`, `created_at`, `updated_at` FROM `genres` WHERE `deleted_at` IS NULL AND `id` = UUID_TO_BIN(?)", vars["id"])
+	if err != nil {
+		notFound(response, request)
+		return
+	}
+	defer genreQuery.Close()
+
+	var genre Genre
+	genreQuery.Next()
+	if err := genreQuery.Scan(&genre.ID, &genre.Name, &genre.CreatedAt, &genre.UpdatedAt); err != nil {
+		notFound(response, request)
+		return
+	}
+
+	// Genre albums
+	albumsQuery, err := db.Query("SELECT BIN_TO_UUID(`id`), `title`, `released_at`, `created_at`, `updated_at` FROM `albums` WHERE `deleted_at` IS NULL AND `id` IN (SELECT `album_id` FROM `album_genre` WHERE `genre_id` = UUID_TO_BIN(?)) ORDER BY `released_at`", genre.ID)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer albumsQuery.Close()
+	for albumsQuery.Next() {
+		var album Album
+		albumsQuery.Scan(&album.ID, &album.Title, &album.ReleasedAt, &album.CreatedAt, &album.UpdatedAt)
+		album.Cover = fmt.Sprintf("http://%s/storage/albums/%s.jpg", request.Host, album.ID)
+		genre.Albums = append(genre.Albums, album)
+	}
+
+	response.Header().Set("Content-Type", "application/json")
+	genreJson, _ := json.Marshal(genre)
+	response.Write(genreJson)
+}
+
 func tracksIndex(response http.ResponseWriter, request *http.Request) {
 	query, page, limit := parseIndexVars(request)
 
 	// Tracks
-	trackssQuery, err := db.Query("SELECT BIN_TO_UUID(`id`), `title`, `disk`, `position`, `duration`, `created_at`, `updated_at` FROM `tracks` WHERE `deleted_at` IS NULL AND `title` LIKE ? ORDER BY LOWER(`title`) LIMIT ?, ?", "%"+query+"%", (page-1)*limit, limit)
+	trackssQuery, err := db.Query("SELECT BIN_TO_UUID(`id`), BIN_TO_UUID(`album_id`), `title`, `disk`, `position`, `duration`, `created_at`, `updated_at` FROM `tracks` WHERE `deleted_at` IS NULL AND `title` LIKE ? ORDER BY LOWER(`title`) LIMIT ?, ?", "%"+query+"%", (page-1)*limit, limit)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -266,8 +371,24 @@ func tracksIndex(response http.ResponseWriter, request *http.Request) {
 	tracks := []Track{}
 	for trackssQuery.Next() {
 		var track Track
-		trackssQuery.Scan(&track.ID, &track.Title, &track.Disk, &track.Position, &track.Duration, &track.CreatedAt, &track.UpdatedAt)
+		var albumID string
+		trackssQuery.Scan(&track.ID, &albumID, &track.Title, &track.Disk, &track.Position, &track.Duration, &track.CreatedAt, &track.UpdatedAt)
 		track.Music = fmt.Sprintf("http://%s/storage/tracks/%s.m4a", request.Host, track.ID)
+
+		// Track album
+		albumsQuery, err := db.Query("SELECT BIN_TO_UUID(`id`), `title`, `released_at`, `created_at`, `updated_at` FROM `albums` WHERE `deleted_at` IS NULL AND `id` = UUID_TO_BIN(?)", albumID)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		defer albumsQuery.Close()
+		var album Album
+		albumsQuery.Next()
+		if err := albumsQuery.Scan(&album.ID, &album.Title, &album.ReleasedAt, &album.CreatedAt, &album.UpdatedAt); err != nil {
+			notFound(response, request)
+			return
+		}
+		album.Cover = fmt.Sprintf("http://%s/storage/albums/%s.jpg", request.Host, album.ID)
+		track.Album = &album
 
 		// Track artists
 		artistsQuery, err := db.Query("SELECT BIN_TO_UUID(`id`), `name`, `created_at`, `updated_at` FROM `artists` WHERE `deleted_at` IS NULL AND `id` IN (SELECT `artist_id` FROM `track_artist` WHERE `track_id` = UUID_TO_BIN(?)) ORDER BY LOWER(`name`)", track.ID)
@@ -360,6 +481,8 @@ func startServer() {
 	api.HandleFunc("/artists/{id}", artistsShow)
 	api.HandleFunc("/albums", albumsIndex)
 	api.HandleFunc("/albums/{id}", albumsShow)
+	api.HandleFunc("/genres", genresIndex)
+	api.HandleFunc("/genres/{id}", genresShow)
 	api.HandleFunc("/tracks", tracksIndex)
 	api.HandleFunc("/tracks/{id}", tracksShow)
 
