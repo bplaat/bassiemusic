@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"log"
 	"net/url"
@@ -14,7 +15,7 @@ import (
 
 const TRACK_DURATION_SLACK int = 5
 
-func createArtist(id int, name string, image string) (string) {
+func createArtist(id int, name string, image string) string {
 	artists, err := db.Query("SELECT BIN_TO_UUID(`id`) FROM `artists` WHERE `name` = ?", name)
 	if err != nil {
 		log.Fatalln(err)
@@ -33,7 +34,7 @@ func createArtist(id int, name string, image string) (string) {
 	return artistId.String()
 }
 
-func createGenre(id int, name string) (string) {
+func createGenre(id int, name string) string {
 	genres, err := db.Query("SELECT BIN_TO_UUID(`id`) FROM `genres` WHERE `name` = ?", name)
 	if err != nil {
 		log.Fatalln(err)
@@ -56,9 +57,16 @@ func downloadAlbum(id int) {
 	fetchJson(fmt.Sprintf("https://api.deezer.com/album/%d", id), &album)
 
 	// Create album row
+	albumType := AlbumTypeAlbum
+	if album.RecordType == "ep" {
+		albumType = AlbumTypeEP
+	}
+	if album.RecordType == "single" {
+		albumType = AlbumTypeSingle
+	}
 	albumId := uuid.NewV4()
-	db.Exec("INSERT INTO `albums` (`id`, `title`, `released_at`, `deezer_id`) VALUES (UUID_TO_BIN(?), ?, ?, ?)",
-		albumId.String(), album.Title, album.ReleaseDate, album.ID)
+	db.Exec("INSERT INTO `albums` (`id`, `type`, `title`, `released_at`, `deezer_id`) VALUES (UUID_TO_BIN(?), ?, ?, ?, ?)",
+		albumId.String(), albumType, album.Title, album.ReleaseDate, album.ID)
 	fmt.Printf("%s by %s\n", album.Title, album.Artist.Name)
 
 	// Create album genres
@@ -125,9 +133,15 @@ func downloadAlbum(id int) {
 	}
 }
 
-func downloadTracks() {
-	var albumSearch DeezerAlbumSearch
-	fetchJson(fmt.Sprintf("https://api.deezer.com/search/album?q=%s", url.QueryEscape(os.Args[2])), &albumSearch)
+func startAdd() {
+	// Parse flags
+	command := flag.NewFlagSet("add", flag.ContinueOnError)
+	query := os.Args[2]
+	var isArtist bool
+	var withSingles bool
+	command.BoolVar(&isArtist, "a", false, "Download all albums of artist")
+	command.BoolVar(&withSingles, "s", false, "With albums with the single type of artist")
+	command.Parse(os.Args[3:])
 
 	// Create missing folders
 	if _, err := os.Stat("storage/"); os.IsNotExist(err) {
@@ -143,10 +157,33 @@ func downloadTracks() {
 		os.Mkdir("storage/tracks", 0755)
 	}
 
+	if isArtist {
+		// Search artist
+		var artistSearch DeezerArtistSearch
+		fetchJson(fmt.Sprintf("https://api.deezer.com/search/artist?q=%s", url.QueryEscape(query)), &artistSearch)
+		if len(artistSearch.Data) == 0 {
+			fmt.Println("Can't find any artist with that name")
+			return
+		}
+
+		// Download all artist albums
+		var artistAlbums DeezerArtistAlbums
+		fetchJson(fmt.Sprintf("https://api.deezer.com/artist/%d/albums", artistSearch.Data[0].ID), &artistAlbums)
+		for _, album := range artistAlbums.Data {
+			if !withSingles && album.RecordType == "single" {
+				continue
+			}
+			downloadAlbum(album.ID)
+		}
+		return
+	}
+
+	// Search and download album
+	var albumSearch DeezerAlbumSearch
+	fetchJson(fmt.Sprintf("https://api.deezer.com/search/album?q=%s", url.QueryEscape(query)), &albumSearch)
 	if len(albumSearch.Data) == 0 {
 		fmt.Println("Can't find any album with that title")
 		return
 	}
-
 	downloadAlbum(albumSearch.Data[0].ID)
 }

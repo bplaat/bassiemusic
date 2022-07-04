@@ -10,6 +10,7 @@ CREATE TABLE `artists` (
 
 CREATE TABLE `albums` (
     `id` BINARY(16) NOT NULL,
+    `type` TINYINT NOT NULL,
     `title` VARCHAR(255) NOT NULL,
     `released_at` DATE NOT NULL,
     `deezer_id` BIGINT UNSIGNED NOT NULL,
