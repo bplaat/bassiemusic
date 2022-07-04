@@ -13,8 +13,8 @@ struct MenuView : View {
     var body: some View {
         List {
             Text("BassieMusic")
-                .font(.title)
-                .padding(.vertical)
+                .font(.title2)
+                .padding(EdgeInsets(top: 0, leading: 0, bottom: 8, trailing: 0))
             
             NavigationLink(destination: ArtistsView()) {
                 Image(systemName: "music.mic").frame(width: 16, height: 16)
@@ -29,12 +29,19 @@ struct MenuView : View {
                 Image(systemName: "music.note").frame(width: 16, height: 16)
                 Text("Tracks")
             }
-        }
+        }.listStyle(SidebarListStyle())
+        
     }
 }
 
 struct ContentView: View {
     @State var progress = 0.0
+    @State var volume = 100.0
+    
+    private func toggleSidebar() {
+        NSApp.keyWindow?.firstResponder?
+            .tryToPerform(#selector(NSSplitViewController.toggleSidebar(_:)), with: nil)
+    }
     
     var body: some View {
         NavigationView {
@@ -42,26 +49,66 @@ struct ContentView: View {
             AlbumsView()
         }
         .toolbar {
-            Button(action: { print("test") }) {
-                Label("Previous", systemImage: "backward.end.fill")
+            
+            ToolbarItemGroup(placement: .primaryAction) {
+                Button(action: toggleSidebar) {
+                    Image(systemName: "sidebar.left")
+                        .help("Toggle Sidebar")
+                }
+
+                HStack {
+                    VStack {
+                        Text("Track")
+                        Text("Artist")
+                    }
+                }
+                
             }
-            Button(action: { print("test") }) {
-                Label("Seek back", systemImage: "backward.fill")
+            
+            ToolbarItemGroup(placement: .principal) {
+                Button(action: { print("Previous track") }) {
+                    Image(systemName: "backward.end.fill")
+                        .help("Previous track")
+                }
+                Button(action: { print("Seek backward") }) {
+                    Image(systemName: "backward.fill")
+                        .help("Seek backward")
+                }
+                Button(action: { print("Play") }) {
+                    Image(systemName: "play.fill")
+                        .help("Play")
+                }
+                Button(action: { print("Seek forward") }) {
+                    Image(systemName: "forward.fill")
+                        .help("Seek forward")
+                }
+                Button(action: { print("Next track") }) {
+                    Image(systemName: "forward.end.fill")
+                        .help("Next track")
+                }
+                Slider(value: $progress, in: 0...100) {
+
+                } minimumValueLabel: {
+                    Text("00:00")
+                } maximumValueLabel: {
+                    Text("10:00")
+                } onEditingChanged: { isEditing in
+
+                }
+                .frame(minWidth:200)
+                
             }
-            Button(action: { print("test") }) {
-                Label("Play", systemImage: "play.fill")
+            
+            ToolbarItemGroup(placement: .principal) {
+                Slider(value: $volume, in: 0...100, onEditingChanged: { editing in
+                    print(editing)
+                }).frame(width:100)
+
+                Button(action: { print("Volume") }) {
+                    Image(systemName: "speaker.wave.3.fill")
+                        .help("Volume")
+                }
             }
-            Button(action: { print("test") }) {
-                Label("Seek forward", systemImage: "forward.fill")
-            }
-            Button(action: { print("test") }) {
-                Label("Next", systemImage: "forward.end.fill")
-            }
-            Text("10:00")
-            Slider(value: $progress, in: 0...100, onEditingChanged: { editing in
-                print(editing)
-            }).frame(width:200)
-            Text("10:00")
         }
         .frame(minWidth: 640, idealWidth: 1280, minHeight: 480, idealHeight: 720)
     }

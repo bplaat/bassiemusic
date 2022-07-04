@@ -11,9 +11,14 @@ import SwiftUI
 struct BassieMusicApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            ContentView().onAppear {
+                NSWindow.allowsAutomaticWindowTabbing = false
+            }
         }
         .windowStyle(.hiddenTitleBar)
         .windowToolbarStyle(.unified)
+        .commands {
+            SidebarCommands()
+        }
     }
 }
