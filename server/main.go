@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"log"
 	"os"
+	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -18,6 +19,14 @@ func main() {
 		log.Fatalln(err)
 	}
 	defer db.Close()
+	db.SetMaxOpenConns(32)
+	db.SetMaxIdleConns(32)
+	db.SetConnMaxLifetime(time.Minute)
+
+	err = db.Ping()
+	if err != nil {
+		log.Fatalln(err)
+	}
 
 	// Run subcommand
 	if len(os.Args) >= 2 {

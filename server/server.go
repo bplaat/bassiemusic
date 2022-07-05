@@ -34,6 +34,7 @@ type Album struct {
 }
 
 type AlbumType int
+
 const AlbumTypeAlbum AlbumType = 0
 const AlbumTypeEP AlbumType = 1
 const AlbumTypeSingle AlbumType = 2
@@ -114,7 +115,6 @@ func artistsIndex(response http.ResponseWriter, request *http.Request) {
 		if err != nil {
 			log.Fatalln(err)
 		}
-		defer albumsQuery.Close()
 		for albumsQuery.Next() {
 			var album Album
 			var albumType AlbumType
@@ -131,6 +131,7 @@ func artistsIndex(response http.ResponseWriter, request *http.Request) {
 			album.Cover = fmt.Sprintf("http://%s/storage/albums/%s.jpg", request.Host, album.ID)
 			artist.Albums = append(artist.Albums, album)
 		}
+		albumsQuery.Close()
 
 		artists = append(artists, artist)
 	}
@@ -218,25 +219,25 @@ func albumsIndex(response http.ResponseWriter, request *http.Request) {
 		if err != nil {
 			log.Fatalln(err)
 		}
-		defer genresQuery.Close()
 		for genresQuery.Next() {
 			var genre Genre
 			genresQuery.Scan(&genre.ID, &genre.Name, &genre.CreatedAt, &genre.UpdatedAt)
 			album.Genres = append(album.Genres, genre)
 		}
+		genresQuery.Close()
 
 		// Album artists
 		artistsQuery, err := db.Query("SELECT BIN_TO_UUID(`id`), `name`, `created_at`, `updated_at` FROM `artists` WHERE `deleted_at` IS NULL AND `id` IN (SELECT `artist_id` FROM `album_artist` WHERE `album_id` = UUID_TO_BIN(?)) ORDER BY LOWER(`name`)", album.ID)
 		if err != nil {
 			log.Fatalln(err)
 		}
-		defer artistsQuery.Close()
 		for artistsQuery.Next() {
 			var artist Artist
 			artistsQuery.Scan(&artist.ID, &artist.Name, &artist.CreatedAt, &artist.UpdatedAt)
 			artist.Image = fmt.Sprintf("http://%s/storage/artists/%s.jpg", request.Host, artist.ID)
 			album.Artists = append(album.Artists, artist)
 		}
+		artistsQuery.Close()
 
 		albums = append(albums, album)
 	}
@@ -316,13 +317,13 @@ func albumsShow(response http.ResponseWriter, request *http.Request) {
 		if err != nil {
 			log.Fatalln(err)
 		}
-		defer artistsQuery.Close()
 		for artistsQuery.Next() {
 			var artist Artist
 			artistsQuery.Scan(&artist.ID, &artist.Name, &artist.CreatedAt, &artist.UpdatedAt)
 			artist.Image = fmt.Sprintf("http://%s/storage/artists/%s.jpg", request.Host, artist.ID)
 			track.Artists = append(track.Artists, artist)
 		}
+		artistsQuery.Close()
 
 		album.Tracks = append(album.Tracks, track)
 	}
@@ -352,7 +353,6 @@ func genresIndex(response http.ResponseWriter, request *http.Request) {
 		if err != nil {
 			log.Fatalln(err)
 		}
-		defer albumsQuery.Close()
 		for albumsQuery.Next() {
 			var album Album
 			var albumType AlbumType
@@ -369,6 +369,7 @@ func genresIndex(response http.ResponseWriter, request *http.Request) {
 			album.Cover = fmt.Sprintf("http://%s/storage/albums/%s.jpg", request.Host, album.ID)
 			genre.Albums = append(genre.Albums, album)
 		}
+		albumsQuery.Close()
 
 		genres = append(genres, genre)
 	}
@@ -446,14 +447,14 @@ func tracksIndex(response http.ResponseWriter, request *http.Request) {
 		if err != nil {
 			log.Fatalln(err)
 		}
-		defer albumsQuery.Close()
 		var album Album
 		var albumType AlbumType
 		albumsQuery.Next()
-		if err := albumsQuery.Scan(&album.ID,  &albumType, &album.Title, &album.ReleasedAt, &album.CreatedAt, &album.UpdatedAt); err != nil {
+		if err := albumsQuery.Scan(&album.ID, &albumType, &album.Title, &album.ReleasedAt, &album.CreatedAt, &album.UpdatedAt); err != nil {
 			notFound(response, request)
 			return
 		}
+		albumsQuery.Close()
 		if albumType == AlbumTypeAlbum {
 			album.Type = "album"
 		}
@@ -471,13 +472,13 @@ func tracksIndex(response http.ResponseWriter, request *http.Request) {
 		if err != nil {
 			log.Fatalln(err)
 		}
-		defer artistsQuery.Close()
 		for artistsQuery.Next() {
 			var artist Artist
 			artistsQuery.Scan(&artist.ID, &artist.Name, &artist.CreatedAt, &artist.UpdatedAt)
 			artist.Image = fmt.Sprintf("http://%s/storage/artists/%s.jpg", request.Host, artist.ID)
 			track.Artists = append(track.Artists, artist)
 		}
+		artistsQuery.Close()
 
 		tracks = append(tracks, track)
 	}
@@ -552,7 +553,7 @@ func tracksShow(response http.ResponseWriter, request *http.Request) {
 
 func notFound(response http.ResponseWriter, request *http.Request) {
 	response.WriteHeader(http.StatusNotFound)
-	fmt.Fprint(response, "404 page not found\n");
+	fmt.Fprint(response, "404 page not found\n")
 }
 
 func startServer() {
