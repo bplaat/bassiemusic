@@ -137,6 +137,7 @@ func artistsIndex(response http.ResponseWriter, request *http.Request) {
 	}
 
 	response.Header().Set("Content-Type", "application/json")
+	response.Header().Set("Access-Control-Allow-Origin", "*")
 	artistsJson, _ := json.Marshal(artists)
 	response.Write(artistsJson)
 }
@@ -180,10 +181,25 @@ func artistsShow(response http.ResponseWriter, request *http.Request) {
 			album.Type = "single"
 		}
 		album.Cover = fmt.Sprintf("http://%s/storage/albums/%s.jpg", request.Host, album.ID)
+
+		// Album artists
+		artistsQuery, err := db.Query("SELECT BIN_TO_UUID(`id`), `name`, `created_at`, `updated_at` FROM `artists` WHERE `deleted_at` IS NULL AND `id` IN (SELECT `artist_id` FROM `album_artist` WHERE `album_id` = UUID_TO_BIN(?)) ORDER BY LOWER(`name`)", album.ID)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		for artistsQuery.Next() {
+			var artist Artist
+			artistsQuery.Scan(&artist.ID, &artist.Name, &artist.CreatedAt, &artist.UpdatedAt)
+			artist.Image = fmt.Sprintf("http://%s/storage/artists/%s.jpg", request.Host, artist.ID)
+			album.Artists = append(album.Artists, artist)
+		}
+		artistsQuery.Close()
+
 		artist.Albums = append(artist.Albums, album)
 	}
 
 	response.Header().Set("Content-Type", "application/json")
+	response.Header().Set("Access-Control-Allow-Origin", "*")
 	artistJson, _ := json.Marshal(artist)
 	response.Write(artistJson)
 }
@@ -243,6 +259,7 @@ func albumsIndex(response http.ResponseWriter, request *http.Request) {
 	}
 
 	response.Header().Set("Content-Type", "application/json")
+	response.Header().Set("Access-Control-Allow-Origin", "*")
 	albumsJson, _ := json.Marshal(albums)
 	response.Write(albumsJson)
 }
@@ -329,6 +346,7 @@ func albumsShow(response http.ResponseWriter, request *http.Request) {
 	}
 
 	response.Header().Set("Content-Type", "application/json")
+	response.Header().Set("Access-Control-Allow-Origin", "*")
 	albumJson, _ := json.Marshal(album)
 	response.Write(albumJson)
 }
@@ -375,6 +393,7 @@ func genresIndex(response http.ResponseWriter, request *http.Request) {
 	}
 
 	response.Header().Set("Content-Type", "application/json")
+	response.Header().Set("Access-Control-Allow-Origin", "*")
 	genresJson, _ := json.Marshal(genres)
 	response.Write(genresJson)
 }
@@ -421,6 +440,7 @@ func genresShow(response http.ResponseWriter, request *http.Request) {
 	}
 
 	response.Header().Set("Content-Type", "application/json")
+	response.Header().Set("Access-Control-Allow-Origin", "*")
 	genreJson, _ := json.Marshal(genre)
 	response.Write(genreJson)
 }
@@ -484,6 +504,7 @@ func tracksIndex(response http.ResponseWriter, request *http.Request) {
 	}
 
 	response.Header().Set("Content-Type", "application/json")
+	response.Header().Set("Access-Control-Allow-Origin", "*")
 	tracksJson, _ := json.Marshal(tracks)
 	response.Write(tracksJson)
 }
@@ -547,6 +568,7 @@ func tracksShow(response http.ResponseWriter, request *http.Request) {
 	}
 
 	response.Header().Set("Content-Type", "application/json")
+	response.Header().Set("Access-Control-Allow-Origin", "*")
 	trackJson, _ := json.Marshal(track)
 	response.Write(trackJson)
 }
