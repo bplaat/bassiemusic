@@ -21,19 +21,22 @@ class FetchAlbums: ObservableObject {
     @Published var albums = [Album]()
 
     init() {
-        let url = URL(string: "http://localhost:8080/api/albums")!
+        loadPage(page: 1)
+    }
+    
+    func loadPage(page: Int) {
+        let url = URL(string: "http://localhost:8080/api/albums?page=\(page)")!
         URLSession.shared.dataTask(with: url) {(data, response, error) in
             do {
-                if let todoData = data {
-                    let decodedData = try JSONDecoder().decode([Album].self, from: todoData)
-                    DispatchQueue.main.async {
-                        self.albums = decodedData
+                let newAlbums = try JSONDecoder().decode([Album].self, from: data!)
+                DispatchQueue.main.async {
+                    if newAlbums.count > 0 {
+                        self.albums.append(contentsOf: newAlbums)
+                        self.loadPage(page: page + 1)
                     }
-                } else {
-                    print("No data")
                 }
             } catch {
-                print("Error")
+                print("Error when loading albums")
             }
         }.resume()
     }
@@ -68,11 +71,5 @@ struct AlbumsView: View {
                 }
             }.padding(16)
         }
-    }
-}
-
-struct AlbumsView_Previews: PreviewProvider {
-    static var previews: some View {
-        AlbumsView().frame(width: 800, height: 600)
     }
 }

@@ -15,8 +15,7 @@ struct BassieMusicApp: App {
                 NSWindow.allowsAutomaticWindowTabbing = false
             }
         }
-        .windowStyle(.hiddenTitleBar)
-        .windowToolbarStyle(.unified)
+        .windowToolbarStyle(.unified(showsTitle: false))
         .commands {
             SidebarCommands()
         }

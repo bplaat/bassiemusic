@@ -18,21 +18,25 @@ struct Artist : Identifiable, Decodable {
 
 class FetchArtists: ObservableObject {
     @Published var artists = [Artist]()
+    
 
     init() {
-        let url = URL(string: "http://localhost:8080/api/artists")!
+        loadPage(page: 1)
+    }
+    
+    func loadPage(page: Int) {
+        let url = URL(string: "http://localhost:8080/api/artists?page=\(page)")!
         URLSession.shared.dataTask(with: url) {(data, response, error) in
             do {
-                if let todoData = data {
-                    let decodedData = try JSONDecoder().decode([Artist].self, from: todoData)
-                    DispatchQueue.main.async {
-                        self.artists = decodedData
+                let newArtists = try JSONDecoder().decode([Artist].self, from: data!)
+                DispatchQueue.main.async {
+                    if newArtists.count > 0 {
+                        self.artists.append(contentsOf: newArtists)
+                        self.loadPage(page: page + 1)
                     }
-                } else {
-                    print("No data")
                 }
             } catch {
-                print("Error")
+                print("Error when loading artists")
             }
         }.resume()
     }
@@ -67,11 +71,5 @@ struct ArtistsView: View {
                 }
             }.padding(16)
         }
-    }
-}
-
-struct ArtistsView_Previews: PreviewProvider {
-    static var previews: some View {
-        ArtistsView().frame(width: 800, height: 600)
     }
 }
