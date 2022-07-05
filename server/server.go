@@ -53,6 +53,7 @@ type Track struct {
 	Disk      int       `json:"disk"`
 	Position  int       `json:"position"`
 	Duration  int       `json:"duration"`
+	Plays     int64     `json:"plays"`
 	Music     string    `json:"music"`
 	Album     *Album    `json:"album,omitempty"`
 	Artists   []Artist  `json:"artists,omitempty"`
@@ -319,14 +320,14 @@ func albumsShow(response http.ResponseWriter, request *http.Request) {
 	}
 
 	// Album tracks
-	tracksQuery, err := db.Query("SELECT BIN_TO_UUID(`id`), `title`, `disk`, `position`, `duration`, `created_at`, `updated_at` FROM `tracks` WHERE `deleted_at` IS NULL AND `album_id` = UUID_TO_BIN(?) ORDER BY `disk`, `position`", album.ID)
+	tracksQuery, err := db.Query("SELECT BIN_TO_UUID(`id`), `title`, `disk`, `position`, `duration`, `plays`, `created_at`, `updated_at` FROM `tracks` WHERE `deleted_at` IS NULL AND `album_id` = UUID_TO_BIN(?) ORDER BY `disk`, `position`", album.ID)
 	if err != nil {
 		log.Fatalln(err)
 	}
 	defer tracksQuery.Close()
 	for tracksQuery.Next() {
 		var track Track
-		tracksQuery.Scan(&track.ID, &track.Title, &track.Disk, &track.Position, &track.Duration, &track.CreatedAt, &track.UpdatedAt)
+		tracksQuery.Scan(&track.ID, &track.Title, &track.Disk, &track.Position, &track.Duration, &track.Plays, &track.CreatedAt, &track.UpdatedAt)
 		track.Music = fmt.Sprintf("http://%s/storage/tracks/%s.m4a", request.Host, track.ID)
 
 		// Album track artists
@@ -449,7 +450,7 @@ func tracksIndex(response http.ResponseWriter, request *http.Request) {
 	query, page, limit := parseIndexVars(request)
 
 	// Tracks
-	trackssQuery, err := db.Query("SELECT BIN_TO_UUID(`id`), BIN_TO_UUID(`album_id`), `title`, `disk`, `position`, `duration`, `created_at`, `updated_at` FROM `tracks` WHERE `deleted_at` IS NULL AND `title` LIKE ? ORDER BY LOWER(`title`) LIMIT ?, ?", "%"+query+"%", (page-1)*limit, limit)
+	trackssQuery, err := db.Query("SELECT BIN_TO_UUID(`id`), BIN_TO_UUID(`album_id`), `title`, `disk`, `position`, `duration`, `plays`, `created_at`, `updated_at` FROM `tracks` WHERE `deleted_at` IS NULL AND `title` LIKE ? ORDER BY LOWER(`title`) LIMIT ?, ?", "%"+query+"%", (page-1)*limit, limit)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -459,7 +460,7 @@ func tracksIndex(response http.ResponseWriter, request *http.Request) {
 	for trackssQuery.Next() {
 		var track Track
 		var albumID string
-		trackssQuery.Scan(&track.ID, &albumID, &track.Title, &track.Disk, &track.Position, &track.Duration, &track.CreatedAt, &track.UpdatedAt)
+		trackssQuery.Scan(&track.ID, &albumID, &track.Title, &track.Disk, &track.Position, &track.Duration, &track.Plays, &track.CreatedAt, &track.UpdatedAt)
 		track.Music = fmt.Sprintf("http://%s/storage/tracks/%s.m4a", request.Host, track.ID)
 
 		// Track album
@@ -513,7 +514,7 @@ func tracksShow(response http.ResponseWriter, request *http.Request) {
 	vars := mux.Vars(request)
 
 	// Track
-	trackssQuery, err := db.Query("SELECT BIN_TO_UUID(`id`), BIN_TO_UUID(`album_id`), `title`, `disk`, `position`, `duration`, `created_at`, `updated_at` FROM `tracks` WHERE `deleted_at` IS NULL AND `id` = UUID_TO_BIN(?)", vars["id"])
+	trackssQuery, err := db.Query("SELECT BIN_TO_UUID(`id`), BIN_TO_UUID(`album_id`), `title`, `disk`, `position`, `duration`, `plays`, `created_at`, `updated_at` FROM `tracks` WHERE `deleted_at` IS NULL AND `id` = UUID_TO_BIN(?)", vars["id"])
 	if err != nil {
 		notFound(response, request)
 		return
@@ -523,7 +524,7 @@ func tracksShow(response http.ResponseWriter, request *http.Request) {
 	var track Track
 	var albumID string
 	trackssQuery.Next()
-	if err := trackssQuery.Scan(&track.ID, &albumID, &track.Title, &track.Disk, &track.Position, &track.Duration, &track.CreatedAt, &track.UpdatedAt); err != nil {
+	if err := trackssQuery.Scan(&track.ID, &albumID, &track.Title, &track.Disk, &track.Position, &track.Duration, &track.Plays, &track.CreatedAt, &track.UpdatedAt); err != nil {
 		notFound(response, request)
 		return
 	}
@@ -573,6 +574,32 @@ func tracksShow(response http.ResponseWriter, request *http.Request) {
 	response.Write(trackJson)
 }
 
+
+func tracksPlay(response http.ResponseWriter, request *http.Request) {
+	vars := mux.Vars(request)
+
+	// Track
+	trackssQuery, err := db.Query("SELECT `plays` FROM `tracks` WHERE `deleted_at` IS NULL AND `id` = UUID_TO_BIN(?)", vars["id"])
+	if err != nil {
+		notFound(response, request)
+		return
+	}
+	defer trackssQuery.Close()
+
+	var plays int64
+	trackssQuery.Next()
+	if err := trackssQuery.Scan(&plays); err != nil {
+		notFound(response, request)
+		return
+	}
+
+	db.Exec("UPDATE `tracks` SET `plays` = ? WHERE `deleted_at` IS NULL AND `id` = UUID_TO_BIN(?)", plays + 1, vars["id"])
+
+	response.Header().Set("Content-Type", "application/json")
+	response.Header().Set("Access-Control-Allow-Origin", "*")
+	response.Write([]byte("{\"success\":true}"))
+}
+
 func notFound(response http.ResponseWriter, request *http.Request) {
 	response.WriteHeader(http.StatusNotFound)
 	fmt.Fprint(response, "404 page not found\n")
@@ -594,6 +621,7 @@ func startServer() {
 	api.HandleFunc("/genres/{id}", genresShow)
 	api.HandleFunc("/tracks", tracksIndex)
 	api.HandleFunc("/tracks/{id}", tracksShow)
+	api.HandleFunc("/tracks/{id}/play", tracksPlay)
 
 	fileServer := http.FileServer(NeuteredFileSystem{http.Dir("./storage")})
 	router.PathPrefix("/storage/").Handler(http.StripPrefix("/storage", fileServer))
