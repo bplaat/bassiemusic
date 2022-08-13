@@ -53,8 +53,10 @@
 
     <div class="player-controls box has-background-white-bis m-0">
         <div v-if="audio != undefined" style="display: flex; align-items: center;">
-            <router-link class="album-cover mr-4" :style="{ backgroundImage: 'url(' + playingTrack.album.cover + ')' }"
-                :to="'/albums/' + playingTrack.album.id"></router-link>
+            <div class="box mr-4 mb-0" style="padding: 0; overflow: hidden; width: 64px; height: 64px;">
+                <img :src="playingTrack.album.cover" style="display: block;">
+            </div>
+
             <div class="mr-5" style="min-width: 10rem">
                 <p><router-link :to="'/albums/' + playingTrack.album.id" style="font-weight: bold;">{{ playingTrack.title }}</router-link></p>
                 <p>
@@ -189,7 +191,7 @@ const ArtistsShow = {
                 </div>
                 <div class="column" style="display: flex; flex-direction: column; justify-content: center;">
                     <h2 class="title mb-3">{{ artist.name }}</h2>
-                    <p>Albums: {{ artist.albums.length }}</p>
+                    <p>Albums: {{ artist.albums != undefined ? artist.albums.length : 0 }}</p>
                 </div>
             </div>
 
@@ -333,24 +335,30 @@ const Tracks = {
         <table class="table is-fullwidth">
             <thead>
                 <tr>
-                    <th style="width: 25%;">Artist</th>
-                    <th style="width: 25%;">Album</th>
-                    <th style="width: 25%;">Title</th>
-                    <th style="width: 15%;">Duration</th>
-                    <th style="width: 10%;">Plays</th>
+                    <th style="width: 5%;">#</th>
+                    <th style="width: 30%;">Title</th>
+                    <th style="width: 30%;">Album</th>
+                    <th style="width: 20%;">Duration</th>
+                    <th style="width: 15%;">Plays</th>
                 </tr>
             </thead>
             <tbody>
-                <tr v-for="track in tracks" :key="track.id" @dblclick.prevent="playTrack(track.id)"
+                <tr v-for="track, index in tracks" :key="track.id" @dblclick.prevent="playTrack(track.id)"
                     :class="{ 'has-background-light': $root.playingTrack != undefined && track.id == $root.playingTrack.id }">
-                    <td>
-                        <router-link v-for="artist in track.artists" :key="artist.id" class="mr-2"
-                            :to="'/artists/' + artist.id">{{ artist.name }}</router-link>
+                    <td style="vertical-align: middle;">{{ index + 1 }}</td>
+                    <td style="display: flex;">
+                        <div class="box mr-4 mb-0" style="padding: 0; overflow: hidden; width: 64px; height: 64px;">
+                            <img :src="track.album.cover" style="display: block;">
+                        </div>
+                        <div style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
+                            <p><router-link :to="'/albums/' + track.album.id" style="font-weight: bold;">{{ track.title }}</router-link></p>
+                            <p><router-link v-for="artist in track.artists" :key="artist.id" class="mr-2"
+                                :to="'/artists/' + artist.id">{{ artist.name }}</router-link></p>
+                        </div>
                     </td>
-                    <td><router-link :to="'/albums/' + track.album.id">{{ track.album.title }}</router-link></td>
-                    <td><router-link :to="'/albums/' + track.album.id">{{ track.title }}</router-link></td>
-                    <td>{{ $filters.formatDuration(track.duration) }}</td>
-                    <td>{{ track.plays }}</td>
+                    <td style="vertical-align: middle;"><router-link :to="'/albums/' + track.album.id">{{ track.album.title }}</router-link></td>
+                    <td style="vertical-align: middle;">{{ $filters.formatDuration(track.duration) }}</td>
+                    <td style="vertical-align: middle;">{{ track.plays }}</td>
                 </tr>
             </tbody>
         </table>
