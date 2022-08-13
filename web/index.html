@@ -9,7 +9,9 @@
     <script src="https://unpkg.com/vue@3"></script>
     <script src="https://unpkg.com/vue-router@4"></script>
     <style>
-        body{margin-left:16rem;margin-bottom:6rem}a{color:currentColor}
+        body{margin-left:16rem;margin-bottom:6rem;user-select:none;cursor:default}
+        a{color:currentColor}a:not(.card):hover,a:not(.card):focus{text-decoration:underline}
+        .menu-list a{text-decoration:none!important}
         .sidebar{position:fixed;top:0;left:0;width:16rem;height:calc(100% - 6rem);display:flex;flex-direction:column}
         .flex{flex:1}
         .card-image{padding-top:100%;background-size:cover;background-position:center center}
@@ -51,10 +53,10 @@
 
     <div class="player-controls box has-background-white-bis m-0">
         <div v-if="audio != undefined" style="display: flex; align-items: center;">
-            <router-link class="album-cover mr-5" :style="{ backgroundImage: 'url(' + playingTrack.album.cover + ')' }"
+            <router-link class="album-cover mr-4" :style="{ backgroundImage: 'url(' + playingTrack.album.cover + ')' }"
                 :to="'/albums/' + playingTrack.album.id"></router-link>
             <div class="mr-5" style="min-width: 10rem">
-                <p><router-link :to="'/albums/' + playingTrack.album.id">{{ playingTrack.title }}</router-link></p>
+                <p><router-link :to="'/albums/' + playingTrack.album.id" style="font-weight: bold;">{{ playingTrack.title }}</router-link></p>
                 <p>
                     <router-link v-for="artist in playingTrack.artists" :key="artist.id" class="mr-2"
                         :to="'/artists/' + artist.id">{{ artist.name }}</router-link>
@@ -111,7 +113,7 @@
 
 <script>
 
-const API_URL = 'http://192.168.0.103:8080/api';
+const API_URL = 'http://localhost:8080/api';
 const SEEK_TIME = 10;
 const UPDATE_TIMEOUT = 1000 / 10;
 
@@ -177,10 +179,19 @@ const ArtistsShow = {
     template: `<div>
         <div v-if="artist != undefined">
             <p class="mb-3">
-                <router-link to="/artists">&lt;&lt; Back to artists</router-link>
+                <router-link to="/artists" style="font-weight: bold;">&lt;&lt; Back to artists</router-link>
             </p>
-            <img class="mb-3" style="width: 25%;" :src="artist.image">
-            <h2 class="title">{{ artist.name }}</h2>
+            <div class="columns">
+                <div class="column is-one-quarter mr-5">
+                    <div class="box" style="padding: 0; overflow: hidden;">
+                        <img :src="artist.image" style="display: block;">
+                    </div>
+                </div>
+                <div class="column" style="display: flex; flex-direction: column; justify-content: center;">
+                    <h2 class="title mb-3">{{ artist.name }}</h2>
+                    <p>Albums: {{ artist.albums.length }}</p>
+                </div>
+            </div>
 
             <h3 class="title is-4">Albums</h3>
             <div v-if="artist.albums != undefined && artist.albums.length > 0" class="columns is-multiline">
@@ -246,25 +257,33 @@ const AlbumsShow = {
     template: `<div>
         <div v-if="album != undefined">
             <p class="mb-3">
-                <router-link to="/albums">&lt;&lt; Back to albums</router-link>
+                <router-link to="/albums" style="font-weight: bold;">&lt;&lt; Back to albums</router-link>
             </p>
-            <img class="mb-3" style="width: 25%;" :src="album.cover">
-            <h2 class="title mb-3">{{ album.title }}</h2>
-            <p class="mb-3">{{ album.released_at.split('T')[0] }}</p>
-            <p class="mb-5">
-                <router-link v-for="artist in album.artists" :key="artist.id" class="mr-2"
-                    :to="'/artists/' + artist.id">{{ artist.name }}</router-link>
-            </p>
+            <div class="columns">
+                <div class="column is-one-quarter mr-5">
+                    <div class="box" style="padding: 0; overflow: hidden;">
+                        <img :src="album.cover" style="display: block;">
+                    </div>
+                </div>
+                <div class="column" style="display: flex; flex-direction: column; justify-content: center;">
+                    <h2 class="title mb-3">{{ album.title }}</h2>
+                    <p class="mb-3">{{ album.released_at.split('T')[0] }}</p>
+                    <p>
+                        <router-link v-for="artist in album.artists" :key="artist.id" class="mr-2"
+                            :to="'/artists/' + artist.id">{{ artist.name }}</router-link>
+                    </p>
+                </div>
+            </div>
 
             <h3 class="title is-4">Tracks</h3>
             <table class="table is-fullwidth">
                 <thead>
                     <tr>
-                        <th>#</th>
-                        <th>Artist</th>
-                        <th>Title</th>
-                        <th>Duration</th>
-                        <th>Plays</th>
+                        <th style="width: 10%;">#</th>
+                        <th style="width: 30%;">Artist</th>
+                        <th style="width: 30%;">Title</th>
+                        <th style="width: 15%;">Duration</th>
+                        <th style="width: 15%;">Plays</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -314,11 +333,11 @@ const Tracks = {
         <table class="table is-fullwidth">
             <thead>
                 <tr>
-                    <th>Artist</th>
-                    <th>Album</th>
-                    <th>Title</th>
-                    <th>Duration</th>
-                    <th>Plays</th>
+                    <th style="width: 25%;">Artist</th>
+                    <th style="width: 25%;">Album</th>
+                    <th style="width: 25%;">Title</th>
+                    <th style="width: 15%;">Duration</th>
+                    <th style="width: 10%;">Plays</th>
                 </tr>
             </thead>
             <tbody>
