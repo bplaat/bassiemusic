@@ -216,10 +216,10 @@ export default {
             </div>
 
             <div class="mr-5" style="min-width: 10rem">
-                <p><router-link :to="'/albums/' + playingTrack.album.id" style="font-weight: bold;">{{ playingTrack.title }}</router-link></p>
+                <p><router-link :to="`/albums/${playingTrack.album.id}`" style="font-weight: bold;">{{ playingTrack.title }}</router-link></p>
                 <p>
                     <router-link v-for="artist in playingTrack.artists" :key="artist.id" class="mr-2"
-                        :to="'/artists/' + artist.id">{{ artist.name }}</router-link>
+                        :to="`/artists/${artist.id}`">{{ artist.name }}</router-link>
                 </p>
             </div>
 

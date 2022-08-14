@@ -52,12 +52,12 @@ export default {
                             <img :src="track.album.cover" style="display: block;">
                         </div>
                         <div style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
-                            <p><router-link :to="'/albums/' + track.album.id" style="font-weight: bold;">{{ track.title }}</router-link></p>
+                            <p><router-link :to="`/albums/${track.album.id}`" style="font-weight: bold;">{{ track.title }}</router-link></p>
                             <p><router-link v-for="artist in track.artists" :key="artist.id" class="mr-2"
-                                :to="'/artists/' + artist.id">{{ artist.name }}</router-link></p>
+                                :to="`/artists/${artist.id}`">{{ artist.name }}</router-link></p>
                         </div>
                     </td>
-                    <td style="vertical-align: middle;"><router-link :to="'/albums/' + track.album.id">{{ track.album.title }}</router-link></td>
+                    <td style="vertical-align: middle;"><router-link :to="`/albums/${track.album.id}`">{{ track.album.title }}</router-link></td>
                     <td style="vertical-align: middle;">{{ $filters.formatDuration(track.duration) }}</td>
                     <td style="vertical-align: middle;">{{ track.plays }}</td>
                 </tr>

@@ -30,8 +30,8 @@ export default {
         <h2 class="title">Artists</h2>
         <div class="columns is-multiline">
             <div class="column is-one-fifth" v-for="artist in artists" :key="artist.id">
-                <router-link class="card" :to="'/artists/' + artist.id">
-                    <div class="card-image" :style="{ backgroundImage: 'url(' + artist.image + ')' }"></div>
+                <router-link class="card" :to="`/artists/${artist.id}`">
+                    <div class="card-image" :style="{ backgroundImage: `url(${artist.image})` }"></div>
                     <div class="card-content">
                         <h3 class="title is-6">{{ artist.name }}</h3>
                     </div>

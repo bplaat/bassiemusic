@@ -16,6 +16,10 @@ export default {
         async fetchAlbum(id) {
             const response = await fetch(`${API_URL}/albums/${id}`);
             this.album = await response.json();
+            this.album.tracks = this.album.tracks.map(track => {
+                track.album = this.album;
+                return track;
+            });
         },
 
         playTrack(id) {
@@ -44,7 +48,7 @@ export default {
                     <p class="mb-3">{{ album.released_at.split('T')[0] }}</p>
                     <p>
                         <router-link v-for="artist in album.artists" :key="artist.id" class="mr-2"
-                            :to="'/artists/' + artist.id">{{ artist.name }}</router-link>
+                            :to="`/artists/${artist.id}`">{{ artist.name }}</router-link>
                     </p>
                 </div>
             </div>
@@ -66,7 +70,7 @@ export default {
                         <td>{{ track.position }}</td>
                         <td>
                             <router-link v-for="artist in track.artists" :key="artist.id" class="mr-2"
-                                :to="'/artists/' + artist.id">{{ artist.name }}</router-link>
+                                :to="`/artists/${artist.id}`">{{ artist.name }}</router-link>
                         </td>
                         <td>{{ track.title }}</td>
                         <td>{{ $filters.formatDuration(track.duration) }}</td>
