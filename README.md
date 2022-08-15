@@ -6,10 +6,9 @@ A new online streaming music service thingy
 - MySQL running
 - yt-dlp in PATH
 - ffmpeg in PATH
+- Node.js & NPM
 
 ## TODO
-- Web player previous next
-
 - Accounts: firstname, lastname, email, password (bcrypt), role (normale, admin)
 - Account settings light, dark theme
 - Love tracks and albums add to loved list

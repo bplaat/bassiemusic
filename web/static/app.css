@@ -1,11 +1,17 @@
 body{margin-left:16rem;margin-bottom:6rem;user-select:none;cursor:default}
+
 a{color:currentColor}a:not(.card):hover,a:not(.card):focus{text-decoration:underline}
 .menu-list a{text-decoration:none!important}
+
+.table td{vertical-align:middle}
+
 .sidebar{position:fixed;top:0;left:0;width:16rem;height:calc(100% - 6rem);display:flex;flex-direction:column}
 .flex{flex:1}
-.card-image{padding-top:100%;background-size:cover;background-position:center center}
-.album-cover{width:64px;height:64px;background-size:cover;background-position:center center}
+.player-controls{position:fixed;left:0;bottom:0;width:100%;height:6rem}
+
 .column>.card{display:flex;flex-direction:column;height:100%;margin-bottom:0;overflow:hidden}
 .column>.card>.card-content{flex:1;margin-bottom:0}
-.player-controls{position:fixed;left:0;bottom:0;width:100%;height:6rem}
-.icon{display:block;width:24px;height:24px}.icon>path{fill:currentColor}
+.card-image{padding-top:100%;background-size:cover;background-position:center center}
+
+.icon{display:block;width:24px;height:24px}.icon path{fill:currentColor}
+.icon.is-inline{display:inline-block;vertical-align:middle;transform:translateY(-1px)}
