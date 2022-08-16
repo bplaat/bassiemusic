@@ -156,7 +156,7 @@ function toggleVolume() {
             </div>
 
             <div class="mr-5" style="width: 10rem">
-                <p><a href="/albums/${track.album.id}" style="font-weight: bold;">{track.title}</a></p>
+                <p><a href="/albums/{track.album.id}" style="font-weight: 500;">{track.title}</a></p>
                 <p>
                     {#each track.artists as artist}
                         <a href="/artists/{artist.id}" class="mr-2">{artist.name}</a>

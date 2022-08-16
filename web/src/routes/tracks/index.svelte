@@ -60,7 +60,7 @@ function playTrack(track) {
                         <img src="{track.album.cover}" alt="{track.title} album's cover" style="display: block;">
                     </div>
                     <div style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
-                        <p><a href="/albums/{track.album.id}" style="font-weight: bold;">{track.title}</a></p>
+                        <p><a href="/albums/{track.album.id}" style="font-weight: 500;">{track.title}</a></p>
                         <p>
                             {#if track.explicit}
                                 <span class="tag is-danger mr-1">E</span>

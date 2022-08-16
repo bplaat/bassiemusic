@@ -299,6 +299,53 @@ func authLogout(res http.ResponseWriter, req *http.Request) {
 	// TODO
 }
 
+func usersIndex(res http.ResponseWriter, req *http.Request) {
+	query, page, limit := parseIndexVars(req)
+
+	// Users
+	usersQuery, err := db.Query("SELECT BIN_TO_UUID(`id`), `firstname`, `lastname`, `email`, `created_at`, `updated_at` FROM `users` WHERE `deleted_at` IS NULL AND (`firstname` LIKE ? OR `lastname` LIKE ? OR `email` LIKE ?) ORDER BY LOWER(`lastname`) LIMIT ?, ?", "%"+query+"%", "%"+query+"%", "%"+query+"%", (page-1)*limit, limit)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer usersQuery.Close()
+
+	users := []User{}
+	for usersQuery.Next() {
+		var user User
+		usersQuery.Scan(&user.ID, &user.Firstname, &user.Lastname, &user.Email, &user.CreatedAt, &user.UpdatedAt)
+		users = append(users, user)
+	}
+
+	res.Header().Set("Content-Type", "application/json")
+	res.Header().Set("Access-Control-Allow-Origin", "*")
+	usersJson, _ := json.Marshal(users)
+	res.Write(usersJson)
+}
+
+func usersShow(res http.ResponseWriter, req *http.Request) {
+	vars := mux.Vars(req)
+
+	// User
+	userQuery, err := db.Query("SELECT BIN_TO_UUID(`id`), `firstname`, `lastname`, `email`, `created_at`, `updated_at` FROM `users` WHERE `deleted_at` IS NULL AND `id` = UUID_TO_BIN(?)", vars["id"])
+	if err != nil {
+		notFound(res, req)
+		return
+	}
+	defer userQuery.Close()
+
+	var user User
+	userQuery.Next()
+	if err := userQuery.Scan(&user.ID, &user.Firstname, &user.Lastname, &user.Email, &user.CreatedAt, &user.UpdatedAt); err != nil {
+		notFound(res, req)
+		return
+	}
+
+	res.Header().Set("Content-Type", "application/json")
+	res.Header().Set("Access-Control-Allow-Origin", "*")
+	userJson, _ := json.Marshal(user)
+	res.Write(userJson)
+}
+
 func artistsIndex(res http.ResponseWriter, req *http.Request) {
 	query, page, limit := parseIndexVars(req)
 
@@ -575,8 +622,8 @@ func startServer() {
 	// api.HandleFunc("/auth/sessions/{id}", authSessionShow)
 	// api.HandleFunc("/auth/sessions/{id}/revoke", authSessionRevoke)
 
-	// api.HandleFunc("/users", usersIndex)
-	// api.HandleFunc("/users/{id}", usersShow)
+	api.HandleFunc("/users", usersIndex)
+	api.HandleFunc("/users/{id}", usersShow)
 	// POST api.HandleFunc("/users/{id}", usersEdit)
 
 	api.HandleFunc("/artists", artistsIndex)

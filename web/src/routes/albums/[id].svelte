@@ -93,7 +93,7 @@ function playTrack(track) {
                 class:has-background-light="{$playingQueue.length > 0 && $playingQueue[$playingTrack].id == track.id}">
                 <td>{index + 1}</td>
                 <td>
-                    <p style="font-weight: bold;">{track.title}</p>
+                    <p style="font-weight: 500;">{track.title}</p>
                     <p>
                         {#if track.explicit}
                             <span class="tag is-danger mr-1">E</span>
