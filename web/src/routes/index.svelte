@@ -2,5 +2,5 @@
     <title>Home - BassieMusic</title>
 </svelte:head>
 
-<h1 class="title">BassieMusic</h1>
+<h2 class="title">Home</h2>
 <p>TODO</p>

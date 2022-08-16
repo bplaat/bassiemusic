@@ -2,5 +2,5 @@
     <title>Search - BassieMusic</title>
 </svelte:head>
 
-<h1 class="title">Search</h1>
+<h2 class="title">Search</h2>
 <p>TODO</p>

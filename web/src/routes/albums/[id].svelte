@@ -41,14 +41,35 @@ function playTrack(track) {
 
 <div class="columns">
     <div class="column is-one-quarter mr-5">
-        <div class="box" style="padding: 0; overflow: hidden;">
+        <div class="box" style="position: relative; padding: 0; overflow: hidden;">
             <img src="{album.cover}" alt="{album.title}'s cover" style="display: block;">
+            <div class="card-image-tags">
+                {#if album.type == 'album'}
+                    <span class="tag">ALBUM</span>
+                {/if}
+                {#if album.type == 'ep'}
+                    <span class="tag">EP</span>
+                {/if}
+                {#if album.type == 'single'}
+                    <span class="tag">SINGLE</span>
+                {/if}
+                {#if album.explicit}
+                    <span class="tag is-danger">E</span>
+                {/if}
+            </div>
         </div>
     </div>
 
     <div class="column" style="display: flex; flex-direction: column; justify-content: center;">
         <h2 class="title mb-3">{album.title}</h2>
         <p class="mb-3">{album.released_at.split('T')[0]}</p>
+        {#if album.genres != undefined}
+            <p class="mb-3">
+                {#each album.genres as genre}
+                    <a href="/genres/{genre.id}" class="mr-2">{genre.name}</a>
+                {/each}
+            </p>
+        {/if}
         <p>
             {#each album.artists as artist}
                 <a href="/artists/{artist.id}" class="mr-2">{artist.name}</a>
@@ -72,8 +93,11 @@ function playTrack(track) {
                 class:has-background-light="{$playingQueue.length > 0 && $playingQueue[$playingTrack].id == track.id}">
                 <td>{index + 1}</td>
                 <td>
-                    <p>{track.title}</p>
+                    <p style="font-weight: bold;">{track.title}</p>
                     <p>
+                        {#if track.explicit}
+                            <span class="tag is-danger mr-1">E</span>
+                        {/if}
                         {#each track.artists as artist}
                             <a href="/artists/{artist.id}" class="mr-2">{artist.name}</a>
                         {/each}

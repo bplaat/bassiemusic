@@ -62,6 +62,9 @@ function playTrack(track) {
                     <div style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
                         <p><a href="/albums/{track.album.id}" style="font-weight: bold;">{track.title}</a></p>
                         <p>
+                            {#if track.explicit}
+                                <span class="tag is-danger mr-1">E</span>
+                            {/if}
                             {#each track.artists as artist}
                                 <a href="/artists/{artist.id}" class="mr-2">{artist.name}</a>
                             {/each}

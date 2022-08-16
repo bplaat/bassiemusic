@@ -12,6 +12,7 @@ a{color:currentColor}a:not(.card):hover,a:not(.card):focus{text-decoration:under
 .column>.card{display:flex;flex-direction:column;height:100%;margin-bottom:0;overflow:hidden}
 .column>.card>.card-content{flex:1;margin-bottom:0}
 .card-image{padding-top:100%;background-size:cover;background-position:center center}
+.card-image-tags{position:absolute;top:.5rem;right:.5rem}
 
-.icon{display:block;width:24px;height:24px}.icon path{fill:currentColor}
+.icon{display:block;width:24px;height:24px}.icon:not(.is-colored) path{fill:currentColor}
 .icon.is-inline{display:inline-block;vertical-align:middle;transform:translateY(-1px)}

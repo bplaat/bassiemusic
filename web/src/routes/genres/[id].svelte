@@ -2,11 +2,11 @@
 import { API_URL } from '../../config.js';
 
 export async function load({ params, fetch }) {
-    const response = await fetch(`${API_URL}/artists/${params.id}`);
+    const response = await fetch(`${API_URL}/genres/${params.id}`);
     return {
         status: response.status,
         props: {
-            artist: response.ok && (await response.json())
+            genre: response.ok && (await response.json())
         }
     };
 };
@@ -15,11 +15,11 @@ export async function load({ params, fetch }) {
 <script>
 import AlbumCard from '../../components/AlbumCard.svelte';
 
-export let artist;
+export let genre;
 </script>
 
 <svelte:head>
-    <title>{artist.name} - Artists - BassieMusic</title>
+    <title>{genre.name} - Genres - BassieMusic</title>
 </svelte:head>
 
 <div class="buttons">
@@ -33,24 +33,24 @@ export let artist;
 <div class="columns">
     <div class="column is-one-quarter mr-5">
         <div class="box" style="padding: 0; overflow: hidden;">
-            <img src="{artist.image}" alt="{artist.image}'s image" style="display: block;">
+            <img src="{genre.image}" alt="{genre.image}'s image" style="display: block;">
         </div>
     </div>
 
     <div class="column" style="display: flex; flex-direction: column; justify-content: center;">
-        <h2 class="title">{artist.name}</h2>
+        <h2 class="title">{genre.name}</h2>
     </div>
 </div>
 
 <h2 class="title">Albums</h2>
-{#if artist.albums != undefined}
+{#if genre.albums != undefined}
     <div class="columns is-multiline">
-        {#each artist.albums as album}
+        {#each genre.albums as album}
             <div class="column is-one-fifth">
                 <AlbumCard album={album} />
             </div>
         {/each}
     </div>
 {:else}
-    <p><i>This artist has no albums</i></p>
+    <p><i>This genre has no albums</i></p>
 {/if}

@@ -1,3 +1,32 @@
+CREATE TABLE `users` (
+    `id` BINARY(16) NOT NULL,
+    `firstname` VARCHAR(255) NOT NULL,
+    `lastname` VARCHAR(255) NOT NULL,
+    `email` VARCHAR(255) NOT NULL,
+    `password` VARCHAR(255) NOT NULL,
+    `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `deleted_at` TIMESTAMP NULL,
+    PRIMARY KEY (`id`)
+);
+
+INSERT INTO `users` (`id`, `firstname`, `lastname`, `email`, `password`) VALUES (UUID_TO_BIN(UUID()), 'Bastiaan', 'van der Plaat', 'bastiaan.v.d.plaat@gmail.com', '$2y$10$dYo9.ABRMCdxo6fDdlWC7uL7MHbaD7sQFDPtVh97feHVnsQEgJh9m');
+
+CREATE TABLE `sessions` (
+    `id` BINARY(16) NOT NULL,
+    `user_id` BINARY(16) NOT NULL,
+    `token` VARCHAR(255) NOT NULL,
+    `os` VARCHAR(32) NULL,
+    `platform` VARCHAR(32) NULL,
+    `version` VARCHAR(32) NULL,
+    `expires_at` TIMESTAMP NOT NULL,
+    `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `deleted_at` TIMESTAMP NULL,
+    PRIMARY KEY (`id`),
+    FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
+);
+
 CREATE TABLE `artists` (
     `id` BINARY(16) NOT NULL,
     `name` VARCHAR(255) NOT NULL,
@@ -13,6 +42,7 @@ CREATE TABLE `albums` (
     `type` TINYINT NOT NULL,
     `title` VARCHAR(255) NOT NULL,
     `released_at` DATE NOT NULL,
+    `explicit` BOOLEAN NOT NULL,
     `deezer_id` BIGINT UNSIGNED NOT NULL,
     `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -25,8 +55,8 @@ CREATE TABLE `album_artist` (
     `album_id` BINARY(16) NOT NULL,
     `artist_id` BINARY(16) NOT NULL,
     PRIMARY KEY (`id`),
-    FOREIGN KEY (`album_id`) REFERENCES `albums`(`id`),
-    FOREIGN KEY (`artist_id`) REFERENCES `artists`(`id`)
+    FOREIGN KEY (`album_id`) REFERENCES `albums`(`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`artist_id`) REFERENCES `artists`(`id`) ON DELETE CASCADE
 );
 
 CREATE TABLE `genres` (
@@ -44,8 +74,8 @@ CREATE TABLE `album_genre` (
     `album_id` BINARY(16) NOT NULL,
     `genre_id` BINARY(16) NOT NULL,
     PRIMARY KEY (`id`),
-    FOREIGN KEY (`album_id`) REFERENCES `albums`(`id`),
-    FOREIGN KEY (`genre_id`) REFERENCES `genres`(`id`)
+    FOREIGN KEY (`album_id`) REFERENCES `albums`(`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`genre_id`) REFERENCES `genres`(`id`) ON DELETE CASCADE
 );
 
 CREATE TABLE `tracks` (
@@ -55,6 +85,7 @@ CREATE TABLE `tracks` (
     `disk` INT UNSIGNED NOT NULL,
     `position` INT UNSIGNED NOT NULL,
     `duration` INT UNSIGNED NOT NULL,
+    `explicit` BOOLEAN NOT NULL,
     `deezer_id` BIGINT UNSIGNED NOT NULL,
     `youtube_id` VARCHAR(16) NOT NULL,
     `plays` BIGINT UNSIGNED NOT NULL DEFAULT 0,
@@ -62,7 +93,7 @@ CREATE TABLE `tracks` (
     `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     `deleted_at` TIMESTAMP NULL,
     PRIMARY KEY (`id`),
-    FOREIGN KEY (`album_id`) REFERENCES `albums`(`id`)
+    FOREIGN KEY (`album_id`) REFERENCES `albums`(`id`) ON DELETE CASCADE
 );
 
 CREATE TABLE `track_artist` (
@@ -70,6 +101,16 @@ CREATE TABLE `track_artist` (
     `track_id` BINARY(16) NOT NULL,
     `artist_id` BINARY(16) NOT NULL,
     PRIMARY KEY (`id`),
-    FOREIGN KEY (`track_id`) REFERENCES `tracks`(`id`),
-    FOREIGN KEY (`artist_id`) REFERENCES `artists`(`id`)
+    FOREIGN KEY (`track_id`) REFERENCES `tracks`(`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`artist_id`) REFERENCES `artists`(`id`) ON DELETE CASCADE
 );
+
+-- artist_likes
+-- album_likes
+-- track_likes
+
+-- track_play
+--     track_id
+--     user_id
+--     timestamps
+-- track playing state local

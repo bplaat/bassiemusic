@@ -47,14 +47,28 @@ func createGenre(id int, name string) string {
 		return genreId
 	}
 
+	var genre DeezerGenre
+	fetchJson(fmt.Sprintf("https://api.deezer.com/genre/%d", id), &genre)
+
 	genreId := uuid.NewV4()
 	db.Exec("INSERT INTO `genres` (`id`, `name`, `deezer_id`) VALUES (UUID_TO_BIN(?), ?, ?)", genreId.String(), name, id)
+	fetchFile(genre.PictureXl, fmt.Sprintf("storage/genres/%s.jpg", genreId.String()))
 	return genreId.String()
 }
 
 func downloadAlbum(id int) {
 	var album DeezerAlbum
 	fetchJson(fmt.Sprintf("https://api.deezer.com/album/%d", id), &album)
+
+	// Check if album already exists
+	albums, err := db.Query("SELECT BIN_TO_UUID(`id`) FROM `albums` WHERE `title` = ?", album.Title)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer albums.Close()
+	if albums.Next() {
+		return
+	}
 
 	// Create album row
 	albumType := AlbumTypeAlbum
@@ -65,8 +79,8 @@ func downloadAlbum(id int) {
 		albumType = AlbumTypeSingle
 	}
 	albumId := uuid.NewV4()
-	db.Exec("INSERT INTO `albums` (`id`, `type`, `title`, `released_at`, `deezer_id`) VALUES (UUID_TO_BIN(?), ?, ?, ?, ?)",
-		albumId.String(), albumType, album.Title, album.ReleaseDate, album.ID)
+	db.Exec("INSERT INTO `albums` (`id`, `type`, `title`, `released_at`, `explicit`, `deezer_id`) VALUES (UUID_TO_BIN(?), ?, ?, ?, ?, ?)",
+		albumId.String(), albumType, album.Title, album.ReleaseDate, album.ExplicitLyrics, album.ID)
 	fmt.Printf("%s by %s\n", album.Title, album.Artist.Name)
 
 	// Create album genres
@@ -109,8 +123,8 @@ func downloadAlbum(id int) {
 				searchCommand.Process.Signal(syscall.SIGTERM)
 
 				trackId := uuid.NewV4()
-				db.Exec("INSERT INTO `tracks` (`id`, `album_id`, `title`, `disk`, `position`, `duration`, `deezer_id`, `youtube_id`) VALUES (UUID_TO_BIN(?), UUID_TO_BIN(?), ?, ?, ?, ?, ?, ?)",
-					trackId.String(), albumId.String(), track.Title, track.DiskNumber, track.TrackPosition, video.Duration, track.ID, video.ID)
+				db.Exec("INSERT INTO `tracks` (`id`, `album_id`, `title`, `disk`, `position`, `duration`, `explicit`, `deezer_id`, `youtube_id`) VALUES (UUID_TO_BIN(?), UUID_TO_BIN(?), ?, ?, ?, ?, ?, ?, ?)",
+					trackId.String(), albumId.String(), track.Title, track.DiskNumber, track.TrackPosition, video.Duration, track.ExplicitLyrics, track.ID, video.ID)
 
 				// Create track artists bindings
 				for _, artist := range track.Contributors {
@@ -152,6 +166,9 @@ func startAdd() {
 	}
 	if _, err := os.Stat("storage/albums"); os.IsNotExist(err) {
 		os.Mkdir("storage/albums", 0755)
+	}
+	if _, err := os.Stat("storage/genres"); os.IsNotExist(err) {
+		os.Mkdir("storage/genres", 0755)
 	}
 	if _, err := os.Stat("storage/tracks"); os.IsNotExist(err) {
 		os.Mkdir("storage/tracks", 0755)

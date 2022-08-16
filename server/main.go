@@ -28,24 +28,14 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	// Run subcommand
+	// Run a subcommand
 	if len(os.Args) >= 2 {
 		if os.Args[1] == "add" {
 			startAdd()
 			return
 		}
-
-		if os.Args[1] == "remove" {
-			startRemove()
-			return
-		}
-
-		if os.Args[1] == "server" {
-			startServer()
-			return
-		}
 	}
 
-	// Print error when no or unkown subcommand is given
-	log.Fatalln("Expected add, remove or server command")
+	// Else start the server
+	startServer()
 }
