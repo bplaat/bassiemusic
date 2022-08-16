@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 )
 
 func fetch(url string) []byte {
@@ -79,4 +80,45 @@ func HashPassword(password string) (string, error) {
 func VerifyPassword(password string, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	return err == nil
+}
+
+func parseIndexVars(req *http.Request) (string, int, int) {
+	queryVars := req.URL.Query()
+
+	query := ""
+	if queryVar, ok := queryVars["query"]; ok {
+		query = queryVar[0]
+	}
+
+	page := 1
+	if pageVar, ok := queryVars["page"]; ok {
+		if pageInt, err := strconv.Atoi(pageVar[0]); err == nil {
+			page = pageInt
+			if page < 1 {
+				page = 1
+			}
+		}
+	}
+
+	limit := 20
+	if limitVar, ok := queryVars["limit"]; ok {
+		if limitInt, err := strconv.Atoi(limitVar[0]); err == nil {
+			limit = limitInt
+			if limit < 1 {
+				limit = 1
+			}
+			if limit > 50 {
+				limit = 50
+			}
+		}
+	}
+
+	return query, page, limit
+}
+
+func jsonResponse(res http.ResponseWriter, data any) {
+	res.Header().Set("Content-Type", "application/json")
+	res.Header().Set("Access-Control-Allow-Origin", "*")
+	dataJson, _ := json.Marshal(data)
+	res.Write(dataJson)
 }

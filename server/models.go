@@ -1,0 +1,202 @@
+package main
+
+import (
+	"fmt"
+	"log"
+	"net/http"
+	"time"
+)
+
+type User struct {
+	ID        string    `json:"id"`
+	Firstname string    `json:"firstname"`
+	Lastname  string    `json:"lastname"`
+	Email     string    `json:"email"`
+	Password  string    `json:"-"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
+type Artist struct {
+	ID        string    `json:"id"`
+	Name      string    `json:"name"`
+	Image     string    `json:"image"`
+	Albums    []Album   `json:"albums,omitempty"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
+type Album struct {
+	ID         string    `json:"id"`
+	Type       string    `json:"type"`
+	Title      string    `json:"title"`
+	ReleasedAt time.Time `json:"released_at"`
+	Explicit   bool      `json:"explicit"`
+	Cover      string    `json:"cover"`
+	Genres     []Genre   `json:"genres,omitempty"`
+	Artists    []Artist  `json:"artists,omitempty"`
+	Tracks     []Track   `json:"tracks,omitempty"`
+	CreatedAt  time.Time `json:"created_at"`
+	UpdatedAt  time.Time `json:"updated_at"`
+}
+
+type AlbumType int
+
+const AlbumTypeAlbum AlbumType = 0
+const AlbumTypeEP AlbumType = 1
+const AlbumTypeSingle AlbumType = 2
+
+type Genre struct {
+	ID        string    `json:"id"`
+	Name      string    `json:"name"`
+	Image     string    `json:"image"`
+	Albums    []Album   `json:"albums,omitempty"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
+type Track struct {
+	ID        string    `json:"id"`
+	Title     string    `json:"title"`
+	Disk      int       `json:"disk"`
+	Position  int       `json:"position"`
+	Duration  int       `json:"duration"`
+	Explicit  bool      `json:"explicit"`
+	Plays     int64     `json:"plays"`
+	Music     string    `json:"music"`
+	Album     *Album    `json:"album,omitempty"`
+	Artists   []Artist  `json:"artists,omitempty"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
+func artistAlbums(artist *Artist, req *http.Request) {
+	albumsQuery, err := db.Query("SELECT BIN_TO_UUID(`id`), `type`, `title`, `released_at`, `explicit`, `created_at`, `updated_at` FROM `albums` WHERE `deleted_at` IS NULL AND `id` IN (SELECT `album_id` FROM `album_artist` WHERE `artist_id` = UUID_TO_BIN(?)) ORDER BY `released_at` DESC", artist.ID)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer albumsQuery.Close()
+	for albumsQuery.Next() {
+		var album Album
+		var albumType AlbumType
+		albumsQuery.Scan(&album.ID, &albumType, &album.Title, &album.ReleasedAt, &album.Explicit, &album.CreatedAt, &album.UpdatedAt)
+		if albumType == AlbumTypeAlbum {
+			album.Type = "album"
+		}
+		if albumType == AlbumTypeEP {
+			album.Type = "ep"
+		}
+		if albumType == AlbumTypeSingle {
+			album.Type = "single"
+		}
+		album.Cover = fmt.Sprintf("http://%s/storage/albums/%s.jpg", req.Host, album.ID)
+		albumArtists(&album, req)
+		artist.Albums = append(artist.Albums, album)
+	}
+}
+
+func albumGenres(album *Album, req *http.Request) {
+	genresQuery, err := db.Query("SELECT BIN_TO_UUID(`id`), `name`, `created_at`, `updated_at` FROM `genres` WHERE `deleted_at` IS NULL AND `id` IN (SELECT `genre_id` FROM `album_genre` WHERE `album_id` = UUID_TO_BIN(?)) ORDER BY LOWER(`name`)", album.ID)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer genresQuery.Close()
+	for genresQuery.Next() {
+		var genre Genre
+		genresQuery.Scan(&genre.ID, &genre.Name, &genre.CreatedAt, &genre.UpdatedAt)
+		genre.Image = fmt.Sprintf("http://%s/storage/genres/%s.jpg", req.Host, genre.ID)
+		album.Genres = append(album.Genres, genre)
+	}
+}
+
+func albumArtists(album *Album, req *http.Request) {
+	artistsQuery, err := db.Query("SELECT BIN_TO_UUID(`id`), `name`, `created_at`, `updated_at` FROM `artists` WHERE `deleted_at` IS NULL AND `id` IN (SELECT `artist_id` FROM `album_artist` WHERE `album_id` = UUID_TO_BIN(?)) ORDER BY LOWER(`name`)", album.ID)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer artistsQuery.Close()
+	for artistsQuery.Next() {
+		var artist Artist
+		artistsQuery.Scan(&artist.ID, &artist.Name, &artist.CreatedAt, &artist.UpdatedAt)
+		artist.Image = fmt.Sprintf("http://%s/storage/artists/%s.jpg", req.Host, artist.ID)
+		album.Artists = append(album.Artists, artist)
+	}
+}
+
+func albumTracks(album *Album, req *http.Request) {
+	tracksQuery, err := db.Query("SELECT BIN_TO_UUID(`id`), `title`, `disk`, `position`, `duration`, `explicit`, `plays`, `created_at`, `updated_at` FROM `tracks` WHERE `deleted_at` IS NULL AND `album_id` = UUID_TO_BIN(?) ORDER BY `disk`, `position`", album.ID)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer tracksQuery.Close()
+	for tracksQuery.Next() {
+		var track Track
+		tracksQuery.Scan(&track.ID, &track.Title, &track.Disk, &track.Position, &track.Duration, &track.Explicit, &track.Plays, &track.CreatedAt, &track.UpdatedAt)
+		track.Music = fmt.Sprintf("http://%s/storage/tracks/%s.m4a", req.Host, track.ID)
+		trackArtists(&track, req)
+		album.Tracks = append(album.Tracks, track)
+	}
+}
+
+func genreAlbums(genre *Genre, req *http.Request) {
+	albumsQuery, err := db.Query("SELECT BIN_TO_UUID(`id`), `type`, `title`, `released_at`, `explicit`, `created_at`, `updated_at` FROM `albums` WHERE `deleted_at` IS NULL AND `id` IN (SELECT `album_id` FROM `album_genre` WHERE `genre_id` = UUID_TO_BIN(?)) ORDER BY `released_at` DESC", genre.ID)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer albumsQuery.Close()
+	for albumsQuery.Next() {
+		var album Album
+		var albumType AlbumType
+		albumsQuery.Scan(&album.ID, &albumType, &album.Title, &album.ReleasedAt, &album.Explicit, &album.CreatedAt, &album.UpdatedAt)
+		if albumType == AlbumTypeAlbum {
+			album.Type = "album"
+		}
+		if albumType == AlbumTypeEP {
+			album.Type = "ep"
+		}
+		if albumType == AlbumTypeSingle {
+			album.Type = "single"
+		}
+		album.Cover = fmt.Sprintf("http://%s/storage/albums/%s.jpg", req.Host, album.ID)
+		albumArtists(&album, req)
+		genre.Albums = append(genre.Albums, album)
+	}
+}
+
+func trackArtists(track *Track, req *http.Request) {
+	artistsQuery, err := db.Query("SELECT BIN_TO_UUID(`id`), `name`, `created_at`, `updated_at` FROM `artists` WHERE `deleted_at` IS NULL AND `id` IN (SELECT `artist_id` FROM `track_artist` WHERE `track_id` = UUID_TO_BIN(?)) ORDER BY LOWER(`name`)", track.ID)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer artistsQuery.Close()
+	for artistsQuery.Next() {
+		var artist Artist
+		artistsQuery.Scan(&artist.ID, &artist.Name, &artist.CreatedAt, &artist.UpdatedAt)
+		artist.Image = fmt.Sprintf("http://%s/storage/artists/%s.jpg", req.Host, artist.ID)
+		track.Artists = append(track.Artists, artist)
+	}
+}
+
+func trackAlbum(track *Track, albumID string, req *http.Request) {
+	albumsQuery, err := db.Query("SELECT BIN_TO_UUID(`id`), `type`, `title`, `released_at`, `explicit`, `created_at`, `updated_at` FROM `albums` WHERE `deleted_at` IS NULL AND `id` = UUID_TO_BIN(?)", albumID)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer albumsQuery.Close()
+
+	var album Album
+	var albumType AlbumType
+	albumsQuery.Next()
+	albumsQuery.Scan(&album.ID, &albumType, &album.Title, &album.ReleasedAt, &album.Explicit, &album.CreatedAt, &album.UpdatedAt)
+	if albumType == AlbumTypeAlbum {
+		album.Type = "album"
+	}
+	if albumType == AlbumTypeEP {
+		album.Type = "ep"
+	}
+	if albumType == AlbumTypeSingle {
+		album.Type = "single"
+	}
+	album.Cover = fmt.Sprintf("http://%s/storage/albums/%s.jpg", req.Host, album.ID)
+	track.Album = &album
+}
