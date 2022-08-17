@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -13,7 +14,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/mileusna/useragent"
-	"github.com/satori/go.uuid"
+	uuid "github.com/satori/go.uuid"
 )
 
 func authLogin(c *fiber.Ctx) error {
@@ -307,18 +308,35 @@ func startServer() {
 		return c.SendString("BassieMusic API")
 	})
 
-	storage := app.Group("/storage")
-	storage.Use(etag.New())
+	storage := app.Group("/storage", etag.New())
 	storage.Static("/", "./storage")
 
-	api := app.Group("/api")
-	api.Use(limiter.New(limiter.Config{
+	api := app.Group("/api/v1", limiter.New(limiter.Config{
 		Expiration: 60 * time.Second,
 		Max:        100,
 	}))
 
 	api.Get("/auth/login", authLogin)
 	api.Get("/auth/logout", authLogout)
+
+	api.Use(func(c *fiber.Ctx) error {
+		token := c.Query("token")
+		if strings.HasPrefix(c.Get("Authorization"), "Bearer ") {
+			token = c.Get("Authorization")[7:]
+		}
+
+		// Get session by token
+		realToken, _ := base64.RawStdEncoding.DecodeString(token)
+		sessionQuery, err := db.Query("SELECT BIN_TO_UUID(`id`) FROM `sessions` WHERE `deleted_at` IS NULL AND `token` = ? AND `expires_at` > NOW()", string(realToken))
+		if err != nil {
+			log.Fatalln(err)
+		}
+		defer sessionQuery.Close()
+		if !sessionQuery.Next() {
+			return fiber.ErrUnauthorized
+		}
+		return c.Next()
+	})
 
 	// api.Get("/auth/sessions", authSessionIndex)
 	// api.Get("/auth/sessions/:id", authSessionShow)

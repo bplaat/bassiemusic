@@ -18,6 +18,17 @@ type User struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
+type Session struct {
+	ID        string    `json:"id"`
+	User      User      `json:"user"`
+	OS        string    `json:"os"`
+	Platform  string    `json:"platform"`
+	Version   string    `json:"version"`
+	ExpiresAt time.Time `json:"expires_at"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
 type Artist struct {
 	ID        string    `json:"id"`
 	Name      string    `json:"name"`

@@ -10,7 +10,7 @@ import (
 	"os/exec"
 	"syscall"
 
-	"github.com/satori/go.uuid"
+	uuid "github.com/satori/go.uuid"
 )
 
 const TRACK_DURATION_SLACK int = 5
