@@ -1,5 +1,5 @@
 <script>
-import { API_URL, UPDATE_TIMEOUT, SEEK_TIME } from '../config.js';
+import { API_URL, PLAYER_UPDATE_UI_TIMEOUT, PLAYER_UPDATE_SERVER_TIMEOUT, PLAYER_SEEK_TIME } from '../config.js';
 import { playingTrack, playingQueue, audioVolume } from '../stores.js';
 import { formatDuration } from '../filters.js';
 
@@ -11,8 +11,6 @@ $: track = $playingQueue[$playingTrack];
 playingTrack.subscribe(playingTrack => {
     if ($playingQueue.length == 0) return;
     const track = $playingQueue[playingTrack];
-
-    fetch(`${API_URL}/tracks/${track.id}/play`);
 
     if (audio != undefined) {
         audio.pause();
@@ -62,10 +60,21 @@ function updatePositionState() {
     }
 }
 
-function updateCurrentTime() {
+function updateUiLoop() {
     audioCurrentTime = audio.currentTime;
     if (isPlaying) {
-        setTimeout(updateCurrentTime, UPDATE_TIMEOUT);
+        setTimeout(updateUiLoop, PLAYER_UPDATE_UI_TIMEOUT);
+    }
+}
+
+async function updateServerLoop() {
+    await fetch(`${API_URL}/tracks/${track.id}/play?position=${audio.currentTime}`, {
+        headers: {
+            Authorization: 'Bearer ' + localStorage.token
+        }
+    });
+    if (isPlaying) {
+        setTimeout(updateServerLoop, PLAYER_UPDATE_SERVER_TIMEOUT);
     }
 }
 
@@ -87,7 +96,7 @@ function previousTrack() {
 
 function seekBackward(details) {
     if (!isPlaying) play();
-    audio.currentTime = Math.max(0, audio.currentTime - (details.seekOffset || SEEK_TIME));
+    audio.currentTime = Math.max(0, audio.currentTime - (details.seekOffset || PLAYER_SEEK_TIME));
     updatePositionState();
 }
 
@@ -97,7 +106,8 @@ function play() {
         navigator.mediaSession.playbackState = 'playing';
     }
     isPlaying = true;
-    updateCurrentTime();
+    updateUiLoop();
+    updateServerLoop();
     updatePositionState();
 }
 
@@ -119,7 +129,7 @@ function playPause() {
 
 function seekForward(details) {
     if (!isPlaying) play();
-    audio.currentTime = Math.min(audio.duration, audio.currentTime + (details.seekOffset || SEEK_TIME));
+    audio.currentTime = Math.min(audio.duration, audio.currentTime + (details.seekOffset || PLAYER_SEEK_TIME));
     updatePositionState();
 }
 

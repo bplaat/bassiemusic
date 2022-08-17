@@ -84,7 +84,7 @@ CREATE TABLE `tracks` (
     `title` VARCHAR(255) NOT NULL,
     `disk` INT UNSIGNED NOT NULL,
     `position` INT UNSIGNED NOT NULL,
-    `duration` INT UNSIGNED NOT NULL,
+    `duration` FLOAT NOT NULL,
     `explicit` BOOLEAN NOT NULL,
     `deezer_id` BIGINT UNSIGNED NOT NULL,
     `youtube_id` VARCHAR(16) NOT NULL,
@@ -105,12 +105,19 @@ CREATE TABLE `track_artist` (
     FOREIGN KEY (`artist_id`) REFERENCES `artists`(`id`) ON DELETE CASCADE
 );
 
+CREATE TABLE `track_play` (
+    `id` BINARY(16) NOT NULL,
+    `user_id` BINARY(16) NOT NULL,
+    `track_id` BINARY(16) NOT NULL,
+    `position` FLOAT NOT NULL,
+    `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `deleted_at` TIMESTAMP NULL,
+    PRIMARY KEY (`id`),
+    FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`track_id`) REFERENCES `tracks`(`id`) ON DELETE CASCADE
+);
+
 -- artist_likes
 -- album_likes
 -- track_likes
-
--- track_play
---     track_id
---     user_id
---     timestamps
--- track playing state local

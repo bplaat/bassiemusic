@@ -2,7 +2,11 @@
 import { API_URL } from '../../config.js';
 
 export async function load({ fetch }) {
-    const response = await fetch(`${API_URL}/genres`);
+    const response = await fetch(`${API_URL}/genres`, {
+        headers: {
+            Authorization: 'Bearer ' + localStorage.token
+        }
+    });
     return {
         status: response.status,
         props: {
@@ -16,7 +20,11 @@ export async function load({ fetch }) {
 export let genres;
 
 async function fetchPage(page) {
-    const response = await fetch(`${API_URL}/genres?page=${page}`);
+    const response = await fetch(`${API_URL}/genres?page=${page}`, {
+        headers: {
+            Authorization: 'Bearer ' + localStorage.token
+        }
+    });
     const newGenres = await response.json();
     if (newGenres.length > 0) {
         genres.push(...newGenres);

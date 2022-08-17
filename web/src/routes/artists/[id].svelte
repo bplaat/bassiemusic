@@ -2,7 +2,11 @@
 import { API_URL } from '../../config.js';
 
 export async function load({ params, fetch }) {
-    const response = await fetch(`${API_URL}/artists/${params.id}`);
+    const response = await fetch(`${API_URL}/artists/${params.id}`, {
+        headers: {
+            Authorization: 'Bearer ' + localStorage.token
+        }
+    });
     return {
         status: response.status,
         props: {

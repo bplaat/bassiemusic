@@ -282,6 +282,13 @@ func tracksShow(c *fiber.Ctx) error {
 }
 
 func tracksPlay(c *fiber.Ctx) error {
+	// Get users last track_play
+
+	// If different track create new
+	// - update track plays
+
+	// Else update last track_play with new position
+
 	trackssQuery, err := db.Query("SELECT `plays` FROM `tracks` WHERE `deleted_at` IS NULL AND `id` = UUID_TO_BIN(?)", c.Params("trackID"))
 	if err != nil {
 		log.Fatalln(err)

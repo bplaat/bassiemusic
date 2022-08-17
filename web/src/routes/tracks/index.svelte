@@ -2,7 +2,11 @@
 import { API_URL } from '../../config.js';
 
 export async function load({ fetch }) {
-    const response = await fetch(`${API_URL}/tracks?limit=50`);
+    const response = await fetch(`${API_URL}/tracks?limit=50`, {
+        headers: {
+            Authorization: 'Bearer ' + localStorage.token
+        }
+    });
     return {
         status: response.status,
         props: {
@@ -19,7 +23,11 @@ import { formatDuration } from '../../filters.js';
 export let tracks;
 
 async function fetchPage(page) {
-    const response = await fetch(`${API_URL}/tracks?page=${page}&limit=50`);
+    const response = await fetch(`${API_URL}/tracks?page=${page}&limit=50`, {
+        headers: {
+            Authorization: 'Bearer ' + localStorage.token
+        }
+    });
     const newTracks = await response.json();
     if (newTracks.length > 0) {
         tracks.push(...newTracks);

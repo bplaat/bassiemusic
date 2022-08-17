@@ -2,7 +2,11 @@
 import { API_URL } from '../../config.js';
 
 export async function load({ fetch }) {
-    const response = await fetch(`${API_URL}/albums`);
+    const response = await fetch(`${API_URL}/albums`, {
+        headers: {
+            Authorization: 'Bearer ' + localStorage.token
+        }
+    });
     return {
         status: response.status,
         props: {
@@ -18,7 +22,11 @@ import AlbumCard from '../../components/AlbumCard.svelte';
 export let albums;
 
 async function fetchPage(page) {
-    const response = await fetch(`${API_URL}/albums?page=${page}`);
+    const response = await fetch(`${API_URL}/albums?page=${page}`, {
+        headers: {
+            Authorization: 'Bearer ' + localStorage.token
+        }
+    });
     const newAlbums = await response.json();
     if (newAlbums.length > 0) {
         albums.push(...newAlbums);

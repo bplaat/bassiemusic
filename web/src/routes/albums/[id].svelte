@@ -2,7 +2,11 @@
 import { API_URL } from '../../config.js';
 
 export async function load({ params, fetch }) {
-    const response = await fetch(`${API_URL}/albums/${params.id}`);
+    const response = await fetch(`${API_URL}/albums/${params.id}`, {
+        headers: {
+            Authorization: 'Bearer ' + localStorage.token
+        }
+    });
     const album = await response.json();
     for (const track of album.tracks) {
         track.album = album;
