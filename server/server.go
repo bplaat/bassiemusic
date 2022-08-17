@@ -4,7 +4,6 @@ import (
 	"encoding/base64"
 	"fmt"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -73,8 +72,10 @@ func authLogin(c *fiber.Ctx) error {
 }
 
 func authLogout(c *fiber.Ctx) error {
-	// TODO
-	return fiber.ErrNotFound
+	db.Exec("UPDATE `sessions` SET `expires_at` = NOW() WHERE `deleted_at` IS NULL AND `token` = ?", parseTokenVar(c))
+	return c.JSON(fiber.Map{
+		"success": true,
+	})
 }
 
 func usersIndex(c *fiber.Ctx) error {
@@ -95,7 +96,7 @@ func usersIndex(c *fiber.Ctx) error {
 }
 
 func usersShow(c *fiber.Ctx) error {
-	userQuery, err := db.Query("SELECT BIN_TO_UUID(`id`), `firstname`, `lastname`, `email`, `created_at`, `updated_at` FROM `users` WHERE `deleted_at` IS NULL AND `id` = UUID_TO_BIN(?)", c.Params("id"))
+	userQuery, err := db.Query("SELECT BIN_TO_UUID(`id`), `firstname`, `lastname`, `email`, `created_at`, `updated_at` FROM `users` WHERE `deleted_at` IS NULL AND `id` = UUID_TO_BIN(?)", c.Params("userID"))
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -129,7 +130,7 @@ func artistsIndex(c *fiber.Ctx) error {
 }
 
 func artistsShow(c *fiber.Ctx) error {
-	artistQuery, err := db.Query("SELECT BIN_TO_UUID(`id`), `name`, `created_at`, `updated_at` FROM `artists` WHERE `deleted_at` IS NULL AND `id` = UUID_TO_BIN(?)", c.Params("id"))
+	artistQuery, err := db.Query("SELECT BIN_TO_UUID(`id`), `name`, `created_at`, `updated_at` FROM `artists` WHERE `deleted_at` IS NULL AND `id` = UUID_TO_BIN(?)", c.Params("artistID"))
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -176,7 +177,7 @@ func albumsIndex(c *fiber.Ctx) error {
 }
 
 func albumsShow(c *fiber.Ctx) error {
-	albumsQuery, err := db.Query("SELECT BIN_TO_UUID(`id`), `type`, `title`, `released_at`, `explicit`, `created_at`, `updated_at` FROM `albums` WHERE `deleted_at` IS NULL AND `id` = UUID_TO_BIN(?)", c.Params("id"))
+	albumsQuery, err := db.Query("SELECT BIN_TO_UUID(`id`), `type`, `title`, `released_at`, `explicit`, `created_at`, `updated_at` FROM `albums` WHERE `deleted_at` IS NULL AND `id` = UUID_TO_BIN(?)", c.Params("albumID"))
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -224,7 +225,7 @@ func genresIndex(c *fiber.Ctx) error {
 }
 
 func genresShow(c *fiber.Ctx) error {
-	genreQuery, err := db.Query("SELECT BIN_TO_UUID(`id`), `name`, `created_at`, `updated_at` FROM `genres` WHERE `deleted_at` IS NULL AND `id` = UUID_TO_BIN(?)", c.Params("id"))
+	genreQuery, err := db.Query("SELECT BIN_TO_UUID(`id`), `name`, `created_at`, `updated_at` FROM `genres` WHERE `deleted_at` IS NULL AND `id` = UUID_TO_BIN(?)", c.Params("genreID"))
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -262,7 +263,7 @@ func tracksIndex(c *fiber.Ctx) error {
 }
 
 func tracksShow(c *fiber.Ctx) error {
-	trackssQuery, err := db.Query("SELECT BIN_TO_UUID(`id`), BIN_TO_UUID(`album_id`), `title`, `disk`, `position`, `duration`, `explicit`, `plays`, `created_at`, `updated_at` FROM `tracks` WHERE `deleted_at` IS NULL AND `id` = UUID_TO_BIN(?)", c.Params("id"))
+	trackssQuery, err := db.Query("SELECT BIN_TO_UUID(`id`), BIN_TO_UUID(`album_id`), `title`, `disk`, `position`, `duration`, `explicit`, `plays`, `created_at`, `updated_at` FROM `tracks` WHERE `deleted_at` IS NULL AND `id` = UUID_TO_BIN(?)", c.Params("trackID"))
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -281,7 +282,7 @@ func tracksShow(c *fiber.Ctx) error {
 }
 
 func tracksPlay(c *fiber.Ctx) error {
-	trackssQuery, err := db.Query("SELECT `plays` FROM `tracks` WHERE `deleted_at` IS NULL AND `id` = UUID_TO_BIN(?)", c.Params("id"))
+	trackssQuery, err := db.Query("SELECT `plays` FROM `tracks` WHERE `deleted_at` IS NULL AND `id` = UUID_TO_BIN(?)", c.Params("trackID"))
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -292,7 +293,7 @@ func tracksPlay(c *fiber.Ctx) error {
 		return fiber.ErrNotFound
 	}
 	trackssQuery.Scan(&plays)
-	db.Exec("UPDATE `tracks` SET `plays` = ? WHERE `deleted_at` IS NULL AND `id` = UUID_TO_BIN(?)", plays+1, c.Params("id"))
+	db.Exec("UPDATE `tracks` SET `plays` = ? WHERE `deleted_at` IS NULL AND `id` = UUID_TO_BIN(?)", plays+1, c.Params("trackID"))
 	return c.JSON(fiber.Map{
 		"success": true,
 	})
@@ -317,17 +318,11 @@ func startServer() {
 	}))
 
 	api.Get("/auth/login", authLogin)
-	api.Get("/auth/logout", authLogout)
 
 	api.Use(func(c *fiber.Ctx) error {
-		token := c.Query("token")
-		if strings.HasPrefix(c.Get("Authorization"), "Bearer ") {
-			token = c.Get("Authorization")[7:]
-		}
-
-		// Get session by token
-		realToken, _ := base64.RawStdEncoding.DecodeString(token)
-		sessionQuery, err := db.Query("SELECT BIN_TO_UUID(`id`) FROM `sessions` WHERE `deleted_at` IS NULL AND `token` = ? AND `expires_at` > NOW()", string(realToken))
+		// Check session by token
+		token := parseTokenVar(c)
+		sessionQuery, err := db.Query("SELECT BIN_TO_UUID(`id`) FROM `sessions` WHERE `deleted_at` IS NULL AND `token` = ? AND `expires_at` > NOW()", token)
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -337,27 +332,27 @@ func startServer() {
 		}
 		return c.Next()
 	})
-
-	// api.Get("/auth/sessions", authSessionIndex)
-	// api.Get("/auth/sessions/:id", authSessionShow)
-	// api.Get("/auth/sessions/:id/revoke", authSessionRevoke)
+	api.Get("/auth/logout", authLogout)
 
 	api.Get("/users", usersIndex)
-	api.Get("/users/:id", usersShow)
-	// api.Post("/users/:id", usersEdit)
+	api.Get("/users/:userID", usersShow)
+	// api.Get("/users/:userID/sessions", usersSessionsIndex)
+	// api.Get("/users/:userID/sessions/:sessionID", usersSessionsShow)
+	// api.Get("/users/:userID/sessions/:sessionID/revoke", usersSessionsRevoke)
+	// api.Post("/users/:userID", usersEdit)
 
 	api.Get("/artists", artistsIndex)
-	api.Get("/artists/:id", artistsShow)
+	api.Get("/artists/:artistID", artistsShow)
 
 	api.Get("/albums", albumsIndex)
-	api.Get("/albums/:id", albumsShow)
+	api.Get("/albums/:albumID", albumsShow)
 
 	api.Get("/genres", genresIndex)
-	api.Get("/genres/:id", genresShow)
+	api.Get("/genres/:genreID", genresShow)
 
 	api.Get("/tracks", tracksIndex)
-	api.Get("/tracks/:id", tracksShow)
-	api.Get("/tracks/:id/play", tracksPlay)
+	api.Get("/tracks/:trackID", tracksShow)
+	api.Get("/tracks/:trackID/play", tracksPlay)
 
 	log.Fatal(app.Listen(":8080"))
 }

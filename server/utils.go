@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"io"
 	"io/ioutil"
@@ -8,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"golang.org/x/crypto/bcrypt"
@@ -55,6 +57,15 @@ func HashPassword(password string) (string, error) {
 func VerifyPassword(password string, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	return err == nil
+}
+
+func parseTokenVar(c *fiber.Ctx) string {
+	token := c.Query("token")
+	if strings.HasPrefix(c.Get("Authorization"), "Bearer ") {
+		token = c.Get("Authorization")[7:]
+	}
+	realToken, _ := base64.RawStdEncoding.DecodeString(token)
+	return string(realToken)
 }
 
 func parseIndexVars(c *fiber.Ctx) (string, int, int) {
