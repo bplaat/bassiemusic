@@ -3,8 +3,9 @@ package main
 import (
 	"fmt"
 	"log"
-	"net/http"
 	"time"
+
+	"github.com/gofiber/fiber/v2"
 )
 
 type User struct {
@@ -70,7 +71,7 @@ type Track struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
-func artistAlbums(artist *Artist, req *http.Request) {
+func artistAlbums(artist *Artist, c *fiber.Ctx) {
 	albumsQuery, err := db.Query("SELECT BIN_TO_UUID(`id`), `type`, `title`, `released_at`, `explicit`, `created_at`, `updated_at` FROM `albums` WHERE `deleted_at` IS NULL AND `id` IN (SELECT `album_id` FROM `album_artist` WHERE `artist_id` = UUID_TO_BIN(?)) ORDER BY `released_at` DESC", artist.ID)
 	if err != nil {
 		log.Fatalln(err)
@@ -89,13 +90,13 @@ func artistAlbums(artist *Artist, req *http.Request) {
 		if albumType == AlbumTypeSingle {
 			album.Type = "single"
 		}
-		album.Cover = fmt.Sprintf("http://%s/storage/albums/%s.jpg", req.Host, album.ID)
-		albumArtists(&album, req)
+		album.Cover = fmt.Sprintf("%s/storage/albums/%s.jpg", c.BaseURL(), album.ID)
+		albumArtists(&album, c)
 		artist.Albums = append(artist.Albums, album)
 	}
 }
 
-func albumGenres(album *Album, req *http.Request) {
+func albumGenres(album *Album, c *fiber.Ctx) {
 	genresQuery, err := db.Query("SELECT BIN_TO_UUID(`id`), `name`, `created_at`, `updated_at` FROM `genres` WHERE `deleted_at` IS NULL AND `id` IN (SELECT `genre_id` FROM `album_genre` WHERE `album_id` = UUID_TO_BIN(?)) ORDER BY LOWER(`name`)", album.ID)
 	if err != nil {
 		log.Fatalln(err)
@@ -104,12 +105,12 @@ func albumGenres(album *Album, req *http.Request) {
 	for genresQuery.Next() {
 		var genre Genre
 		genresQuery.Scan(&genre.ID, &genre.Name, &genre.CreatedAt, &genre.UpdatedAt)
-		genre.Image = fmt.Sprintf("http://%s/storage/genres/%s.jpg", req.Host, genre.ID)
+		genre.Image = fmt.Sprintf("%s/storage/genres/%s.jpg", c.BaseURL(), genre.ID)
 		album.Genres = append(album.Genres, genre)
 	}
 }
 
-func albumArtists(album *Album, req *http.Request) {
+func albumArtists(album *Album, c *fiber.Ctx) {
 	artistsQuery, err := db.Query("SELECT BIN_TO_UUID(`id`), `name`, `created_at`, `updated_at` FROM `artists` WHERE `deleted_at` IS NULL AND `id` IN (SELECT `artist_id` FROM `album_artist` WHERE `album_id` = UUID_TO_BIN(?)) ORDER BY LOWER(`name`)", album.ID)
 	if err != nil {
 		log.Fatalln(err)
@@ -118,12 +119,12 @@ func albumArtists(album *Album, req *http.Request) {
 	for artistsQuery.Next() {
 		var artist Artist
 		artistsQuery.Scan(&artist.ID, &artist.Name, &artist.CreatedAt, &artist.UpdatedAt)
-		artist.Image = fmt.Sprintf("http://%s/storage/artists/%s.jpg", req.Host, artist.ID)
+		artist.Image = fmt.Sprintf("%s/storage/artists/%s.jpg", c.BaseURL(), artist.ID)
 		album.Artists = append(album.Artists, artist)
 	}
 }
 
-func albumTracks(album *Album, req *http.Request) {
+func albumTracks(album *Album, c *fiber.Ctx) {
 	tracksQuery, err := db.Query("SELECT BIN_TO_UUID(`id`), `title`, `disk`, `position`, `duration`, `explicit`, `plays`, `created_at`, `updated_at` FROM `tracks` WHERE `deleted_at` IS NULL AND `album_id` = UUID_TO_BIN(?) ORDER BY `disk`, `position`", album.ID)
 	if err != nil {
 		log.Fatalln(err)
@@ -132,13 +133,13 @@ func albumTracks(album *Album, req *http.Request) {
 	for tracksQuery.Next() {
 		var track Track
 		tracksQuery.Scan(&track.ID, &track.Title, &track.Disk, &track.Position, &track.Duration, &track.Explicit, &track.Plays, &track.CreatedAt, &track.UpdatedAt)
-		track.Music = fmt.Sprintf("http://%s/storage/tracks/%s.m4a", req.Host, track.ID)
-		trackArtists(&track, req)
+		track.Music = fmt.Sprintf("%s/storage/tracks/%s.m4a", c.BaseURL(), track.ID)
+		trackArtists(&track, c)
 		album.Tracks = append(album.Tracks, track)
 	}
 }
 
-func genreAlbums(genre *Genre, req *http.Request) {
+func genreAlbums(genre *Genre, c *fiber.Ctx) {
 	albumsQuery, err := db.Query("SELECT BIN_TO_UUID(`id`), `type`, `title`, `released_at`, `explicit`, `created_at`, `updated_at` FROM `albums` WHERE `deleted_at` IS NULL AND `id` IN (SELECT `album_id` FROM `album_genre` WHERE `genre_id` = UUID_TO_BIN(?)) ORDER BY `released_at` DESC", genre.ID)
 	if err != nil {
 		log.Fatalln(err)
@@ -157,33 +158,18 @@ func genreAlbums(genre *Genre, req *http.Request) {
 		if albumType == AlbumTypeSingle {
 			album.Type = "single"
 		}
-		album.Cover = fmt.Sprintf("http://%s/storage/albums/%s.jpg", req.Host, album.ID)
-		albumArtists(&album, req)
+		album.Cover = fmt.Sprintf("%s/storage/albums/%s.jpg", c.BaseURL(), album.ID)
+		albumArtists(&album, c)
 		genre.Albums = append(genre.Albums, album)
 	}
 }
 
-func trackArtists(track *Track, req *http.Request) {
-	artistsQuery, err := db.Query("SELECT BIN_TO_UUID(`id`), `name`, `created_at`, `updated_at` FROM `artists` WHERE `deleted_at` IS NULL AND `id` IN (SELECT `artist_id` FROM `track_artist` WHERE `track_id` = UUID_TO_BIN(?)) ORDER BY LOWER(`name`)", track.ID)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	defer artistsQuery.Close()
-	for artistsQuery.Next() {
-		var artist Artist
-		artistsQuery.Scan(&artist.ID, &artist.Name, &artist.CreatedAt, &artist.UpdatedAt)
-		artist.Image = fmt.Sprintf("http://%s/storage/artists/%s.jpg", req.Host, artist.ID)
-		track.Artists = append(track.Artists, artist)
-	}
-}
-
-func trackAlbum(track *Track, albumID string, req *http.Request) {
+func trackAlbum(track *Track, albumID string, c *fiber.Ctx) {
 	albumsQuery, err := db.Query("SELECT BIN_TO_UUID(`id`), `type`, `title`, `released_at`, `explicit`, `created_at`, `updated_at` FROM `albums` WHERE `deleted_at` IS NULL AND `id` = UUID_TO_BIN(?)", albumID)
 	if err != nil {
 		log.Fatalln(err)
 	}
 	defer albumsQuery.Close()
-
 	var album Album
 	var albumType AlbumType
 	albumsQuery.Next()
@@ -197,6 +183,20 @@ func trackAlbum(track *Track, albumID string, req *http.Request) {
 	if albumType == AlbumTypeSingle {
 		album.Type = "single"
 	}
-	album.Cover = fmt.Sprintf("http://%s/storage/albums/%s.jpg", req.Host, album.ID)
+	album.Cover = fmt.Sprintf("%s/storage/albums/%s.jpg", c.BaseURL(), album.ID)
 	track.Album = &album
+}
+
+func trackArtists(track *Track, c *fiber.Ctx) {
+	artistsQuery, err := db.Query("SELECT BIN_TO_UUID(`id`), `name`, `created_at`, `updated_at` FROM `artists` WHERE `deleted_at` IS NULL AND `id` IN (SELECT `artist_id` FROM `track_artist` WHERE `track_id` = UUID_TO_BIN(?)) ORDER BY LOWER(`name`)", track.ID)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer artistsQuery.Close()
+	for artistsQuery.Next() {
+		var artist Artist
+		artistsQuery.Scan(&artist.ID, &artist.Name, &artist.CreatedAt, &artist.UpdatedAt)
+		artist.Image = fmt.Sprintf("%s/storage/artists/%s.jpg", c.BaseURL(), artist.ID)
+		track.Artists = append(track.Artists, artist)
+	}
 }

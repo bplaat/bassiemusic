@@ -4,34 +4,21 @@ import (
 	"encoding/base64"
 	"fmt"
 	"log"
-	"net/http"
 	"time"
 
-	"github.com/gorilla/mux"
+	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/compress"
+	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gofiber/fiber/v2/middleware/etag"
+	"github.com/gofiber/fiber/v2/middleware/limiter"
+	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/mileusna/useragent"
 	"github.com/satori/go.uuid"
 )
 
-type AuthLoginResponse struct {
-	Success bool   `json:"success"`
-	Message   string `json:"message,omitempty"`
-	Token   string `json:"token,omitempty"`
-	User    *User   `json:"user,omitempty"`
-}
-
-func authLogin(res http.ResponseWriter, req *http.Request) {
-	// Parse vars
-	queryVars := req.URL.Query()
-
-	email := ""
-	if emailVar, ok := queryVars["email"]; ok {
-		email = emailVar[0]
-	}
-
-	password := ""
-	if passwordVar, ok := queryVars["password"]; ok {
-		password = passwordVar[0]
-	}
+func authLogin(c *fiber.Ctx) error {
+	email := c.Query("email")
+	password := c.Query("password")
 
 	// Get user by email
 	userQuery, err := db.Query("SELECT BIN_TO_UUID(`id`), `password` FROM `users` WHERE `deleted_at` IS NULL AND `email` = ?", email)
@@ -42,30 +29,27 @@ func authLogin(res http.ResponseWriter, req *http.Request) {
 
 	var user User
 	if !userQuery.Next() {
-		var response AuthLoginResponse
-		response.Success = false
-		response.Message = "Wrong email or password"
-		jsonResponse(res, response)
-		return
+		return c.JSON(fiber.Map{
+			"success": false,
+			"message": "Wrong email or password",
+		})
 	}
 	userQuery.Scan(&user.ID, &user.Password)
 
 	// Verify user password
 	if !VerifyPassword(password, user.Password) {
-		var response AuthLoginResponse
-		response.Success = false
-		response.Message = "Wrong email or password"
-		jsonResponse(res, response)
-		return
+		return c.JSON(fiber.Map{
+			"success": false,
+			"message": "Wrong email or password",
+		})
 	}
 
 	// Create new session
-	ua := useragent.Parse(req.Header.Get("User-Agent"))
+	ua := useragent.Parse(c.Get("User-Agent"))
 
 	token, err := HashPassword(email)
 	if err != nil {
 		log.Fatalln(err)
-		return
 	}
 
 	sessionId := uuid.NewV4()
@@ -73,31 +57,27 @@ func authLogin(res http.ResponseWriter, req *http.Request) {
 		sessionId.String(), user.ID, token, ua.OS, ua.Name, ua.Version, time.Now().Add(365*24*60*60*time.Second).Format(time.RFC3339))
 	if err != nil {
 		log.Fatalln(err)
-		return
 	}
 
-	// Response
-	var response AuthLoginResponse
-	response.Success = true
-	response.Token = base64.StdEncoding.EncodeToString([]byte(token))
-
-	// User
+	// Write response
 	userQuery, err = db.Query("SELECT BIN_TO_UUID(`id`), `firstname`, `lastname`, `email`, `created_at`, `updated_at` FROM `users` WHERE `deleted_at` IS NULL AND `id` = UUID_TO_BIN(?)", user.ID)
 	defer userQuery.Close()
 	userQuery.Next()
 	userQuery.Scan(&user.ID, &user.Firstname, &user.Lastname, &user.Email, &user.CreatedAt, &user.UpdatedAt)
-	response.User = &user
-	jsonResponse(res, response)
+	return c.JSON(fiber.Map{
+		"success": true,
+		"token":   base64.StdEncoding.EncodeToString([]byte(token)),
+		"user":    user,
+	})
 }
 
-func authLogout(res http.ResponseWriter, req *http.Request) {
+func authLogout(c *fiber.Ctx) error {
 	// TODO
+	return fiber.ErrNotFound
 }
 
-func usersIndex(res http.ResponseWriter, req *http.Request) {
-	query, page, limit := parseIndexVars(req)
-
-	// Users
+func usersIndex(c *fiber.Ctx) error {
+	query, page, limit := parseIndexVars(c)
 	usersQuery, err := db.Query("SELECT BIN_TO_UUID(`id`), `firstname`, `lastname`, `email`, `created_at`, `updated_at` FROM `users` WHERE `deleted_at` IS NULL AND (`firstname` LIKE ? OR `lastname` LIKE ? OR `email` LIKE ?) ORDER BY LOWER(`lastname`) LIMIT ?, ?", "%"+query+"%", "%"+query+"%", "%"+query+"%", (page-1)*limit, limit)
 	if err != nil {
 		log.Fatalln(err)
@@ -110,33 +90,26 @@ func usersIndex(res http.ResponseWriter, req *http.Request) {
 		usersQuery.Scan(&user.ID, &user.Firstname, &user.Lastname, &user.Email, &user.CreatedAt, &user.UpdatedAt)
 		users = append(users, user)
 	}
-	jsonResponse(res, users)
+	return c.JSON(users)
 }
 
-func usersShow(res http.ResponseWriter, req *http.Request) {
-	vars := mux.Vars(req)
-
-	// User
-	userQuery, err := db.Query("SELECT BIN_TO_UUID(`id`), `firstname`, `lastname`, `email`, `created_at`, `updated_at` FROM `users` WHERE `deleted_at` IS NULL AND `id` = UUID_TO_BIN(?)", vars["id"])
+func usersShow(c *fiber.Ctx) error {
+	userQuery, err := db.Query("SELECT BIN_TO_UUID(`id`), `firstname`, `lastname`, `email`, `created_at`, `updated_at` FROM `users` WHERE `deleted_at` IS NULL AND `id` = UUID_TO_BIN(?)", c.Params("id"))
 	if err != nil {
-		notFound(res, req)
-		return
+		log.Fatalln(err)
 	}
 	defer userQuery.Close()
 
 	var user User
 	if !userQuery.Next() {
-		notFound(res, req)
-		return
+		return fiber.ErrNotFound
 	}
 	userQuery.Scan(&user.ID, &user.Firstname, &user.Lastname, &user.Email, &user.CreatedAt, &user.UpdatedAt)
-	jsonResponse(res, user)
+	return c.JSON(user)
 }
 
-func artistsIndex(res http.ResponseWriter, req *http.Request) {
-	query, page, limit := parseIndexVars(req)
-
-	// Artists
+func artistsIndex(c *fiber.Ctx) error {
+	query, page, limit := parseIndexVars(c)
 	artistsQuery, err := db.Query("SELECT BIN_TO_UUID(`id`), `name`, `created_at`, `updated_at` FROM `artists` WHERE `deleted_at` IS NULL AND `name` LIKE ? ORDER BY LOWER(`name`) LIMIT ?, ?", "%"+query+"%", (page-1)*limit, limit)
 	if err != nil {
 		log.Fatalln(err)
@@ -147,39 +120,32 @@ func artistsIndex(res http.ResponseWriter, req *http.Request) {
 	for artistsQuery.Next() {
 		var artist Artist
 		artistsQuery.Scan(&artist.ID, &artist.Name, &artist.CreatedAt, &artist.UpdatedAt)
-		artist.Image = fmt.Sprintf("http://%s/storage/artists/%s.jpg", req.Host, artist.ID)
-		artistAlbums(&artist, req)
+		artist.Image = fmt.Sprintf("%s/storage/artists/%s.jpg", c.BaseURL(), artist.ID)
+		artistAlbums(&artist, c)
 		artists = append(artists, artist)
 	}
-	jsonResponse(res, artists)
+	return c.JSON(artists)
 }
 
-func artistsShow(res http.ResponseWriter, req *http.Request) {
-	vars := mux.Vars(req)
-
-	// Artist
-	artistQuery, err := db.Query("SELECT BIN_TO_UUID(`id`), `name`, `created_at`, `updated_at` FROM `artists` WHERE `deleted_at` IS NULL AND `id` = UUID_TO_BIN(?)", vars["id"])
+func artistsShow(c *fiber.Ctx) error {
+	artistQuery, err := db.Query("SELECT BIN_TO_UUID(`id`), `name`, `created_at`, `updated_at` FROM `artists` WHERE `deleted_at` IS NULL AND `id` = UUID_TO_BIN(?)", c.Params("id"))
 	if err != nil {
-		notFound(res, req)
-		return
+		log.Fatalln(err)
 	}
 	defer artistQuery.Close()
 
 	var artist Artist
 	if !artistQuery.Next() {
-		notFound(res, req)
-		return
+		return fiber.ErrNotFound
 	}
 	artistQuery.Scan(&artist.ID, &artist.Name, &artist.CreatedAt, &artist.UpdatedAt)
-	artist.Image = fmt.Sprintf("http://%s/storage/artists/%s.jpg", req.Host, artist.ID)
-	artistAlbums(&artist, req)
-	jsonResponse(res, artist)
+	artist.Image = fmt.Sprintf("%s/storage/artists/%s.jpg", c.BaseURL(), artist.ID)
+	artistAlbums(&artist, c)
+	return c.JSON(artist)
 }
 
-func albumsIndex(res http.ResponseWriter, req *http.Request) {
-	query, page, limit := parseIndexVars(req)
-
-	// Albums
+func albumsIndex(c *fiber.Ctx) error {
+	query, page, limit := parseIndexVars(c)
 	albumsQuery, err := db.Query("SELECT BIN_TO_UUID(`id`), `type`, `title`, `released_at`, `explicit`, `created_at`, `updated_at` FROM `albums` WHERE `deleted_at` IS NULL AND `title` LIKE ? ORDER BY LOWER(`title`) LIMIT ?, ?", "%"+query+"%", (page-1)*limit, limit)
 	if err != nil {
 		log.Fatalln(err)
@@ -200,30 +166,25 @@ func albumsIndex(res http.ResponseWriter, req *http.Request) {
 		if albumType == AlbumTypeSingle {
 			album.Type = "single"
 		}
-		album.Cover = fmt.Sprintf("http://%s/storage/albums/%s.jpg", req.Host, album.ID)
-		albumGenres(&album, req)
-		albumArtists(&album, req)
+		album.Cover = fmt.Sprintf("%s/storage/albums/%s.jpg", c.BaseURL(), album.ID)
+		albumGenres(&album, c)
+		albumArtists(&album, c)
 		albums = append(albums, album)
 	}
-	jsonResponse(res, albums)
+	return c.JSON(albums)
 }
 
-func albumsShow(res http.ResponseWriter, req *http.Request) {
-	vars := mux.Vars(req)
-
-	// Album
-	albumsQuery, err := db.Query("SELECT BIN_TO_UUID(`id`), `type`, `title`, `released_at`, `explicit`, `created_at`, `updated_at` FROM `albums` WHERE `deleted_at` IS NULL AND `id` = UUID_TO_BIN(?)", vars["id"])
+func albumsShow(c *fiber.Ctx) error {
+	albumsQuery, err := db.Query("SELECT BIN_TO_UUID(`id`), `type`, `title`, `released_at`, `explicit`, `created_at`, `updated_at` FROM `albums` WHERE `deleted_at` IS NULL AND `id` = UUID_TO_BIN(?)", c.Params("id"))
 	if err != nil {
-		notFound(res, req)
-		return
+		log.Fatalln(err)
 	}
 	defer albumsQuery.Close()
 
 	var album Album
 	var albumType AlbumType
 	if !albumsQuery.Next() {
-		notFound(res, req)
-		return
+		return fiber.ErrNotFound
 	}
 	albumsQuery.Scan(&album.ID, &albumType, &album.Title, &album.ReleasedAt, &album.Explicit, &album.CreatedAt, &album.UpdatedAt)
 	if albumType == AlbumTypeAlbum {
@@ -235,17 +196,15 @@ func albumsShow(res http.ResponseWriter, req *http.Request) {
 	if albumType == AlbumTypeSingle {
 		album.Type = "single"
 	}
-	album.Cover = fmt.Sprintf("http://%s/storage/albums/%s.jpg", req.Host, album.ID)
-	albumGenres(&album, req)
-	albumArtists(&album, req)
-	albumTracks(&album, req)
-	jsonResponse(res, album)
+	album.Cover = fmt.Sprintf("%s/storage/albums/%s.jpg", c.BaseURL(), album.ID)
+	albumGenres(&album, c)
+	albumArtists(&album, c)
+	albumTracks(&album, c)
+	return c.JSON(album)
 }
 
-func genresIndex(res http.ResponseWriter, req *http.Request) {
-	query, page, limit := parseIndexVars(req)
-
-	// Genres
+func genresIndex(c *fiber.Ctx) error {
+	query, page, limit := parseIndexVars(c)
 	genresQuery, err := db.Query("SELECT BIN_TO_UUID(`id`), `name`, `created_at`, `updated_at` FROM `genres` WHERE `deleted_at` IS NULL AND `name` LIKE ? ORDER BY LOWER(`name`) LIMIT ?, ?", "%"+query+"%", (page-1)*limit, limit)
 	if err != nil {
 		log.Fatalln(err)
@@ -256,38 +215,32 @@ func genresIndex(res http.ResponseWriter, req *http.Request) {
 	for genresQuery.Next() {
 		var genre Genre
 		genresQuery.Scan(&genre.ID, &genre.Name, &genre.CreatedAt, &genre.UpdatedAt)
-		genre.Image = fmt.Sprintf("http://%s/storage/genres/%s.jpg", req.Host, genre.ID)
-		genreAlbums(&genre, req)
+		genre.Image = fmt.Sprintf("%s/storage/genres/%s.jpg", c.BaseURL(), genre.ID)
+		genreAlbums(&genre, c)
 		genres = append(genres, genre)
 	}
-	jsonResponse(res, genres)
+	return c.JSON(genres)
 }
 
-func genresShow(res http.ResponseWriter, req *http.Request) {
-	vars := mux.Vars(req)
-
-	// Genre
-	genreQuery, err := db.Query("SELECT BIN_TO_UUID(`id`), `name`, `created_at`, `updated_at` FROM `genres` WHERE `deleted_at` IS NULL AND `id` = UUID_TO_BIN(?)", vars["id"])
+func genresShow(c *fiber.Ctx) error {
+	genreQuery, err := db.Query("SELECT BIN_TO_UUID(`id`), `name`, `created_at`, `updated_at` FROM `genres` WHERE `deleted_at` IS NULL AND `id` = UUID_TO_BIN(?)", c.Params("id"))
 	if err != nil {
-		notFound(res, req)
-		return
+		log.Fatalln(err)
 	}
 	defer genreQuery.Close()
 
 	var genre Genre
 	if !genreQuery.Next() {
-		notFound(res, req)
-		return
+		return fiber.ErrNotFound
 	}
 	genreQuery.Scan(&genre.ID, &genre.Name, &genre.CreatedAt, &genre.UpdatedAt)
-	genre.Image = fmt.Sprintf("http://%s/storage/genres/%s.jpg", req.Host, genre.ID)
-	genreAlbums(&genre, req)
-	jsonResponse(res, genre)
+	genre.Image = fmt.Sprintf("%s/storage/genres/%s.jpg", c.BaseURL(), genre.ID)
+	genreAlbums(&genre, c)
+	return c.JSON(genre)
 }
 
-func tracksIndex(res http.ResponseWriter, req *http.Request) {
-	query, page, limit := parseIndexVars(req)
-
+func tracksIndex(c *fiber.Ctx) error {
+	query, page, limit := parseIndexVars(c)
 	trackssQuery, err := db.Query("SELECT BIN_TO_UUID(`id`), BIN_TO_UUID(`album_id`), `title`, `disk`, `position`, `duration`, `explicit`, `plays`, `created_at`, `updated_at` FROM `tracks` WHERE `deleted_at` IS NULL AND `title` LIKE ? ORDER BY `plays` DESC, LOWER(`title`) LIMIT ?, ?", "%"+query+"%", (page-1)*limit, limit)
 	if err != nil {
 		log.Fatalln(err)
@@ -299,106 +252,94 @@ func tracksIndex(res http.ResponseWriter, req *http.Request) {
 		var track Track
 		var albumID string
 		trackssQuery.Scan(&track.ID, &albumID, &track.Title, &track.Disk, &track.Position, &track.Duration, &track.Explicit, &track.Plays, &track.CreatedAt, &track.UpdatedAt)
-		track.Music = fmt.Sprintf("http://%s/storage/tracks/%s.m4a", req.Host, track.ID)
-		trackAlbum(&track, albumID, req)
-		trackArtists(&track, req)
+		track.Music = fmt.Sprintf("%s/storage/tracks/%s.m4a", c.BaseURL(), track.ID)
+		trackAlbum(&track, albumID, c)
+		trackArtists(&track, c)
 		tracks = append(tracks, track)
 	}
-	jsonResponse(res, tracks)
+	return c.JSON(tracks)
 }
 
-func tracksShow(res http.ResponseWriter, req *http.Request) {
-	vars := mux.Vars(req)
-
-	// Track
-	trackssQuery, err := db.Query("SELECT BIN_TO_UUID(`id`), BIN_TO_UUID(`album_id`), `title`, `disk`, `position`, `duration`, `explicit`, `plays`, `created_at`, `updated_at` FROM `tracks` WHERE `deleted_at` IS NULL AND `id` = UUID_TO_BIN(?)", vars["id"])
+func tracksShow(c *fiber.Ctx) error {
+	trackssQuery, err := db.Query("SELECT BIN_TO_UUID(`id`), BIN_TO_UUID(`album_id`), `title`, `disk`, `position`, `duration`, `explicit`, `plays`, `created_at`, `updated_at` FROM `tracks` WHERE `deleted_at` IS NULL AND `id` = UUID_TO_BIN(?)", c.Params("id"))
 	if err != nil {
-		notFound(res, req)
-		return
+		log.Fatalln(err)
 	}
 	defer trackssQuery.Close()
 
 	var track Track
 	var albumID string
 	if !trackssQuery.Next() {
-		notFound(res, req)
-		return
+		return fiber.ErrNotFound
 	}
 	trackssQuery.Scan(&track.ID, &albumID, &track.Title, &track.Disk, &track.Position, &track.Duration, &track.Explicit, &track.Plays, &track.CreatedAt, &track.UpdatedAt)
-	track.Music = fmt.Sprintf("http://%s/storage/tracks/%s.m4a", req.Host, track.ID)
-	trackAlbum(&track, albumID, req)
-	trackArtists(&track, req)
-	jsonResponse(res, track)
+	track.Music = fmt.Sprintf("%s/storage/tracks/%s.m4a", c.BaseURL(), track.ID)
+	trackAlbum(&track, albumID, c)
+	trackArtists(&track, c)
+	return c.JSON(track)
 }
 
-type TracksPlayResponse struct {
-	Success bool `json:"success"`
-}
-
-func tracksPlay(res http.ResponseWriter, req *http.Request) {
-	vars := mux.Vars(req)
-
-	// Track
-	trackssQuery, err := db.Query("SELECT `plays` FROM `tracks` WHERE `deleted_at` IS NULL AND `id` = UUID_TO_BIN(?)", vars["id"])
+func tracksPlay(c *fiber.Ctx) error {
+	trackssQuery, err := db.Query("SELECT `plays` FROM `tracks` WHERE `deleted_at` IS NULL AND `id` = UUID_TO_BIN(?)", c.Params("id"))
 	if err != nil {
-		notFound(res, req)
-		return
+		log.Fatalln(err)
 	}
 	defer trackssQuery.Close()
 
 	var plays int64
 	if !trackssQuery.Next() {
-		notFound(res, req)
-		return
+		return fiber.ErrNotFound
 	}
 	trackssQuery.Scan(&plays)
-
-	db.Exec("UPDATE `tracks` SET `plays` = ? WHERE `deleted_at` IS NULL AND `id` = UUID_TO_BIN(?)", plays+1, vars["id"])
-	var response TracksPlayResponse
-	response.Success = true
-	jsonResponse(res, response)
-}
-
-func notFound(res http.ResponseWriter, req *http.Request) {
-	res.WriteHeader(http.StatusNotFound)
-	fmt.Fprint(res, "404 page not found\n")
+	db.Exec("UPDATE `tracks` SET `plays` = ? WHERE `deleted_at` IS NULL AND `id` = UUID_TO_BIN(?)", plays+1, c.Params("id"))
+	return c.JSON(fiber.Map{
+		"success": true,
+	})
 }
 
 func startServer() {
-	router := mux.NewRouter().StrictSlash(true)
-	router.HandleFunc("/", func(res http.ResponseWriter, req *http.Request) {
-		fmt.Fprintf(res, "BassieMusic API")
+	app := fiber.New()
+	app.Use(compress.New())
+	app.Use(cors.New())
+	app.Use(logger.New())
+
+	app.Get("/", func(c *fiber.Ctx) error {
+		return c.SendString("BassieMusic API")
 	})
-	router.NotFoundHandler = http.HandlerFunc(notFound)
 
-	api := router.PathPrefix("/api").Subrouter()
-	api.HandleFunc("/auth/login", authLogin)
-	api.HandleFunc("/auth/logout", authLogout)
+	storage := app.Group("/storage")
+	storage.Use(etag.New())
+	storage.Static("/", "./storage")
 
-	// api.HandleFunc("/auth/sessions", authSessionIndex)
-	// api.HandleFunc("/auth/sessions/{id}", authSessionShow)
-	// api.HandleFunc("/auth/sessions/{id}/revoke", authSessionRevoke)
+	api := app.Group("/api")
+	api.Use(limiter.New(limiter.Config{
+		Expiration: 60 * time.Second,
+		Max:        100,
+	}))
 
-	api.HandleFunc("/users", usersIndex)
-	api.HandleFunc("/users/{id}", usersShow)
-	// POST api.HandleFunc("/users/{id}", usersEdit)
+	api.Get("/auth/login", authLogin)
+	api.Get("/auth/logout", authLogout)
 
-	api.HandleFunc("/artists", artistsIndex)
-	api.HandleFunc("/artists/{id}", artistsShow)
+	// api.Get("/auth/sessions", authSessionIndex)
+	// api.Get("/auth/sessions/:id", authSessionShow)
+	// api.Get("/auth/sessions/:id/revoke", authSessionRevoke)
 
-	api.HandleFunc("/albums", albumsIndex)
-	api.HandleFunc("/albums/{id}", albumsShow)
+	api.Get("/users", usersIndex)
+	api.Get("/users/:id", usersShow)
+	// api.Post("/users/:id", usersEdit)
 
-	api.HandleFunc("/genres", genresIndex)
-	api.HandleFunc("/genres/{id}", genresShow)
+	api.Get("/artists", artistsIndex)
+	api.Get("/artists/:id", artistsShow)
 
-	api.HandleFunc("/tracks", tracksIndex)
-	api.HandleFunc("/tracks/{id}", tracksShow)
-	api.HandleFunc("/tracks/{id}/play", tracksPlay)
+	api.Get("/albums", albumsIndex)
+	api.Get("/albums/:id", albumsShow)
 
-	fileServer := http.FileServer(NeuteredFileSystem{http.Dir("./storage")})
-	router.PathPrefix("/storage/").Handler(http.StripPrefix("/storage", fileServer))
+	api.Get("/genres", genresIndex)
+	api.Get("/genres/:id", genresShow)
 
-	fmt.Printf("The server is listening on: http://localhost:8080/\n")
-	http.ListenAndServe(":8080", router)
+	api.Get("/tracks", tracksIndex)
+	api.Get("/tracks/:id", tracksShow)
+	api.Get("/tracks/:id/play", tracksPlay)
+
+	log.Fatal(app.Listen(":8080"))
 }
