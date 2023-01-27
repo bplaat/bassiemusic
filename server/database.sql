@@ -1,30 +1,43 @@
+-- BassieMusic database
+
+-- MariaDB UUID_TO_BIN and BIN_TO_UUID pollyfills:
+-- https://gist.github.com/bplaat/1d8d1bba135c726178ebdfc9df08e2ca
+
+-- Tables
 CREATE TABLE `users` (
     `id` BINARY(16) NOT NULL,
-    `firstname` VARCHAR(255) NOT NULL,
-    `lastname` VARCHAR(255) NOT NULL,
+    `username` VARCHAR(255) NOT NULL,
     `email` VARCHAR(255) NOT NULL,
     `password` VARCHAR(255) NOT NULL,
+    `role` TINYINT UNSIGNED NOT NULL,
     `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    `deleted_at` TIMESTAMP NULL,
-    PRIMARY KEY (`id`)
+    PRIMARY KEY (`id`),
+    UNIQUE (`username`),
+    UNIQUE (`email`)
 );
 
-INSERT INTO `users` (`id`, `firstname`, `lastname`, `email`, `password`) VALUES (UUID_TO_BIN(UUID()), 'Bastiaan', 'van der Plaat', 'bastiaan.v.d.plaat@gmail.com', '$2y$10$dYo9.ABRMCdxo6fDdlWC7uL7MHbaD7sQFDPtVh97feHVnsQEgJh9m');
+INSERT INTO `users` (`id`, `username`, `email`, `password`, `role`) VALUES
+    (UUID_TO_BIN(UUID()), 'bplaat', 'bastiaan.v.d.plaat@gmail.com', '$2a$10$21hEKLKeYntMkANwm.RCludVDbMU12PRqmc.k6febZUkJHNDoLEAq', 1);
 
 CREATE TABLE `sessions` (
     `id` BINARY(16) NOT NULL,
     `user_id` BINARY(16) NOT NULL,
     `token` VARCHAR(255) NOT NULL,
-    `os` VARCHAR(32) NULL,
-    `platform` VARCHAR(32) NULL,
-    `version` VARCHAR(32) NULL,
+    `ip` VARCHAR(48) NOT NULL,
+    `ip_latitude` DECIMAL(10, 8) NULL,
+    `ip_longitude` DECIMAL(11, 8) NULL,
+    `ip_country` CHAR(2) NULL,
+    `ip_city` VARCHAR(255) NULL,
+    `client_os` VARCHAR(32) NULL,
+    `client_name` VARCHAR(32) NULL,
+    `client_version` VARCHAR(32) NULL,
     `expires_at` TIMESTAMP NOT NULL,
     `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    `deleted_at` TIMESTAMP NULL,
     PRIMARY KEY (`id`),
-    FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
+    FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+    UNIQUE (`token`)
 );
 
 CREATE TABLE `artists` (
@@ -33,20 +46,18 @@ CREATE TABLE `artists` (
     `deezer_id` BIGINT UNSIGNED NOT NULL,
     `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    `deleted_at` TIMESTAMP NULL,
     PRIMARY KEY (`id`)
 );
 
 CREATE TABLE `albums` (
     `id` BINARY(16) NOT NULL,
-    `type` TINYINT NOT NULL,
+    `type` TINYINT UNSIGNED NOT NULL,
     `title` VARCHAR(255) NOT NULL,
     `released_at` DATE NOT NULL,
     `explicit` BOOLEAN NOT NULL,
     `deezer_id` BIGINT UNSIGNED NOT NULL,
     `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    `deleted_at` TIMESTAMP NULL,
     PRIMARY KEY (`id`)
 );
 
@@ -65,7 +76,6 @@ CREATE TABLE `genres` (
     `deezer_id` BIGINT UNSIGNED NOT NULL,
     `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    `deleted_at` TIMESTAMP NULL,
     PRIMARY KEY (`id`)
 );
 
@@ -91,7 +101,6 @@ CREATE TABLE `tracks` (
     `plays` BIGINT UNSIGNED NOT NULL DEFAULT 0,
     `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    `deleted_at` TIMESTAMP NULL,
     PRIMARY KEY (`id`),
     FOREIGN KEY (`album_id`) REFERENCES `albums`(`id`) ON DELETE CASCADE
 );
@@ -105,19 +114,12 @@ CREATE TABLE `track_artist` (
     FOREIGN KEY (`artist_id`) REFERENCES `artists`(`id`) ON DELETE CASCADE
 );
 
-CREATE TABLE `track_play` (
+CREATE TABLE `download_tasks` (
     `id` BINARY(16) NOT NULL,
-    `user_id` BINARY(16) NOT NULL,
-    `track_id` BINARY(16) NOT NULL,
-    `position` FLOAT NOT NULL,
+    `type` TINYINT UNSIGNED NOT NULL,
+    `deezer_id` BIGINT UNSIGNED NULL,
+    `singles` BOOLEAN NOT NULL DEFAULT 0,
     `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    `deleted_at` TIMESTAMP NULL,
-    PRIMARY KEY (`id`),
-    FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
-    FOREIGN KEY (`track_id`) REFERENCES `tracks`(`id`) ON DELETE CASCADE
+    PRIMARY KEY (`id`)
 );
-
--- artist_likes
--- album_likes
--- track_likes

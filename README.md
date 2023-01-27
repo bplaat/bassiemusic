@@ -2,19 +2,20 @@
 A new online streaming music service thingy
 
 ## Dependencies
-- Go Compiler installed
-- MySQL running
+- Go Compiler
+- MySQL
+- Node.js
 - yt-dlp in PATH
 - ffmpeg in PATH
-- Node.js & NPM
 
 ## TODO
-- Accounts settings
-- Better account login logout
-- Settings light, dark theme local saved
-- Plays per account remember played songs
+- Fix many bugs
+
+- Admin users crud
+- Accounts settings, user avatar
+- Local language and theme settings
 - Love artist, album and tracks to loved list
-- Accounts role (normale, admin)
+- Plays per account remember played songs
 - Add remove albums / artists in web interface when admin
 
 - Finish basic macOS application

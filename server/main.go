@@ -1,41 +1,116 @@
 package main
 
 import (
-	"database/sql"
 	"log"
+	"net/url"
 	"os"
-	"time"
 
+	"github.com/bplaat/bassiemusic/controllers"
+	"github.com/bplaat/bassiemusic/database"
+	"github.com/bplaat/bassiemusic/middlewares"
+	"github.com/bplaat/bassiemusic/tasks"
+	"github.com/bplaat/bassiemusic/utils"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/compress"
+	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gofiber/fiber/v2/middleware/favicon"
+	"github.com/gofiber/fiber/v2/middleware/logger"
 )
 
-var db *sql.DB
+func createStorageDirs() {
+	if _, err := os.Stat("storage/"); os.IsNotExist(err) {
+		os.Mkdir("storage", 0755)
+	}
+	if _, err := os.Stat("storage/artists"); os.IsNotExist(err) {
+		os.Mkdir("storage/artists", 0755)
+	}
+	if _, err := os.Stat("storage/albums"); os.IsNotExist(err) {
+		os.Mkdir("storage/albums", 0755)
+	}
+	if _, err := os.Stat("storage/genres"); os.IsNotExist(err) {
+		os.Mkdir("storage/genres", 0755)
+	}
+	if _, err := os.Stat("storage/tracks"); os.IsNotExist(err) {
+		os.Mkdir("storage/tracks", 0755)
+	}
+}
 
 func main() {
+	// Create missing storage dirs
+	createStorageDirs()
+
 	// Connect to the database
-	var err error
-	db, err = sql.Open("mysql", "bassiemusic:bassiemusic@tcp(127.0.0.1:3306)/bassiemusic?parseTime=true")
-	if err != nil {
-		log.Fatalln(err)
-	}
-	defer db.Close()
-	db.SetMaxOpenConns(32)
-	db.SetMaxIdleConns(32)
-	db.SetConnMaxLifetime(time.Minute)
+	database.Connect()
 
-	err = db.Ping()
-	if err != nil {
-		log.Fatalln(err)
-	}
+	// Start download task
+	go tasks.DownloadTask()
 
-	// Run a subcommand
-	if len(os.Args) >= 2 {
-		if os.Args[1] == "add" {
-			startAdd()
-			return
-		}
-	}
+	// Start server
+	app := fiber.New(fiber.Config{
+		AppName: "BassieMusic",
+	})
+	app.Use(compress.New())
+	app.Use(cors.New())
+	app.Use(favicon.New())
+	app.Use(logger.New())
+	// app.Use(limiter.New(limiter.Config{
+	// 	Max:        100,
+	// 	Expiration: time.Minute,
+	// }))
 
-	// Else start the server
-	startServer()
+	app.Get("/", func(c *fiber.Ctx) error {
+		return c.SendString("BassieMusic API")
+	})
+
+	app.Static("/storage", "./storage")
+
+	// Deezer API proxies
+	app.Get("/deezer/artists", func(c *fiber.Ctx) error {
+		query := c.Query("q")
+		c.Response().Header.Add("Content-Type", "application/json")
+		_, err := c.Write(utils.Fetch("https://api.deezer.com/search/artist?q=" + url.QueryEscape(query)))
+		return err
+	})
+	app.Get("/deezer/albums", func(c *fiber.Ctx) error {
+		query := c.Query("q")
+		c.Response().Header.Add("Content-Type", "application/json")
+		_, err := c.Write(utils.Fetch("https://api.deezer.com/search/album?q=" + url.QueryEscape(query)))
+		return err
+	})
+
+	app.Post("/auth/login", controllers.AuthLogin)
+
+	// app.Use(middlewares.IsAuthed)
+
+	app.Get("/auth/validate", controllers.AuthValidate)
+	app.Get("/auth/logout", controllers.AuthLogout)
+
+	app.Get("/artists", controllers.ArtistsIndex)
+	app.Get("/artists/:artistID", controllers.ArtistsShow)
+
+	app.Get("/albums", controllers.AlbumsIndex)
+	app.Get("/albums/:albumID", controllers.AlbumsShow)
+
+	app.Get("/genres", controllers.GenresIndex)
+	app.Get("/genres/:genreID", controllers.GenresShow)
+
+	app.Get("/tracks", controllers.TracksIndex)
+	app.Get("/tracks/:trackID", controllers.TracksShow)
+	app.Get("/tracks/:trackID/play", controllers.TracksPlay)
+
+	app.Use(middlewares.IsAdmin)
+
+	app.Get("/download/artist", controllers.DownloadArtist)
+	app.Get("/download/album", controllers.DownloadAlbum)
+
+	app.Get("/users", controllers.UsersIndex)
+	app.Get("/users/:userID", controllers.UsersShow)
+	app.Get("/users/:userID/sessions", controllers.UsersSessions)
+
+	app.Get("/sessions", controllers.SessionsIndex)
+	app.Get("/sessions/:sessionID", controllers.SessionsShow)
+	app.Get("/sessions/:sessionID/revoke", controllers.SessionsRevoke)
+
+	log.Fatal(app.Listen(":8080"))
 }
