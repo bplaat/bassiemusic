@@ -16,3 +16,5 @@ a{color:currentColor}a:not(.card):hover,a:not(.card):focus{text-decoration:under
 
 .icon{display:block;width:24px;height:24px}.icon:not(.is-colored) path{fill:currentColor}
 .icon.is-inline{display:inline-block;vertical-align:middle;transform:translateY(-1px)}
+
+.ellipsis{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}

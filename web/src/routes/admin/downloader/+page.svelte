@@ -109,7 +109,7 @@
                         </div>
                         <button
                             class="button is-link"
-                            on:click={downloadArtist(artist)}
+                            on:click={() => downloadArtist(artist)}
                             >Add to BassieMusic</button
                         >
                     </div>
@@ -158,7 +158,7 @@
                         </div>
                         <button
                             class="button is-link"
-                            on:click={downloadAlbum(album)}
+                            on:click={() => downloadAlbum(album)}
                             >Add to BassieMusic</button
                         >
                     </div>

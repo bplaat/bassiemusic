@@ -52,7 +52,7 @@
     <tbody>
         {#each tracks as track, index}
             <tr
-                on:dblclick|preventDefault={playTrack(track)}
+                on:dblclick|preventDefault={() => playTrack(track)}
                 class:has-background-light={$playingQueue.length > 0 &&
                     $playingQueue[$playingTrack].id == track.id}
             >
