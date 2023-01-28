@@ -1,6 +1,6 @@
 import { redirect } from '@sveltejs/kit';
 
-export async function authMiddleware({ fetch, cookies }) {
+export async function isAuthedMiddleware({ fetch, cookies }) {
     const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/validate`, {
         headers: {
             Authorization: `Bearer ${cookies.get('token')}`

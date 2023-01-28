@@ -150,49 +150,60 @@
                 <li>Comming soon...</li>
             </ul>
 
-            <p class="menu-label">Admin</p>
-            <ul class="menu-list mb-5">
-                <li>
-                    <a
-                        href="/admin/users"
-                        class:is-active={$page.url.pathname == "/admin/users"}
-                    >
-                        <svg class="icon is-inline mr-2" viewBox="0 0 24 24">
-                            <path
-                                d="M16.5,12A2.5,2.5 0 0,0 19,9.5A2.5,2.5 0 0,0 16.5,7A2.5,2.5 0 0,0 14,9.5A2.5,2.5 0 0,0 16.5,12M9,11A3,3 0 0,0 12,8A3,3 0 0,0 9,5A3,3 0 0,0 6,8A3,3 0 0,0 9,11M16.5,14C14.67,14 11,14.92 11,16.75V19H22V16.75C22,14.92 18.33,14 16.5,14M9,13C6.67,13 2,14.17 2,16.5V19H9V16.75C9,15.9 9.33,14.41 11.37,13.28C10.5,13.1 9.66,13 9,13Z"
-                            />
-                        </svg>
-                        Users
-                    </a>
-                </li>
-                <li>
-                    <a
-                        href="/admin/downloader"
-                        class:is-active={$page.url.pathname ==
-                            "/admin/downloader"}
-                    >
-                        <svg class="icon is-inline mr-2" viewBox="0 0 24 24">
-                            <path
-                                d="M2 12H4V17H20V12H22V17C22 18.11 21.11 19 20 19H4C2.9 19 2 18.11 2 17V12M12 15L17.55 9.54L16.13 8.13L13 11.25V2H11V11.25L7.88 8.13L6.46 9.55L12 15Z"
-                            />
-                        </svg>
-                        Downloader
-                    </a>
-                </li>
-            </ul>
+            {#if authUser.role === "admin"}
+                <p class="menu-label">Admin</p>
+                <ul class="menu-list mb-5">
+                    <li>
+                        <a
+                            href="/admin/users"
+                            class:is-active={$page.url.pathname ==
+                                "/admin/users"}
+                        >
+                            <svg
+                                class="icon is-inline mr-2"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    d="M16.5,12A2.5,2.5 0 0,0 19,9.5A2.5,2.5 0 0,0 16.5,7A2.5,2.5 0 0,0 14,9.5A2.5,2.5 0 0,0 16.5,12M9,11A3,3 0 0,0 12,8A3,3 0 0,0 9,5A3,3 0 0,0 6,8A3,3 0 0,0 9,11M16.5,14C14.67,14 11,14.92 11,16.75V19H22V16.75C22,14.92 18.33,14 16.5,14M9,13C6.67,13 2,14.17 2,16.5V19H9V16.75C9,15.9 9.33,14.41 11.37,13.28C10.5,13.1 9.66,13 9,13Z"
+                                />
+                            </svg>
+                            Users
+                        </a>
+                    </li>
+                    <li>
+                        <a
+                            href="/admin/downloader"
+                            class:is-active={$page.url.pathname ==
+                                "/admin/downloader"}
+                        >
+                            <svg
+                                class="icon is-inline mr-2"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    d="M2 12H4V17H20V12H22V17C22 18.11 21.11 19 20 19H4C2.9 19 2 18.11 2 17V12M12 15L17.55 9.54L16.13 8.13L13 11.25V2H11V11.25L7.88 8.13L6.46 9.55L12 15Z"
+                                />
+                            </svg>
+                            Downloader
+                        </a>
+                    </li>
+                </ul>
+            {/if}
         {/if}
     </div>
 
     <div class="flex" />
 
     {#if authUser != null}
-        <div>
-            {authUser.username}
-        </div>
-        <div class="buttons">
-            <button class="button is-link is-fullwidth" on:click={logout}
-                >Logout</button
-            >
+        <div style="display: flex;" class="mb-5">
+            <div class="flex">
+                {authUser.username}
+            </div>
+            <div class="buttons">
+                <button class="button is-link is-fullwidth" on:click={logout}
+                    >Logout</button
+                >
+            </div>
         </div>
     {/if}
 

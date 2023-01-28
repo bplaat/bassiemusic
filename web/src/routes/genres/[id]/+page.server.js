@@ -1,8 +1,8 @@
 import { error } from '@sveltejs/kit';
-import { authMiddleware } from '../../../middlewares/auth.js';
+import { isAuthedMiddleware } from '../../../middlewares/auth.js';
 
 export async function load({ fetch, cookies, params }) {
-    const authUser = authMiddleware({ fetch, cookies });
+    const authUser = await isAuthedMiddleware({ fetch, cookies });
 
     const response = await fetch(`${import.meta.env.VITE_API_URL}/genres/${params.id}`, {
         headers: {
