@@ -3,7 +3,6 @@ package models
 import (
 	"database/sql"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/bplaat/bassiemusic/database"
@@ -37,11 +36,7 @@ func GenresScan(c *fiber.Ctx, genresQuery *sql.Rows, withAlbums bool) []Genre {
 }
 
 func GenreAlbums(c *fiber.Ctx, genre *Genre) []Album {
-	albumsQuery, err := database.Query("SELECT BIN_TO_UUID(`id`), `type`, `title`, `released_at`, `explicit`, `created_at` FROM `albums` WHERE `id` IN (SELECT `album_id` FROM `album_genre` WHERE `genre_id` = UUID_TO_BIN(?)) ORDER BY `released_at` DESC", genre.ID)
-	if err != nil {
-		log.Fatalln(err)
-	}
+	albumsQuery := database.Query("SELECT BIN_TO_UUID(`id`), `type`, `title`, `released_at`, `explicit`, `created_at` FROM `albums` WHERE `id` IN (SELECT `album_id` FROM `album_genre` WHERE `genre_id` = UUID_TO_BIN(?)) ORDER BY `released_at` DESC", genre.ID)
 	defer albumsQuery.Close()
-
 	return AlbumsScan(c, albumsQuery, true, true, false)
 }

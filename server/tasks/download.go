@@ -17,10 +17,7 @@ import (
 const TRACK_DURATION_SLACK int = 5
 
 func createArtist(id int, name string, image string) string {
-	artists, err := database.Query("SELECT BIN_TO_UUID(`id`) FROM `artists` WHERE `name` = ?", name)
-	if err != nil {
-		log.Fatalln(err)
-	}
+	artists := database.Query("SELECT BIN_TO_UUID(`id`) FROM `artists` WHERE `name` = ?", name)
 	defer artists.Close()
 
 	if artists.Next() {
@@ -36,10 +33,7 @@ func createArtist(id int, name string, image string) string {
 }
 
 func createGenre(id int, name string) string {
-	genres, err := database.Query("SELECT BIN_TO_UUID(`id`) FROM `genres` WHERE `name` = ?", name)
-	if err != nil {
-		log.Fatalln(err)
-	}
+	genres := database.Query("SELECT BIN_TO_UUID(`id`) FROM `genres` WHERE `name` = ?", name)
 	defer genres.Close()
 
 	if genres.Next() {
@@ -62,10 +56,7 @@ func downloadAlbum(id int) {
 	utils.FetchJson(fmt.Sprintf("https://api.deezer.com/album/%d", id), &album)
 
 	// Check if album already exists
-	albums, err := database.Query("SELECT BIN_TO_UUID(`id`) FROM `albums` WHERE `title` = ?", album.Title)
-	if err != nil {
-		log.Fatalln(err)
-	}
+	albums := database.Query("SELECT BIN_TO_UUID(`id`) FROM `albums` WHERE `title` = ?", album.Title)
 	defer albums.Close()
 	if albums.Next() {
 		return
@@ -117,7 +108,6 @@ func downloadAlbum(id int) {
 		for {
 			var video YoutubeVideo
 			if err := json.NewDecoder(stdout).Decode(&video); err != nil {
-				log.Fatal(err)
 				break
 			}
 
@@ -154,10 +144,7 @@ func DownloadTask() {
 	for {
 		time.Sleep(time.Second)
 
-		downloadTaskQuery, err := database.Query("SELECT BIN_TO_UUID(`id`), `type`, `deezer_id`, `singles`, `created_at` FROM `download_tasks` ORDER BY `created_at` LIMIT 2")
-		if err != nil {
-			log.Fatalln(err)
-		}
+		downloadTaskQuery := database.Query("SELECT BIN_TO_UUID(`id`), `type`, `deezer_id`, `singles`, `created_at` FROM `download_tasks` ORDER BY `created_at` LIMIT 2")
 		defer downloadTaskQuery.Close()
 
 		if !downloadTaskQuery.Next() {

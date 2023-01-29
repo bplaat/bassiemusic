@@ -26,10 +26,27 @@ func Connect() {
 	}
 }
 
-func Query(query string, args ...any) (*sql.Rows, error) {
-	return db.Query(query, args...)
+func Query(query string, args ...any) *sql.Rows {
+	rows, err := db.Query(query, args...)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	return rows
 }
 
-func Exec(query string, args ...any) (sql.Result, error) {
-	return db.Exec(query, args...)
+func Exec(query string, args ...any) sql.Result {
+	result, err := db.Exec(query, args...)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	return result
+}
+
+func Count(query string, args ...any) int64 {
+	countQuery := Query(query, args...)
+	defer countQuery.Close()
+	countQuery.Next()
+	var count int64
+	countQuery.Scan(&count)
+	return count
 }

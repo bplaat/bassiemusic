@@ -68,23 +68,21 @@ func main() {
 
 	app.Static("/storage", "./storage")
 
+	app.Post("/auth/login", controllers.AuthLogin)
+
 	// Deezer API proxies
 	app.Get("/deezer/artists", func(c *fiber.Ctx) error {
-		query := c.Query("q")
 		c.Response().Header.Add("Content-Type", "application/json")
-		_, err := c.Write(utils.Fetch("https://api.deezer.com/search/artist?q=" + url.QueryEscape(query)))
+		_, err := c.Write(utils.Fetch("https://api.deezer.com/search/artist?q=" + url.QueryEscape(c.Query("q"))))
 		return err
 	})
 	app.Get("/deezer/albums", func(c *fiber.Ctx) error {
-		query := c.Query("q")
 		c.Response().Header.Add("Content-Type", "application/json")
-		_, err := c.Write(utils.Fetch("https://api.deezer.com/search/album?q=" + url.QueryEscape(query)))
+		_, err := c.Write(utils.Fetch("https://api.deezer.com/search/album?q=" + url.QueryEscape(c.Query("q"))))
 		return err
 	})
 
-	app.Post("/auth/login", controllers.AuthLogin)
-
-	// app.Use(middlewares.IsAuthed)
+	app.Use(middlewares.IsAuthed)
 
 	app.Get("/auth/validate", controllers.AuthValidate)
 	app.Get("/auth/logout", controllers.AuthLogout)
@@ -108,8 +106,11 @@ func main() {
 	app.Get("/download/album", controllers.DownloadAlbum)
 
 	app.Get("/users", controllers.UsersIndex)
+	app.Post("/users", controllers.UsersCreate)
 	app.Get("/users/:userID", controllers.UsersShow)
+	app.Post("/users/:userID", controllers.UsersEdit)
 	app.Get("/users/:userID/sessions", controllers.UsersSessions)
+	app.Get("/users/:userID/delete", controllers.UsersDelete)
 
 	app.Get("/sessions", controllers.SessionsIndex)
 	app.Get("/sessions/:sessionID", controllers.SessionsShow)

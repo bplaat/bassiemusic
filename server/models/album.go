@@ -3,7 +3,6 @@ package models
 import (
 	"database/sql"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/bplaat/bassiemusic/database"
@@ -64,31 +63,19 @@ func AlbumsScan(c *fiber.Ctx, albumsQuery *sql.Rows, withArtists bool, withGenre
 }
 
 func AlbumArtists(c *fiber.Ctx, album *Album) []Artist {
-	artistsQuery, err := database.Query("SELECT BIN_TO_UUID(`id`), `name`, `created_at` FROM `artists` WHERE `id` IN (SELECT `artist_id` FROM `album_artist` WHERE `album_id` = UUID_TO_BIN(?)) ORDER BY LOWER(`name`)", album.ID)
-	if err != nil {
-		log.Fatalln(err)
-	}
+	artistsQuery := database.Query("SELECT BIN_TO_UUID(`id`), `name`, `created_at` FROM `artists` WHERE `id` IN (SELECT `artist_id` FROM `album_artist` WHERE `album_id` = UUID_TO_BIN(?)) ORDER BY LOWER(`name`)", album.ID)
 	defer artistsQuery.Close()
-
 	return ArtistsScan(c, artistsQuery, false)
 }
 
 func AlbumGenres(c *fiber.Ctx, album *Album) []Genre {
-	genresQuery, err := database.Query("SELECT BIN_TO_UUID(`id`), `name`, `created_at` FROM `genres` WHERE `id` IN (SELECT `genre_id` FROM `album_genre` WHERE `album_id` = UUID_TO_BIN(?)) ORDER BY LOWER(`name`)", album.ID)
-	if err != nil {
-		log.Fatalln(err)
-	}
+	genresQuery := database.Query("SELECT BIN_TO_UUID(`id`), `name`, `created_at` FROM `genres` WHERE `id` IN (SELECT `genre_id` FROM `album_genre` WHERE `album_id` = UUID_TO_BIN(?)) ORDER BY LOWER(`name`)", album.ID)
 	defer genresQuery.Close()
-
 	return GenresScan(c, genresQuery, false)
 }
 
 func AlbumTracks(c *fiber.Ctx, album *Album) []Track {
-	tracksQuery, err := database.Query("SELECT BIN_TO_UUID(`id`), BIN_TO_UUID(`album_id`), `title`, `disk`, `position`, `duration`, `explicit`, `plays`, `created_at` FROM `tracks` WHERE `album_id` = UUID_TO_BIN(?) ORDER BY `disk`, `position`", album.ID)
-	if err != nil {
-		log.Fatalln(err)
-	}
+	tracksQuery := database.Query("SELECT BIN_TO_UUID(`id`), BIN_TO_UUID(`album_id`), `title`, `disk`, `position`, `duration`, `explicit`, `plays`, `created_at` FROM `tracks` WHERE `album_id` = UUID_TO_BIN(?) ORDER BY `disk`, `position`", album.ID)
 	defer tracksQuery.Close()
-
 	return TracksScan(c, tracksQuery, false, true)
 }

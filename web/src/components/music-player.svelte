@@ -1,4 +1,5 @@
 <script>
+    import Cookies from "js-cookie";
     import { PLAYER_UPDATE_UI_TIMEOUT, PLAYER_SEEK_TIME } from "../config.js";
     import { playingTrack, playingQueue, audioVolume } from "../stores.js";
     import { formatDuration } from "../filters.js";
@@ -27,7 +28,7 @@
 
             fetch(`${import.meta.env.VITE_API_URL}/tracks/${track.id}/play`, {
                 headers: {
-                    Authorization: "Bearer " + localStorage.token,
+                    Authorization: `Bearer ${Cookies.get('token')}`,
                 },
             });
         };

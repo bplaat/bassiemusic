@@ -1,8 +1,6 @@
 package middlewares
 
 import (
-	"log"
-
 	"github.com/bplaat/bassiemusic/database"
 	"github.com/bplaat/bassiemusic/utils"
 	"github.com/gofiber/fiber/v2"
@@ -15,10 +13,7 @@ func IsAuthed(c *fiber.Ctx) error {
 	}
 
 	// Get all active session by token
-	sessionQuery, err := database.Query("SELECT `id` FROM `sessions` WHERE `token` = ? AND `expires_at` > NOW() LIMIT 1", token)
-	if err != nil {
-		log.Fatalln(err)
-	}
+	sessionQuery := database.Query("SELECT `id` FROM `sessions` WHERE `token` = ? AND `expires_at` > NOW()", token)
 	defer sessionQuery.Close()
 
 	// When a session doesn't exist return unauthorized error

@@ -3,7 +3,6 @@ package models
 import (
 	"database/sql"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/bplaat/bassiemusic/database"
@@ -48,22 +47,14 @@ func TracksScan(c *fiber.Ctx, tracksQuery *sql.Rows, withAlbum bool, withArtists
 }
 
 func TrackAlbum(c *fiber.Ctx, track *Track) Album {
-	albumQuery, err := database.Query("SELECT BIN_TO_UUID(`id`), `type`, `title`, `released_at`, `explicit`, `created_at` FROM `albums` WHERE `id` = UUID_TO_BIN(?)", track.AlbumID)
-	if err != nil {
-		log.Fatalln(err)
-	}
+	albumQuery := database.Query("SELECT BIN_TO_UUID(`id`), `type`, `title`, `released_at`, `explicit`, `created_at` FROM `albums` WHERE `id` = UUID_TO_BIN(?)", track.AlbumID)
 	defer albumQuery.Close()
-
 	albumQuery.Next()
 	return AlbumScan(c, albumQuery, true, true, false)
 }
 
 func TrackArtists(c *fiber.Ctx, track *Track) []Artist {
-	artistsQuery, err := database.Query("SELECT BIN_TO_UUID(`id`), `name`, `created_at` FROM `artists` WHERE `id` IN (SELECT `artist_id` FROM `track_artist` WHERE `track_id` = UUID_TO_BIN(?)) ORDER BY LOWER(`name`)", track.ID)
-	if err != nil {
-		log.Fatalln(err)
-	}
+	artistsQuery := database.Query("SELECT BIN_TO_UUID(`id`), `name`, `created_at` FROM `artists` WHERE `id` IN (SELECT `artist_id` FROM `track_artist` WHERE `track_id` = UUID_TO_BIN(?)) ORDER BY LOWER(`name`)", track.ID)
 	defer artistsQuery.Close()
-
 	return ArtistsScan(c, artistsQuery, false)
 }

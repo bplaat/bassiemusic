@@ -1,9 +1,6 @@
 package controllers
 
 import (
-	"database/sql"
-	"log"
-
 	"github.com/bplaat/bassiemusic/database"
 	"github.com/bplaat/bassiemusic/models"
 	"github.com/bplaat/bassiemusic/utils"
@@ -13,23 +10,11 @@ import (
 func TracksIndex(c *fiber.Ctx) error {
 	query, page, limit := utils.ParseIndexVars(c)
 
-	// Get total tracks count
-	tracksCountQuery, err := database.Query("SELECT COUNT(`id`) FROM `tracks` WHERE `title` LIKE ?", "%"+query+"%")
-	if err != nil {
-		log.Fatalln(err)
-	}
-	defer tracksCountQuery.Close()
-
-	tracksCountQuery.Next()
-	var total int64
-	tracksCountQuery.Scan(&total)
+	// Get total tracks
+	total := database.Count("SELECT COUNT(`id`) FROM `tracks` WHERE `title` LIKE ?", "%"+query+"%")
 
 	// Get tracks
-	var tracksQuery *sql.Rows
-	tracksQuery, err = database.Query("SELECT BIN_TO_UUID(`id`), BIN_TO_UUID(`album_id`), `title`, `disk`, `position`, `duration`, `explicit`, `plays`, `created_at` FROM `tracks` WHERE `title` LIKE ? ORDER BY LOWER(`title`) LIMIT ?, ?", "%"+query+"%", (page-1)*limit, limit)
-	if err != nil {
-		log.Fatalln(err)
-	}
+	tracksQuery := database.Query("SELECT BIN_TO_UUID(`id`), BIN_TO_UUID(`album_id`), `title`, `disk`, `position`, `duration`, `explicit`, `plays`, `created_at` FROM `tracks` WHERE `title` LIKE ? ORDER BY `plays` DESC, LOWER(`title`) LIMIT ?, ?", "%"+query+"%", (page-1)*limit, limit)
 	defer tracksQuery.Close()
 
 	// Return response
@@ -44,23 +29,19 @@ func TracksIndex(c *fiber.Ctx) error {
 }
 
 func TracksShow(c *fiber.Ctx) error {
-	trackQuery, err := database.Query("SELECT BIN_TO_UUID(`id`), BIN_TO_UUID(`album_id`), `title`, `disk`, `position`, `duration`, `explicit`, `plays`, `created_at` FROM `tracks` WHERE `id` = UUID_TO_BIN(?) LIMIT 1", c.Params("trackID"))
-	if err != nil {
-		log.Fatalln(err)
-	}
+	// Check if track exists
+	trackQuery := database.Query("SELECT BIN_TO_UUID(`id`), BIN_TO_UUID(`album_id`), `title`, `disk`, `position`, `duration`, `explicit`, `plays`, `created_at` FROM `tracks` WHERE `id` = UUID_TO_BIN(?)", c.Params("trackID"))
 	defer trackQuery.Close()
-
 	if !trackQuery.Next() {
 		return fiber.ErrNotFound
 	}
+
+	// Return response
 	return c.JSON(models.TrackScan(c, trackQuery, true, true))
 }
 
 func TracksPlay(c *fiber.Ctx) error {
-	trackQuery, err := database.Query("SELECT `plays` FROM `tracks` WHERE `id` = UUID_TO_BIN(?)", c.Params("trackID"))
-	if err != nil {
-		log.Fatalln(err)
-	}
+	trackQuery := database.Query("SELECT `plays` FROM `tracks` WHERE `id` = UUID_TO_BIN(?)", c.Params("trackID"))
 	defer trackQuery.Close()
 
 	if !trackQuery.Next() {

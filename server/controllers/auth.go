@@ -26,10 +26,7 @@ func AuthLogin(c *fiber.Ctx) error {
 	}
 
 	// Get user by username or email
-	userQuery, err := database.Query("SELECT BIN_TO_UUID(`id`), `username`, `email`, `password`, `role`, `created_at` FROM `users` WHERE `username` = ? OR `email` = ?", params.Logon, params.Logon)
-	if err != nil {
-		log.Fatalln(err)
-	}
+	userQuery := database.Query("SELECT BIN_TO_UUID(`id`), `username`, `email`, `password`, `role`, `created_at` FROM `users` WHERE `username` = ? OR `email` = ?", params.Logon, params.Logon)
 	defer userQuery.Close()
 
 	if !userQuery.Next() {
@@ -50,7 +47,7 @@ func AuthLogin(c *fiber.Ctx) error {
 
 	// Generate new token
 	randomBytes := make([]byte, 128)
-	_, err = io.ReadFull(rand.Reader, randomBytes)
+	_, err := io.ReadFull(rand.Reader, randomBytes)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -58,12 +55,9 @@ func AuthLogin(c *fiber.Ctx) error {
 
 	// Create new session
 	ua := useragent.Parse(c.Get("User-Agent"))
-	_, err = database.Exec("INSERT INTO `sessions` (`id`, `user_id`, `token`, `ip`, `client_os`, `client_name`, `client_version`, `expires_at`) VALUES "+
+	database.Exec("INSERT INTO `sessions` (`id`, `user_id`, `token`, `ip`, `client_os`, `client_name`, `client_version`, `expires_at`) VALUES "+
 		"(UUID_TO_BIN(UUID()), UUID_TO_BIN(?), ?, ?, ?, ?, ?, ?)",
 		user.ID, token, c.IP(), ua.OS, ua.Name, ua.Version, time.Now().Add(365*24*60*60*time.Second).Format(time.RFC3339))
-	if err != nil {
-		log.Fatalln(err)
-	}
 
 	// Return response
 	return c.JSON(fiber.Map{
