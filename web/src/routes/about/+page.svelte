@@ -1,3 +1,7 @@
+<svelte:head>
+    <title>About - BassieMusic</title>
+</svelte:head>
+
 <div class="content">
     <h1 class="title">About BassieMusic</h1>
     <p>

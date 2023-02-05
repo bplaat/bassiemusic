@@ -201,7 +201,7 @@
                 style="padding: 0; overflow: hidden; width: 48px; height: 48px;"
             >
                 <img
-                    src="https://raw.githubusercontent.com/bplaat/strepen/master/docs/icons/avatar-default.svg"
+                    src="/images/avatar-default.svg"
                     alt="{authUser.username}'s avatar"
                     style="display: block;"
                 />

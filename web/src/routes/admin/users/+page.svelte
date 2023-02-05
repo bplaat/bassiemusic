@@ -50,6 +50,10 @@
     }
 </script>
 
+<svelte:head>
+    <title>Users - Admin - BassieMusic</title>
+</svelte:head>
+
 <div class="columns">
     <div class="column">
         <h2 class="title">Admin User</h2>

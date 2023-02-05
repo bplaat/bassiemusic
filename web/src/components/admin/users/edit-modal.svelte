@@ -3,6 +3,7 @@
     import Cookies from "js-cookie";
 
     export let user;
+    let newPassword = '';
 
     let isOpen = false;
     export function open() {
@@ -24,7 +25,7 @@
                 body: new URLSearchParams({
                     username: user.username,
                     email: user.email,
-                    password: user.password,
+                    password: newPassword,
                     role: user.role,
                     theme: user.theme
                 }),
@@ -99,7 +100,7 @@
                         class="input"
                         type="password"
                         id="edit-password"
-                        bind:value={user.password}
+                        bind:value={newPassword}
                     />
                 </div>
             </div>

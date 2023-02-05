@@ -3,6 +3,7 @@
 
     export let data;
     const { authUser } = data;
+    let newPassword = '';
 
     async function editDetails() {
         const response = await fetch(
@@ -15,7 +16,7 @@
                 body: new URLSearchParams({
                     username: authUser.username,
                     email: authUser.email,
-                    password: authUser.password,
+                    password: newPassword,
                     theme: authUser.theme,
                 }),
             }
@@ -78,7 +79,7 @@
                 class="input"
                 type="password"
                 id="edit-password"
-                bind:value={authUser.password}
+                bind:value={newPassword}
             />
         </div>
     </div>

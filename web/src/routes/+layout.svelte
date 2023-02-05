@@ -7,14 +7,18 @@
 </script>
 
 <svelte:head>
-    {#if authUser.theme == 'system'}
-        <link rel="stylesheet" href="/bulma-system.min.css">
-    {/if}
-    {#if authUser.theme == 'light'}
-        <link rel="stylesheet" href="/bulma-light.min.css">
-    {/if}
-    {#if authUser.theme == 'dark'}
-        <link rel="stylesheet" href="/bulma-dark.min.css">
+    {#if authUser}
+        {#if authUser.theme == 'system'}
+            <link rel="stylesheet" href="/css/bulma-system.min.css">
+        {/if}
+        {#if authUser.theme == 'light'}
+            <link rel="stylesheet" href="/css/bulma-light.min.css">
+        {/if}
+        {#if authUser.theme == 'dark'}
+            <link rel="stylesheet" href="/css/bulma-dark.min.css">
+        {/if}
+    {:else}
+        <link rel="stylesheet" href="/css/bulma-system.min.css">
     {/if}
 </svelte:head>
 
