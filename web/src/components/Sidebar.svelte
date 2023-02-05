@@ -15,7 +15,7 @@
     }
 </script>
 
-<div class="sidebar box has-background-white-bis m-0">
+<div class="sidebar box has-background-white-bis m-0" style="border-radius: 0;">
     <h1 class="title is-4 mb-5"><a href="/">BassieMusic</a></h1>
     <div class="menu">
         {#if authUser == null}
