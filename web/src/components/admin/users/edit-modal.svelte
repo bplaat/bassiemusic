@@ -26,6 +26,7 @@
                     email: user.email,
                     password: user.password,
                     role: user.role,
+                    theme: user.theme
                 }),
             }
         );
@@ -55,29 +56,37 @@
             />
         </header>
         <section class="modal-card-body">
-            <div class="field">
-                <label class="label" for="edit-username">Username</label>
-                <div class="control">
-                    <input
-                        class="input"
-                        type="text"
-                        id="edit-username"
-                        bind:value={user.username}
-                        required
-                    />
+            <div class="columns">
+                <div class="column">
+                    <div class="field">
+                        <label class="label" for="edit-username"
+                            >Username</label
+                        >
+                        <div class="control">
+                            <input
+                                class="input"
+                                type="text"
+                                id="edit-username"
+                                bind:value={user.username}
+                                required
+                            />
+                        </div>
+                    </div>
                 </div>
-            </div>
 
-            <div class="field">
-                <label class="label" for="edit-email">Email</label>
-                <div class="control">
-                    <input
-                        class="input"
-                        type="email"
-                        id="edit-email"
-                        bind:value={user.email}
-                        required
-                    />
+                <div class="column">
+                    <div class="field">
+                        <label class="label" for="edit-email">Email</label>
+                        <div class="control">
+                            <input
+                                class="input"
+                                type="email"
+                                id="edit-email"
+                                bind:value={user.email}
+                                required
+                            />
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -95,14 +104,41 @@
                 </div>
             </div>
 
-            <div class="field">
-                <label class="label" for="edit-role">Role</label>
-                <div class="control">
-                    <div class="select is-fullwidth ">
-                        <select id="edit-role" bind:value={user.role} required>
-                            <option value="normal">Normal</option>
-                            <option value="admin">Admin</option>
-                        </select>
+            <div class="columns">
+                <div class="column">
+                    <div class="field">
+                        <label class="label" for="edit-role">Role</label>
+                        <div class="control">
+                            <div class="select is-fullwidth">
+                                <select
+                                    id="edit-role"
+                                    bind:value={user.role}
+                                    required
+                                >
+                                    <option value="normal">Normal</option>
+                                    <option value="admin">Admin</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="column">
+                    <div class="field">
+                        <label class="label" for="edit-theme">Theme</label>
+                        <div class="control">
+                            <div class="select is-fullwidth">
+                                <select
+                                    id="edit-theme"
+                                    bind:value={user.theme}
+                                    required
+                                >
+                                    <option value="system">System</option>
+                                    <option value="light">Light</option>
+                                    <option value="dark">Dark</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

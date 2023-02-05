@@ -7,6 +7,7 @@ import (
 
 	"github.com/bplaat/bassiemusic/controllers"
 	"github.com/bplaat/bassiemusic/database"
+	"github.com/bplaat/bassiemusic/middlewares"
 	"github.com/bplaat/bassiemusic/tasks"
 	"github.com/bplaat/bassiemusic/utils"
 	_ "github.com/go-sql-driver/mysql"
@@ -77,7 +78,7 @@ func main() {
 		return err
 	})
 
-	// app.Use(middlewares.IsAuthed)
+	app.Use(middlewares.IsAuthed)
 
 	app.Get("/auth/validate", controllers.AuthValidate)
 	app.Get("/auth/logout", controllers.AuthLogout)
@@ -95,16 +96,17 @@ func main() {
 	app.Get("/tracks/:trackID", controllers.TracksShow)
 	app.Get("/tracks/:trackID/play", controllers.TracksPlay)
 
-	// app.Use(middlewares.IsAdmin)
+	app.Get("/users/:userID", controllers.UsersShow)
+	app.Get("/users/:userID/sessions", controllers.UsersSessions)
+	app.Post("/users/:userID", controllers.UsersEdit)
+
+	app.Use(middlewares.IsAdmin)
 
 	app.Get("/download/artist", controllers.DownloadArtist)
 	app.Get("/download/album", controllers.DownloadAlbum)
 
 	app.Get("/users", controllers.UsersIndex)
 	app.Post("/users", controllers.UsersCreate)
-	app.Get("/users/:userID", controllers.UsersShow)
-	app.Post("/users/:userID", controllers.UsersEdit)
-	app.Get("/users/:userID/sessions", controllers.UsersSessions)
 	app.Get("/users/:userID/delete", controllers.UsersDelete)
 
 	app.Get("/sessions", controllers.SessionsIndex)

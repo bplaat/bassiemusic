@@ -26,7 +26,7 @@ func AuthLogin(c *fiber.Ctx) error {
 	}
 
 	// Get user by username or email
-	userQuery := database.Query("SELECT BIN_TO_UUID(`id`), `username`, `email`, `password`, `role`, `created_at` FROM `users` WHERE `username` = ? OR `email` = ?", params.Logon, params.Logon)
+	userQuery := database.Query("SELECT BIN_TO_UUID(`id`), `username`, `email`, `password`, `role`, `theme`, `created_at` FROM `users` WHERE `username` = ? OR `email` = ?", params.Logon, params.Logon)
 	defer userQuery.Close()
 
 	if !userQuery.Next() {

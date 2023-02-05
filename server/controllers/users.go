@@ -18,7 +18,7 @@ func UsersIndex(c *fiber.Ctx) error {
 	total := database.Count("SELECT COUNT(`id`) FROM `users` WHERE `username` LIKE ? OR `email` LIKE ?", "%"+query+"%", "%"+query+"%")
 
 	// Get users
-	usersQuery := database.Query("SELECT BIN_TO_UUID(`id`), `username`, `email`, `password`, `role`, `created_at` FROM `users` WHERE `username` LIKE ? OR `email` LIKE ? ORDER BY LOWER(`username`) LIMIT ?, ?", "%"+query+"%", "%"+query+"%", (page-1)*limit, limit)
+	usersQuery := database.Query("SELECT BIN_TO_UUID(`id`), `username`, `email`, `password`, `role`, `theme`, `created_at` FROM `users` WHERE `username` LIKE ? OR `email` LIKE ? ORDER BY LOWER(`username`) LIMIT ?, ?", "%"+query+"%", "%"+query+"%", (page-1)*limit, limit)
 	defer usersQuery.Close()
 
 	// Return response
@@ -37,6 +37,7 @@ type UsersCreateParams struct {
 	Email    string `form:"email" validate:"required,email"`
 	Password string `form:"password" validate:"required,min=6"`
 	Role     string `form:"role" validate:"required"`
+	Theme    string `form:"theme" validate:"required"`
 }
 
 func UsersCreate(c *fiber.Ctx) error {
@@ -76,8 +77,15 @@ func UsersCreate(c *fiber.Ctx) error {
 		return fiber.ErrBadRequest
 	}
 
+	// Validate theme is correct
+	if params.Theme != "system" && params.Theme != "light" && params.Theme != "dark" {
+		log.Println("theme not valid")
+		return fiber.ErrBadRequest
+	}
+
 	// Create user
 	userId := uuid.NewV4()
+
 	var userRole models.UserRole
 	if params.Role == "normal" {
 		userRole = models.UserRoleNormal
@@ -85,19 +93,37 @@ func UsersCreate(c *fiber.Ctx) error {
 	if params.Role == "admin" {
 		userRole = models.UserRoleAdmin
 	}
-	database.Exec("INSERT INTO `users` (`id`, `username`, `email`, `password`, `role`) VALUES (UUID_TO_BIN(?), ?, ?, ?, ?)",
-		userId.String(), params.Username, params.Email, utils.HashPassword(params.Password), userRole)
+
+	var userTheme models.UserTheme
+	if params.Theme == "system" {
+		userTheme = models.UserThemeSystem
+	}
+	if params.Theme == "light" {
+		userTheme = models.UserThemeLight
+	}
+	if params.Theme == "dark" {
+		userTheme = models.UserThemeDark
+	}
+
+	database.Exec("INSERT INTO `users` (`id`, `username`, `email`, `password`, `role`, `theme`) VALUES (UUID_TO_BIN(?), ?, ?, ?, ?, ?)",
+		userId.String(), params.Username, params.Email, utils.HashPassword(params.Password), userRole, userTheme)
 
 	// Get new created user and send response
-	userQuery := database.Query("SELECT BIN_TO_UUID(`id`), `username`, `email`, `password`, `role`, `created_at` FROM `users` WHERE `id` = UUID_TO_BIN(?)", userId.String())
+	userQuery := database.Query("SELECT BIN_TO_UUID(`id`), `username`, `email`, `password`, `role`, `theme`, `created_at` FROM `users` WHERE `id` = UUID_TO_BIN(?)", userId.String())
 	defer userQuery.Close()
 	userQuery.Next()
 	return c.JSON(models.UserScan(c, userQuery))
 }
 
 func UsersShow(c *fiber.Ctx) error {
+	// Check auth
+	authUser := utils.AuthUser(c)
+	if authUser.Role != "admin" && authUser.ID != c.Params("userID") {
+		return fiber.ErrUnauthorized
+	}
+
 	// Check if user exists
-	userQuery := database.Query("SELECT BIN_TO_UUID(`id`), `username`, `email`, `password`, `role`, `created_at` FROM `users` WHERE `id` = UUID_TO_BIN(?)", c.Params("userID"))
+	userQuery := database.Query("SELECT BIN_TO_UUID(`id`), `username`, `email`, `password`, `role`, `theme`, `created_at` FROM `users` WHERE `id` = UUID_TO_BIN(?)", c.Params("userID"))
 	defer userQuery.Close()
 	if !userQuery.Next() {
 		return fiber.ErrNotFound
@@ -111,12 +137,19 @@ type UsersEditParams struct {
 	Username string `form:"username" validate:"required,min=2"`
 	Email    string `form:"email" validate:"required,email"`
 	Password string `form:"password" validate:"omitempty,min=6"`
-	Role     string `form:"role" validate:"required"`
+	Role     string `form:"role" validate:"omitempty,required"`
+	Theme    string `form:"theme" validate:"required"`
 }
 
 func UsersEdit(c *fiber.Ctx) error {
+	// Check auth
+	authUser := utils.AuthUser(c)
+	if authUser.Role != "admin" && authUser.ID != c.Params("userID") {
+		return fiber.ErrUnauthorized
+	}
+
 	// Check if user exists
-	userQuery := database.Query("SELECT BIN_TO_UUID(`id`), `username`, `email`, `password`, `role`, `created_at` FROM `users` WHERE `id` = UUID_TO_BIN(?)", c.Params("userID"))
+	userQuery := database.Query("SELECT BIN_TO_UUID(`id`), `username`, `email`, `password`, `role`, `theme`, `created_at` FROM `users` WHERE `id` = UUID_TO_BIN(?)", c.Params("userID"))
 	defer userQuery.Close()
 	if !userQuery.Next() {
 		return fiber.ErrNotFound
@@ -160,8 +193,14 @@ func UsersEdit(c *fiber.Ctx) error {
 	}
 
 	// Validate role is correct
-	if params.Role != "normal" && params.Role != "admin" {
+	if params.Role != "" && params.Role != "normal" && params.Role != "admin" {
 		log.Println("role not valid")
+		return fiber.ErrBadRequest
+	}
+
+	// Validate theme is correct
+	if params.Theme != "system" && params.Theme != "light" && params.Theme != "dark" {
+		log.Println("theme not valid")
 		return fiber.ErrBadRequest
 	}
 
@@ -173,14 +212,30 @@ func UsersEdit(c *fiber.Ctx) error {
 	if params.Role == "admin" {
 		userRole = models.UserRoleAdmin
 	}
-	if params.Password != "" {
-		database.Exec("UPDATE `users` SET `username` = ?, `email` = ?, `password` = ?, `role` = ? WHERE `id` = UUID_TO_BIN(?)", params.Username, params.Email, utils.HashPassword(params.Password), userRole, user.ID)
+
+	var userTheme models.UserTheme
+	if params.Theme == "system" {
+		userTheme = models.UserThemeSystem
+	}
+	if params.Theme == "light" {
+		userTheme = models.UserThemeLight
+	}
+	if params.Theme == "dark" {
+		userTheme = models.UserThemeDark
+	}
+
+	if params.Role != "" {
+		if params.Password != "" {
+			database.Exec("UPDATE `users` SET `username` = ?, `email` = ?, `password` = ?, `role` = ?, theme = ? WHERE `id` = UUID_TO_BIN(?)", params.Username, params.Email, utils.HashPassword(params.Password), userRole, userTheme, user.ID)
+		} else {
+			database.Exec("UPDATE `users` SET `username` = ?, `email` = ?, `role` = ?, `theme` = ? WHERE `id` = UUID_TO_BIN(?)", params.Username, params.Email, userRole, userTheme, user.ID)
+		}
 	} else {
-		database.Exec("UPDATE `users` SET `username` = ?, `email` = ?, `role` = ? WHERE `id` = UUID_TO_BIN(?)", params.Username, params.Email, userRole, user.ID)
+		database.Exec("UPDATE `users` SET `username` = ?, `email` = ?, `theme` = ? WHERE `id` = UUID_TO_BIN(?)", params.Username, params.Email, userTheme, user.ID)
 	}
 
 	// Get edited user and send response
-	updatedUserQuery := database.Query("SELECT BIN_TO_UUID(`id`), `username`, `email`, `password`, `role`, `created_at` FROM `users` WHERE `id` = UUID_TO_BIN(?)", user.ID)
+	updatedUserQuery := database.Query("SELECT BIN_TO_UUID(`id`), `username`, `email`, `password`, `role`, `theme`, `created_at` FROM `users` WHERE `id` = UUID_TO_BIN(?)", user.ID)
 	defer updatedUserQuery.Close()
 	updatedUserQuery.Next()
 	return c.JSON(models.UserScan(c, updatedUserQuery))
@@ -188,6 +243,12 @@ func UsersEdit(c *fiber.Ctx) error {
 
 func UsersSessions(c *fiber.Ctx) error {
 	_, page, limit := utils.ParseIndexVars(c)
+
+	// Check auth
+	authUser := utils.AuthUser(c)
+	if authUser.Role != "admin" && authUser.ID != c.Params("userID") {
+		return fiber.ErrUnauthorized
+	}
 
 	// Check if user exists
 	userQuery := database.Query("SELECT `id` FROM `users` WHERE `id` = UUID_TO_BIN(?)", c.Params("userID"))

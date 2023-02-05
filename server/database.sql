@@ -10,6 +10,7 @@ CREATE TABLE `users` (
     `email` VARCHAR(255) NOT NULL,
     `password` VARCHAR(255) NOT NULL,
     `role` TINYINT UNSIGNED NOT NULL,
+    `theme` TINYINT UNSIGNED NOT NULL,
     `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
@@ -17,9 +18,9 @@ CREATE TABLE `users` (
     UNIQUE (`email`)
 );
 
-INSERT INTO `users` (`id`, `username`, `email`, `password`, `role`) VALUES
-    (UUID_TO_BIN(UUID()), 'bplaat', 'bastiaan.v.d.plaat@gmail.com', '$2a$10$21hEKLKeYntMkANwm.RCludVDbMU12PRqmc.k6febZUkJHNDoLEAq', 1),
-    (UUID_TO_BIN(UUID()), 'lplaat', 'leonard.van.der.plaat@gmail.com', '$2a$10$21hEKLKeYntMkANwm.RCludVDbMU12PRqmc.k6febZUkJHNDoLEAq', 1);
+INSERT INTO `users` (`id`, `username`, `email`, `password`, `role`, `theme`) VALUES
+    (UUID_TO_BIN(UUID()), 'bplaat', 'bastiaan.v.d.plaat@gmail.com', '$2a$10$21hEKLKeYntMkANwm.RCludVDbMU12PRqmc.k6febZUkJHNDoLEAq', 1, 0),
+    (UUID_TO_BIN(UUID()), 'lplaat', 'leonard.van.der.plaat@gmail.com', '$2a$10$21hEKLKeYntMkANwm.RCludVDbMU12PRqmc.k6febZUkJHNDoLEAq', 1, 0);
 
 CREATE TABLE `sessions` (
     `id` BINARY(16) NOT NULL,
