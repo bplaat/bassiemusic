@@ -19,6 +19,10 @@
             audio.pause();
         }
 
+        // Limiting sidebar height
+        document.body.style.marginBottom = '6rem';
+        document.querySelector('.sidebar').style.height = 'calc(100% - 6rem)';
+
         audio = new Audio(track.music);
         audio.volume = $audioVolume;
         audio.onloadedmetadata = () => {
@@ -178,8 +182,8 @@
     }
 </script>
 
-<div class="player-controls box has-background-white-bis m-0" style="border-radius: 0;">
-    {#if $playingQueue.length > 0}
+{#if $playingQueue.length > 0}
+<div class="player-controls box has-background-white-bis m-0">
     <div style="display: flex; align-items: center;">
         <div class="box mr-4 mb-0" style="padding: 0; overflow: hidden; width: 64px; height: 64px;">
             <img src={track.album.cover} alt="{track.title} album's cover" style="display: block;" />
@@ -268,5 +272,5 @@
             <input type="range" style="flex: 1;" bind:value={$audioVolume} min="0" max="1" step="0.01" />
         </div>
     </div>
-    {/if}
 </div>
+{/if}
