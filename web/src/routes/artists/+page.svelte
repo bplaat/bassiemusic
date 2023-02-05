@@ -1,8 +1,6 @@
 <script>
-    import Cookies from "js-cookie";
-
     export let data;
-    let { artists } = data;
+    let { token, artists } = data;
 
     async function fetchPage(page) {
         const response = await fetch(
@@ -11,7 +9,7 @@
             })}`,
             {
                 headers: {
-                    Authorization: `Bearer ${Cookies.get("token")}`,
+                    Authorization: `Bearer ${token}`,
                 },
             }
         );

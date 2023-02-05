@@ -1,9 +1,8 @@
 <script>
-    import Cookies from "js-cookie";
     import TracksTable from "../../components/tracks-table.svelte";
 
     export let data;
-    let { tracks } = data;
+    let { token, tracks } = data;
 
     async function fetchPage(page) {
         const response = await fetch(
@@ -13,7 +12,7 @@
             })}`,
             {
                 headers: {
-                    Authorization: `Bearer ${Cookies.get("token")}`,
+                    Authorization: `Bearer ${token}`,
                 },
             }
         );
@@ -34,4 +33,4 @@
 </svelte:head>
 
 <h2 class="title">Tracks</h2>
-<TracksTable {tracks} />
+<TracksTable {token} {tracks} />

@@ -1,5 +1,8 @@
 package models
 
+// This needs to be in the utils package but then you get an import cycle error
+// So to put it here is a quick and dirty fix
+
 import (
 	"strings"
 

@@ -1,9 +1,8 @@
 <script>
-    import Cookies from "js-cookie";
     import AlbumCard from "../../components/album-card.svelte";
 
     export let data;
-    let { albums } = data;
+    let { token, albums } = data;
 
     async function fetchPage(page) {
         const response = await fetch(
@@ -12,7 +11,7 @@
             })}`,
             {
                 headers: {
-                    Authorization: `Bearer ${Cookies.get("token")}`,
+                    Authorization: `Bearer ${token}`,
                 },
             }
         );

@@ -1,8 +1,8 @@
 <script>
-    import Cookies from "js-cookie";
     import { playingTrack, playingQueue } from "../stores.js";
     import { formatDuration } from "../filters.js";
 
+    export let token;
     export let tracks;
     export let showAlbum = true;
 
@@ -23,7 +23,7 @@
             }`,
             {
                 headers: {
-                    Authorization: `Bearer ${Cookies.get("token")}`,
+                    Authorization: `Bearer ${token}`,
                 },
             }
         );

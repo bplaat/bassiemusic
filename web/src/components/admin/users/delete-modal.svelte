@@ -1,7 +1,7 @@
 <script>
     import { createEventDispatcher } from "svelte";
-    import Cookies from "js-cookie";
 
+    export let token;
     export let user;
 
     let isOpen = false;
@@ -18,7 +18,7 @@
             `${import.meta.env.VITE_API_URL}/users/${user.id}/delete`,
             {
                 headers: {
-                    Authorization: `Bearer ${Cookies.get("token")}`,
+                    Authorization: `Bearer ${token}`,
                 },
             }
         );

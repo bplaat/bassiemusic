@@ -1,10 +1,9 @@
 <script>
-    import Cookies from "js-cookie";
     import TracksTable from "../../../components/tracks-table.svelte";
     import AlbumCard from "../../../components/album-card.svelte";
 
     export let data;
-    const { artist } = data;
+    const { token, artist } = data;
 
     let topTracksTable;
 
@@ -15,7 +14,7 @@
             }`,
             {
                 headers: {
-                    Authorization: `Bearer ${Cookies.get("token")}`,
+                    Authorization: `Bearer ${token}`,
                 },
             }
         );
@@ -82,7 +81,7 @@
 </div>
 
 <h2 class="title mt-5">Top Tracks</h2>
-<TracksTable bind:this={topTracksTable} tracks={artist.top_tracks} />
+<TracksTable bind:this={topTracksTable} {token} tracks={artist.top_tracks} />
 
 <h2 class="title mt-5">Albums</h2>
 {#if artist.albums != undefined}

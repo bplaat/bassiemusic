@@ -14,5 +14,5 @@ export async function load({ fetch, cookies, params }) {
     }
     const album = await response.json();
 
-    return { authUser, album };
+    return { token: cookies.get('token'), authUser, album };
 }

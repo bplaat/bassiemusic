@@ -1,8 +1,6 @@
 <script>
-    import Cookies from "js-cookie";
-
     export let data;
-    const { authUser } = data;
+    const { token, authUser } = data;
     let newPassword = '';
 
     async function editDetails() {
@@ -11,7 +9,7 @@
             {
                 method: "POST",
                 headers: {
-                    Authorization: `Bearer ${Cookies.get("token")}`,
+                    Authorization: `Bearer ${token}`,
                 },
                 body: new URLSearchParams({
                     username: authUser.username,

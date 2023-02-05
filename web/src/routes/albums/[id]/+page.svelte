@@ -1,9 +1,8 @@
 <script>
-    import Cookies from "js-cookie";
     import TracksTable from "../../../components/tracks-table.svelte";
 
     export let data;
-    const { album } = data;
+    const { token, album } = data;
     album.tracks = album.tracks.slice().map((track) => {
         track.album = album;
         return track;
@@ -18,7 +17,7 @@
             }`,
             {
                 headers: {
-                    Authorization: `Bearer ${Cookies.get("token")}`,
+                    Authorization: `Bearer ${token}`,
                 },
             }
         );
@@ -115,4 +114,4 @@
 </div>
 
 <h3 class="title is-4">Tracks</h3>
-<TracksTable bind:this={tracksTable} tracks={album.tracks} showAlbum={false} />
+<TracksTable bind:this={tracksTable} {token} tracks={album.tracks} showAlbum={false} />

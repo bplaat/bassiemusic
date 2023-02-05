@@ -1,11 +1,10 @@
 <script>
-    import Cookies from "js-cookie";
     import CreateModal from "../../../components/admin/users/create-modal.svelte";
     import EditModal from "../../../components/admin/users/edit-modal.svelte";
     import DeleteModal from "../../../components/admin/users/delete-modal.svelte";
 
     export let data;
-    let { users } = data;
+    let { token, users } = data;
 
     async function fetchPage(page) {
         const response = await fetch(
@@ -14,7 +13,7 @@
             })}`,
             {
                 headers: {
-                    Authorization: `Bearer ${Cookies.get("token")}`,
+                    Authorization: `Bearer ${token}`,
                 },
             }
         );
@@ -99,17 +98,20 @@
 
 <CreateModal
     bind:this={createModal}
+    {token}
     on:createUser={updateUsers}
 />
 
 <EditModal
     bind:this={editModal}
+    {token}
     user={selectedUser}
     on:updateUser={updateUsers}
 />
 
 <DeleteModal
     bind:this={deleteModal}
+    {token}
     user={selectedUser}
     on:deleteUser={updateUsers}
 />

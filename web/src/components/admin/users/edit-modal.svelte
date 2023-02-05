@@ -1,7 +1,7 @@
 <script>
     import { createEventDispatcher } from "svelte";
-    import Cookies from "js-cookie";
 
+    export let token;
     export let user;
     let newPassword = '';
 
@@ -20,7 +20,7 @@
             {
                 method: "POST",
                 headers: {
-                    Authorization: `Bearer ${Cookies.get("token")}`,
+                    Authorization: `Bearer ${token}`,
                 },
                 body: new URLSearchParams({
                     username: user.username,

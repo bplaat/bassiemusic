@@ -10,5 +10,5 @@ export async function load({ cookies, fetch }) {
     });
     const { data: artists, pagination } = await response.json();
 
-    return { authUser, artists, total: pagination.total };
+    return { token: cookies.get('token'), authUser, artists, total: pagination.total };
 }
