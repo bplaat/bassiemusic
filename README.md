@@ -11,7 +11,6 @@ A new online streaming music service thingy
 ## TODO
 - Fix many bugs
 
-- FIX WHITE BAR
 - Accounts settings
 - Theme settings
 - Love artist, album and tracks to loved list
