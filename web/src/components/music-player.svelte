@@ -178,7 +178,7 @@
     }
 </script>
 
-<div class="player-controls box has-background-white-bis m-0">
+<div class="player-controls box has-background-white-bis m-0" style="border-radius: 0;">
     {#if $playingQueue.length > 0}
     <div style="display: flex; align-items: center;">
         <div class="box mr-4 mb-0" style="padding: 0; overflow: hidden; width: 64px; height: 64px;">

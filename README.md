@@ -12,8 +12,7 @@ A new online streaming music service thingy
 - Fix many bugs
 
 - FIX WHITE BAR
-- Accounts settings
-- Theme settings
+- Accounts settings, user theme settings
 - Love artist, album and tracks to loved list
 - Remember played songs and state per user (Play history)
 - Global search artist, album, track
