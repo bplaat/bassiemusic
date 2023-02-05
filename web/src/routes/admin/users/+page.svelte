@@ -1,8 +1,11 @@
 <script>
     import Cookies from "js-cookie";
+    import CreateModal from "../../../components/admin/users/create-modal.svelte";
+    import EditModal from "../../../components/admin/users/edit-modal.svelte";
+    import DeleteModal from "../../../components/admin/users/delete-modal.svelte";
 
     export let data;
-    const { users } = data;
+    let { users } = data;
 
     async function fetchPage(page) {
         const response = await fetch(
@@ -17,6 +20,7 @@
         );
         const { data: newUsers, pagination } = await response.json();
         users.push(...newUsers);
+        users = users;
         if (users.length != pagination.total) {
             fetchPage(page + 1);
         }
@@ -24,9 +28,38 @@
     if (users.length != data.total) {
         fetchPage(2);
     }
+
+    function updateUsers() {
+        users = [];
+        fetchPage(1);
+    }
+
+    let selectedUser = {};
+    let createModal;
+    let editModal;
+    let deleteModal;
+
+    function editUser(user) {
+        selectedUser = user;
+        editModal.open();
+    }
+
+    function deleteUser(user) {
+        selectedUser = user;
+        deleteModal.open();
+    }
 </script>
 
-<h1 class="title">Admin Users</h1>
+<div class="columns">
+    <div class="column">
+        <h2 class="title">Admin User</h2>
+    </div>
+    <div class="column">
+        <div class="buttons is-pulled-right">
+            <button class="button is-link" on:click={createModal.open()}>Create new user</button>
+        </div>
+    </div>
+</div>
 
 <table class="table" style="width: 100%;">
     <thead>
@@ -42,14 +75,37 @@
                 <td>{index + 1}</td>
                 <td>{user.username}</td>
                 <td>{user.email}</td>
-                <td>{user.role == 'normal' ? 'Normal' : 'Admin'}</td>
+                <td>{user.role == "normal" ? "Normal" : "Admin"}</td>
                 <td>
                     <div class="buttons">
-                        <button class="button is-link is-small">Edit</button>
-                        <button class="button is-danger is-small">Delete</button>
+                        <button
+                            class="button is-link is-small"
+                            on:click={() => editUser(user)}>Edit</button
+                        >
+                        <button
+                            class="button is-danger is-small"
+                            on:click={() => deleteUser(user)}>Delete</button
+                        >
                     </div>
                 </td>
             </tr>
         {/each}
     </tbody>
 </table>
+
+<CreateModal
+    bind:this={createModal}
+    on:createUser={updateUsers}
+/>
+
+<EditModal
+    bind:this={editModal}
+    user={selectedUser}
+    on:updateUser={updateUsers}
+/>
+
+<DeleteModal
+    bind:this={deleteModal}
+    user={selectedUser}
+    on:deleteUser={updateUsers}
+/>

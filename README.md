@@ -11,15 +11,14 @@ A new online streaming music service thingy
 ## TODO
 - Fix many bugs
 
-- Admin users crud with modals
-- Accounts settings, user avatar
-- User account sessions managment
-- Local language and (dark) theme settings
-
+- Accounts settings
+- Theme settings
 - Love artist, album and tracks to loved list
 - Remember played songs and state per user (Play history)
 - Global search artist, album, track
+- User account sessions managment
 - Change and remove albums / artists in web interface when admin
+- User avatar
 - Users can create, edit, delete find playlists
 
 - Android app
