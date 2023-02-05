@@ -56,5 +56,5 @@ func TrackAlbum(c *fiber.Ctx, track *Track) Album {
 func TrackArtists(c *fiber.Ctx, track *Track) []Artist {
 	artistsQuery := database.Query("SELECT BIN_TO_UUID(`id`), `name`, `created_at` FROM `artists` WHERE `id` IN (SELECT `artist_id` FROM `track_artist` WHERE `track_id` = UUID_TO_BIN(?)) ORDER BY LOWER(`name`)", track.ID)
 	defer artistsQuery.Close()
-	return ArtistsScan(c, artistsQuery, false)
+	return ArtistsScan(c, artistsQuery, false, false)
 }

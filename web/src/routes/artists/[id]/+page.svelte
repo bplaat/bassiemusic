@@ -1,4 +1,5 @@
 <script>
+    import TracksTable from "../../../components/tracks-table.svelte";
     import AlbumCard from "../../../components/album-card.svelte";
 
     export let data;
@@ -38,7 +39,10 @@
     </div>
 </div>
 
-<h2 class="title">Albums</h2>
+<h2 class="title">Top Tracks</h2>
+<TracksTable tracks={artist.top_tracks} />
+
+<h2 class="title" style="margin-top: 3rem;">Albums</h2>
 {#if artist.albums != undefined}
     <div class="columns is-multiline">
         {#each artist.albums as album}

@@ -19,7 +19,7 @@ func ArtistsIndex(c *fiber.Ctx) error {
 
 	// Return response
 	return c.JSON(&fiber.Map{
-		"data": models.ArtistsScan(c, artistsQuery, false),
+		"data": models.ArtistsScan(c, artistsQuery, false, false),
 		"pagination": &fiber.Map{
 			"page":  page,
 			"limit": limit,
@@ -37,5 +37,5 @@ func ArtistsShow(c *fiber.Ctx) error {
 	}
 
 	// Return response
-	return c.JSON(models.ArtistScan(c, artistQuery, true))
+	return c.JSON(models.ArtistScan(c, artistQuery, true, true))
 }

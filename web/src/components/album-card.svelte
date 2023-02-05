@@ -1,17 +1,17 @@
 <script>
-export let album;
+    export let album;
 </script>
 
 <a class="card" href="/albums/{album.id}">
     <div class="card-image" style="background-image: url({album.cover});">
         <div class="card-image-tags">
-            {#if album.type == 'album'}
+            {#if album.type == "album"}
                 <span class="tag">ALBUM</span>
             {/if}
-            {#if album.type == 'ep'}
+            {#if album.type == "ep"}
                 <span class="tag">EP</span>
             {/if}
-            {#if album.type == 'single'}
+            {#if album.type == "single"}
                 <span class="tag">SINGLE</span>
             {/if}
             {#if album.explicit}
