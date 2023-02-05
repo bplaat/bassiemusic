@@ -11,13 +11,17 @@ A new online streaming music service thingy
 ## TODO
 - Fix many bugs
 
-- Love artist, album and tracks to loved list
-- Remember played songs and state per user (Play history)
-- Global search artist, album, track
-- User account sessions management
-- Change and remove albums / artists in web interface when admin
-- User avatar
-- Users can create, edit, delete find playlists
+- lplaat: Global search artist, album, track
+- lplaat: User account sessions management UI like GitHub
+- lplaat: Hover track play button but dblclick still needs to work
+- bplaat: Love artist, album and tracks to loved list
+- bplaat: Remember played songs and state per user (Play history)
+- bplaat: All images must have a small (128x128), medium (512x512) and large (1024x1024) version
+- bplaat: `./bassiemusic restore` redownload the `storage/` folder files
 
+- User avatar upload system
+- Users can create, edit, delete find playlists
+- Change and remove albums / artists in web interface when admin
+- Better downloader experience
 - Android app
 - macOS app
