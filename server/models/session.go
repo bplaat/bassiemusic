@@ -45,7 +45,7 @@ func SessionsScan(c *fiber.Ctx, sessionsQuery *sql.Rows, withUser bool) []Sessio
 }
 
 func SessionUser(c *fiber.Ctx, session *Session) User {
-	userQuery := database.Query("SELECT BIN_TO_UUID(`id`), `username`, `email`, `password`, `role`, `created_at` FROM `users` WHERE `id` = UUID_TO_BIN(?)", session.UserID)
+	userQuery := database.Query("SELECT BIN_TO_UUID(`id`), `username`, `email`, `password`, `role`, `theme`, `created_at` FROM `users` WHERE `id` = UUID_TO_BIN(?)", session.UserID)
 	defer userQuery.Close()
 	userQuery.Next()
 	return UserScan(c, userQuery)
