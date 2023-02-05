@@ -6,6 +6,7 @@ import (
 	"github.com/bplaat/bassiemusic/database"
 	"github.com/bplaat/bassiemusic/models"
 	"github.com/bplaat/bassiemusic/utils"
+	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	uuid "github.com/satori/go.uuid"
 )
@@ -31,28 +32,66 @@ func UsersIndex(c *fiber.Ctx) error {
 	})
 }
 
+type UsersCreateParams struct {
+	Username string `form:"username" validate:"required,min=2"`
+	Email    string `form:"email" validate:"required,email"`
+	Password string `form:"password" validate:"required,min=6"`
+	Role     string `form:"role" validate:"required"`
+}
+
 func UsersCreate(c *fiber.Ctx) error {
-	// Parse and validate body
-	var user models.User
-	if err := c.BodyParser(&user); err != nil {
-		log.Fatalln(err)
+	// Parse body
+	var params UsersCreateParams
+	if err := c.BodyParser(&params); err != nil {
+		log.Println(err)
+		return fiber.ErrBadRequest
+	}
+
+	// Validate values
+	validate := validator.New()
+	if err := validate.Struct(params); err != nil {
+		log.Println(err)
+		return fiber.ErrBadRequest
+	}
+
+	// Validate username is unique
+	usernameQuery := database.Query("SELECT `id` FROM `users` WHERE `username` = ?", params.Username)
+	defer usernameQuery.Close()
+	if usernameQuery.Next() {
+		log.Println("username not unique")
+		return fiber.ErrBadRequest
+	}
+
+	// Validate email is unique
+	emailQuery := database.Query("SELECT `id` FROM `users` WHERE `email` = ?", params.Email)
+	defer emailQuery.Close()
+	if emailQuery.Next() {
+		log.Println("email not unique")
+		return fiber.ErrBadRequest
+	}
+
+	// Validate role is correct
+	if params.Role != "normal" && params.Role != "admin" {
+		log.Println("role not valid")
+		return fiber.ErrBadRequest
 	}
 
 	// Create user
 	userId := uuid.NewV4()
 	var userRole models.UserRole
-	if user.Role == "normal" {
+	if params.Role == "normal" {
 		userRole = models.UserRoleNormal
 	}
-	if user.Role == "admin" {
+	if params.Role == "admin" {
 		userRole = models.UserRoleAdmin
 	}
 	database.Exec("INSERT INTO `users` (`id`, `username`, `email`, `password`, `role`) VALUES (UUID_TO_BIN(?), ?, ?, ?, ?)",
-		userId.String(), user.Username, user.Email, utils.HashPassword(user.Password), userRole)
+		userId.String(), params.Username, params.Email, utils.HashPassword(params.Password), userRole)
 
 	// Get new created user and send response
 	userQuery := database.Query("SELECT BIN_TO_UUID(`id`), `username`, `email`, `password`, `role`, `created_at` FROM `users` WHERE `id` = UUID_TO_BIN(?)", userId.String())
 	defer userQuery.Close()
+	userQuery.Next()
 	return c.JSON(models.UserScan(c, userQuery))
 }
 
@@ -68,6 +107,13 @@ func UsersShow(c *fiber.Ctx) error {
 	return c.JSON(models.UserScan(c, userQuery))
 }
 
+type UsersEditParams struct {
+	Username string `form:"username" validate:"required,min=2"`
+	Email    string `form:"email" validate:"required,email"`
+	Password string `form:"password" validate:"omitempty,min=6"`
+	Role     string `form:"role" validate:"required"`
+}
+
 func UsersEdit(c *fiber.Ctx) error {
 	// Check if user exists
 	userQuery := database.Query("SELECT BIN_TO_UUID(`id`), `username`, `email`, `password`, `role`, `created_at` FROM `users` WHERE `id` = UUID_TO_BIN(?)", c.Params("userID"))
@@ -79,17 +125,64 @@ func UsersEdit(c *fiber.Ctx) error {
 	// Get user
 	user := models.UserScan(c, userQuery)
 
-	// Parse and validate body
-	var updates models.User
-	if err := c.BodyParser(&updates); err != nil {
-		log.Fatalln(err)
+	// Parse body
+	var params UsersEditParams
+	if err := c.BodyParser(&params); err != nil {
+		log.Println(err)
+		return fiber.ErrBadRequest
 	}
 
-	// TODO
+	// Validate values
+	validate := validator.New()
+	if err := validate.Struct(params); err != nil {
+		log.Println(err)
+		return fiber.ErrBadRequest
+	}
+
+	// Validate username is unique when diffrent
+	if user.Username != params.Username {
+		usernameQuery := database.Query("SELECT `id` FROM `users` WHERE `username` = ?", params.Username)
+		defer usernameQuery.Close()
+		if usernameQuery.Next() {
+			log.Println("username not unique")
+			return fiber.ErrBadRequest
+		}
+	}
+
+	// Validate email is unique
+	if user.Email != params.Email {
+		emailQuery := database.Query("SELECT `id` FROM `users` WHERE `email` = ?", params.Email)
+		defer emailQuery.Close()
+		if emailQuery.Next() {
+			log.Println("email not unique")
+			return fiber.ErrBadRequest
+		}
+	}
+
+	// Validate role is correct
+	if params.Role != "normal" && params.Role != "admin" {
+		log.Println("role not valid")
+		return fiber.ErrBadRequest
+	}
+
+	// Update user
+	var userRole models.UserRole
+	if params.Role == "normal" {
+		userRole = models.UserRoleNormal
+	}
+	if params.Role == "admin" {
+		userRole = models.UserRoleAdmin
+	}
+	if params.Password != "" {
+		database.Exec("UPDATE `users` SET `username` = ?, `email` = ?, `password` = ?, `role` = ? WHERE `id` = UUID_TO_BIN(?)", params.Username, params.Email, utils.HashPassword(params.Password), userRole, user.ID)
+	} else {
+		database.Exec("UPDATE `users` SET `username` = ?, `email` = ?, `role` = ? WHERE `id` = UUID_TO_BIN(?)", params.Username, params.Email, userRole, user.ID)
+	}
 
 	// Get edited user and send response
 	updatedUserQuery := database.Query("SELECT BIN_TO_UUID(`id`), `username`, `email`, `password`, `role`, `created_at` FROM `users` WHERE `id` = UUID_TO_BIN(?)", user.ID)
 	defer updatedUserQuery.Close()
+	updatedUserQuery.Next()
 	return c.JSON(models.UserScan(c, updatedUserQuery))
 }
 
@@ -112,7 +205,7 @@ func UsersSessions(c *fiber.Ctx) error {
 
 	// Return response
 	return c.JSON(&fiber.Map{
-		"data": models.UsersScan(c, sessionsQuery),
+		"data": models.SessionsScan(c, sessionsQuery, false),
 		"pagination": &fiber.Map{
 			"page":  page,
 			"limit": limit,

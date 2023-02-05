@@ -7,7 +7,6 @@ import (
 
 	"github.com/bplaat/bassiemusic/controllers"
 	"github.com/bplaat/bassiemusic/database"
-	"github.com/bplaat/bassiemusic/middlewares"
 	"github.com/bplaat/bassiemusic/tasks"
 	"github.com/bplaat/bassiemusic/utils"
 	_ "github.com/go-sql-driver/mysql"
@@ -38,7 +37,7 @@ func createStorageDirs() {
 
 func main() {
 	// Set log settings
-	log.SetFlags(log.LstdFlags | log.Lshortfile)
+	log.SetFlags(log.LstdFlags | log.Llongfile)
 
 	// Create missing storage dirs
 	createStorageDirs()
@@ -57,10 +56,6 @@ func main() {
 	app.Use(cors.New())
 	app.Use(favicon.New())
 	app.Use(logger.New())
-	// app.Use(limiter.New(limiter.Config{
-	// 	Max:        100,
-	// 	Expiration: time.Minute,
-	// }))
 
 	app.Get("/", func(c *fiber.Ctx) error {
 		return c.SendString("BassieMusic API")
@@ -82,7 +77,7 @@ func main() {
 		return err
 	})
 
-	app.Use(middlewares.IsAuthed)
+	// app.Use(middlewares.IsAuthed)
 
 	app.Get("/auth/validate", controllers.AuthValidate)
 	app.Get("/auth/logout", controllers.AuthLogout)
@@ -100,7 +95,7 @@ func main() {
 	app.Get("/tracks/:trackID", controllers.TracksShow)
 	app.Get("/tracks/:trackID/play", controllers.TracksPlay)
 
-	app.Use(middlewares.IsAdmin)
+	// app.Use(middlewares.IsAdmin)
 
 	app.Get("/download/artist", controllers.DownloadArtist)
 	app.Get("/download/album", controllers.DownloadAlbum)

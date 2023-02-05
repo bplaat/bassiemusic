@@ -11,9 +11,9 @@ A new online streaming music service thingy
 ## TODO
 - Fix many bugs
 
-- Go validation
 - Admin users crud with modals
 - Accounts settings, user avatar
+- User account sessions managment
 - Local language and (dark) theme settings
 
 - Love artist, album and tracks to loved list

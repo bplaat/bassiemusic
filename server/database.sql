@@ -18,7 +18,8 @@ CREATE TABLE `users` (
 );
 
 INSERT INTO `users` (`id`, `username`, `email`, `password`, `role`) VALUES
-    (UUID_TO_BIN(UUID()), 'bplaat', 'bastiaan.v.d.plaat@gmail.com', '$2a$10$21hEKLKeYntMkANwm.RCludVDbMU12PRqmc.k6febZUkJHNDoLEAq', 1);
+    (UUID_TO_BIN(UUID()), 'bplaat', 'bastiaan.v.d.plaat@gmail.com', '$2a$10$21hEKLKeYntMkANwm.RCludVDbMU12PRqmc.k6febZUkJHNDoLEAq', 1),
+    (UUID_TO_BIN(UUID()), 'lplaat', 'leonard.van.der.plaat@gmail.com', '$2a$10$21hEKLKeYntMkANwm.RCludVDbMU12PRqmc.k6febZUkJHNDoLEAq', 1);
 
 CREATE TABLE `sessions` (
     `id` BINARY(16) NOT NULL,
