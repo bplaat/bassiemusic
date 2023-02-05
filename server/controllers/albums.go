@@ -39,3 +39,51 @@ func AlbumsShow(c *fiber.Ctx) error {
 	// Return response
 	return c.JSON(models.AlbumScan(c, albumQuery, true, true, true))
 }
+
+func AlbumsLike(c *fiber.Ctx) error {
+	authUser := models.AuthUser(c)
+
+	// Check if album exists
+	albumQuery := database.Query("SELECT `id` FROM `albums` WHERE `id` = UUID_TO_BIN(?)", c.Params("albumID"))
+	defer albumQuery.Close()
+	if !albumQuery.Next() {
+		return fiber.ErrNotFound
+	}
+
+	// Check if album_likes binding exists
+	albumLikeQuery := database.Query("SELECT `id` FROM `album_likes` WHERE `album_id` = UUID_TO_BIN(?) AND `user_id` = UUID_TO_BIN(?)", c.Params("albumID"), authUser.ID)
+	defer albumLikeQuery.Close()
+	if albumLikeQuery.Next() {
+		return c.JSON(fiber.Map{"success": true})
+	}
+
+	// Create album_likes binding
+	database.Exec("INSERT INTO `album_likes` (`id`, `album_id`, `user_id`) VALUES (UUID_TO_BIN(UUID()), UUID_TO_BIN(?), UUID_TO_BIN(?))", c.Params("albumID"), authUser.ID)
+
+	// Send successfull response
+	return c.JSON(fiber.Map{"success": true})
+}
+
+func AlbumsLikeDelete(c *fiber.Ctx) error {
+	authUser := models.AuthUser(c)
+
+	// Check if album exists
+	albumQuery := database.Query("SELECT `id` FROM `albums` WHERE `id` = UUID_TO_BIN(?)", c.Params("albumID"))
+	defer albumQuery.Close()
+	if !albumQuery.Next() {
+		return fiber.ErrNotFound
+	}
+
+	// Check if album_likes binding doesn't exists
+	albumLikeQuery := database.Query("SELECT `id` FROM `album_likes` WHERE `album_id` = UUID_TO_BIN(?) AND `user_id` = UUID_TO_BIN(?)", c.Params("albumID"), authUser.ID)
+	defer albumLikeQuery.Close()
+	if !albumLikeQuery.Next() {
+		return c.JSON(fiber.Map{"success": true})
+	}
+
+	// Delete album_likes binding
+	database.Exec("DELETE FROM `album_likes` WHERE `album_id` = UUID_TO_BIN(?) AND `user_id` = UUID_TO_BIN(?)", c.Params("albumID"), authUser.ID)
+
+	// Send successfull response
+	return c.JSON(fiber.Map{"success": true})
+}

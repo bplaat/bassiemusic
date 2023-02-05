@@ -117,7 +117,7 @@ func UsersCreate(c *fiber.Ctx) error {
 
 func UsersShow(c *fiber.Ctx) error {
 	// Check auth
-	authUser := utils.AuthUser(c)
+	authUser := models.AuthUser(c)
 	if authUser.Role != "admin" && authUser.ID != c.Params("userID") {
 		return fiber.ErrUnauthorized
 	}
@@ -143,7 +143,7 @@ type UsersEditParams struct {
 
 func UsersEdit(c *fiber.Ctx) error {
 	// Check auth
-	authUser := utils.AuthUser(c)
+	authUser := models.AuthUser(c)
 	if authUser.Role != "admin" && authUser.ID != c.Params("userID") {
 		return fiber.ErrUnauthorized
 	}
@@ -245,7 +245,7 @@ func UsersSessions(c *fiber.Ctx) error {
 	_, page, limit := utils.ParseIndexVars(c)
 
 	// Check auth
-	authUser := utils.AuthUser(c)
+	authUser := models.AuthUser(c)
 	if authUser.Role != "admin" && authUser.ID != c.Params("userID") {
 		return fiber.ErrUnauthorized
 	}
@@ -287,7 +287,5 @@ func UsersDelete(c *fiber.Ctx) error {
 	database.Exec("DELETE FROM `users` WHERE `id` = UUID_TO_BIN(?)", c.Params("userID"))
 
 	// Return response
-	return c.JSON(&fiber.Map{
-		"success": true,
-	})
+	return c.JSON(fiber.Map{"success": true})
 }

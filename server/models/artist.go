@@ -13,6 +13,7 @@ type Artist struct {
 	ID        string    `json:"id"`
 	Name      string    `json:"name"`
 	Image     string    `json:"image"`
+	Liked     bool      `json:"liked"`
 	CreatedAt time.Time `json:"created_at"`
 	Albums    []Album   `json:"albums,omitempty"`
 	TopTracks []Track   `json:"top_tracks,omitempty"`
@@ -28,6 +29,7 @@ func ArtistScan(c *fiber.Ctx, artistQuery *sql.Rows, withAlbums bool, withTopTra
 	if withTopTracks {
 		artist.TopTracks = ArtistTopTracks(c, &artist)
 	}
+	artist.Liked = ArtistLiked(c, &artist)
 	return artist
 }
 
@@ -37,6 +39,13 @@ func ArtistsScan(c *fiber.Ctx, artistsQuery *sql.Rows, withAlbums bool, withTopT
 		artists = append(artists, ArtistScan(c, artistsQuery, withAlbums, withTopTracks))
 	}
 	return artists
+}
+
+func ArtistLiked(c *fiber.Ctx, artist *Artist) bool {
+	authUser := AuthUser(c)
+	artistLikeQuery := database.Query("SELECT `id` FROM `artist_likes` WHERE `artist_id` = UUID_TO_BIN(?) AND `user_id` = UUID_TO_BIN(?)", artist.ID, authUser.ID)
+	defer artistLikeQuery.Close()
+	return artistLikeQuery.Next()
 }
 
 func ArtistAlbums(c *fiber.Ctx, artist *Artist) []Album {

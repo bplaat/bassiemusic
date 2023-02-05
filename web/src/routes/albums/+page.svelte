@@ -3,7 +3,7 @@
     import AlbumCard from "../../components/album-card.svelte";
 
     export let data;
-    const { albums } = data;
+    let { albums } = data;
 
     async function fetchPage(page) {
         const response = await fetch(
@@ -18,6 +18,7 @@
         );
         const { data: newAlbums, pagination } = await response.json();
         albums.push(...newAlbums);
+        albums = albums;
         if (albums.length != pagination.total) {
             fetchPage(page + 1);
         }

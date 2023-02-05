@@ -1,12 +1,20 @@
-package utils
+package models
 
 import (
+	"strings"
+
 	"github.com/bplaat/bassiemusic/database"
-	"github.com/bplaat/bassiemusic/models"
 	"github.com/gofiber/fiber/v2"
 )
 
-func AuthUser(c *fiber.Ctx) models.User {
+func ParseTokenVar(c *fiber.Ctx) string {
+	if strings.HasPrefix(c.Get("Authorization"), "Bearer ") {
+		return c.Get("Authorization")[7:]
+	}
+	return ""
+}
+
+func AuthUser(c *fiber.Ctx) User {
 	token := ParseTokenVar(c)
 
 	// Get user from session
@@ -20,5 +28,5 @@ func AuthUser(c *fiber.Ctx) models.User {
 	userQuery := database.Query("SELECT BIN_TO_UUID(`id`), `username`, `email`, `password`, `role`, `theme`, `created_at` FROM `users` WHERE `id` = UUID_TO_BIN(?)", userID)
 	defer userQuery.Close()
 	userQuery.Next()
-	return models.UserScan(c, userQuery)
+	return UserScan(c, userQuery)
 }

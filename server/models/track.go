@@ -19,6 +19,7 @@ type Track struct {
 	Explicit  bool      `json:"explicit"`
 	Plays     int64     `json:"plays"`
 	Music     string    `json:"music"`
+	Liked     bool      `json:"liked"`
 	CreatedAt time.Time `json:"created_at"`
 	Album     *Album    `json:"album,omitempty"`
 	Artists   []Artist  `json:"artists,omitempty"`
@@ -35,6 +36,7 @@ func TrackScan(c *fiber.Ctx, trackQuery *sql.Rows, withAlbum bool, withArtists b
 	if withArtists {
 		track.Artists = TrackArtists(c, &track)
 	}
+	track.Liked = TrackLiked(c, &track)
 	return track
 }
 
@@ -44,6 +46,13 @@ func TracksScan(c *fiber.Ctx, tracksQuery *sql.Rows, withAlbum bool, withArtists
 		tracks = append(tracks, TrackScan(c, tracksQuery, withAlbum, withArtists))
 	}
 	return tracks
+}
+
+func TrackLiked(c *fiber.Ctx, track *Track) bool {
+	authUser := AuthUser(c)
+	trackLikeQuery := database.Query("SELECT `id` FROM `track_likes` WHERE `track_id` = UUID_TO_BIN(?) AND `user_id` = UUID_TO_BIN(?)", track.ID, authUser.ID)
+	defer trackLikeQuery.Close()
+	return trackLikeQuery.Next()
 }
 
 func TrackAlbum(c *fiber.Ctx, track *Track) Album {

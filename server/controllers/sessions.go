@@ -53,7 +53,5 @@ func SessionsRevoke(c *fiber.Ctx) error {
 	database.Exec("UPDATE `sessions` SET `expires_at` = NOW() WHERE `id` = UUID_TO_BIN(?)", session.ID)
 
 	// Return response
-	return c.JSON(fiber.Map{
-		"success": true,
-	})
+	return c.JSON(fiber.Map{"success": true})
 }

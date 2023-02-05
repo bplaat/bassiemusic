@@ -2,7 +2,7 @@
     import Cookies from "js-cookie";
 
     export let data;
-    const { genres } = data;
+    let { genres } = data;
 
     async function fetchPage(page) {
         const response = await fetch(
@@ -17,6 +17,7 @@
         );
         const { data: newGenres, pagination } = await response.json();
         genres.push(...newGenres);
+        genres = genres;
         if (genres.length != pagination.total) {
             fetchPage(page + 1);
         }

@@ -3,7 +3,7 @@
     import TracksTable from "../../components/tracks-table.svelte";
 
     export let data;
-    const { tracks } = data;
+    let { tracks } = data;
 
     async function fetchPage(page) {
         const response = await fetch(
@@ -19,6 +19,7 @@
         );
         const { data: newTracks, pagination } = await response.json();
         tracks.push(...newTracks);
+        tracks = tracks;
         if (tracks.length != pagination.total) {
             fetchPage(page + 1);
         }

@@ -51,6 +51,17 @@ CREATE TABLE `artists` (
     PRIMARY KEY (`id`)
 );
 
+CREATE TABLE `artist_likes` (
+    `id` BINARY(16) NOT NULL,
+    `artist_id` BINARY(16) NOT NULL,
+    `user_id` BINARY(16) NOT NULL,
+    `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    FOREIGN KEY (`artist_id`) REFERENCES `artists`(`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
+);
+
 CREATE TABLE `albums` (
     `id` BINARY(16) NOT NULL,
     `type` TINYINT UNSIGNED NOT NULL,
@@ -70,6 +81,17 @@ CREATE TABLE `album_artist` (
     PRIMARY KEY (`id`),
     FOREIGN KEY (`album_id`) REFERENCES `albums`(`id`) ON DELETE CASCADE,
     FOREIGN KEY (`artist_id`) REFERENCES `artists`(`id`) ON DELETE CASCADE
+);
+
+CREATE TABLE `album_likes` (
+    `id` BINARY(16) NOT NULL,
+    `album_id` BINARY(16) NOT NULL,
+    `user_id` BINARY(16) NOT NULL,
+    `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    FOREIGN KEY (`album_id`) REFERENCES `albums`(`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
 );
 
 CREATE TABLE `genres` (
@@ -114,6 +136,17 @@ CREATE TABLE `track_artist` (
     PRIMARY KEY (`id`),
     FOREIGN KEY (`track_id`) REFERENCES `tracks`(`id`) ON DELETE CASCADE,
     FOREIGN KEY (`artist_id`) REFERENCES `artists`(`id`) ON DELETE CASCADE
+);
+
+CREATE TABLE `track_likes` (
+    `id` BINARY(16) NOT NULL,
+    `track_id` BINARY(16) NOT NULL,
+    `user_id` BINARY(16) NOT NULL,
+    `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    FOREIGN KEY (`track_id`) REFERENCES `tracks`(`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
 );
 
 CREATE TABLE `download_tasks` (

@@ -2,7 +2,7 @@
     import Cookies from "js-cookie";
 
     export let data;
-    const { artists } = data;
+    let { artists } = data;
 
     async function fetchPage(page) {
         const response = await fetch(
@@ -17,6 +17,7 @@
         );
         const { data: newArtists, pagination } = await response.json();
         artists.push(...newArtists);
+        artists = artists;
         if (artists.length != pagination.total) {
             fetchPage(page + 1);
         }
