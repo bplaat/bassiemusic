@@ -1,18 +1,23 @@
-body{margin-left:16rem;user-select:none;cursor:default}
+body{margin-left:16.5rem;user-select:none;cursor:default}
 
 a{color:currentColor}a:not(.card):hover,a:not(.card):focus{text-decoration:underline}
 .menu-list a{text-decoration:none!important}
 
 .table td{vertical-align:middle}
 
-.sidebar{position:fixed;top:0;left:0;width:16rem;height:100%;display:flex;flex-direction:column}
+.sidebar{position:fixed;top:0;left:0;width:16.5rem;height:100%;overflow-y:auto;display:flex;flex-direction:column}
 .flex{flex:1}
 .player-controls{position:fixed;left:0;bottom:0;width:100%;height:6rem}
+body.is-playing{margin-bottom:6rem}
+body.is-playing .sidebar{height:calc(100% - 6rem)}
 
 .column>.card{display:flex;flex-direction:column;height:100%;margin-bottom:0;overflow:hidden}
 .column>.card>.card-content{flex:1;margin-bottom:0}
 .card-image{padding-top:100%;background-size:cover;background-position:center center}
 .card-image-tags{position:absolute;top:.5rem;right:.5rem}
+
+.box.is-image{position:relative;background-size:cover;background-position:center center}
+.box.is-squared{padding:100% 0 0 0}
 
 .icon{display:block;width:24px;height:24px}.icon:not(.is-colored) path{fill:currentColor}
 .icon.is-inline{display:inline-block;vertical-align:middle;transform:translateY(-1px)}

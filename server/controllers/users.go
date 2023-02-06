@@ -1,7 +1,9 @@
 package controllers
 
 import (
+	"fmt"
 	"log"
+	"os"
 
 	"github.com/bplaat/bassiemusic/database"
 	"github.com/bplaat/bassiemusic/models"
@@ -18,7 +20,7 @@ func UsersIndex(c *fiber.Ctx) error {
 	total := database.Count("SELECT COUNT(`id`) FROM `users` WHERE `username` LIKE ? OR `email` LIKE ?", "%"+query+"%", "%"+query+"%")
 
 	// Get users
-	usersQuery := database.Query("SELECT BIN_TO_UUID(`id`), `username`, `email`, `password`, `role`, `theme`, `created_at` FROM `users` WHERE `username` LIKE ? OR `email` LIKE ? ORDER BY LOWER(`username`) LIMIT ?, ?", "%"+query+"%", "%"+query+"%", (page-1)*limit, limit)
+	usersQuery := database.Query("SELECT BIN_TO_UUID(`id`), `username`, `email`, `password`, BIN_TO_UUID(`avatar`), `role`, `theme`, `created_at` FROM `users` WHERE `username` LIKE ? OR `email` LIKE ? ORDER BY LOWER(`username`) LIMIT ?, ?", "%"+query+"%", "%"+query+"%", (page-1)*limit, limit)
 	defer usersQuery.Close()
 
 	// Return response
@@ -84,7 +86,7 @@ func UsersCreate(c *fiber.Ctx) error {
 	}
 
 	// Create user
-	userId := uuid.NewV4()
+	userID := uuid.NewV4()
 
 	var userRole models.UserRole
 	if params.Role == "normal" {
@@ -106,10 +108,10 @@ func UsersCreate(c *fiber.Ctx) error {
 	}
 
 	database.Exec("INSERT INTO `users` (`id`, `username`, `email`, `password`, `role`, `theme`) VALUES (UUID_TO_BIN(?), ?, ?, ?, ?, ?)",
-		userId.String(), params.Username, params.Email, utils.HashPassword(params.Password), userRole, userTheme)
+		userID.String(), params.Username, params.Email, utils.HashPassword(params.Password), userRole, userTheme)
 
 	// Get new created user and send response
-	userQuery := database.Query("SELECT BIN_TO_UUID(`id`), `username`, `email`, `password`, `role`, `theme`, `created_at` FROM `users` WHERE `id` = UUID_TO_BIN(?)", userId.String())
+	userQuery := database.Query("SELECT BIN_TO_UUID(`id`), `username`, `email`, `password`, BIN_TO_UUID(`avatar`), `role`, `theme`, `created_at` FROM `users` WHERE `id` = UUID_TO_BIN(?)", userID.String())
 	defer userQuery.Close()
 	userQuery.Next()
 	return c.JSON(models.UserScan(c, userQuery))
@@ -117,13 +119,13 @@ func UsersCreate(c *fiber.Ctx) error {
 
 func UsersShow(c *fiber.Ctx) error {
 	// Check auth
-	authUser := utils.AuthUser(c)
+	authUser := models.AuthUser(c)
 	if authUser.Role != "admin" && authUser.ID != c.Params("userID") {
 		return fiber.ErrUnauthorized
 	}
 
 	// Check if user exists
-	userQuery := database.Query("SELECT BIN_TO_UUID(`id`), `username`, `email`, `password`, `role`, `theme`, `created_at` FROM `users` WHERE `id` = UUID_TO_BIN(?)", c.Params("userID"))
+	userQuery := database.Query("SELECT BIN_TO_UUID(`id`), `username`, `email`, `password`, BIN_TO_UUID(`avatar`), `role`, `theme`, `created_at` FROM `users` WHERE `id` = UUID_TO_BIN(?)", c.Params("userID"))
 	defer userQuery.Close()
 	if !userQuery.Next() {
 		return fiber.ErrNotFound
@@ -143,13 +145,13 @@ type UsersEditParams struct {
 
 func UsersEdit(c *fiber.Ctx) error {
 	// Check auth
-	authUser := utils.AuthUser(c)
+	authUser := models.AuthUser(c)
 	if authUser.Role != "admin" && authUser.ID != c.Params("userID") {
 		return fiber.ErrUnauthorized
 	}
 
 	// Check if user exists
-	userQuery := database.Query("SELECT BIN_TO_UUID(`id`), `username`, `email`, `password`, `role`, `theme`, `created_at` FROM `users` WHERE `id` = UUID_TO_BIN(?)", c.Params("userID"))
+	userQuery := database.Query("SELECT BIN_TO_UUID(`id`), `username`, `email`, `password`, BIN_TO_UUID(`avatar`), `role`, `theme`, `created_at` FROM `users` WHERE `id` = UUID_TO_BIN(?)", c.Params("userID"))
 	defer userQuery.Close()
 	if !userQuery.Next() {
 		return fiber.ErrNotFound
@@ -235,17 +237,232 @@ func UsersEdit(c *fiber.Ctx) error {
 	}
 
 	// Get edited user and send response
-	updatedUserQuery := database.Query("SELECT BIN_TO_UUID(`id`), `username`, `email`, `password`, `role`, `theme`, `created_at` FROM `users` WHERE `id` = UUID_TO_BIN(?)", user.ID)
+	updatedUserQuery := database.Query("SELECT BIN_TO_UUID(`id`), `username`, `email`, `password`, BIN_TO_UUID(`avatar`), `role`, `theme`, `created_at` FROM `users` WHERE `id` = UUID_TO_BIN(?)", user.ID)
 	defer updatedUserQuery.Close()
 	updatedUserQuery.Next()
 	return c.JSON(models.UserScan(c, updatedUserQuery))
+}
+
+func UsersAvatar(c *fiber.Ctx) error {
+	// Check auth
+	authUser := models.AuthUser(c)
+	if authUser.Role != "admin" && authUser.ID != c.Params("userID") {
+		return fiber.ErrUnauthorized
+	}
+
+	// Check if user exists
+	userQuery := database.Query("SELECT BIN_TO_UUID(`id`), `username`, `email`, `password`, BIN_TO_UUID(`avatar`), `role`, `theme`, `created_at` FROM `users` WHERE `id` = UUID_TO_BIN(?)", c.Params("userID"))
+	defer userQuery.Close()
+	if !userQuery.Next() {
+		return fiber.ErrNotFound
+	}
+
+	// Get user
+	user := models.UserScan(c, userQuery)
+
+	// Remove old avatar file
+	if user.AvatarID != "" {
+		if err := os.Remove(fmt.Sprintf("storage/avatars/%s.jpg", user.AvatarID)); err != nil {
+			log.Fatalln(err)
+		}
+	}
+
+	// Save uploaded avatar file
+	avatarID := uuid.NewV4()
+	avatar, err := c.FormFile("avatar")
+	if err != nil {
+		return fiber.ErrBadRequest
+	}
+	if err = c.SaveFile(avatar, fmt.Sprintf("storage/avatars/%s.jpg", avatarID.String())); err != nil {
+		log.Fatalln(err)
+	}
+
+	// Save avatar id for user
+	database.Exec("UPDATE `users` SET `avatar` = UUID_TO_BIN(?) WHERE `id` = UUID_TO_BIN(?)", avatarID.String(), user.ID)
+
+	return c.JSON(fiber.Map{"success": true})
+}
+
+func UsersAvatarDelete(c *fiber.Ctx) error {
+	// Check auth
+	authUser := models.AuthUser(c)
+	if authUser.Role != "admin" && authUser.ID != c.Params("userID") {
+		return fiber.ErrUnauthorized
+	}
+
+	// Check if user exists
+	userQuery := database.Query("SELECT BIN_TO_UUID(`id`), `username`, `email`, `password`, BIN_TO_UUID(`avatar`), `role`, `theme`, `created_at` FROM `users` WHERE `id` = UUID_TO_BIN(?)", c.Params("userID"))
+	defer userQuery.Close()
+	if !userQuery.Next() {
+		return fiber.ErrNotFound
+	}
+
+	// Get user
+	user := models.UserScan(c, userQuery)
+
+	// Check if user has avatar
+	if user.AvatarID != "" {
+		// Remove old avatar file
+		if err := os.Remove(fmt.Sprintf("storage/avatars/%s.jpg", user.AvatarID)); err != nil {
+			log.Fatalln(err)
+		}
+
+		// Clear avatar id for user
+		database.Exec("UPDATE `users` SET `avatar` = NULL WHERE `id` = UUID_TO_BIN(?)", user.ID)
+	}
+
+	return c.JSON(fiber.Map{"success": true})
+}
+
+func UsersLikedArtists(c *fiber.Ctx) error {
+	query, page, limit := utils.ParseIndexVars(c)
+
+	// Check auth
+	authUser := models.AuthUser(c)
+	if authUser.Role != "admin" && authUser.ID != c.Params("userID") {
+		return fiber.ErrUnauthorized
+	}
+
+	// Check if user exists
+	userQuery := database.Query("SELECT `id` FROM `users` WHERE `id` = UUID_TO_BIN(?)", c.Params("userID"))
+	defer userQuery.Close()
+	if !userQuery.Next() {
+		return fiber.ErrNotFound
+	}
+
+	// Get total liked artists
+	total := database.Count("SELECT COUNT(`artists`.`id`) FROM `artists` INNER JOIN `artist_likes` ON `artists`.`id` = `artist_likes`.`artist_id` "+
+		"WHERE `artists`.`name` LIKE ?", "%"+query+"%")
+
+	// Get liked artists
+	artistsQuery := database.Query("SELECT BIN_TO_UUID(`artists`.`id`), `artists`.`name`, `artists`.`deezer_id`, `artists`.`created_at` FROM `artists` INNER JOIN `artist_likes` ON `artists`.`id` = `artist_likes`.`artist_id` "+
+		"WHERE `artists`.`name` LIKE ? ORDER BY LOWER(`artists`.`name`) LIMIT ?, ?", "%"+query+"%", (page-1)*limit, limit)
+	defer artistsQuery.Close()
+
+	// Return response
+	return c.JSON(&fiber.Map{
+		"data": models.ArtistsScan(c, artistsQuery, false, false),
+		"pagination": &fiber.Map{
+			"page":  page,
+			"limit": limit,
+			"total": total,
+		},
+	})
+}
+
+func UsersLikedAlbums(c *fiber.Ctx) error {
+	query, page, limit := utils.ParseIndexVars(c)
+
+	// Check auth
+	authUser := models.AuthUser(c)
+	if authUser.Role != "admin" && authUser.ID != c.Params("userID") {
+		return fiber.ErrUnauthorized
+	}
+
+	// Check if user exists
+	userQuery := database.Query("SELECT `id` FROM `users` WHERE `id` = UUID_TO_BIN(?)", c.Params("userID"))
+	defer userQuery.Close()
+	if !userQuery.Next() {
+		return fiber.ErrNotFound
+	}
+
+	// Get total liked albums
+	total := database.Count("SELECT COUNT(`albums`.`id`) FROM `albums` INNER JOIN `album_likes` ON `albums`.`id` = `album_likes`.`album_id` "+
+		"WHERE `albums`.`title` LIKE ?", "%"+query+"%")
+
+	// Get liked albums
+	albumsQuery := database.Query("SELECT BIN_TO_UUID(`albums`.`id`), `albums`.`type`, `albums`.`title`, `albums`.`released_at`, `albums`.`explicit`, `albums`.`deezer_id`, `albums`.`created_at` FROM `albums` "+
+		"INNER JOIN `album_likes` ON `albums`.`id` = `album_likes`.`album_id` WHERE `albums`.`title` LIKE ? ORDER BY LOWER(`albums`.`title`) LIMIT ?, ?", "%"+query+"%", (page-1)*limit, limit)
+	defer albumsQuery.Close()
+
+	// Return response
+	return c.JSON(&fiber.Map{
+		"data": models.AlbumsScan(c, albumsQuery, true, true, false),
+		"pagination": &fiber.Map{
+			"page":  page,
+			"limit": limit,
+			"total": total,
+		},
+	})
+}
+
+func UsersLikedTracks(c *fiber.Ctx) error {
+	query, page, limit := utils.ParseIndexVars(c)
+
+	// Check auth
+	authUser := models.AuthUser(c)
+	if authUser.Role != "admin" && authUser.ID != c.Params("userID") {
+		return fiber.ErrUnauthorized
+	}
+
+	// Check if user exists
+	userQuery := database.Query("SELECT `id` FROM `users` WHERE `id` = UUID_TO_BIN(?)", c.Params("userID"))
+	defer userQuery.Close()
+	if !userQuery.Next() {
+		return fiber.ErrNotFound
+	}
+
+	// Get total liked tracks
+	total := database.Count("SELECT COUNT(`tracks`.`id`) FROM `tracks` INNER JOIN `track_likes` ON `tracks`.`id` = `track_likes`.`track_id` "+
+		"WHERE `tracks`.`title` LIKE ?", "%"+query+"%")
+
+	// Get liked tracks
+	tracksQuery := database.Query("SELECT BIN_TO_UUID(`tracks`.`id`), BIN_TO_UUID(`tracks`.`album_id`), `tracks`.`title`, `tracks`.`disk`, `tracks`.`position`, `tracks`.`duration`, `tracks`.`explicit`, `tracks`.`deezer_id`, `tracks`.`youtube_id`, `tracks`.`plays`, `tracks`.`created_at` FROM `tracks` "+
+		"INNER JOIN `track_likes` ON `tracks`.`id` = `track_likes`.`track_id` WHERE `tracks`.`title` LIKE ? ORDER BY `tracks`.`plays` DESC, LOWER(`title`) LIMIT ?, ?", "%"+query+"%", (page-1)*limit, limit)
+	defer tracksQuery.Close()
+
+	// Return response
+	return c.JSON(&fiber.Map{
+		"data": models.TracksScan(c, tracksQuery, true, true),
+		"pagination": &fiber.Map{
+			"page":  page,
+			"limit": limit,
+			"total": total,
+		},
+	})
+}
+
+func UsersPlayedTracks(c *fiber.Ctx) error {
+	query, page, limit := utils.ParseIndexVars(c)
+
+	// Check auth
+	authUser := models.AuthUser(c)
+	if authUser.Role != "admin" && authUser.ID != c.Params("userID") {
+		return fiber.ErrUnauthorized
+	}
+
+	// Check if user exists
+	userQuery := database.Query("SELECT `id` FROM `users` WHERE `id` = UUID_TO_BIN(?)", c.Params("userID"))
+	defer userQuery.Close()
+	if !userQuery.Next() {
+		return fiber.ErrNotFound
+	}
+
+	// Get total played tracks
+	total := database.Count("SELECT COUNT(`tracks`.`id`) FROM `tracks` INNER JOIN `track_plays` ON `tracks`.`id` = `track_plays`.`track_id` "+
+		"WHERE `tracks`.`title` LIKE ?", "%"+query+"%")
+
+	// Get played tracks
+	tracksQuery := database.Query("SELECT BIN_TO_UUID(`tracks`.`id`), BIN_TO_UUID(`tracks`.`album_id`), `tracks`.`title`, `tracks`.`disk`, `tracks`.`position`, `tracks`.`duration`, `tracks`.`explicit`, `tracks`.`deezer_id`, `tracks`.`youtube_id`, `tracks`.`plays`, `tracks`.`created_at` FROM `tracks` "+
+		"INNER JOIN `track_plays` ON `tracks`.`id` = `track_plays`.`track_id` WHERE `tracks`.`title` LIKE ? ORDER BY `track_plays`.`created_at` DESC LIMIT ?, ?", "%"+query+"%", (page-1)*limit, limit)
+	defer tracksQuery.Close()
+
+	// Return response
+	return c.JSON(&fiber.Map{
+		"data": models.TracksScan(c, tracksQuery, true, true),
+		"pagination": &fiber.Map{
+			"page":  page,
+			"limit": limit,
+			"total": total,
+		},
+	})
 }
 
 func UsersSessions(c *fiber.Ctx) error {
 	_, page, limit := utils.ParseIndexVars(c)
 
 	// Check auth
-	authUser := utils.AuthUser(c)
+	authUser := models.AuthUser(c)
 	if authUser.Role != "admin" && authUser.ID != c.Params("userID") {
 		return fiber.ErrUnauthorized
 	}
@@ -287,7 +504,5 @@ func UsersDelete(c *fiber.Ctx) error {
 	database.Exec("DELETE FROM `users` WHERE `id` = UUID_TO_BIN(?)", c.Params("userID"))
 
 	// Return response
-	return c.JSON(&fiber.Map{
-		"success": true,
-	})
+	return c.JSON(fiber.Map{"success": true})
 }

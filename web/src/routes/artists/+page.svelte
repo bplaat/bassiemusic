@@ -1,9 +1,8 @@
 <script>
-    import Cookies from "js-cookie";
     import ArtistCard from "../../components/artist-card.svelte";
 
     export let data;
-    const { artists } = data;
+    let { token, artists } = data;
 
     async function fetchPage(page) {
         const response = await fetch(
@@ -12,12 +11,13 @@
             })}`,
             {
                 headers: {
-                    Authorization: `Bearer ${Cookies.get("token")}`,
+                    Authorization: `Bearer ${token}`,
                 },
             }
         );
         const { data: newArtists, pagination } = await response.json();
         artists.push(...newArtists);
+        artists = artists;
         if (artists.length != pagination.total) {
             fetchPage(page + 1);
         }

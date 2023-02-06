@@ -1,9 +1,8 @@
 <script>
-    import Cookies from "js-cookie";
     import AlbumCard from "../../components/album-card.svelte";
 
     export let data;
-    const { albums } = data;
+    let { token, albums } = data;
 
     async function fetchPage(page) {
         const response = await fetch(
@@ -12,12 +11,13 @@
             })}`,
             {
                 headers: {
-                    Authorization: `Bearer ${Cookies.get("token")}`,
+                    Authorization: `Bearer ${token}`,
                 },
             }
         );
         const { data: newAlbums, pagination } = await response.json();
         albums.push(...newAlbums);
+        albums = albums;
         if (albums.length != pagination.total) {
             fetchPage(page + 1);
         }

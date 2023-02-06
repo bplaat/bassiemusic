@@ -2,6 +2,7 @@ package middlewares
 
 import (
 	"github.com/bplaat/bassiemusic/database"
+	"github.com/bplaat/bassiemusic/models"
 	"github.com/bplaat/bassiemusic/utils"
 	"github.com/gofiber/fiber/v2"
 )
@@ -24,7 +25,7 @@ func IsAuthed(c *fiber.Ctx) error {
 }
 
 func IsAdmin(c *fiber.Ctx) error {
-	user := utils.AuthUser(c)
+	user := models.AuthUser(c)
 	if user.Role != "admin" {
 		return fiber.ErrUnauthorized
 	}

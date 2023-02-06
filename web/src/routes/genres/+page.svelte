@@ -1,9 +1,8 @@
 <script>
-    import Cookies from "js-cookie";
     import GenreCard from "../../components/genre-card.svelte";
 
     export let data;
-    const { genres } = data;
+    let { token, genres } = data;
 
     async function fetchPage(page) {
         const response = await fetch(
@@ -12,12 +11,13 @@
             })}`,
             {
                 headers: {
-                    Authorization: `Bearer ${Cookies.get("token")}`,
+                    Authorization: `Bearer ${token}`,
                 },
             }
         );
         const { data: newGenres, pagination } = await response.json();
         genres.push(...newGenres);
+        genres = genres;
         if (genres.length != pagination.total) {
             fetchPage(page + 1);
         }

@@ -7,11 +7,11 @@ export async function load({ cookies, fetch }) {
                 Authorization: `Bearer ${cookies.get('token')}`
             }
         });
-        const { success, user: authUser } = await response.json();
-        if (!success) {
+        const { user: authUser, last_track: lastTrack, last_track_position: lastTrackPosition } = await response.json();
+        if (response.status != 200) {
             throw redirect(307, '/auth/login');
         }
-        return { authUser };
+        return { token: cookies.get('token'), authUser, lastTrack, lastTrackPosition };
     }
     return { authUser: null };
 }

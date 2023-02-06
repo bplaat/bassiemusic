@@ -1,44 +1,41 @@
 package main
 
 import (
+	"fmt"
 	"log"
-	"net/url"
 	"os"
 
-	"github.com/bplaat/bassiemusic/controllers"
 	"github.com/bplaat/bassiemusic/database"
-	"github.com/bplaat/bassiemusic/middlewares"
-	"github.com/bplaat/bassiemusic/tasks"
-	"github.com/bplaat/bassiemusic/utils"
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/compress"
-	"github.com/gofiber/fiber/v2/middleware/cors"
-	"github.com/gofiber/fiber/v2/middleware/favicon"
-	"github.com/gofiber/fiber/v2/middleware/logger"
 )
 
+func createDirIfNotExists(path string) {
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		os.Mkdir(path, 0755)
+	}
+}
+
 func createStorageDirs() {
-	if _, err := os.Stat("storage/"); os.IsNotExist(err) {
-		os.Mkdir("storage", 0755)
-	}
-	if _, err := os.Stat("storage/artists"); os.IsNotExist(err) {
-		os.Mkdir("storage/artists", 0755)
-	}
-	if _, err := os.Stat("storage/albums"); os.IsNotExist(err) {
-		os.Mkdir("storage/albums", 0755)
-	}
-	if _, err := os.Stat("storage/genres"); os.IsNotExist(err) {
-		os.Mkdir("storage/genres", 0755)
-	}
-	if _, err := os.Stat("storage/tracks"); os.IsNotExist(err) {
-		os.Mkdir("storage/tracks", 0755)
-	}
+	createDirIfNotExists("storage")
+	createDirIfNotExists("storage/avatars")
+	createDirIfNotExists("storage/artists")
+	createDirIfNotExists("storage/artists/small")
+	createDirIfNotExists("storage/artists/medium")
+	createDirIfNotExists("storage/artists/large")
+	createDirIfNotExists("storage/albums")
+	createDirIfNotExists("storage/albums/small")
+	createDirIfNotExists("storage/albums/medium")
+	createDirIfNotExists("storage/albums/large")
+	createDirIfNotExists("storage/genres")
+	createDirIfNotExists("storage/genres/small")
+	createDirIfNotExists("storage/genres/medium")
+	createDirIfNotExists("storage/genres/large")
+	createDirIfNotExists("storage/tracks")
 }
 
 func main() {
 	// Set log settings
-	log.SetFlags(log.LstdFlags | log.Llongfile)
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
 	// Create missing storage dirs
 	createStorageDirs()
@@ -46,74 +43,24 @@ func main() {
 	// Connect to the database
 	database.Connect()
 
-	// Start download task
-	go tasks.DownloadTask()
+	// Check arguments for subcommand
+	if len(os.Args) > 1 {
+		if os.Args[1] == "serve" {
+			serve()
+			return
+		}
 
-	// Start server
-	app := fiber.New(fiber.Config{
-		AppName: "BassieMusic",
-	})
-	app.Use(compress.New())
-	app.Use(cors.New())
-	app.Use(favicon.New())
-	app.Use(logger.New())
+		if os.Args[1] == "restore" {
+			restore()
+			return
+		}
+	}
 
-	app.Get("/", func(c *fiber.Ctx) error {
-		return c.SendString("BassieMusic API")
-	})
-
-	app.Static("/storage", "./storage")
-
-	app.Post("/auth/login", controllers.AuthLogin)
-
-	// Deezer API proxies
-	app.Get("/deezer/artists", func(c *fiber.Ctx) error {
-		c.Response().Header.Add("Content-Type", "application/json")
-		_, err := c.Write(utils.Fetch("https://api.deezer.com/search/artist?q=" + url.QueryEscape(c.Query("q"))))
-		return err
-	})
-	app.Get("/deezer/albums", func(c *fiber.Ctx) error {
-		c.Response().Header.Add("Content-Type", "application/json")
-		_, err := c.Write(utils.Fetch("https://api.deezer.com/search/album?q=" + url.QueryEscape(c.Query("q"))))
-		return err
-	})
-
-	// app.Use(middlewares.IsAuthed)
-
-	app.Get("/auth/validate", controllers.AuthValidate)
-	app.Get("/auth/logout", controllers.AuthLogout)
-
-	app.Get("/artists", controllers.ArtistsIndex)
-	app.Get("/artists/:artistID", controllers.ArtistsShow)
-
-	app.Get("/search", controllers.SearchIndex)
-
-	app.Get("/albums", controllers.AlbumsIndex)
-	app.Get("/albums/:albumID", controllers.AlbumsShow)
-
-	app.Get("/genres", controllers.GenresIndex)
-	app.Get("/genres/:genreID", controllers.GenresShow)
-
-	app.Get("/tracks", controllers.TracksIndex)
-	app.Get("/tracks/:trackID", controllers.TracksShow)
-	app.Get("/tracks/:trackID/play", controllers.TracksPlay)
-
-	app.Get("/users/:userID", controllers.UsersShow)
-	app.Get("/users/:userID/sessions", controllers.UsersSessions)
-	app.Post("/users/:userID", controllers.UsersEdit)
-
-	app.Use(middlewares.IsAdmin)
-
-	app.Get("/download/artist", controllers.DownloadArtist)
-	app.Get("/download/album", controllers.DownloadAlbum)
-
-	app.Get("/users", controllers.UsersIndex)
-	app.Post("/users", controllers.UsersCreate)
-	app.Get("/users/:userID/delete", controllers.UsersDelete)
-
-	app.Get("/sessions", controllers.SessionsIndex)
-	app.Get("/sessions/:sessionID", controllers.SessionsShow)
-	app.Get("/sessions/:sessionID/revoke", controllers.SessionsRevoke)
-
-	log.Fatal(app.Listen(":8080"))
+	// When no command is given print help text
+	fmt.Print("BassieMusic server executable\n\n" +
+		"Usage:\n" +
+		"\t./bassiemusic <command>\n\n" +
+		"The commands are:\n" +
+		"\tserve\t\tStart the BassieMusic server and serve content\n" +
+		"\trestore\t\tRedownload the storage/ folder with your filled database\n")
 }

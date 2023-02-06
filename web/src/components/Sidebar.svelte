@@ -1,16 +1,16 @@
 <script>
-    import Cookies from "js-cookie";
     import { page } from "$app/stores";
 
+    export let token;
     export let authUser;
 
     async function logout() {
         await fetch(`${import.meta.env.VITE_API_URL}/auth/logout`, {
             headers: {
-                Authorization: `Bearer ${Cookies.get("token")}`,
+                Authorization: `Bearer ${token}`,
             },
         });
-        Cookies.remove("token");
+        document.cookie = `token=; expires=${new Date(0).toUTCString()}`;
         window.location = "/auth/login";
     }
 </script>
@@ -143,6 +143,34 @@
                         Tracks
                     </a>
                 </li>
+                <li>
+                    <a
+                        href="/liked/artists"
+                        class:is-active={$page.url.pathname.startsWith(
+                            "/liked"
+                        )}
+                    >
+                        <svg class="icon is-inline mr-2" viewBox="0 0 24 24">
+                            <path
+                                d="M13.5,20C6.9,13.9 3.5,10.8 3.5,7.1C3.5,4 5.9,1.6 9,1.6C10.7,1.6 12.4,2.4 13.5,3.7C14.6,2.4 16.3,1.6 18,1.6C21.1,1.6 23.5,4 23.5,7.1C23.5,10.9 20.1,14 13.5,20M12,21.1C5.4,15.2 1.5,11.7 1.5,7C1.5,6.8 1.5,6.6 1.5,6.4C0.9,7.3 0.5,8.4 0.5,9.6C0.5,13.4 3.9,16.5 10.5,22.4L12,21.1Z"
+                            />
+                        </svg>
+                        Liked
+                    </a>
+                </li>
+                <li>
+                    <a
+                        href="/history"
+                        class:is-active={$page.url.pathname == "/history"}
+                    >
+                        <svg class="icon is-inline mr-2" viewBox="0 0 24 24">
+                            <path
+                                d="M13.5,8H12V13L16.28,15.54L17,14.33L13.5,12.25V8M13,3A9,9 0 0,0 4,12H1L4.96,16.03L9,12H6A7,7 0 0,1 13,5A7,7 0 0,1 20,12A7,7 0 0,1 13,19C11.07,19 9.32,18.21 8.06,16.94L6.64,18.36C8.27,20 10.5,21 13,21A9,9 0 0,0 22,12A9,9 0 0,0 13,3"
+                            />
+                        </svg>
+                        History
+                    </a>
+                </li>
             </ul>
 
             <p class="menu-label">Playlists</p>
@@ -197,15 +225,11 @@
     {#if authUser != null}
         <div style="display: flex; align-items: center;" class="mb-5">
             <div
-                class="box mr-4 mb-0"
-                style="padding: 0; overflow: hidden; width: 48px; height: 48px;"
-            >
-                <img
-                    src="/images/avatar-default.svg"
-                    alt="{authUser.username}'s avatar"
-                    style="display: block;"
-                />
-            </div>
+                class="box is-image mr-4 mb-0"
+                style="width: 48px; height: 48px; background-image: url({authUser.avatar
+                    ? authUser.avatar
+                    : '/images/avatar-default.svg'});"
+            />
 
             <div style="flex: 1;">
                 <p><b>{authUser.username}</b></p>

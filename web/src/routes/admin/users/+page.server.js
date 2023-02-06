@@ -14,5 +14,5 @@ export async function load({ fetch, cookies }) {
     });
     const { data: users, pagination } = await response.json();
 
-    return { authUser, users, total: pagination.total };
+    return { token: cookies.get('token'), authUser, users, total: pagination.total };
 }

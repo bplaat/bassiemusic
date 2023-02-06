@@ -16,20 +16,25 @@ import (
 
 const TRACK_DURATION_SLACK int = 5
 
-func createArtist(id int, name string, image string) string {
+func createArtist(id int, name string) string {
 	artists := database.Query("SELECT BIN_TO_UUID(`id`) FROM `artists` WHERE `name` = ?", name)
 	defer artists.Close()
 
 	if artists.Next() {
-		var artistId string
-		artists.Scan(&artistId)
-		return artistId
+		var artistID string
+		artists.Scan(&artistID)
+		return artistID
 	}
 
-	artistId := uuid.NewV4()
-	database.Exec("INSERT INTO `artists` (`id`, `name`, `deezer_id`) VALUES (UUID_TO_BIN(?), ?, ?)", artistId.String(), name, id)
-	utils.FetchFile(image, fmt.Sprintf("storage/artists/%s.jpg", artistId.String()))
-	return artistId.String()
+	var artist DeezerArtist
+	utils.FetchJson(fmt.Sprintf("https://api.deezer.com/artist/%d", id), &artist)
+
+	artistID := uuid.NewV4()
+	database.Exec("INSERT INTO `artists` (`id`, `name`, `deezer_id`) VALUES (UUID_TO_BIN(?), ?, ?)", artistID.String(), name, id)
+	utils.FetchFile(artist.PictureMedium, fmt.Sprintf("storage/artists/small/%s.jpg", artistID.String()))
+	utils.FetchFile(artist.PictureBig, fmt.Sprintf("storage/artists/medium/%s.jpg", artistID.String()))
+	utils.FetchFile(artist.PictureXl, fmt.Sprintf("storage/artists/large/%s.jpg", artistID.String()))
+	return artistID.String()
 }
 
 func createGenre(id int, name string) string {
@@ -37,18 +42,26 @@ func createGenre(id int, name string) string {
 	defer genres.Close()
 
 	if genres.Next() {
-		var genreId string
-		genres.Scan(&genreId)
-		return genreId
+		var genreID string
+		genres.Scan(&genreID)
+		return genreID
 	}
 
 	var genre DeezerGenre
 	utils.FetchJson(fmt.Sprintf("https://api.deezer.com/genre/%d", id), &genre)
 
-	genreId := uuid.NewV4()
-	database.Exec("INSERT INTO `genres` (`id`, `name`, `deezer_id`) VALUES (UUID_TO_BIN(?), ?, ?)", genreId.String(), name, id)
-	utils.FetchFile(genre.PictureXl, fmt.Sprintf("storage/genres/%s.jpg", genreId.String()))
-	return genreId.String()
+	genreID := uuid.NewV4()
+	database.Exec("INSERT INTO `genres` (`id`, `name`, `deezer_id`) VALUES (UUID_TO_BIN(?), ?, ?)", genreID.String(), name, id)
+	if genre.PictureMedium != "" {
+		utils.FetchFile(genre.PictureMedium, fmt.Sprintf("storage/genres/small/%s.jpg", genreID.String()))
+		utils.FetchFile(genre.PictureBig, fmt.Sprintf("storage/genres/medium/%s.jpg", genreID.String()))
+		utils.FetchFile(genre.PictureXl, fmt.Sprintf("storage/genres/large/%s.jpg", genreID.String()))
+	} else {
+		utils.FetchFile("https://e-cdns-images.dzcdn.net/images/misc//250x250-000000-80-0-0.jpg", fmt.Sprintf("storage/genres/small/%s.jpg", genreID.String()))
+		utils.FetchFile("https://e-cdns-images.dzcdn.net/images/misc//500x500-000000-80-0-0.jpg", fmt.Sprintf("storage/genres/medium/%s.jpg", genreID.String()))
+		utils.FetchFile("https://e-cdns-images.dzcdn.net/images/misc//1000x1000-000000-80-0-0.jpg", fmt.Sprintf("storage/genres/large/%s.jpg", genreID.String()))
+	}
+	return genreID.String()
 }
 
 func downloadAlbum(id int) {
@@ -70,26 +83,28 @@ func downloadAlbum(id int) {
 	if album.RecordType == "single" {
 		albumType = models.AlbumTypeSingle
 	}
-	albumId := uuid.NewV4()
+	albumID := uuid.NewV4()
 	database.Exec("INSERT INTO `albums` (`id`, `type`, `title`, `released_at`, `explicit`, `deezer_id`) VALUES (UUID_TO_BIN(?), ?, ?, ?, ?, ?)",
-		albumId.String(), albumType, album.Title, album.ReleaseDate, album.ExplicitLyrics, album.ID)
+		albumID.String(), albumType, album.Title, album.ReleaseDate, album.ExplicitLyrics, album.ID)
 	fmt.Printf("Downloading %s by %s\n", album.Title, album.Artist.Name)
 
 	// Create album genres
 	for _, genre := range album.Genres.Data {
-		genreId := createGenre(genre.ID, genre.Name)
-		albumGenreId := uuid.NewV4()
-		database.Exec("INSERT INTO `album_genre` (`id`, `album_id`, `genre_id`) VALUES (UUID_TO_BIN(?), UUID_TO_BIN(?), UUID_TO_BIN(?))", albumGenreId.String(), albumId.String(), genreId)
+		genreID := createGenre(genre.ID, genre.Name)
+		albumGenreID := uuid.NewV4()
+		database.Exec("INSERT INTO `album_genre` (`id`, `album_id`, `genre_id`) VALUES (UUID_TO_BIN(?), UUID_TO_BIN(?), UUID_TO_BIN(?))", albumGenreID.String(), albumID.String(), genreID)
 	}
 
 	// Create album artists bindings
 	for _, artist := range album.Contributors {
-		artistId := createArtist(artist.ID, artist.Name, artist.PictureXl)
-		albumArtistId := uuid.NewV4()
-		database.Exec("INSERT INTO `album_artist` (`id`, `album_id`, `artist_id`) VALUES (UUID_TO_BIN(?), UUID_TO_BIN(?), UUID_TO_BIN(?))", albumArtistId.String(), albumId.String(), artistId)
+		artistID := createArtist(artist.ID, artist.Name)
+		albumArtistID := uuid.NewV4()
+		database.Exec("INSERT INTO `album_artist` (`id`, `album_id`, `artist_id`) VALUES (UUID_TO_BIN(?), UUID_TO_BIN(?), UUID_TO_BIN(?))", albumArtistID.String(), albumID.String(), artistID)
 	}
 
-	utils.FetchFile(album.CoverXl, fmt.Sprintf("storage/albums/%s.jpg", albumId.String()))
+	utils.FetchFile(album.CoverMedium, fmt.Sprintf("storage/albums/small/%s.jpg", albumID.String()))
+	utils.FetchFile(album.CoverBig, fmt.Sprintf("storage/albums/medium/%s.jpg", albumID.String()))
+	utils.FetchFile(album.CoverXl, fmt.Sprintf("storage/albums/large/%s.jpg", albumID.String()))
 
 	// Create album tracks
 	for _, incompleteTrack := range album.Tracks.Data {
@@ -114,19 +129,19 @@ func downloadAlbum(id int) {
 			if track.Duration >= video.Duration-TRACK_DURATION_SLACK && track.Duration <= video.Duration+TRACK_DURATION_SLACK {
 				searchCommand.Process.Signal(syscall.SIGTERM)
 
-				trackId := uuid.NewV4()
+				trackID := uuid.NewV4()
 				database.Exec("INSERT INTO `tracks` (`id`, `album_id`, `title`, `disk`, `position`, `duration`, `explicit`, `deezer_id`, `youtube_id`) VALUES (UUID_TO_BIN(?), UUID_TO_BIN(?), ?, ?, ?, ?, ?, ?, ?)",
-					trackId.String(), albumId.String(), track.Title, track.DiskNumber, track.TrackPosition, video.Duration, track.ExplicitLyrics, track.ID, video.ID)
+					trackID.String(), albumID.String(), track.Title, track.DiskNumber, track.TrackPosition, video.Duration, track.ExplicitLyrics, track.ID, video.ID)
 
 				// Create track artists bindings
 				for _, artist := range track.Contributors {
-					artistId := createArtist(artist.ID, artist.Name, artist.PictureXl)
-					trackArtistId := uuid.NewV4()
-					database.Exec("INSERT INTO `track_artist` (`id`, `track_id`, `artist_id`) VALUES (UUID_TO_BIN(?), UUID_TO_BIN(?), UUID_TO_BIN(?))", trackArtistId.String(), trackId.String(), artistId)
+					artistID := createArtist(artist.ID, artist.Name)
+					trackArtistID := uuid.NewV4()
+					database.Exec("INSERT INTO `track_artist` (`id`, `track_id`, `artist_id`) VALUES (UUID_TO_BIN(?), UUID_TO_BIN(?), UUID_TO_BIN(?))", trackArtistID.String(), trackID.String(), artistID)
 				}
 
 				downloadCommand := exec.Command("yt-dlp", "-f", "bestaudio[ext=m4a]", fmt.Sprintf("https://www.youtube.com/watch?v=%s", video.ID),
-					"-o", fmt.Sprintf("storage/tracks/%s.m4a", trackId.String()))
+					"-o", fmt.Sprintf("storage/tracks/%s.m4a", trackID.String()))
 				if err := downloadCommand.Start(); err != nil {
 					log.Fatalln(err)
 				}
@@ -140,18 +155,17 @@ func downloadAlbum(id int) {
 }
 
 func DownloadTask() {
-
 	for {
 		time.Sleep(time.Second)
 
 		downloadTaskQuery := database.Query("SELECT BIN_TO_UUID(`id`), `type`, `deezer_id`, `singles`, `created_at` FROM `download_tasks` ORDER BY `created_at` LIMIT 2")
-		defer downloadTaskQuery.Close()
-
 		if !downloadTaskQuery.Next() {
+			downloadTaskQuery.Close()
 			continue
 		}
 
 		task := models.DownloadTaskScan(downloadTaskQuery)
+		downloadTaskQuery.Close()
 
 		if task.Type == "deezer_artist" {
 			var artistAlbums DeezerArtistAlbums
