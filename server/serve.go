@@ -57,6 +57,8 @@ func serve() {
 	app.Get("/auth/validate", controllers.AuthValidate)
 	app.Get("/auth/logout", controllers.AuthLogout)
 
+	app.Get("/search", controllers.SearchIndex)
+
 	app.Get("/artists", controllers.ArtistsIndex)
 	app.Get("/artists/:artistID", controllers.ArtistsShow)
 	app.Get("/artists/:artistID/like", controllers.ArtistsLike)

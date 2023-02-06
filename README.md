@@ -11,7 +11,6 @@ A new online streaming music service thingy
 ## TODO
 In progress:
 - Fix many bugs
-- lplaat: Global search artist, album, track
 - bplaat: Popup shows music queue and you can add, reorder and remove songs from queue
 
 Backlog:

@@ -1,11 +1,11 @@
 <script>
-    import Cookies from "js-cookie";
     import GenreCard from "../../components/genre-card.svelte";
     import AlbumCard from "../../components/album-card.svelte";
     import ArtistCard from "../../components/artist-card.svelte";
     import TracksTable from "../../components/tracks-table.svelte";
 
     export let data;
+    let token = data.token;
     let allGenres = data.genres;
 
     let genres = allGenres;
@@ -32,7 +32,7 @@
                 })}`,
                 {
                     headers: {
-                        Authorization: `Bearer ${Cookies.get("token")}`,
+                        Authorization: `Bearer ${token}`,
                     },
                 }
             );
@@ -97,7 +97,7 @@
 {#if showTracks}
     <h2 class="title is-5">Tracks</h2>
 
-    <TracksTable {tracks} />
+    <TracksTable {token} {tracks} />
 {/if}
 
 {#if showArtists}
