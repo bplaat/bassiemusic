@@ -1,5 +1,6 @@
 <script>
-    import Cookies from "js-cookie";
+    export let data;
+    let { token } = data;
 
     // Artists
     let artistQuery = "";
@@ -26,7 +27,7 @@
             })}`,
             {
                 headers: {
-                    Authorization: `Bearer ${Cookies.get("token")}`,
+                    Authorization: `Bearer ${token}`,
                 },
             }
         );
@@ -57,7 +58,7 @@
             })}`,
             {
                 headers: {
-                    Authorization: `Bearer ${Cookies.get("token")}`,
+                    Authorization: `Bearer ${token}`,
                 },
             }
         );

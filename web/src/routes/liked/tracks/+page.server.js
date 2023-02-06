@@ -1,9 +1,9 @@
-import { isAuthedMiddleware } from '../../middlewares/auth.js';
+import { isAuthedMiddleware } from '../../../middlewares/auth.js';
 
 export async function load({ cookies, fetch }) {
     const authUser = await isAuthedMiddleware({ fetch, cookies });
 
-    const response = await fetch(`${import.meta.env.VITE_API_URL}/tracks?limit=50`, {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/users/${authUser.id}/liked_tracks`, {
         headers: {
             Authorization: `Bearer ${cookies.get('token')}`
         }

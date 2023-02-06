@@ -11,7 +11,7 @@ export async function load({ cookies, fetch }) {
         if (!success) {
             throw redirect(307, '/auth/login');
         }
-        return { authUser };
+        return { token: cookies.get('token'), authUser };
     }
     return { authUser: null };
 }

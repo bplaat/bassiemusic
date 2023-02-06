@@ -14,5 +14,5 @@ export async function load({ fetch, cookies, params }) {
     }
     const genre = await response.json();
 
-    return { authUser, genre };
+    return { token: cookies.get('token'), authUser, genre };
 }

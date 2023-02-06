@@ -51,7 +51,53 @@ func TracksPlay(c *fiber.Ctx) error {
 	trackQuery.Scan(&plays)
 	database.Exec("UPDATE `tracks` SET `plays` = ? WHERE `id` = UUID_TO_BIN(?)", plays+1, c.Params("trackID"))
 
-	return c.JSON(fiber.Map{
-		"success": true,
-	})
+	return c.JSON(fiber.Map{"success": true})
+}
+
+func TracksLike(c *fiber.Ctx) error {
+	authUser := models.AuthUser(c)
+
+	// Check if track exists
+	trackQuery := database.Query("SELECT `id` FROM `tracks` WHERE `id` = UUID_TO_BIN(?)", c.Params("trackID"))
+	defer trackQuery.Close()
+	if !trackQuery.Next() {
+		return fiber.ErrNotFound
+	}
+
+	// Check if track_likes binding exists
+	trackLikeQuery := database.Query("SELECT `id` FROM `track_likes` WHERE `track_id` = UUID_TO_BIN(?) AND `user_id` = UUID_TO_BIN(?)", c.Params("trackID"), authUser.ID)
+	defer trackLikeQuery.Close()
+	if trackLikeQuery.Next() {
+		return c.JSON(fiber.Map{"success": true})
+	}
+
+	// Create track_likes binding
+	database.Exec("INSERT INTO `track_likes` (`id`, `track_id`, `user_id`) VALUES (UUID_TO_BIN(UUID()), UUID_TO_BIN(?), UUID_TO_BIN(?))", c.Params("trackID"), authUser.ID)
+
+	// Send successfull response
+	return c.JSON(fiber.Map{"success": true})
+}
+
+func TracksLikeDelete(c *fiber.Ctx) error {
+	authUser := models.AuthUser(c)
+
+	// Check if track exists
+	trackQuery := database.Query("SELECT `id` FROM `tracks` WHERE `id` = UUID_TO_BIN(?)", c.Params("trackID"))
+	defer trackQuery.Close()
+	if !trackQuery.Next() {
+		return fiber.ErrNotFound
+	}
+
+	// Check if track_likes binding doesn't exists
+	trackLikeQuery := database.Query("SELECT `id` FROM `track_likes` WHERE `track_id` = UUID_TO_BIN(?) AND `user_id` = UUID_TO_BIN(?)", c.Params("trackID"), authUser.ID)
+	defer trackLikeQuery.Close()
+	if !trackLikeQuery.Next() {
+		return c.JSON(fiber.Map{"success": true})
+	}
+
+	// Delete track_likes binding
+	database.Exec("DELETE FROM `track_likes` WHERE `track_id` = UUID_TO_BIN(?) AND `user_id` = UUID_TO_BIN(?)", c.Params("trackID"), authUser.ID)
+
+	// Send successfull response
+	return c.JSON(fiber.Map{"success": true})
 }

@@ -16,6 +16,7 @@ type Album struct {
 	ReleasedAt time.Time `json:"released_at"`
 	Explicit   bool      `json:"explicit"`
 	Cover      string    `json:"cover"`
+	Liked      bool      `json:"liked"`
 	CreatedAt  time.Time `json:"created_at"`
 	Artists    []Artist  `json:"artists,omitempty"`
 	Genres     []Genre   `json:"genres,omitempty"`
@@ -51,6 +52,7 @@ func AlbumScan(c *fiber.Ctx, albumsQuery *sql.Rows, withArtists bool, withGenres
 	if withTracks {
 		album.Tracks = AlbumTracks(c, &album)
 	}
+	album.Liked = AlbumLiked(c, &album)
 	return album
 }
 
@@ -60,6 +62,13 @@ func AlbumsScan(c *fiber.Ctx, albumsQuery *sql.Rows, withArtists bool, withGenre
 		albums = append(albums, AlbumScan(c, albumsQuery, withArtists, withGenres, withTracks))
 	}
 	return albums
+}
+
+func AlbumLiked(c *fiber.Ctx, album *Album) bool {
+	authUser := AuthUser(c)
+	albumLikeQuery := database.Query("SELECT `id` FROM `album_likes` WHERE `album_id` = UUID_TO_BIN(?) AND `user_id` = UUID_TO_BIN(?)", album.ID, authUser.ID)
+	defer albumLikeQuery.Close()
+	return albumLikeQuery.Next()
 }
 
 func AlbumArtists(c *fiber.Ctx, album *Album) []Artist {

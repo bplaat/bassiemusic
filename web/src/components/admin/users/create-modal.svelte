@@ -1,6 +1,7 @@
 <script>
     import { createEventDispatcher } from "svelte";
-    import Cookies from "js-cookie";
+
+    export let token;
 
     let user = {
         username: "",
@@ -23,7 +24,7 @@
         const response = await fetch(`${import.meta.env.VITE_API_URL}/users`, {
             method: "POST",
             headers: {
-                Authorization: `Bearer ${Cookies.get("token")}`,
+                Authorization: `Bearer ${token}`,
             },
             body: new URLSearchParams({
                 username: user.username,

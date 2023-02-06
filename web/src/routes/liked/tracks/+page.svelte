@@ -1,14 +1,13 @@
 <script>
-    import TracksTable from "../../components/tracks-table.svelte";
+    import TracksTable from "../../../components/tracks-table.svelte";
 
     export let data;
-    let { token, tracks } = data;
+    let { token, authUser, tracks } = data;
 
     async function fetchPage(page) {
         const response = await fetch(
-            `${import.meta.env.VITE_API_URL}/tracks?${new URLSearchParams({
+            `${import.meta.env.VITE_API_URL}/users/${authUser.id}/liked_tracks?${new URLSearchParams({
                 page,
-                limit: 50,
             })}`,
             {
                 headers: {
@@ -29,8 +28,18 @@
 </script>
 
 <svelte:head>
-    <title>Tracks - BassieMusic</title>
+    <title>Tracks - Liked - BassieMusic</title>
 </svelte:head>
 
-<h2 class="title">Tracks</h2>
-<TracksTable {token} {tracks} />
+<div class="tabs">
+    <ul>
+        <li><a href="/liked/artists">Artists</a></li>
+        <li><a href="/liked/albums">Albums</a></li>
+        <li class="is-active"><a href="/liked/tracks">Tracks</a></li>
+    </ul>
+</div>
+
+<div class="content">
+    <h1 class="title">Liked Tracks</h1>
+    <TracksTable {token} {tracks} />
+</div>

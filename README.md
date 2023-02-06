@@ -14,9 +14,8 @@ A new online streaming music service thingy
 - lplaat: Global search artist, album, track
 - lplaat: User account sessions management UI like GitHub
 - lplaat: Hover track play button but dblclick still needs to work
-- bplaat: Love artist, album and tracks to loved list
 - bplaat: Remember played songs and state per user (Play history)
-- bplaat: All images must have a small (128x128), medium (512x512) and large (1024x1024) version
+- bplaat: All images must have a small (250x250), medium (500x500) and large (1000x1000) version
 - bplaat: `./bassiemusic restore` redownload the `storage/` folder files
 
 - User avatar upload system

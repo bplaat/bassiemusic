@@ -85,9 +85,13 @@ func main() {
 
 	app.Get("/artists", controllers.ArtistsIndex)
 	app.Get("/artists/:artistID", controllers.ArtistsShow)
+	app.Get("/artists/:artistID/like", controllers.ArtistsLike)
+	app.Get("/artists/:artistID/like/delete", controllers.ArtistsLikeDelete)
 
 	app.Get("/albums", controllers.AlbumsIndex)
 	app.Get("/albums/:albumID", controllers.AlbumsShow)
+	app.Get("/albums/:albumID/like", controllers.AlbumsLike)
+	app.Get("/albums/:albumID/like/delete", controllers.AlbumsLikeDelete)
 
 	app.Get("/genres", controllers.GenresIndex)
 	app.Get("/genres/:genreID", controllers.GenresShow)
@@ -95,8 +99,13 @@ func main() {
 	app.Get("/tracks", controllers.TracksIndex)
 	app.Get("/tracks/:trackID", controllers.TracksShow)
 	app.Get("/tracks/:trackID/play", controllers.TracksPlay)
+	app.Get("/tracks/:trackID/like", controllers.TracksLike)
+	app.Get("/tracks/:trackID/like/delete", controllers.TracksLikeDelete)
 
 	app.Get("/users/:userID", controllers.UsersShow)
+	app.Get("/users/:userID/liked_artists", controllers.UsersLikedArtists)
+	app.Get("/users/:userID/liked_albums", controllers.UsersLikedAlbums)
+	app.Get("/users/:userID/liked_tracks", controllers.UsersLikedTracks)
 	app.Get("/users/:userID/sessions", controllers.UsersSessions)
 	app.Post("/users/:userID", controllers.UsersEdit)
 

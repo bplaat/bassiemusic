@@ -71,7 +71,7 @@ func AuthValidate(c *fiber.Ctx) error {
 	// Return response
 	return c.JSON(fiber.Map{
 		"success": true,
-		"user":    utils.AuthUser(c),
+		"user":    models.AuthUser(c),
 	})
 }
 
@@ -87,7 +87,5 @@ func AuthLogout(c *fiber.Ctx) error {
 	database.Exec("UPDATE `sessions` SET `expires_at` = NOW() WHERE `token` = ?", token)
 
 	// Return response
-	return c.JSON(fiber.Map{
-		"success": true,
-	})
+	return c.JSON(fiber.Map{"success": true})
 }

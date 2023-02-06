@@ -117,7 +117,7 @@ func UsersCreate(c *fiber.Ctx) error {
 
 func UsersShow(c *fiber.Ctx) error {
 	// Check auth
-	authUser := utils.AuthUser(c)
+	authUser := models.AuthUser(c)
 	if authUser.Role != "admin" && authUser.ID != c.Params("userID") {
 		return fiber.ErrUnauthorized
 	}
@@ -143,7 +143,7 @@ type UsersEditParams struct {
 
 func UsersEdit(c *fiber.Ctx) error {
 	// Check auth
-	authUser := utils.AuthUser(c)
+	authUser := models.AuthUser(c)
 	if authUser.Role != "admin" && authUser.ID != c.Params("userID") {
 		return fiber.ErrUnauthorized
 	}
@@ -241,11 +241,119 @@ func UsersEdit(c *fiber.Ctx) error {
 	return c.JSON(models.UserScan(c, updatedUserQuery))
 }
 
+func UsersLikedArtists(c *fiber.Ctx) error {
+	query, page, limit := utils.ParseIndexVars(c)
+
+	// Check auth
+	authUser := models.AuthUser(c)
+	if authUser.Role != "admin" && authUser.ID != c.Params("userID") {
+		return fiber.ErrUnauthorized
+	}
+
+	// Check if user exists
+	userQuery := database.Query("SELECT `id` FROM `users` WHERE `id` = UUID_TO_BIN(?)", c.Params("userID"))
+	defer userQuery.Close()
+	if !userQuery.Next() {
+		return fiber.ErrNotFound
+	}
+
+	// Get total liked artists
+	total := database.Count("SELECT COUNT(`artists`.`id`) FROM `artists` INNER JOIN `artist_likes` ON `artists`.`id` = `artist_likes`.`artist_id` "+
+		"WHERE `artists`.`name` LIKE ?", "%"+query+"%")
+
+	// Get liked artists
+	artistsQuery := database.Query("SELECT BIN_TO_UUID(`artists`.`id`), `artists`.`name`, `artists`.`created_at` FROM `artists` INNER JOIN `artist_likes` ON `artists`.`id` = `artist_likes`.`artist_id` "+
+		"WHERE `artists`.`name` LIKE ? ORDER BY LOWER(`artists`.`name`) LIMIT ?, ?", "%"+query+"%", (page-1)*limit, limit)
+	defer artistsQuery.Close()
+
+	// Return response
+	return c.JSON(&fiber.Map{
+		"data": models.ArtistsScan(c, artistsQuery, false, false),
+		"pagination": &fiber.Map{
+			"page":  page,
+			"limit": limit,
+			"total": total,
+		},
+	})
+}
+
+func UsersLikedAlbums(c *fiber.Ctx) error {
+	query, page, limit := utils.ParseIndexVars(c)
+
+	// Check auth
+	authUser := models.AuthUser(c)
+	if authUser.Role != "admin" && authUser.ID != c.Params("userID") {
+		return fiber.ErrUnauthorized
+	}
+
+	// Check if user exists
+	userQuery := database.Query("SELECT `id` FROM `users` WHERE `id` = UUID_TO_BIN(?)", c.Params("userID"))
+	defer userQuery.Close()
+	if !userQuery.Next() {
+		return fiber.ErrNotFound
+	}
+
+	// Get total liked albums
+	total := database.Count("SELECT COUNT(`albums`.`id`) FROM `albums` INNER JOIN `album_likes` ON `albums`.`id` = `album_likes`.`album_id` "+
+		"WHERE `albums`.`title` LIKE ?", "%"+query+"%")
+
+	// Get liked albums
+	albumsQuery := database.Query("SELECT BIN_TO_UUID(`albums`.`id`), `albums`.`type`, `albums`.`title`, `albums`.`released_at`, `albums`.`explicit`, `albums`.`created_at` FROM `albums` "+
+		"INNER JOIN `album_likes` ON `albums`.`id` = `album_likes`.`album_id` WHERE `albums`.`title` LIKE ? ORDER BY LOWER(`albums`.`title`) LIMIT ?, ?", "%"+query+"%", (page-1)*limit, limit)
+	defer albumsQuery.Close()
+
+	// Return response
+	return c.JSON(&fiber.Map{
+		"data": models.AlbumsScan(c, albumsQuery, true, true, false),
+		"pagination": &fiber.Map{
+			"page":  page,
+			"limit": limit,
+			"total": total,
+		},
+	})
+}
+
+func UsersLikedTracks(c *fiber.Ctx) error {
+	query, page, limit := utils.ParseIndexVars(c)
+
+	// Check auth
+	authUser := models.AuthUser(c)
+	if authUser.Role != "admin" && authUser.ID != c.Params("userID") {
+		return fiber.ErrUnauthorized
+	}
+
+	// Check if user exists
+	userQuery := database.Query("SELECT `id` FROM `users` WHERE `id` = UUID_TO_BIN(?)", c.Params("userID"))
+	defer userQuery.Close()
+	if !userQuery.Next() {
+		return fiber.ErrNotFound
+	}
+
+	// Get total liked tracks
+	total := database.Count("SELECT COUNT(`tracks`.`id`) FROM `tracks` INNER JOIN `track_likes` ON `tracks`.`id` = `track_likes`.`track_id` "+
+		"WHERE `tracks`.`title` LIKE ?", "%"+query+"%")
+
+	// Get liked tracks
+	tracksQuery := database.Query("SELECT BIN_TO_UUID(`tracks`.`id`), BIN_TO_UUID(`tracks`.`album_id`), `tracks`.`title`, `tracks`.`disk`, `tracks`.`position`, `tracks`.`duration`, `tracks`.`explicit`, `tracks`.`plays`, `tracks`.`created_at` FROM `tracks` "+
+		"INNER JOIN `track_likes` ON `tracks`.`id` = `track_likes`.`track_id` WHERE `tracks`.`title` LIKE ? ORDER BY `plays` DESC, LOWER(`title`) LIMIT ?, ?", "%"+query+"%", (page-1)*limit, limit)
+	defer tracksQuery.Close()
+
+	// Return response
+	return c.JSON(&fiber.Map{
+		"data": models.TracksScan(c, tracksQuery, true, true),
+		"pagination": &fiber.Map{
+			"page":  page,
+			"limit": limit,
+			"total": total,
+		},
+	})
+}
+
 func UsersSessions(c *fiber.Ctx) error {
 	_, page, limit := utils.ParseIndexVars(c)
 
 	// Check auth
-	authUser := utils.AuthUser(c)
+	authUser := models.AuthUser(c)
 	if authUser.Role != "admin" && authUser.ID != c.Params("userID") {
 		return fiber.ErrUnauthorized
 	}
@@ -287,7 +395,5 @@ func UsersDelete(c *fiber.Ctx) error {
 	database.Exec("DELETE FROM `users` WHERE `id` = UUID_TO_BIN(?)", c.Params("userID"))
 
 	// Return response
-	return c.JSON(&fiber.Map{
-		"success": true,
-	})
+	return c.JSON(fiber.Map{"success": true})
 }

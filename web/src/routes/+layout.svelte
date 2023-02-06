@@ -3,7 +3,7 @@
     import MusicPlayer from "../components/music-player.svelte";
 
     export let data;
-    const { authUser } = data;
+    const { token, authUser } = data;
 </script>
 
 <svelte:head>
@@ -22,7 +22,7 @@
     {/if}
 </svelte:head>
 
-<Sidebar {authUser} />
+<Sidebar {token} {authUser} />
 
 <div class="section">
     <slot />
