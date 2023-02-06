@@ -1,5 +1,6 @@
 <script>
     import Cookies from "js-cookie";
+    import GenreCard from "../../components/genre-card.svelte";
 
     export let data;
     const { genres } = data;
@@ -35,15 +36,7 @@
 <div class="columns is-multiline">
     {#each genres as genre}
         <div class="column is-one-fifth">
-            <a class="card" href="/genres/{genre.id}">
-                <div
-                    class="card-image"
-                    style="background-image: url({genre.image});"
-                />
-                <div class="card-content">
-                    <h3 class="title is-6">{genre.name}</h3>
-                </div>
-            </a>
+            <GenreCard {genre}/>
         </div>
     {/each}
 </div>

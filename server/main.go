@@ -78,13 +78,15 @@ func main() {
 		return err
 	})
 
-	app.Use(middlewares.IsAuthed)
+	// app.Use(middlewares.IsAuthed)
 
 	app.Get("/auth/validate", controllers.AuthValidate)
 	app.Get("/auth/logout", controllers.AuthLogout)
 
 	app.Get("/artists", controllers.ArtistsIndex)
 	app.Get("/artists/:artistID", controllers.ArtistsShow)
+
+	app.Get("/search", controllers.SearchIndex)
 
 	app.Get("/albums", controllers.AlbumsIndex)
 	app.Get("/albums/:albumID", controllers.AlbumsShow)
