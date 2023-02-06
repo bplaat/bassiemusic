@@ -14,7 +14,7 @@ func ArtistsIndex(c *fiber.Ctx) error {
 	total := database.Count("SELECT COUNT(`id`) FROM `artists` WHERE `name` LIKE ?", "%"+query+"%")
 
 	// Get artists
-	artistsQuery := database.Query("SELECT BIN_TO_UUID(`id`), `name`, `created_at` FROM `artists` WHERE `name` LIKE ? ORDER BY LOWER(`name`) LIMIT ?, ?", "%"+query+"%", (page-1)*limit, limit)
+	artistsQuery := database.Query("SELECT BIN_TO_UUID(`id`), `name`, `deezer_id`, `created_at` FROM `artists` WHERE `name` LIKE ? ORDER BY LOWER(`name`) LIMIT ?, ?", "%"+query+"%", (page-1)*limit, limit)
 	defer artistsQuery.Close()
 
 	// Return response
@@ -30,7 +30,7 @@ func ArtistsIndex(c *fiber.Ctx) error {
 
 func ArtistsShow(c *fiber.Ctx) error {
 	// Check if artist exists
-	artistQuery := database.Query("SELECT BIN_TO_UUID(`id`), `name`, `created_at` FROM `artists` WHERE `id` = UUID_TO_BIN(?)", c.Params("artistID"))
+	artistQuery := database.Query("SELECT BIN_TO_UUID(`id`), `name`, `deezer_id`, `created_at` FROM `artists` WHERE `id` = UUID_TO_BIN(?)", c.Params("artistID"))
 	defer artistQuery.Close()
 	if !artistQuery.Next() {
 		return fiber.ErrNotFound

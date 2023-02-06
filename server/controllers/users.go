@@ -84,7 +84,7 @@ func UsersCreate(c *fiber.Ctx) error {
 	}
 
 	// Create user
-	userId := uuid.NewV4()
+	userID := uuid.NewV4()
 
 	var userRole models.UserRole
 	if params.Role == "normal" {
@@ -106,10 +106,10 @@ func UsersCreate(c *fiber.Ctx) error {
 	}
 
 	database.Exec("INSERT INTO `users` (`id`, `username`, `email`, `password`, `role`, `theme`) VALUES (UUID_TO_BIN(?), ?, ?, ?, ?, ?)",
-		userId.String(), params.Username, params.Email, utils.HashPassword(params.Password), userRole, userTheme)
+		userID.String(), params.Username, params.Email, utils.HashPassword(params.Password), userRole, userTheme)
 
 	// Get new created user and send response
-	userQuery := database.Query("SELECT BIN_TO_UUID(`id`), `username`, `email`, `password`, `role`, `theme`, `created_at` FROM `users` WHERE `id` = UUID_TO_BIN(?)", userId.String())
+	userQuery := database.Query("SELECT BIN_TO_UUID(`id`), `username`, `email`, `password`, `role`, `theme`, `created_at` FROM `users` WHERE `id` = UUID_TO_BIN(?)", userID.String())
 	defer userQuery.Close()
 	userQuery.Next()
 	return c.JSON(models.UserScan(c, userQuery))
@@ -262,7 +262,7 @@ func UsersLikedArtists(c *fiber.Ctx) error {
 		"WHERE `artists`.`name` LIKE ?", "%"+query+"%")
 
 	// Get liked artists
-	artistsQuery := database.Query("SELECT BIN_TO_UUID(`artists`.`id`), `artists`.`name`, `artists`.`created_at` FROM `artists` INNER JOIN `artist_likes` ON `artists`.`id` = `artist_likes`.`artist_id` "+
+	artistsQuery := database.Query("SELECT BIN_TO_UUID(`artists`.`id`), `artists`.`name`, `artists`.`deezer_id`, `artists`.`created_at` FROM `artists` INNER JOIN `artist_likes` ON `artists`.`id` = `artist_likes`.`artist_id` "+
 		"WHERE `artists`.`name` LIKE ? ORDER BY LOWER(`artists`.`name`) LIMIT ?, ?", "%"+query+"%", (page-1)*limit, limit)
 	defer artistsQuery.Close()
 
@@ -298,7 +298,7 @@ func UsersLikedAlbums(c *fiber.Ctx) error {
 		"WHERE `albums`.`title` LIKE ?", "%"+query+"%")
 
 	// Get liked albums
-	albumsQuery := database.Query("SELECT BIN_TO_UUID(`albums`.`id`), `albums`.`type`, `albums`.`title`, `albums`.`released_at`, `albums`.`explicit`, `albums`.`created_at` FROM `albums` "+
+	albumsQuery := database.Query("SELECT BIN_TO_UUID(`albums`.`id`), `albums`.`type`, `albums`.`title`, `albums`.`released_at`, `albums`.`explicit`, `albums`.`deezer_id`, `albums`.`created_at` FROM `albums` "+
 		"INNER JOIN `album_likes` ON `albums`.`id` = `album_likes`.`album_id` WHERE `albums`.`title` LIKE ? ORDER BY LOWER(`albums`.`title`) LIMIT ?, ?", "%"+query+"%", (page-1)*limit, limit)
 	defer albumsQuery.Close()
 
@@ -334,7 +334,7 @@ func UsersLikedTracks(c *fiber.Ctx) error {
 		"WHERE `tracks`.`title` LIKE ?", "%"+query+"%")
 
 	// Get liked tracks
-	tracksQuery := database.Query("SELECT BIN_TO_UUID(`tracks`.`id`), BIN_TO_UUID(`tracks`.`album_id`), `tracks`.`title`, `tracks`.`disk`, `tracks`.`position`, `tracks`.`duration`, `tracks`.`explicit`, `tracks`.`plays`, `tracks`.`created_at` FROM `tracks` "+
+	tracksQuery := database.Query("SELECT BIN_TO_UUID(`tracks`.`id`), BIN_TO_UUID(`tracks`.`album_id`), `tracks`.`title`, `tracks`.`disk`, `tracks`.`position`, `tracks`.`duration`, `tracks`.`explicit`, `tracks`.`deezer_id`, `tracks`.`youtube_id`, `tracks`.`plays`, `tracks`.`created_at` FROM `tracks` "+
 		"INNER JOIN `track_likes` ON `tracks`.`id` = `track_likes`.`track_id` WHERE `tracks`.`title` LIKE ? ORDER BY `plays` DESC, LOWER(`title`) LIMIT ?, ?", "%"+query+"%", (page-1)*limit, limit)
 	defer tracksQuery.Close()
 

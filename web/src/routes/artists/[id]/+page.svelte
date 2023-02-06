@@ -40,8 +40,8 @@
     <div class="column is-one-quarter mr-5">
         <div class="box" style="padding: 0; overflow: hidden;">
             <img
-                src={artist.image}
-                alt="{artist.image}'s image"
+                src={artist.large_image}
+                alt="{artist.large_image}'s image"
                 style="display: block;"
             />
         </div>

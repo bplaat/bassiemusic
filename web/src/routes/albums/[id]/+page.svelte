@@ -46,7 +46,7 @@
             style="position: relative; padding: 0; overflow: hidden;"
         >
             <img
-                src={album.cover}
+                src={album.large_cover}
                 alt="{album.title}'s cover"
                 style="display: block;"
             />

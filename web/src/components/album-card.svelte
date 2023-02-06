@@ -3,7 +3,7 @@
 </script>
 
 <a class="card" href="/albums/{album.id}">
-    <div class="card-image" style="background-image: url({album.cover});">
+    <div class="card-image" style="background-image: url({album.medium_cover});">
         <div class="card-image-tags">
             {#if album.type == "album"}
                 <span class="tag">ALBUM</span>

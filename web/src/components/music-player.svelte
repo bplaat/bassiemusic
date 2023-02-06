@@ -49,7 +49,7 @@
                 artwork: [
                     {
                         type: "image/jpeg",
-                        src: track.album.cover,
+                        src: track.album.large_cover,
                         sizes: "1024x1024",
                     },
                 ],
@@ -186,7 +186,7 @@
 <div class="player-controls box has-background-white-bis m-0">
     <div style="display: flex; align-items: center;">
         <div class="box mr-4 mb-0" style="padding: 0; overflow: hidden; width: 64px; height: 64px;">
-            <img src={track.album.cover} alt="{track.title} album's cover" style="display: block;" />
+            <img src={track.album.small_cover} alt="{track.title} album's cover" style="display: block;" />
         </div>
 
         <div class="mr-5" style="width: 10rem">

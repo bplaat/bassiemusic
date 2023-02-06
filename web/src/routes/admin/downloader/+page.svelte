@@ -148,7 +148,7 @@
                 <div>
                     <div style="display:flex">
                         <img
-                            src={album.cover_medium}
+                            src={album.medium_cover}
                             alt="Cover of album {album.title}"
                             class="mr-3"
                             style="width: 64px; height: 64px;"

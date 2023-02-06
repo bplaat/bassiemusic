@@ -58,7 +58,7 @@
                             style="width: 64px; height: 64px; padding: 0; overflow: hidden;"
                         >
                             <img
-                                src={track.album.cover}
+                                src={track.album.small_cover}
                                 alt="{track.title} album's cover"
                                 style="display: block;"
                             />

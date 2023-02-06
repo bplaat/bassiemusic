@@ -14,7 +14,7 @@ func GenresIndex(c *fiber.Ctx) error {
 	total := database.Count("SELECT COUNT(`id`) FROM `genres` WHERE `name` LIKE ?", "%"+query+"%")
 
 	// Get genres
-	genresQuery := database.Query("SELECT BIN_TO_UUID(`id`), `name`, `created_at` FROM `genres` WHERE `name` LIKE ? ORDER BY LOWER(`name`) LIMIT ?, ?", "%"+query+"%", (page-1)*limit, limit)
+	genresQuery := database.Query("SELECT BIN_TO_UUID(`id`), `name`, `deezer_id`, `created_at` FROM `genres` WHERE `name` LIKE ? ORDER BY LOWER(`name`) LIMIT ?, ?", "%"+query+"%", (page-1)*limit, limit)
 	defer genresQuery.Close()
 
 	// Return response
@@ -30,7 +30,7 @@ func GenresIndex(c *fiber.Ctx) error {
 
 func GenresShow(c *fiber.Ctx) error {
 	// Check if genre exists
-	genreQuery := database.Query("SELECT BIN_TO_UUID(`id`), `name`, `created_at` FROM `genres` WHERE `id` = UUID_TO_BIN(?)", c.Params("genreID"))
+	genreQuery := database.Query("SELECT BIN_TO_UUID(`id`), `name`, `deezer_id`, `created_at` FROM `genres` WHERE `id` = UUID_TO_BIN(?)", c.Params("genreID"))
 	defer genreQuery.Close()
 	if !genreQuery.Next() {
 		return fiber.ErrNotFound
