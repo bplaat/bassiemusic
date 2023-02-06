@@ -1,6 +1,4 @@
 <script>
-    import Cookies from 'js-cookie';
-
     let logon = '';
     let password = '';
     let errors = {};
@@ -15,11 +13,7 @@
         });
         const { success, token } = await response.json();
         if (success) {
-            Cookies.set('token', token, {
-                expires: 356,
-                path: '/',
-                sameSite: 'strict'
-            });
+            document.cookie = `token=${token}; path=/; samesite=strict; expires=${new Date(Date.now() + 356 * 24 * 60 * 60 + 1000).toUTCString()}`;
             window.location = '/';
         } else {
             errors = {

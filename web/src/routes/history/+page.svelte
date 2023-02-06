@@ -1,5 +1,5 @@
 <script>
-    import TracksTable from "../../../components/tracks-table.svelte";
+    import TracksTable from "../../components/tracks-table.svelte";
 
     export let data;
     let { token, authUser, tracks } = data;
@@ -8,7 +8,7 @@
         const response = await fetch(
             `${import.meta.env.VITE_API_URL}/users/${
                 authUser.id
-            }/liked_tracks?${new URLSearchParams({
+            }/played_tracks?${new URLSearchParams({
                 page,
             })}`,
             {
@@ -30,23 +30,15 @@
 </script>
 
 <svelte:head>
-    <title>Tracks - Liked - BassieMusic</title>
+    <title>Play History - BassieMusic</title>
 </svelte:head>
 
-<div class="tabs">
-    <ul>
-        <li><a href="/liked/artists">Artists</a></li>
-        <li><a href="/liked/albums">Albums</a></li>
-        <li class="is-active"><a href="/liked/tracks">Tracks</a></li>
-    </ul>
-</div>
-
 <div class="content">
-    <h1 class="title">Liked Tracks</h1>
+    <h1 class="title">Play History</h1>
 
     {#if tracks.length > 0}
         <TracksTable {token} {tracks} />
     {:else}
-        <p>You have not liked any tracks</p>
+        <p>You have not listened to any tracks</p>
     {/if}
 </div>

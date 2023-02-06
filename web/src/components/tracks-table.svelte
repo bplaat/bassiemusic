@@ -1,5 +1,5 @@
 <script>
-    import { playingTrack, playingQueue } from "../stores.js";
+    import { playingTrack, playingQueue, autoplay } from "../stores.js";
     import { formatDuration } from "../filters.js";
 
     export let token;
@@ -8,6 +8,7 @@
 
     function playTrack(track) {
         const index = tracks.indexOf(track);
+        autoplay.set(true);
         playingQueue.set(tracks);
         playingTrack.set(index);
     }

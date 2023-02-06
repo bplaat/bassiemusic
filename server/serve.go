@@ -76,6 +76,7 @@ func serve() {
 	app.Get("/users/:userID/liked_artists", controllers.UsersLikedArtists)
 	app.Get("/users/:userID/liked_albums", controllers.UsersLikedAlbums)
 	app.Get("/users/:userID/liked_tracks", controllers.UsersLikedTracks)
+	app.Get("/users/:userID/played_tracks", controllers.UsersPlayedTracks)
 	app.Get("/users/:userID/sessions", controllers.UsersSessions)
 	app.Post("/users/:userID", controllers.UsersEdit)
 

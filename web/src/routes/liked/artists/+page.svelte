@@ -6,7 +6,9 @@
 
     async function fetchPage(page) {
         const response = await fetch(
-            `${import.meta.env.VITE_API_URL}/users/${authUser.id}/liked_artists?${new URLSearchParams({
+            `${import.meta.env.VITE_API_URL}/users/${
+                authUser.id
+            }/liked_artists?${new URLSearchParams({
                 page,
             })}`,
             {
@@ -42,11 +44,15 @@
 <div class="content">
     <h1 class="title">Liked Artists</h1>
 
-    <div class="columns is-multiline">
-        {#each artists as artist}
-            <div class="column is-one-fifth">
-                <ArtistCard {artist} />
-            </div>
-        {/each}
-    </div>
+    {#if artists.length > 0}
+        <div class="columns is-multiline">
+            {#each artists as artist}
+                <div class="column is-one-fifth">
+                    <ArtistCard {artist} />
+                </div>
+            {/each}
+        </div>
+    {:else}
+        <p>You have not liked any artists</p>
+    {/if}
 </div>
