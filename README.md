@@ -17,8 +17,8 @@ In progress:
 Backlog:
 - lplaat: Hover track play button but dblclick still needs to work
 - lplaat: User account sessions management UI like GitHub
-- Discover other peoples public playlists via global search and like them to add them to your sidebar
 - bplaat: Users can create, edit, delete find public and private playlists
+- Discover other peoples public playlists via global search and like them to add them to your sidebar
 - Change and remove artists, albums, genres, tracks in web interface when admin
 - Move track/play messages to a websocket connection to reduce load
 - Better downloader experience with live progress via websockets

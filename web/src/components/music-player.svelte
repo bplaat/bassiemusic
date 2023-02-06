@@ -9,21 +9,22 @@
     import { formatDuration } from "../filters.js";
 
     export let token;
-    let isPlaying = false,
+    let playingMusicPlayerIndex,
+        isPlaying = false,
         audio,
         audioDuration,
         audioCurrentTime,
         updateUiTimeout,
-        updateServerTimeout,
-        ignoreMusicPlayerUpdate = false;
+        updateServerTimeout;
 
     $: track = $musicPlayer.queue[$musicPlayer.index];
 
     if (browser) {
         musicPlayer.subscribe((musicPlayer) => {
             if (musicPlayer.queue.length == 0) return;
-            if (ignoreMusicPlayerUpdate) return;
+            if (playingMusicPlayerIndex == musicPlayer.index) return;
             const track = musicPlayer.queue[musicPlayer.index];
+            playingMusicPlayerIndex = musicPlayer.index;
 
             if (audio != undefined) {
                 audio.pause();
@@ -92,7 +93,7 @@
 
     function updatePositionState() {
         audioCurrentTime = audio.currentTime;
-        if ("mediaSession" in navigator) {
+        if ("mediaSession" in navigator && audio.readyState >= 1) {
             navigator.mediaSession.setPositionState({
                 duration: audio.duration,
                 playbackRate: audio.playbackRate,
@@ -156,6 +157,7 @@
     }
 
     function previousTrack() {
+        playingMusicPlayerIndex = undefined;
         musicPlayer.update((musicPlayer) => {
             musicPlayer.index =
                 musicPlayer.index - 1 >= 0
@@ -176,12 +178,10 @@
     }
 
     function play() {
-        ignoreMusicPlayerUpdate = true;
         musicPlayer.update((musicPlayer) => {
             musicPlayer.action = "play";
             return musicPlayer;
         });
-        ignoreMusicPlayerUpdate = false;
 
         audio.play();
         if ("mediaSession" in navigator) {
@@ -220,6 +220,7 @@
     }
 
     function nextTrack() {
+        playingMusicPlayerIndex = undefined;
         musicPlayer.update((musicPlayer) => {
             musicPlayer.index =
                 musicPlayer.index + 1 <= musicPlayer.queue.length - 1
@@ -242,10 +243,8 @@
                 },
             }
         );
-        ignoreMusicPlayerUpdate = true;
         track.liked = !track.liked;
         $musicPlayer = $musicPlayer;
-        ignoreMusicPlayerUpdate = false;
     }
 
     // Volume
@@ -273,27 +272,33 @@
 </script>
 
 {#if $musicPlayer.queue.length > 0}
-    <div class="player-controls box has-background-white-bis m-0">
+    <div class="player-controls box has-background-white-bis m-0 p-0">
         <div style="display: flex; align-items: center;">
             <div
-                class="box is-image mr-4 mb-0"
-                style="width: 64px; height: 64px; min-width: 64px; background-image: url({track
-                    .album.small_cover});"
-            />
+                class="p-4"
+                style="width: 16.5rem; display: flex; align-items: center;"
+            >
+                <div
+                    class="box is-image m-0 mr-4"
+                    style="width: 64px; height: 64px; background-image: url({track
+                        .album.small_cover});"
+                />
 
-            <div class="mr-5" style="width: 10rem">
-                <p class="ellipsis">
-                    <a href="/albums/{track.album.id}" style="font-weight: 500;"
-                        >{track.title}</a
-                    >
-                </p>
-                <p class="ellipsis">
-                    {#each track.artists as artist}
-                        <a href="/artists/{artist.id}" class="mr-2"
-                            >{artist.name}</a
+                <div class="flex">
+                    <p class="ellipsis">
+                        <a
+                            href="/albums/{track.album.id}"
+                            style="font-weight: 500;">{track.title}</a
                         >
-                    {/each}
-                </p>
+                    </p>
+                    <p class="ellipsis">
+                        {#each track.artists as artist}
+                            <a href="/artists/{artist.id}" class="mr-2"
+                                >{artist.name}</a
+                            >
+                        {/each}
+                    </p>
+                </div>
             </div>
 
             <button class="button mr-3" on:click={likeTrack}>
@@ -361,7 +366,7 @@
                 >
                 <input
                     type="range"
-                    style="flex: 1;"
+                    class="flex"
                     value={audioCurrentTime}
                     on:input={seekToInput}
                     min="0"
@@ -372,7 +377,15 @@
                 >
             </div>
 
-            <div style="flex: 1; display: flex;">
+            <button class="button" on:click={() => alert('TODO')}>
+                <svg class="icon" viewBox="0 0 24 24">
+                    <path
+                        d="M15,6H3V8H15V6M15,10H3V12H15V10M3,16H11V14H3V16M17,6V14.18C16.69,14.07 16.35,14 16,14A3,3 0 0,0 13,17A3,3 0 0,0 16,20A3,3 0 0,0 19,17V8H22V6H17Z"
+                    />
+                </svg>
+            </button>
+
+            <div class="p-4 flex" style="display: flex;">
                 <button class="button mr-3" on:click={toggleVolume}>
                     <svg class="icon" viewBox="0 0 24 24">
                         {#if $audioVolume == 0}
@@ -397,7 +410,7 @@
                 </button>
                 <input
                     type="range"
-                    style="flex: 1;"
+                    class="flex"
                     bind:value={$audioVolume}
                     min="0"
                     max="1"
