@@ -21,13 +21,7 @@
 
 <div class="columns">
     <div class="column is-one-quarter mr-5">
-        <div class="box" style="padding: 0; overflow: hidden;">
-            <img
-                src={genre.large_image}
-                alt="{genre.large_image}'s image"
-                style="display: block;"
-            />
-        </div>
+        <div class="box is-image is-squared" style="background-image: url({genre.large_image});"></div>
     </div>
 
     <div

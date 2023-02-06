@@ -16,6 +16,9 @@ body.is-playing .sidebar{height:calc(100% - 6rem)}
 .card-image{padding-top:100%;background-size:cover;background-position:center center}
 .card-image-tags{position:absolute;top:.5rem;right:.5rem}
 
+.box.is-image{position:relative;background-size:cover;background-position:center center}
+.box.is-squared{padding:100% 0 0 0}
+
 .icon{display:block;width:24px;height:24px}.icon:not(.is-colored) path{fill:currentColor}
 .icon.is-inline{display:inline-block;vertical-align:middle;transform:translateY(-1px)}
 

@@ -38,13 +38,7 @@
 
 <div class="columns">
     <div class="column is-one-quarter mr-5">
-        <div class="box" style="padding: 0; overflow: hidden;">
-            <img
-                src={artist.large_image}
-                alt="{artist.large_image}'s image"
-                style="display: block;"
-            />
-        </div>
+        <div class="box is-image is-squared" style="background-image: url({artist.large_image});"></div>
     </div>
 
     <div
