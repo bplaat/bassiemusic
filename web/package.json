@@ -11,8 +11,5 @@
         "@sveltejs/kit": "^1.0.0",
         "svelte": "^3.54.0",
         "vite": "^4.0.0"
-    },
-    "dependencies": {
-        "js-cookie": "^3.0.1"
     }
 }

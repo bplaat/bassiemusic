@@ -1,9 +1,16 @@
 <script>
+    import { browser } from '$app/environment';
     import Sidebar from "../components/sidebar.svelte";
     import MusicPlayer from "../components/music-player.svelte";
+    import { playingTrack, playingQueue } from "../stores.js";
 
     export let data;
-    const { token, authUser } = data;
+    const { token, authUser, lastTrack } = data;
+
+    if (browser && lastTrack) {
+        playingQueue.set([lastTrack]);
+        playingTrack.set(0);
+    }
 </script>
 
 <svelte:head>
@@ -28,4 +35,4 @@
     <slot />
 </div>
 
-<MusicPlayer />
+<MusicPlayer {token} />

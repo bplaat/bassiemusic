@@ -34,7 +34,7 @@ func createStorageDirs() {
 
 func main() {
 	// Set log settings
-	log.SetFlags(log.LstdFlags | log.Llongfile)
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
 	// Create missing storage dirs
 	createStorageDirs()

@@ -57,7 +57,7 @@ func AuthLogin(c *fiber.Ctx) error {
 	ua := useragent.Parse(c.Get("User-Agent"))
 	database.Exec("INSERT INTO `sessions` (`id`, `user_id`, `token`, `ip`, `client_os`, `client_name`, `client_version`, `expires_at`) VALUES "+
 		"(UUID_TO_BIN(UUID()), UUID_TO_BIN(?), ?, ?, ?, ?, ?, ?)",
-		user.ID, token, c.IP(), ua.OS, ua.Name, ua.Version, time.Now().Add(365*24*60*60*time.Second).Format(time.RFC3339))
+		user.ID, token, c.IP(), ua.OS, ua.Name, ua.Version, time.Now().Add(365*24*60*60*time.Second).Format(time.DateTime))
 
 	// Return response
 	return c.JSON(fiber.Map{
@@ -68,10 +68,32 @@ func AuthLogin(c *fiber.Ctx) error {
 }
 
 func AuthValidate(c *fiber.Ctx) error {
+	authUser := models.AuthUser(c)
+
+	// Get last track plays binding
+	trackPlayQuery := database.Query("SELECT BIN_TO_UUID(`track_id`) FROM `track_plays` WHERE `user_id` = UUID_TO_BIN(?) ORDER BY `created_at` DESC LIMIT 1", authUser.ID)
+	defer trackPlayQuery.Close()
+
+	// When we have a last played track get it
+	if trackPlayQuery.Next() {
+		var lastTrackID string
+		trackPlayQuery.Scan(&lastTrackID)
+		trackQuery := database.Query("SELECT BIN_TO_UUID(`id`), BIN_TO_UUID(`album_id`), `title`, `disk`, `position`, `duration`, `explicit`, `deezer_id`, `youtube_id`, `plays`, `created_at` FROM `tracks` WHERE `id` = UUID_TO_BIN(?)", lastTrackID)
+		defer trackQuery.Close()
+		trackQuery.Next()
+
+		// Return response
+		return c.JSON(fiber.Map{
+			"success":    true,
+			"user":       authUser,
+			"last_track": models.TrackScan(c, trackQuery, true, true),
+		})
+	}
+
 	// Return response
 	return c.JSON(fiber.Map{
 		"success": true,
-		"user":    models.AuthUser(c),
+		"user":    authUser,
 	})
 }
 

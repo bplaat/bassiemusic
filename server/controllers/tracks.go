@@ -1,6 +1,8 @@
 package controllers
 
 import (
+	"strconv"
+
 	"github.com/bplaat/bassiemusic/database"
 	"github.com/bplaat/bassiemusic/models"
 	"github.com/bplaat/bassiemusic/utils"
@@ -41,16 +43,40 @@ func TracksShow(c *fiber.Ctx) error {
 }
 
 func TracksPlay(c *fiber.Ctx) error {
-	trackQuery := database.Query("SELECT `plays` FROM `tracks` WHERE `id` = UUID_TO_BIN(?)", c.Params("trackID"))
-	defer trackQuery.Close()
+	authUser := models.AuthUser(c)
 
+	// Check if track exists
+	trackQuery := database.Query("SELECT BIN_TO_UUID(`id`), BIN_TO_UUID(`album_id`), `title`, `disk`, `position`, `duration`, `explicit`, `deezer_id`, `youtube_id`, `plays`, `created_at` FROM `tracks` WHERE `id` = UUID_TO_BIN(?)", c.Params("trackID"))
+	defer trackQuery.Close()
 	if !trackQuery.Next() {
 		return fiber.ErrNotFound
 	}
-	var plays int64
-	trackQuery.Scan(&plays)
-	database.Exec("UPDATE `tracks` SET `plays` = ? WHERE `id` = UUID_TO_BIN(?)", plays+1, c.Params("trackID"))
+	track := models.TrackScan(c, trackQuery, false, false)
 
+	// Parse position get variable
+	var position float32
+	if positionFloat, err := strconv.ParseFloat(c.Query("position", "0"), 32); err == nil {
+		position = float32(positionFloat)
+	}
+
+	// Get last track plays binding
+	trackPlayQuery := database.Query("SELECT BIN_TO_UUID(`id`), BIN_TO_UUID(`track_id`) FROM `track_plays` WHERE `user_id` = UUID_TO_BIN(?) ORDER BY `created_at` DESC LIMIT 1", authUser.ID)
+	defer trackPlayQuery.Close()
+
+	// When last track play is this track only update position
+	if trackPlayQuery.Next() {
+		var playID string
+		var lastTrackID string
+		trackPlayQuery.Scan(&playID, &lastTrackID)
+		if track.ID == lastTrackID {
+			database.Exec("UPDATE `track_plays` SET `position` = ? WHERE `id` = UUID_TO_BIN(?)", position, playID)
+			return c.JSON(fiber.Map{"success": true})
+		}
+	}
+
+	// When different create new track_plays and increment global play count
+	database.Exec("INSERT INTO `track_plays` (`id`, `track_id`, `user_id`, `position`) VALUES (UUID_TO_BIN(UUID()), UUID_TO_BIN(?), UUID_TO_BIN(?), ?)", track.ID, authUser.ID, position)
+	database.Exec("UPDATE `tracks` SET `plays` = ? WHERE `id` = UUID_TO_BIN(?)", track.Plays+1, track.ID)
 	return c.JSON(fiber.Map{"success": true})
 }
 

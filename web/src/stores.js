@@ -1,6 +1,8 @@
 import { browser } from '$app/environment';
 import { writable } from 'svelte/store';
 
+export const autoplay = writable(false);
+
 export const playingTrack = writable(null);
 
 export const playingQueue = writable([]);

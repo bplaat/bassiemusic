@@ -1,5 +1,11 @@
 -- BassieMusic database
 
+-- Create BassieMusic MySQL user
+-- CREATE USER 'bassiemusic'@'localhost' IDENTIFIED BY 'bassiemusic';
+-- CREATE DATABASE `bassiemusic` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+-- GRANT ALL PRIVILEGES ON `bassiemusic`.* TO 'bassiemusic'@'localhost';
+-- FLUSH PRIVILEGES;
+
 -- MariaDB UUID_TO_BIN and BIN_TO_UUID pollyfills:
 -- https://gist.github.com/bplaat/1d8d1bba135c726178ebdfc9df08e2ca
 
@@ -142,6 +148,18 @@ CREATE TABLE `track_likes` (
     `id` BINARY(16) NOT NULL,
     `track_id` BINARY(16) NOT NULL,
     `user_id` BINARY(16) NOT NULL,
+    `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    FOREIGN KEY (`track_id`) REFERENCES `tracks`(`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
+);
+
+CREATE TABLE `track_plays` (
+    `id` BINARY(16) NOT NULL,
+    `track_id` BINARY(16) NOT NULL,
+    `user_id` BINARY(16) NOT NULL,
+    `position` FLOAT NOT NULL,
     `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),

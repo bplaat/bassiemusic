@@ -12,13 +12,14 @@ A new online streaming music service thingy
 - Fix many bugs
 
 - lplaat: Global search artist, album, track
-- lplaat: User account sessions management UI like GitHub
 - lplaat: Hover track play button but dblclick still needs to work
-- bplaat: Remember played songs and state per user (Play history)
+- lplaat: User account sessions management UI like GitHub
+- bplaat: Users can create, edit, delete find public and private playlists
 
+- Popup shows music queue and you can add, reorder and remove songs from queue
+- Change and remove artists, albums, genres, tracks in web interface when admin
 - User avatar upload system
-- Users can create, edit, delete find playlists
-- Change and remove albums / artists in web interface when admin
-- Better downloader experience
+- Discover other peoples and their public playlists
+- Better downloader experience with live progress via websockets
 - Android app
 - macOS app

@@ -335,7 +335,43 @@ func UsersLikedTracks(c *fiber.Ctx) error {
 
 	// Get liked tracks
 	tracksQuery := database.Query("SELECT BIN_TO_UUID(`tracks`.`id`), BIN_TO_UUID(`tracks`.`album_id`), `tracks`.`title`, `tracks`.`disk`, `tracks`.`position`, `tracks`.`duration`, `tracks`.`explicit`, `tracks`.`deezer_id`, `tracks`.`youtube_id`, `tracks`.`plays`, `tracks`.`created_at` FROM `tracks` "+
-		"INNER JOIN `track_likes` ON `tracks`.`id` = `track_likes`.`track_id` WHERE `tracks`.`title` LIKE ? ORDER BY `plays` DESC, LOWER(`title`) LIMIT ?, ?", "%"+query+"%", (page-1)*limit, limit)
+		"INNER JOIN `track_likes` ON `tracks`.`id` = `track_likes`.`track_id` WHERE `tracks`.`title` LIKE ? ORDER BY `tracks`.`plays` DESC, LOWER(`title`) LIMIT ?, ?", "%"+query+"%", (page-1)*limit, limit)
+	defer tracksQuery.Close()
+
+	// Return response
+	return c.JSON(&fiber.Map{
+		"data": models.TracksScan(c, tracksQuery, true, true),
+		"pagination": &fiber.Map{
+			"page":  page,
+			"limit": limit,
+			"total": total,
+		},
+	})
+}
+
+func UsersPlayedTracks(c *fiber.Ctx) error {
+	query, page, limit := utils.ParseIndexVars(c)
+
+	// Check auth
+	authUser := models.AuthUser(c)
+	if authUser.Role != "admin" && authUser.ID != c.Params("userID") {
+		return fiber.ErrUnauthorized
+	}
+
+	// Check if user exists
+	userQuery := database.Query("SELECT `id` FROM `users` WHERE `id` = UUID_TO_BIN(?)", c.Params("userID"))
+	defer userQuery.Close()
+	if !userQuery.Next() {
+		return fiber.ErrNotFound
+	}
+
+	// Get total played tracks
+	total := database.Count("SELECT COUNT(`tracks`.`id`) FROM `tracks` INNER JOIN `track_plays` ON `tracks`.`id` = `track_plays`.`track_id` "+
+		"WHERE `tracks`.`title` LIKE ?", "%"+query+"%")
+
+	// Get played tracks
+	tracksQuery := database.Query("SELECT BIN_TO_UUID(`tracks`.`id`), BIN_TO_UUID(`tracks`.`album_id`), `tracks`.`title`, `tracks`.`disk`, `tracks`.`position`, `tracks`.`duration`, `tracks`.`explicit`, `tracks`.`deezer_id`, `tracks`.`youtube_id`, `tracks`.`plays`, `tracks`.`created_at` FROM `tracks` "+
+		"INNER JOIN `track_plays` ON `tracks`.`id` = `track_plays`.`track_id` WHERE `tracks`.`title` LIKE ? ORDER BY `track_plays`.`created_at` DESC LIMIT ?, ?", "%"+query+"%", (page-1)*limit, limit)
 	defer tracksQuery.Close()
 
 	// Return response
