@@ -2,6 +2,7 @@ package models
 
 import (
 	"database/sql"
+	"fmt"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -12,6 +13,8 @@ type User struct {
 	Username  string    `json:"username"`
 	Email     string    `json:"email"`
 	Password  string    `json:"-"`
+	AvatarID  string    `json:"-"`
+	Avatar    string    `json:"avatar,omitempty"`
 	Role      string    `json:"role"`
 	Theme     string    `json:"theme"`
 	CreatedAt time.Time `json:"created_at"`
@@ -32,7 +35,7 @@ func UserScan(c *fiber.Ctx, userQuery *sql.Rows) User {
 	var user User
 	var userRole UserRole
 	var userTheme UserTheme
-	userQuery.Scan(&user.ID, &user.Username, &user.Email, &user.Password, &userRole, &userTheme, &user.CreatedAt)
+	userQuery.Scan(&user.ID, &user.Username, &user.Email, &user.Password, &user.AvatarID, &userRole, &userTheme, &user.CreatedAt)
 
 	if userRole == UserRoleNormal {
 		user.Role = "normal"
@@ -49,6 +52,10 @@ func UserScan(c *fiber.Ctx, userQuery *sql.Rows) User {
 	}
 	if userTheme == UserThemeDark {
 		user.Theme = "dark"
+	}
+
+	if c != nil && user.AvatarID != "" {
+		user.Avatar = fmt.Sprintf("%s/storage/avatars/%s.jpg", c.BaseURL(), user.AvatarID)
 	}
 	return user
 }

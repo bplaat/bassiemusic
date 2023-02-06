@@ -7,8 +7,7 @@ export async function load({ cookies, fetch }) {
                 Authorization: `Bearer ${cookies.get('token')}`
             }
         });
-        const { success } = await response.json();
-        if (success) {
+        if (response.status == 200) {
             throw redirect(307, '/');
         }
     }

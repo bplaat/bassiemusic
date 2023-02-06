@@ -229,7 +229,7 @@
                 style="padding: 0; overflow: hidden; width: 48px; height: 48px;"
             >
                 <img
-                    src="/images/avatar-default.svg"
+                    src={authUser.avatar ? authUser.avatar : '/images/avatar-default.svg'}
                     alt="{authUser.username}'s avatar"
                     style="display: block;"
                 />

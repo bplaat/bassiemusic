@@ -13,6 +13,9 @@ import (
 )
 
 func restore() {
+	// Avatars can't be redownloaded they are local so clear avatars of all users
+	database.Exec("UPDATE `users` SET `avatar` = NULL")
+
 	// Redownload all artist images
 	artistsQuery := database.Query("SELECT BIN_TO_UUID(`id`), `name`, `deezer_id`, `created_at` FROM `artists`")
 	defer artistsQuery.Close()

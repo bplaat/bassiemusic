@@ -1,13 +1,14 @@
 <script>
-    import { browser } from '$app/environment';
+    import { browser } from "$app/environment";
+    import { trackPosition, playingQueue, playingTrack } from "../stores.js";
     import Sidebar from "../components/sidebar.svelte";
     import MusicPlayer from "../components/music-player.svelte";
-    import { playingTrack, playingQueue } from "../stores.js";
 
     export let data;
-    const { token, authUser, lastTrack } = data;
+    const { token, authUser, lastTrack, lastTrackPosition } = data;
 
     if (browser && lastTrack) {
+        trackPosition.set(lastTrackPosition);
         playingQueue.set([lastTrack]);
         playingTrack.set(0);
     }
@@ -15,17 +16,17 @@
 
 <svelte:head>
     {#if authUser}
-        {#if authUser.theme == 'system'}
-            <link rel="stylesheet" href="/css/bulma-system.min.css">
+        {#if authUser.theme == "system"}
+            <link rel="stylesheet" href="/css/bulma-system.min.css" />
         {/if}
-        {#if authUser.theme == 'light'}
-            <link rel="stylesheet" href="/css/bulma-light.min.css">
+        {#if authUser.theme == "light"}
+            <link rel="stylesheet" href="/css/bulma-light.min.css" />
         {/if}
-        {#if authUser.theme == 'dark'}
-            <link rel="stylesheet" href="/css/bulma-dark.min.css">
+        {#if authUser.theme == "dark"}
+            <link rel="stylesheet" href="/css/bulma-dark.min.css" />
         {/if}
     {:else}
-        <link rel="stylesheet" href="/css/bulma-system.min.css">
+        <link rel="stylesheet" href="/css/bulma-system.min.css" />
     {/if}
 </svelte:head>
 

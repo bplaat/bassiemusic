@@ -1,10 +1,17 @@
 <script>
+    import { browser } from "$app/environment";
     import {
         PLAYER_UPDATE_UI_TIMEOUT,
         PLAYER_UPDATE_SERVER_TIMEOUT,
         PLAYER_SEEK_TIME,
     } from "../consts.js";
-    import { autoplay, playingTrack, playingQueue, audioVolume } from "../stores.js";
+    import {
+        trackAutoplay,
+        trackPosition,
+        playingQueue,
+        playingTrack,
+        audioVolume,
+    } from "../stores.js";
     import { formatDuration } from "../filters.js";
 
     export let token;
@@ -17,36 +24,41 @@
 
     $: track = $playingQueue[$playingTrack];
 
-    playingTrack.subscribe((playingTrack) => {
-        if ($playingQueue.length == 0) return;
-        const track = $playingQueue[playingTrack];
+    if (browser) {
+        playingTrack.subscribe((playingTrack) => {
+            if ($playingQueue.length == 0) return;
+            const track = $playingQueue[playingTrack];
 
-        if (audio != undefined) {
-            audio.pause();
-        }
-        if (updateUiTimeout != undefined) {
-            clearTimeout(updateUiTimeout);
-        }
-        if (updateServerTimeout != undefined) {
-            clearTimeout(updateServerTimeout);
-        }
+            if (audio != undefined) {
+                audio.pause();
+            }
+            if (updateUiTimeout != undefined) {
+                clearTimeout(updateUiTimeout);
+            }
+            if (updateServerTimeout != undefined) {
+                clearTimeout(updateServerTimeout);
+            }
 
-        // Limiting sidebar height
-        document.body.style.marginBottom = "6rem";
-        document.querySelector(".sidebar").style.height = "calc(100% - 6rem)";
+            document.body.classList.add("is-playing");
 
-        audio = new Audio(track.music);
-        audio.volume = $audioVolume;
-        audio.onloadedmetadata = () => {
-            audioDuration = audio.duration;
-            audioCurrentTime = audio.currentTime;
-            if ($autoplay) play();
-        };
-        audio.onratechange = () => {
-            updatePositionState();
-        };
-        audio.onended = nextTrack;
+            audio = new Audio(track.music);
+            audio.volume = $audioVolume;
+            audio.onloadedmetadata = () => {
+                audio.currentTime = $trackPosition;
+                audioDuration = audio.duration;
+                audioCurrentTime = audio.currentTime;
+                if ($trackAutoplay) play();
+            };
+            audio.onratechange = () => {
+                updatePositionState();
+            };
+            audio.onended = nextTrack;
 
+            setMediaSession(track);
+        });
+    }
+
+    function setMediaSession(track) {
         if ("mediaSession" in navigator) {
             navigator.mediaSession.metadata = new MediaMetadata({
                 title: track.title,
@@ -76,7 +88,7 @@
             );
             navigator.mediaSession.setActionHandler("nexttrack", nextTrack);
         }
-    });
+    }
 
     function updatePositionState() {
         audioCurrentTime = audio.currentTime;
