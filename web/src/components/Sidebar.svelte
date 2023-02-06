@@ -161,7 +161,7 @@
                 <li>
                     <a
                         href="/history"
-                        class:is-active={$page.url.pathname == '/history'}
+                        class:is-active={$page.url.pathname == "/history"}
                     >
                         <svg class="icon is-inline mr-2" viewBox="0 0 24 24">
                             <path
@@ -225,15 +225,11 @@
     {#if authUser != null}
         <div style="display: flex; align-items: center;" class="mb-5">
             <div
-                class="box mr-4 mb-0"
-                style="padding: 0; overflow: hidden; width: 48px; height: 48px;"
-            >
-                <img
-                    src={authUser.avatar ? authUser.avatar : '/images/avatar-default.svg'}
-                    alt="{authUser.username}'s avatar"
-                    style="display: block;"
-                />
-            </div>
+                class="box is-image mr-4 mb-0"
+                style="width: 48px; height: 48px; background-image: url({authUser.avatar
+                    ? authUser.avatar
+                    : '/images/avatar-default.svg'});"
+            />
 
             <div style="flex: 1;">
                 <p><b>{authUser.username}</b></p>

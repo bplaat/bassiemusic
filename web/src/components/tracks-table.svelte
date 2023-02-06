@@ -1,10 +1,5 @@
 <script>
-    import {
-        trackAutoplay,
-        trackPosition,
-        playingQueue,
-        playingTrack,
-    } from "../stores.js";
+    import { musicPlayer } from "../stores.js";
     import { formatDuration } from "../filters.js";
 
     export let token;
@@ -13,10 +8,11 @@
 
     function playTrack(track) {
         const index = tracks.indexOf(track);
-        trackAutoplay.set(true);
-        trackPosition.set(0);
-        playingQueue.set(tracks);
-        playingTrack.set(index);
+        musicPlayer.set({
+            action: "play",
+            queue: tracks,
+            index,
+        });
     }
 
     export function playFirstTrack() {
@@ -54,22 +50,17 @@
         {#each tracks as track, index}
             <tr
                 on:dblclick|preventDefault={() => playTrack(track)}
-                class:has-background-light={$playingQueue.length > 0 &&
-                    $playingQueue[$playingTrack].id == track.id}
+                class:has-background-light={$musicPlayer.queue.length > 0 &&
+                    $musicPlayer.queue[$musicPlayer.index].id == track.id}
             >
                 <td>{index + 1}</td>
                 {#if showAlbum}
                     <td style="display: flex;">
                         <div
-                            class="box mr-4 mb-0"
-                            style="width: 64px; height: 64px; padding: 0; overflow: hidden;"
-                        >
-                            <img
-                                src={track.album.small_cover}
-                                alt="{track.title} album's cover"
-                                style="display: block;"
-                            />
-                        </div>
+                            class="box is-image mr-4 mb-0"
+                            style="width: 64px; height: 64px; background-image: url({track
+                                .album.small_cover});"
+                        />
                         <div
                             style="flex: 1; display: flex; flex-direction: column; justify-content: center;"
                         >

@@ -42,14 +42,9 @@
 <div class="columns">
     <div class="column is-one-quarter mr-5">
         <div
-            class="box"
-            style="position: relative; padding: 0; overflow: hidden;"
+            class="box is-image is-squared"
+            style="background-image: url({album.large_cover});"
         >
-            <img
-                src={album.large_cover}
-                alt="{album.title}'s cover"
-                style="display: block;"
-            />
             <div class="card-image-tags">
                 {#if album.type == "album"}
                     <span class="tag">ALBUM</span>
@@ -114,4 +109,9 @@
 </div>
 
 <h3 class="title is-4">Tracks</h3>
-<TracksTable bind:this={tracksTable} {token} tracks={album.tracks} showAlbum={false} />
+<TracksTable
+    bind:this={tracksTable}
+    {token}
+    tracks={album.tracks}
+    showAlbum={false}
+/>

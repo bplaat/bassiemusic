@@ -5,13 +5,7 @@
         PLAYER_UPDATE_SERVER_TIMEOUT,
         PLAYER_SEEK_TIME,
     } from "../consts.js";
-    import {
-        trackAutoplay,
-        trackPosition,
-        playingQueue,
-        playingTrack,
-        audioVolume,
-    } from "../stores.js";
+    import { musicPlayer, audioVolume } from "../stores.js";
     import { formatDuration } from "../filters.js";
 
     export let token;
@@ -20,14 +14,16 @@
         audioDuration,
         audioCurrentTime,
         updateUiTimeout,
-        updateServerTimeout;
+        updateServerTimeout,
+        ignoreMusicPlayerUpdate = false;
 
-    $: track = $playingQueue[$playingTrack];
+    $: track = $musicPlayer.queue[$musicPlayer.index];
 
     if (browser) {
-        playingTrack.subscribe((playingTrack) => {
-            if ($playingQueue.length == 0) return;
-            const track = $playingQueue[playingTrack];
+        musicPlayer.subscribe((musicPlayer) => {
+            if (musicPlayer.queue.length == 0) return;
+            if (ignoreMusicPlayerUpdate) return;
+            const track = musicPlayer.queue[musicPlayer.index];
 
             if (audio != undefined) {
                 audio.pause();
@@ -44,10 +40,14 @@
             audio = new Audio(track.music);
             audio.volume = $audioVolume;
             audio.onloadedmetadata = () => {
-                audio.currentTime = $trackPosition;
+                audio.currentTime =
+                    musicPlayer.action == "init" ? musicPlayer.position : 0;
                 audioDuration = audio.duration;
                 audioCurrentTime = audio.currentTime;
-                if ($trackAutoplay) play();
+
+                if (musicPlayer.action == "play") {
+                    play();
+                }
             };
             audio.onratechange = () => {
                 updatePositionState();
@@ -111,7 +111,11 @@
         }
     }
 
-    async function updateServerLoop() {
+    let isSendingTrackPlay = false;
+
+    async function sendTrackPlay() {
+        if (isSendingTrackPlay) return;
+        isSendingTrackPlay = true;
         await fetch(
             `${import.meta.env.VITE_API_URL}/tracks/${
                 track.id
@@ -124,7 +128,11 @@
                 },
             }
         );
+        isSendingTrackPlay = false;
+    }
 
+    async function updateServerLoop() {
+        await sendTrackPlay();
         if (isPlaying) {
             updateServerTimeout = setTimeout(
                 updateServerLoop,
@@ -136,19 +144,25 @@
     function seekTo(details) {
         if (!isPlaying) play();
         audio.currentTime = details.seekTime;
+        sendTrackPlay();
         updatePositionState();
     }
 
     function seekToInput(event) {
         if (!isPlaying) play();
         audio.currentTime = event.target.value;
+        sendTrackPlay();
         updatePositionState();
     }
 
     function previousTrack() {
-        playingTrack.update((playingTrack) =>
-            playingTrack - 1 >= 0 ? playingTrack - 1 : $playingQueue.length - 1
-        );
+        musicPlayer.update((musicPlayer) => {
+            musicPlayer.index =
+                musicPlayer.index - 1 >= 0
+                    ? musicPlayer.index - 1
+                    : musicPlayer.queue.length - 1;
+            return musicPlayer;
+        });
     }
 
     function seekBackward(details) {
@@ -157,10 +171,18 @@
             0,
             audio.currentTime - (details.seekOffset || PLAYER_SEEK_TIME)
         );
+        sendTrackPlay();
         updatePositionState();
     }
 
     function play() {
+        ignoreMusicPlayerUpdate = true;
+        musicPlayer.update((musicPlayer) => {
+            musicPlayer.action = "play";
+            return musicPlayer;
+        });
+        ignoreMusicPlayerUpdate = false;
+
         audio.play();
         if ("mediaSession" in navigator) {
             navigator.mediaSession.playbackState = "playing";
@@ -193,18 +215,23 @@
             audio.duration,
             audio.currentTime + (details.seekOffset || PLAYER_SEEK_TIME)
         );
+        sendTrackPlay();
         updatePositionState();
     }
 
     function nextTrack() {
-        playingTrack.update((playingTrack) =>
-            playingTrack + 1 <= $playingQueue.length - 1 ? playingTrack + 1 : 0
-        );
+        musicPlayer.update((musicPlayer) => {
+            musicPlayer.index =
+                musicPlayer.index + 1 <= musicPlayer.queue.length - 1
+                    ? musicPlayer.index + 1
+                    : 0;
+            return musicPlayer;
+        });
     }
 
     // Like
     function likeTrack() {
-        const track = $playingQueue[$playingTrack];
+        const track = $musicPlayer.queue[$musicPlayer.index];
         fetch(
             `${import.meta.env.VITE_API_URL}/tracks/${track.id}/like${
                 track.liked ? "/delete" : ""
@@ -215,8 +242,10 @@
                 },
             }
         );
+        ignoreMusicPlayerUpdate = true;
         track.liked = !track.liked;
-        $playingQueue = $playingQueue;
+        $musicPlayer = $musicPlayer;
+        ignoreMusicPlayerUpdate = false;
     }
 
     // Volume
@@ -243,19 +272,14 @@
     }
 </script>
 
-{#if $playingQueue.length > 0}
+{#if $musicPlayer.queue.length > 0}
     <div class="player-controls box has-background-white-bis m-0">
         <div style="display: flex; align-items: center;">
             <div
-                class="box mr-4 mb-0"
-                style="padding: 0; overflow: hidden; width: 64px; height: 64px;"
-            >
-                <img
-                    src={track.album.small_cover}
-                    alt="{track.title} album's cover"
-                    style="display: block;"
-                />
-            </div>
+                class="box is-image mr-4 mb-0"
+                style="width: 64px; height: 64px; min-width: 64px; background-image: url({track
+                    .album.small_cover});"
+            />
 
             <div class="mr-5" style="width: 10rem">
                 <p class="ellipsis">

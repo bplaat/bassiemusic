@@ -1,6 +1,6 @@
 <script>
     import { browser } from "$app/environment";
-    import { trackPosition, playingQueue, playingTrack } from "../stores.js";
+    import {  musicPlayer } from "../stores.js";
     import Sidebar from "../components/sidebar.svelte";
     import MusicPlayer from "../components/music-player.svelte";
 
@@ -8,9 +8,12 @@
     const { token, authUser, lastTrack, lastTrackPosition } = data;
 
     if (browser && lastTrack) {
-        trackPosition.set(lastTrackPosition);
-        playingQueue.set([lastTrack]);
-        playingTrack.set(0);
+        musicPlayer.set({
+            action: 'init',
+            queue: [lastTrack],
+            index: 0,
+            position: lastTrackPosition
+        });
     }
 </script>
 
