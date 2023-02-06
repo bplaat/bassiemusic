@@ -1,7 +1,3 @@
-<svelte:head>
-    <title>Search - BassieMusic</title>
-</svelte:head>
-
 <script>
     import Cookies from "js-cookie";
     import GenreCard from "../../components/genre-card.svelte";
@@ -54,8 +50,7 @@
 
             let tempGenres = data.genres;
             showGenres = tempGenres.length != 0;
-            if(showGenres) genres = tempGenres
-
+            if (showGenres) genres = tempGenres;
         } else {
             showGenres = true;
             showAlbums = false;
@@ -78,9 +73,13 @@
     }
 </script>
 
+<svelte:head>
+    <title>Search - BassieMusic</title>
+</svelte:head>
+
 <h2 class="title">Search</h2>
 
-<div class="field has-addons">
+<div class="field has-addons mb-5">
     <div class="control">
         <input
             class="input"
@@ -95,57 +94,44 @@
     </div>
 </div>
 
-<br>
-
 {#if showTracks}
-    <div>
-        <h2 class="title is-size-5">Tracks</h2>
+    <h2 class="title is-5">Tracks</h2>
 
-        <TracksTable {tracks} />
-    </div>
-    <br>
+    <TracksTable {tracks} />
 {/if}
 
 {#if showArtists}
-    <div>
-        <h2 class="title is-size-5">Artists</h2>
+    <h2 class="title is-5 mt-5">Artists</h2>
 
-        <div class="columns is-multiline">
-            {#each artists as artist}
-                <div class="column is-one-fifth">
-                    <ArtistCard {artist} />
-                </div>
-            {/each}
-        </div>        
+    <div class="columns is-multiline mb-5">
+        {#each artists as artist}
+            <div class="column is-one-fifth">
+                <ArtistCard {artist} />
+            </div>
+        {/each}
     </div>
-    <br>
 {/if}
 
 {#if showAlbums}
-    <div>
-        <h2 class="title is-size-5">Albums</h2>
+    <h2 class="title is-5">Albums</h2>
 
-        <div class="columns is-multiline">
-            {#each albums as album}
-                <div class="column is-one-fifth">
-                    <AlbumCard {album} />
-                </div>
-            {/each}
-        </div>
+    <div class="columns is-multiline mb-5">
+        {#each albums as album}
+            <div class="column is-one-fifth">
+                <AlbumCard {album} />
+            </div>
+        {/each}
     </div>
-    <br>
 {/if}
 
 {#if showGenres}
-    <div>
-        <h2 class="title is-size-5">Genres</h2>
+    <h2 class="title is-5">Genres</h2>
 
-        <div class="columns is-multiline">
-            {#each genres as genre}
-                <div class="column is-one-fifth">
-                    <GenreCard {genre} />
-                </div>
-            {/each}
-        </div>
+    <div class="columns is-multiline">
+        {#each genres as genre}
+            <div class="column is-one-fifth">
+                <GenreCard {genre} />
+            </div>
+        {/each}
     </div>
 {/if}

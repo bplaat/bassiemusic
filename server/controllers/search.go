@@ -11,12 +11,12 @@ func SearchIndex(c *fiber.Ctx) error {
 	query, _, _ := utils.ParseIndexVars(c)
 
 	// Get artists
-	artistsQuery := database.Query("SELECT BIN_TO_UUID(`id`), `name`, `created_at` FROM `artists` WHERE `name` LIKE ? ORDER BY LOWER(`name`) LIMIT ?, ?", "%"+query+"%", 0, 20)
+	artistsQuery := database.Query("SELECT BIN_TO_UUID(`id`), `name`, `created_at` FROM `artists` WHERE `name` LIKE ? ORDER BY LOWER(`name`) LIMIT ?, ?", "%"+query+"%", 0, 10)
 	defer artistsQuery.Close()
 	artists := models.ArtistsScan(c, artistsQuery, false, false)
 
 	// Get albums
-	albumsQuery := database.Query("SELECT BIN_TO_UUID(`id`), `type`, `title`, `released_at`, `explicit`, `created_at` FROM `albums` WHERE `title` LIKE ? ORDER BY LOWER(`title`) LIMIT ?, ?", "%"+query+"%", 0, 20)
+	albumsQuery := database.Query("SELECT BIN_TO_UUID(`id`), `type`, `title`, `released_at`, `explicit`, `created_at` FROM `albums` WHERE `title` LIKE ? ORDER BY LOWER(`title`) LIMIT ?, ?", "%"+query+"%", 0, 10)
 	defer albumsQuery.Close()
 	albums := models.AlbumsScan(c, albumsQuery, true, true, false)
 
@@ -26,7 +26,7 @@ func SearchIndex(c *fiber.Ctx) error {
 	tracks := models.TracksScan(c, tracksQuery, true, true)
 
 	// Get Genres
-	genresQuery := database.Query("SELECT BIN_TO_UUID(`id`), `name`, `created_at` FROM `genres` WHERE `name` LIKE ? ORDER BY LOWER(`name`) LIMIT ?, ?", "%"+query+"%", 0, 20)
+	genresQuery := database.Query("SELECT BIN_TO_UUID(`id`), `name`, `created_at` FROM `genres` WHERE `name` LIKE ? ORDER BY LOWER(`name`) LIMIT ?, ?", "%"+query+"%", 0, 10)
 	genres := models.GenresScan(c, genresQuery, false)
 
 	// Return all values
