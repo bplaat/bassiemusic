@@ -26,7 +26,7 @@ func AuthLogin(c *fiber.Ctx) error {
 	}
 
 	// Get user by username or email
-	userQuery := database.Query("SELECT BIN_TO_UUID(`id`), `username`, `email`, `password`, `role`, `theme`, `created_at` FROM `users` WHERE `username` = ? OR `email` = ?", params.Logon, params.Logon)
+	userQuery := database.Query("SELECT BIN_TO_UUID(`id`), `username`, `email`, `password`, BIN_TO_UUID(`avatar`), `role`, `theme`, `created_at` FROM `users` WHERE `username` = ? OR `email` = ?", params.Logon, params.Logon)
 	defer userQuery.Close()
 
 	if !userQuery.Next() {
@@ -71,22 +71,24 @@ func AuthValidate(c *fiber.Ctx) error {
 	authUser := models.AuthUser(c)
 
 	// Get last track plays binding
-	trackPlayQuery := database.Query("SELECT BIN_TO_UUID(`track_id`) FROM `track_plays` WHERE `user_id` = UUID_TO_BIN(?) ORDER BY `created_at` DESC LIMIT 1", authUser.ID)
+	trackPlayQuery := database.Query("SELECT BIN_TO_UUID(`track_id`), `position` FROM `track_plays` WHERE `user_id` = UUID_TO_BIN(?) ORDER BY `created_at` DESC LIMIT 1", authUser.ID)
 	defer trackPlayQuery.Close()
 
 	// When we have a last played track get it
 	if trackPlayQuery.Next() {
 		var lastTrackID string
-		trackPlayQuery.Scan(&lastTrackID)
+		var lastTrackPosition float32
+		trackPlayQuery.Scan(&lastTrackID, &lastTrackPosition)
 		trackQuery := database.Query("SELECT BIN_TO_UUID(`id`), BIN_TO_UUID(`album_id`), `title`, `disk`, `position`, `duration`, `explicit`, `deezer_id`, `youtube_id`, `plays`, `created_at` FROM `tracks` WHERE `id` = UUID_TO_BIN(?)", lastTrackID)
 		defer trackQuery.Close()
 		trackQuery.Next()
 
 		// Return response
 		return c.JSON(fiber.Map{
-			"success":    true,
-			"user":       authUser,
-			"last_track": models.TrackScan(c, trackQuery, true, true),
+			"success":             true,
+			"user":                authUser,
+			"last_track":          models.TrackScan(c, trackQuery, true, true),
+			"last_track_position": lastTrackPosition,
 		})
 	}
 

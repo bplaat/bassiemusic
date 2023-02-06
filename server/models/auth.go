@@ -28,7 +28,7 @@ func AuthUser(c *fiber.Ctx) User {
 	sessionQuery.Scan(&userID)
 
 	// Get user
-	userQuery := database.Query("SELECT BIN_TO_UUID(`id`), `username`, `email`, `password`, `role`, `theme`, `created_at` FROM `users` WHERE `id` = UUID_TO_BIN(?)", userID)
+	userQuery := database.Query("SELECT BIN_TO_UUID(`id`), `username`, `email`, `password`, BIN_TO_UUID(`avatar`), `role`, `theme`, `created_at` FROM `users` WHERE `id` = UUID_TO_BIN(?)", userID)
 	defer userQuery.Close()
 	userQuery.Next()
 	return UserScan(c, userQuery)

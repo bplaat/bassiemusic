@@ -1,4 +1,4 @@
-# bplaat/bassiemusic
+# BassieMusic
 A new online streaming music service thingy
 
 ## Dependencies
@@ -17,9 +17,11 @@ A new online streaming music service thingy
 - bplaat: Users can create, edit, delete find public and private playlists
 
 - Popup shows music queue and you can add, reorder and remove songs from queue
+- Discover other peoples public playlists via global search and like them to add them to your sidebar
 - Change and remove artists, albums, genres, tracks in web interface when admin
-- User avatar upload system
-- Discover other peoples and their public playlists
 - Better downloader experience with live progress via websockets
-- Android app
-- macOS app
+
+- native Android streaming app 100% online
+- native Android app offline download features
+- macOS webview wrapper app
+- basic native macOS app written in objc with cocoa

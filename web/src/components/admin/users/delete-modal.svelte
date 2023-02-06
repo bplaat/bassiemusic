@@ -22,8 +22,7 @@
                 },
             }
         );
-        const { success } = await response.json();
-        if (success) {
+        if (response.status == 200) {
             close();
             dispatch("deleteUser", { user });
         }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"net/http"
 	"net/url"
 
 	"github.com/bplaat/bassiemusic/controllers"
@@ -12,6 +13,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/compress"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/favicon"
+	"github.com/gofiber/fiber/v2/middleware/filesystem"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 )
 
@@ -32,7 +34,9 @@ func serve() {
 		return c.SendString("BassieMusic API")
 	})
 
-	app.Static("/storage", "./storage")
+	app.Use("/storage", filesystem.New(filesystem.Config{
+		Root: http.Dir("./storage"),
+	}))
 
 	app.Post("/auth/login", controllers.AuthLogin)
 
@@ -79,6 +83,8 @@ func serve() {
 	app.Get("/users/:userID/played_tracks", controllers.UsersPlayedTracks)
 	app.Get("/users/:userID/sessions", controllers.UsersSessions)
 	app.Post("/users/:userID", controllers.UsersEdit)
+	app.Post("/users/:userID/avatar", controllers.UsersAvatar)
+	app.Get("/users/:userID/avatar/delete", controllers.UsersAvatarDelete)
 
 	app.Use(middlewares.IsAdmin)
 
