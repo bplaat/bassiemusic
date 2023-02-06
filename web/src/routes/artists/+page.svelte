@@ -1,4 +1,6 @@
 <script>
+    import ArtistCard from "../../components/artist-card.svelte";
+
     export let data;
     let { token, artists } = data;
 
@@ -34,15 +36,7 @@
 <div class="columns is-multiline">
     {#each artists as artist}
         <div class="column is-one-fifth">
-            <a class="card" href="/artists/{artist.id}">
-                <div
-                    class="card-image"
-                    style="background-image: url({artist.image});"
-                />
-                <div class="card-content">
-                    <h3 class="title is-6">{artist.name}</h3>
-                </div>
-            </a>
+            <ArtistCard {artist} />
         </div>
     {/each}
 </div>

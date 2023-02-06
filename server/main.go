@@ -103,6 +103,9 @@ func main() {
 	app.Get("/tracks/:trackID/like/delete", controllers.TracksLikeDelete)
 
 	app.Get("/users/:userID", controllers.UsersShow)
+	app.Get("/users/:userID/liked_artists", controllers.UsersLikedArtists)
+	app.Get("/users/:userID/liked_albums", controllers.UsersLikedAlbums)
+	app.Get("/users/:userID/liked_tracks", controllers.UsersLikedTracks)
 	app.Get("/users/:userID/sessions", controllers.UsersSessions)
 	app.Post("/users/:userID", controllers.UsersEdit)
 

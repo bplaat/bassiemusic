@@ -146,8 +146,10 @@
                 </li>
                 <li>
                     <a
-                        href="/liked"
-                        class:is-active={$page.url.pathname == "/liked"}
+                        href="/liked/artists"
+                        class:is-active={$page.url.pathname.startsWith(
+                            "/liked"
+                        )}
                     >
                         <svg class="icon is-inline mr-2" viewBox="0 0 24 24">
                             <path
