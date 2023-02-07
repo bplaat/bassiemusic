@@ -6,6 +6,7 @@ import (
 	"github.com/bplaat/bassiemusic/models"
 	"github.com/bplaat/bassiemusic/utils"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/internal/uuid"
 )
 
 func TracksIndex(c *fiber.Ctx) error {

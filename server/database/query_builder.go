@@ -1,7 +1,6 @@
 package database
 
 import (
-	"fmt"
 	"reflect"
 	"strconv"
 )
@@ -25,12 +24,12 @@ type QueryBuilderColumn struct {
 }
 
 type QueryBuilderPaginated[T any] struct {
-	Data     []T `json:"data"`
-	Paginate struct {
+	Data       []T `json:"data"`
+	Pagination struct {
 		Page  int   `json:"page"`
 		Limit int   `json:"limit"`
 		Total int64 `json:"total"`
-	} `json:"paginate"`
+	} `json:"pagination"`
 }
 
 func (qb QueryBuilder[T]) Join(join string) QueryBuilder[T] {
@@ -160,8 +159,6 @@ func (qb QueryBuilder[T]) Get() []T {
 		selectQuery += " LIMIT " + qb.LimitStr
 	}
 
-	fmt.Println(selectQuery)
-
 	query := Query(selectQuery, qb.WhereValues...)
 	defer query.Close()
 	models := []T{}
@@ -170,7 +167,6 @@ func (qb QueryBuilder[T]) Get() []T {
 		modelType := reflect.Indirect(reflect.ValueOf(&model))
 		ptrs := []any{}
 		for _, column := range qb.Model.Columns {
-			fmt.Println(column.Name)
 			ptrs = append(ptrs, modelType.FieldByName(column.Name).Addr().Interface())
 		}
 		query.Scan(ptrs...)
@@ -203,9 +199,9 @@ func (qb QueryBuilder[T]) Delete() {
 func (qb QueryBuilder[T]) Paginate(page int, limit int) QueryBuilderPaginated[T] {
 	paginated := QueryBuilderPaginated[T]{}
 	paginated.Data = qb.Limit(strconv.Itoa((page-1)*limit) + ", " + strconv.Itoa(limit)).Get()
-	paginated.Paginate.Page = page
-	paginated.Paginate.Limit = limit
-	paginated.Paginate.Total = qb.Count()
+	paginated.Pagination.Page = page
+	paginated.Pagination.Limit = limit
+	paginated.Pagination.Total = qb.Count()
 	return paginated
 }
 

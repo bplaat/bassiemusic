@@ -1,6 +1,7 @@
 package database
 
 import (
+	"fmt"
 	"reflect"
 	"strings"
 
@@ -47,6 +48,7 @@ func (m Model[T]) query() QueryBuilder[T] {
 }
 
 func (m Model[T]) Create(model *T) T {
+	modelType := reflect.Indirect(reflect.ValueOf(model))
 	insertQuery := "INSERT INTO `" + m.TableName + "` ("
 	index := 0
 	for _, column := range m.Columns {
@@ -56,11 +58,9 @@ func (m Model[T]) Create(model *T) T {
 		}
 		index++
 	}
-
-	modelType := reflect.ValueOf(model)
 	modelID := uuid.NewV4()
-	insertValues := []any{modelID}
-	insertQuery += " VALUES (UUID_TO_BIN(?), "
+	insertQuery += ") VALUES ("
+	insertValues := []any{}
 	index = 0
 	for _, column := range m.Columns {
 		if column.Type == "uuid" {
@@ -68,7 +68,12 @@ func (m Model[T]) Create(model *T) T {
 		} else {
 			insertQuery += "?"
 		}
-		insertValues = append(insertValues, modelType.FieldByName(column.Name).Elem())
+		if column.Name == m.PrimaryKey {
+			insertValues = append(insertValues, uuid.NewV4().String())
+		} else {
+			fmt.Println(modelType.FieldByName(column.Name))
+			insertValues = append(insertValues, modelType.FieldByName(column.Name).Interface())
+		}
 		if index != len(m.Columns)-1 {
 			insertQuery += ", "
 		}
@@ -76,7 +81,7 @@ func (m Model[T]) Create(model *T) T {
 	}
 	insertQuery += ")"
 
-	Exec(insertQuery, insertValues)
+	Exec(insertQuery, insertValues...)
 
 	return *m.Find(modelID.String())
 }

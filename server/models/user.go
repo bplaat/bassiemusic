@@ -12,7 +12,7 @@ type User struct {
 	Username  string    `column:"username,string" json:"username"`
 	Email     string    `column:"email,string" json:"email"`
 	Password  string    `column:"password,string" json:"-"`
-	AvatarID  string    `column:"avatar,uuid" json:"-"`
+	AvatarID  *string   `column:"avatar,uuid" json:"-"`
 	Avatar    string    `json:"avatar,omitempty"`
 	RoleInt   UserRole  `column:"role,int" json:"-"`
 	Role      string    `json:"role"`
@@ -53,8 +53,8 @@ func UserModel(c *fiber.Ctx) database.Model[User] {
 				user.Theme = "dark"
 			}
 
-			if c != nil && user.AvatarID != "" {
-				user.Avatar = fmt.Sprintf("%s/storage/avatars/%s.jpg", c.BaseURL(), user.AvatarID)
+			if c != nil && user.AvatarID != nil {
+				user.Avatar = fmt.Sprintf("%s/storage/avatars/%s.jpg", c.BaseURL(), *user.AvatarID)
 			}
 		},
 	}.Init()

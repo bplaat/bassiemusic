@@ -55,9 +55,9 @@ func AuthLogin(c *fiber.Ctx) error {
 		UserID:        user.ID,
 		Token:         token,
 		IP:            c.IP(),
-		ClientOS:      agent.OS,
-		ClientName:    agent.Name,
-		ClientVersion: agent.Version,
+		ClientOS:      &agent.OS,
+		ClientName:    &agent.Name,
+		ClientVersion: &agent.Version,
 		ExpiresAt:     time.Now().Add(365 * 24 * 60 * 60 * time.Second),
 	}
 	models.SessionModel(c).Create(&session)
