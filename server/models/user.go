@@ -1,23 +1,23 @@
 package models
 
 import (
-	"database/sql"
 	"fmt"
 	"time"
 
+	"github.com/bplaat/bassiemusic/database"
 	"github.com/gofiber/fiber/v2"
 )
 
 type User struct {
-	ID        string    `json:"id"`
-	Username  string    `json:"username"`
-	Email     string    `json:"email"`
-	Password  string    `json:"-"`
-	AvatarID  string    `json:"-"`
+	ID        string    `column:"id,uuid" json:"id"`
+	Username  string    `column:"username,string" json:"username"`
+	Email     string    `column:"email,string" json:"email"`
+	Password  string    `column:"password,string" json:"-"`
+	AvatarID  string    `column:"avatar_id,uuid" json:"-"`
 	Avatar    string    `json:"avatar,omitempty"`
-	Role      string    `json:"role"`
-	Theme     string    `json:"theme"`
-	CreatedAt time.Time `json:"created_at"`
+	Role      string    `column:"role,enum:normal|admin" json:"role"`
+	Theme     string    `column:"theme,enum:system|light|dark" json:"theme"`
+	CreatedAt time.Time `column:"created_at,timestamp" json:"created_at"`
 }
 
 type UserRole int
@@ -31,39 +31,13 @@ const UserThemeSystem UserTheme = 0
 const UserThemeLight UserTheme = 1
 const UserThemeDark UserTheme = 2
 
-func UserScan(c *fiber.Ctx, userQuery *sql.Rows) User {
-	var user User
-	var userRole UserRole
-	var userTheme UserTheme
-	userQuery.Scan(&user.ID, &user.Username, &user.Email, &user.Password, &user.AvatarID, &userRole, &userTheme, &user.CreatedAt)
-
-	if userRole == UserRoleNormal {
-		user.Role = "normal"
-	}
-	if userRole == UserRoleAdmin {
-		user.Role = "admin"
-	}
-
-	if userTheme == UserThemeSystem {
-		user.Theme = "system"
-	}
-	if userTheme == UserThemeLight {
-		user.Theme = "light"
-	}
-	if userTheme == UserThemeDark {
-		user.Theme = "dark"
-	}
-
-	if c != nil && user.AvatarID != "" {
-		user.Avatar = fmt.Sprintf("%s/storage/avatars/%s.jpg", c.BaseURL(), user.AvatarID)
-	}
-	return user
-}
-
-func UsersScan(c *fiber.Ctx, usersQuery *sql.Rows) []User {
-	users := []User{}
-	for usersQuery.Next() {
-		users = append(users, UserScan(c, usersQuery))
-	}
-	return users
+func UserModel(c *fiber.Ctx) database.Model[User] {
+	return database.Model[User]{
+		TableName: "users",
+		Process: func(user *User) {
+			if c != nil && user.AvatarID != "" {
+				user.Avatar = fmt.Sprintf("%s/storage/avatars/%s.jpg", c.BaseURL(), user.AvatarID)
+			}
+		},
+	}.Init()
 }

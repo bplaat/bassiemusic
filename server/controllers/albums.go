@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"github.com/bplaat/bassiemusic/database"
 	"github.com/bplaat/bassiemusic/models"
 	"github.com/bplaat/bassiemusic/utils"
 	"github.com/gofiber/fiber/v2"
@@ -9,58 +8,39 @@ import (
 
 func AlbumsIndex(c *fiber.Ctx) error {
 	query, page, limit := utils.ParseIndexVars(c)
-
-	// Get total albums
-	total := database.Count("SELECT COUNT(`id`) FROM `albums` WHERE `title` LIKE ?", "%"+query+"%")
-
-	// Get albums
-	albumsQuery := database.Query("SELECT BIN_TO_UUID(`id`), `type`, `title`, `released_at`, `explicit`, `deezer_id`, `created_at` FROM `albums` WHERE `title` LIKE ? ORDER BY LOWER(`title`) LIMIT ?, ?", "%"+query+"%", (page-1)*limit, limit)
-	defer albumsQuery.Close()
-
-	// Return response
-	return c.JSON(&fiber.Map{
-		"data": models.AlbumsScan(c, albumsQuery, true, true, false),
-		"pagination": &fiber.Map{
-			"page":  page,
-			"limit": limit,
-			"total": total,
-		},
-	})
+	return c.JSON(models.AlbumModel(c).With("artists", "genres").WhereRaw("`title` LIKE ?", "%"+query+"%").OrderByRaw("LOWER(`title`)").Paginate(page, limit))
 }
 
 func AlbumsShow(c *fiber.Ctx) error {
-	// Check if album exists
-	albumQuery := database.Query("SELECT BIN_TO_UUID(`id`), `type`, `title`, `released_at`, `explicit`, `deezer_id`, `created_at` FROM `albums` WHERE `id` = UUID_TO_BIN(?)", c.Params("albumID"))
-	defer albumQuery.Close()
-	if !albumQuery.Next() {
+	album := models.AlbumModel(c).With("artists", "genres", "tracks").Find(c.Params("albumID"))
+	if album == nil {
 		return fiber.ErrNotFound
 	}
-
-	// Return response
-	return c.JSON(models.AlbumScan(c, albumQuery, true, true, true))
+	return c.JSON(album)
 }
 
 func AlbumsLike(c *fiber.Ctx) error {
 	authUser := models.AuthUser(c)
 
 	// Check if album exists
-	albumQuery := database.Query("SELECT `id` FROM `albums` WHERE `id` = UUID_TO_BIN(?)", c.Params("albumID"))
-	defer albumQuery.Close()
-	if !albumQuery.Next() {
+	album := models.AlbumModel(c).Find(c.Params("albumID"))
+	if album == nil {
 		return fiber.ErrNotFound
 	}
 
-	// Check if album_likes binding exists
-	albumLikeQuery := database.Query("SELECT `id` FROM `album_likes` WHERE `album_id` = UUID_TO_BIN(?) AND `user_id` = UUID_TO_BIN(?)", c.Params("albumID"), authUser.ID)
-	defer albumLikeQuery.Close()
-	if albumLikeQuery.Next() {
+	// Check if album already liked
+	albumLike := models.AlbumLikeModel().Where("album_id", c.Params("albumID")).Where("user_id", authUser.ID).First()
+	if albumLike != nil {
 		return c.JSON(fiber.Map{"success": true})
 	}
 
-	// Create album_likes binding
-	database.Exec("INSERT INTO `album_likes` (`id`, `album_id`, `user_id`) VALUES (UUID_TO_BIN(UUID()), UUID_TO_BIN(?), UUID_TO_BIN(?))", c.Params("albumID"), authUser.ID)
+	// Like album
+	newAlbumLike := models.AlbumLike{
+		AlbumID: c.Params("albumID"),
+		UserID:  authUser.ID,
+	}
+	models.AlbumLikeModel().Create(&newAlbumLike)
 
-	// Send successfull response
 	return c.JSON(fiber.Map{"success": true})
 }
 
@@ -68,22 +48,18 @@ func AlbumsLikeDelete(c *fiber.Ctx) error {
 	authUser := models.AuthUser(c)
 
 	// Check if album exists
-	albumQuery := database.Query("SELECT `id` FROM `albums` WHERE `id` = UUID_TO_BIN(?)", c.Params("albumID"))
-	defer albumQuery.Close()
-	if !albumQuery.Next() {
+	album := models.AlbumModel(c).Find(c.Params("albumID"))
+	if album == nil {
 		return fiber.ErrNotFound
 	}
 
-	// Check if album_likes binding doesn't exists
-	albumLikeQuery := database.Query("SELECT `id` FROM `album_likes` WHERE `album_id` = UUID_TO_BIN(?) AND `user_id` = UUID_TO_BIN(?)", c.Params("albumID"), authUser.ID)
-	defer albumLikeQuery.Close()
-	if !albumLikeQuery.Next() {
+	// Check if album not liked
+	albumLike := models.AlbumLikeModel().Where("album_id", c.Params("albumID")).Where("user_id", authUser.ID).First()
+	if albumLike == nil {
 		return c.JSON(fiber.Map{"success": true})
 	}
 
-	// Delete album_likes binding
-	database.Exec("DELETE FROM `album_likes` WHERE `album_id` = UUID_TO_BIN(?) AND `user_id` = UUID_TO_BIN(?)", c.Params("albumID"), authUser.ID)
-
-	// Send successfull response
+	// Delete like
+	models.AlbumLikeModel().Where("album_id", c.Params("albumID")).Where("user_id", authUser.ID).Delete()
 	return c.JSON(fiber.Map{"success": true})
 }

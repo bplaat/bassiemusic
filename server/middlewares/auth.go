@@ -1,7 +1,8 @@
 package middlewares
 
 import (
-	"github.com/bplaat/bassiemusic/database"
+	"time"
+
 	"github.com/bplaat/bassiemusic/models"
 	"github.com/bplaat/bassiemusic/utils"
 	"github.com/gofiber/fiber/v2"
@@ -13,12 +14,9 @@ func IsAuthed(c *fiber.Ctx) error {
 		return fiber.ErrUnauthorized
 	}
 
-	// Get all active session by token
-	sessionQuery := database.Query("SELECT `id` FROM `sessions` WHERE `token` = ? AND `expires_at` > NOW()", token)
-	defer sessionQuery.Close()
-
-	// When a session doesn't exist return unauthorized error
-	if !sessionQuery.Next() {
+	// Get active session by token
+	session := models.SessionModel(c).Where("token", token).WhereRaw("`expires_at` > ?", time.Now()).First()
+	if session == nil {
 		return fiber.ErrUnauthorized
 	}
 	return c.Next()

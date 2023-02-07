@@ -15,23 +15,7 @@ import (
 
 func UsersIndex(c *fiber.Ctx) error {
 	query, page, limit := utils.ParseIndexVars(c)
-
-	// Get total users
-	total := database.Count("SELECT COUNT(`id`) FROM `users` WHERE `username` LIKE ? OR `email` LIKE ?", "%"+query+"%", "%"+query+"%")
-
-	// Get users
-	usersQuery := database.Query("SELECT BIN_TO_UUID(`id`), `username`, `email`, `password`, BIN_TO_UUID(`avatar`), `role`, `theme`, `created_at` FROM `users` WHERE `username` LIKE ? OR `email` LIKE ? ORDER BY LOWER(`username`) LIMIT ?, ?", "%"+query+"%", "%"+query+"%", (page-1)*limit, limit)
-	defer usersQuery.Close()
-
-	// Return response
-	return c.JSON(&fiber.Map{
-		"data": models.UsersScan(c, usersQuery),
-		"pagination": &fiber.Map{
-			"page":  page,
-			"limit": limit,
-			"total": total,
-		},
-	})
+	return c.JSON(models.UserModel(c).WhereRaw("`username` LIKE ?", "%"+query+"%").WhereOrRaw("`email` LIKE ?", "%"+query+"%").OrderByRaw("LOWER(`username`)").Paginate(page, limit))
 }
 
 type UsersCreateParams struct {
@@ -58,17 +42,13 @@ func UsersCreate(c *fiber.Ctx) error {
 	}
 
 	// Validate username is unique
-	usernameQuery := database.Query("SELECT `id` FROM `users` WHERE `username` = ?", params.Username)
-	defer usernameQuery.Close()
-	if usernameQuery.Next() {
+	if models.UserModel(c).Where("username", params.Username).First() != nil {
 		log.Println("username not unique")
 		return fiber.ErrBadRequest
 	}
 
 	// Validate email is unique
-	emailQuery := database.Query("SELECT `id` FROM `users` WHERE `email` = ?", params.Email)
-	defer emailQuery.Close()
-	if emailQuery.Next() {
+	if models.UserModel(c).Where("email", params.Email).First() != nil {
 		log.Println("email not unique")
 		return fiber.ErrBadRequest
 	}
@@ -86,53 +66,21 @@ func UsersCreate(c *fiber.Ctx) error {
 	}
 
 	// Create user
-	userID := uuid.NewV4()
-
-	var userRole models.UserRole
-	if params.Role == "normal" {
-		userRole = models.UserRoleNormal
+	user := models.User{
+		Username: params.Username,
+		Email:    params.Email,
+		Password: utils.HashPassword(params.Password),
+		Role:     params.Role,
 	}
-	if params.Role == "admin" {
-		userRole = models.UserRoleAdmin
-	}
-
-	var userTheme models.UserTheme
-	if params.Theme == "system" {
-		userTheme = models.UserThemeSystem
-	}
-	if params.Theme == "light" {
-		userTheme = models.UserThemeLight
-	}
-	if params.Theme == "dark" {
-		userTheme = models.UserThemeDark
-	}
-
-	database.Exec("INSERT INTO `users` (`id`, `username`, `email`, `password`, `role`, `theme`) VALUES (UUID_TO_BIN(?), ?, ?, ?, ?, ?)",
-		userID.String(), params.Username, params.Email, utils.HashPassword(params.Password), userRole, userTheme)
-
-	// Get new created user and send response
-	userQuery := database.Query("SELECT BIN_TO_UUID(`id`), `username`, `email`, `password`, BIN_TO_UUID(`avatar`), `role`, `theme`, `created_at` FROM `users` WHERE `id` = UUID_TO_BIN(?)", userID.String())
-	defer userQuery.Close()
-	userQuery.Next()
-	return c.JSON(models.UserScan(c, userQuery))
+	return c.JSON(models.UserModel(c).Create(&user))
 }
 
 func UsersShow(c *fiber.Ctx) error {
-	// Check auth
-	authUser := models.AuthUser(c)
-	if authUser.Role != "admin" && authUser.ID != c.Params("userID") {
-		return fiber.ErrUnauthorized
-	}
-
-	// Check if user exists
-	userQuery := database.Query("SELECT BIN_TO_UUID(`id`), `username`, `email`, `password`, BIN_TO_UUID(`avatar`), `role`, `theme`, `created_at` FROM `users` WHERE `id` = UUID_TO_BIN(?)", c.Params("userID"))
-	defer userQuery.Close()
-	if !userQuery.Next() {
+	user := models.UserModel(c).With("albums", "top_tracks").Find(c.Params("userID"))
+	if user == nil {
 		return fiber.ErrNotFound
 	}
-
-	// Return response
-	return c.JSON(models.UserScan(c, userQuery))
+	return c.JSON(user)
 }
 
 type UsersEditParams struct {
@@ -144,21 +92,17 @@ type UsersEditParams struct {
 }
 
 func UsersEdit(c *fiber.Ctx) error {
-	// Check auth
-	authUser := models.AuthUser(c)
-	if authUser.Role != "admin" && authUser.ID != c.Params("userID") {
-		return fiber.ErrUnauthorized
-	}
-
 	// Check if user exists
-	userQuery := database.Query("SELECT BIN_TO_UUID(`id`), `username`, `email`, `password`, BIN_TO_UUID(`avatar`), `role`, `theme`, `created_at` FROM `users` WHERE `id` = UUID_TO_BIN(?)", c.Params("userID"))
-	defer userQuery.Close()
-	if !userQuery.Next() {
+	user := models.UserModel(c).Find(c.Params("userID"))
+	if user == nil {
 		return fiber.ErrNotFound
 	}
 
-	// Get user
-	user := models.UserScan(c, userQuery)
+	// Check auth
+	authUser := models.AuthUser(c)
+	if authUser.Role != "admin" && authUser.ID != user.ID {
+		return fiber.ErrUnauthorized
+	}
 
 	// Parse body
 	var params UsersEditParams
@@ -175,23 +119,15 @@ func UsersEdit(c *fiber.Ctx) error {
 	}
 
 	// Validate username is unique when diffrent
-	if user.Username != params.Username {
-		usernameQuery := database.Query("SELECT `id` FROM `users` WHERE `username` = ?", params.Username)
-		defer usernameQuery.Close()
-		if usernameQuery.Next() {
-			log.Println("username not unique")
-			return fiber.ErrBadRequest
-		}
+	if user.Username != params.Username && models.UserModel(c).Where("username", params.Username).First() != nil {
+		log.Println("username not unique")
+		return fiber.ErrBadRequest
 	}
 
 	// Validate email is unique
-	if user.Email != params.Email {
-		emailQuery := database.Query("SELECT `id` FROM `users` WHERE `email` = ?", params.Email)
-		defer emailQuery.Close()
-		if emailQuery.Next() {
-			log.Println("email not unique")
-			return fiber.ErrBadRequest
-		}
+	if user.Email != params.Email && models.UserModel(c).Where("email", params.Email).First() != nil {
+		log.Println("email not unique")
+		return fiber.ErrBadRequest
 	}
 
 	// Validate role is correct
@@ -244,21 +180,17 @@ func UsersEdit(c *fiber.Ctx) error {
 }
 
 func UsersAvatar(c *fiber.Ctx) error {
-	// Check auth
-	authUser := models.AuthUser(c)
-	if authUser.Role != "admin" && authUser.ID != c.Params("userID") {
-		return fiber.ErrUnauthorized
-	}
-
 	// Check if user exists
-	userQuery := database.Query("SELECT BIN_TO_UUID(`id`), `username`, `email`, `password`, BIN_TO_UUID(`avatar`), `role`, `theme`, `created_at` FROM `users` WHERE `id` = UUID_TO_BIN(?)", c.Params("userID"))
-	defer userQuery.Close()
-	if !userQuery.Next() {
+	user := models.UserModel(c).Find(c.Params("userID"))
+	if user == nil {
 		return fiber.ErrNotFound
 	}
 
-	// Get user
-	user := models.UserScan(c, userQuery)
+	// Check auth
+	authUser := models.AuthUser(c)
+	if authUser.Role != "admin" && authUser.ID != user.ID {
+		return fiber.ErrUnauthorized
+	}
 
 	// Remove old avatar file
 	if user.AvatarID != "" {
@@ -278,27 +210,23 @@ func UsersAvatar(c *fiber.Ctx) error {
 	}
 
 	// Save avatar id for user
-	database.Exec("UPDATE `users` SET `avatar` = UUID_TO_BIN(?) WHERE `id` = UUID_TO_BIN(?)", avatarID.String(), user.ID)
-
+	user.AvatarID = avatarID.String()
+	models.UserModel(c).Update(user)
 	return c.JSON(fiber.Map{"success": true})
 }
 
 func UsersAvatarDelete(c *fiber.Ctx) error {
-	// Check auth
-	authUser := models.AuthUser(c)
-	if authUser.Role != "admin" && authUser.ID != c.Params("userID") {
-		return fiber.ErrUnauthorized
-	}
-
 	// Check if user exists
-	userQuery := database.Query("SELECT BIN_TO_UUID(`id`), `username`, `email`, `password`, BIN_TO_UUID(`avatar`), `role`, `theme`, `created_at` FROM `users` WHERE `id` = UUID_TO_BIN(?)", c.Params("userID"))
-	defer userQuery.Close()
-	if !userQuery.Next() {
+	user := models.UserModel(c).Find(c.Params("userID"))
+	if user == nil {
 		return fiber.ErrNotFound
 	}
 
-	// Get user
-	user := models.UserScan(c, userQuery)
+	// Check auth
+	authUser := models.AuthUser(c)
+	if authUser.Role != "admin" && authUser.ID != user.ID {
+		return fiber.ErrUnauthorized
+	}
 
 	// Check if user has avatar
 	if user.AvatarID != "" {
@@ -310,199 +238,121 @@ func UsersAvatarDelete(c *fiber.Ctx) error {
 		// Clear avatar id for user
 		database.Exec("UPDATE `users` SET `avatar` = NULL WHERE `id` = UUID_TO_BIN(?)", user.ID)
 	}
-
 	return c.JSON(fiber.Map{"success": true})
 }
 
 func UsersLikedArtists(c *fiber.Ctx) error {
 	query, page, limit := utils.ParseIndexVars(c)
 
-	// Check auth
-	authUser := models.AuthUser(c)
-	if authUser.Role != "admin" && authUser.ID != c.Params("userID") {
-		return fiber.ErrUnauthorized
-	}
-
 	// Check if user exists
-	userQuery := database.Query("SELECT `id` FROM `users` WHERE `id` = UUID_TO_BIN(?)", c.Params("userID"))
-	defer userQuery.Close()
-	if !userQuery.Next() {
+	user := models.UserModel(c).Find(c.Params("userID"))
+	if user == nil {
 		return fiber.ErrNotFound
 	}
 
-	// Get total liked artists
-	total := database.Count("SELECT COUNT(`artists`.`id`) FROM `artists` INNER JOIN `artist_likes` ON `artists`.`id` = `artist_likes`.`artist_id` "+
-		"WHERE `artists`.`name` LIKE ?", "%"+query+"%")
+	// Check auth
+	authUser := models.AuthUser(c)
+	if authUser.Role != "admin" && authUser.ID != user.ID {
+		return fiber.ErrUnauthorized
+	}
 
 	// Get liked artists
-	artistsQuery := database.Query("SELECT BIN_TO_UUID(`artists`.`id`), `artists`.`name`, `artists`.`deezer_id`, `artists`.`created_at` FROM `artists` INNER JOIN `artist_likes` ON `artists`.`id` = `artist_likes`.`artist_id` "+
-		"WHERE `artists`.`name` LIKE ? ORDER BY LOWER(`artists`.`name`) LIMIT ?, ?", "%"+query+"%", (page-1)*limit, limit)
-	defer artistsQuery.Close()
-
-	// Return response
-	return c.JSON(&fiber.Map{
-		"data": models.ArtistsScan(c, artistsQuery, false, false),
-		"pagination": &fiber.Map{
-			"page":  page,
-			"limit": limit,
-			"total": total,
-		},
-	})
+	likedArtists := models.ArtistModel(c).Join("INNER JOIN `artist_likes` ON `artists`.`id` = `artist_likes`.`artist_id`").
+		WhereRaw("`artists`.`name` LIKE ?", "%"+query+"%").OrderByRaw("LOWER(`artists`.`name`)").Paginate(page, limit)
+	return c.JSON(likedArtists)
 }
 
 func UsersLikedAlbums(c *fiber.Ctx) error {
 	query, page, limit := utils.ParseIndexVars(c)
 
-	// Check auth
-	authUser := models.AuthUser(c)
-	if authUser.Role != "admin" && authUser.ID != c.Params("userID") {
-		return fiber.ErrUnauthorized
-	}
-
 	// Check if user exists
-	userQuery := database.Query("SELECT `id` FROM `users` WHERE `id` = UUID_TO_BIN(?)", c.Params("userID"))
-	defer userQuery.Close()
-	if !userQuery.Next() {
+	user := models.UserModel(c).Find(c.Params("userID"))
+	if user == nil {
 		return fiber.ErrNotFound
 	}
 
-	// Get total liked albums
-	total := database.Count("SELECT COUNT(`albums`.`id`) FROM `albums` INNER JOIN `album_likes` ON `albums`.`id` = `album_likes`.`album_id` "+
-		"WHERE `albums`.`title` LIKE ?", "%"+query+"%")
+	// Check auth
+	authUser := models.AuthUser(c)
+	if authUser.Role != "admin" && authUser.ID != user.ID {
+		return fiber.ErrUnauthorized
+	}
 
 	// Get liked albums
-	albumsQuery := database.Query("SELECT BIN_TO_UUID(`albums`.`id`), `albums`.`type`, `albums`.`title`, `albums`.`released_at`, `albums`.`explicit`, `albums`.`deezer_id`, `albums`.`created_at` FROM `albums` "+
-		"INNER JOIN `album_likes` ON `albums`.`id` = `album_likes`.`album_id` WHERE `albums`.`title` LIKE ? ORDER BY LOWER(`albums`.`title`) LIMIT ?, ?", "%"+query+"%", (page-1)*limit, limit)
-	defer albumsQuery.Close()
-
-	// Return response
-	return c.JSON(&fiber.Map{
-		"data": models.AlbumsScan(c, albumsQuery, true, true, false),
-		"pagination": &fiber.Map{
-			"page":  page,
-			"limit": limit,
-			"total": total,
-		},
-	})
+	likedAlbums := models.AlbumModel(c).Join("INNER JOIN `album_likes` ON `albums`.`id` = `album_likes`.`album_id`").
+		With("artists", "genres").WhereRaw("`albums`.`title` LIKE ?", "%"+query+"%").OrderByRaw("LOWER(`albums`.`title`)").Paginate(page, limit)
+	return c.JSON(likedAlbums)
 }
 
 func UsersLikedTracks(c *fiber.Ctx) error {
 	query, page, limit := utils.ParseIndexVars(c)
 
-	// Check auth
-	authUser := models.AuthUser(c)
-	if authUser.Role != "admin" && authUser.ID != c.Params("userID") {
-		return fiber.ErrUnauthorized
-	}
-
 	// Check if user exists
-	userQuery := database.Query("SELECT `id` FROM `users` WHERE `id` = UUID_TO_BIN(?)", c.Params("userID"))
-	defer userQuery.Close()
-	if !userQuery.Next() {
+	user := models.UserModel(c).Find(c.Params("userID"))
+	if user == nil {
 		return fiber.ErrNotFound
 	}
 
-	// Get total liked tracks
-	total := database.Count("SELECT COUNT(`tracks`.`id`) FROM `tracks` INNER JOIN `track_likes` ON `tracks`.`id` = `track_likes`.`track_id` "+
-		"WHERE `tracks`.`title` LIKE ?", "%"+query+"%")
+	// Check auth
+	authUser := models.AuthUser(c)
+	if authUser.Role != "admin" && authUser.ID != user.ID {
+		return fiber.ErrUnauthorized
+	}
 
 	// Get liked tracks
-	tracksQuery := database.Query("SELECT BIN_TO_UUID(`tracks`.`id`), BIN_TO_UUID(`tracks`.`album_id`), `tracks`.`title`, `tracks`.`disk`, `tracks`.`position`, `tracks`.`duration`, `tracks`.`explicit`, `tracks`.`deezer_id`, `tracks`.`youtube_id`, `tracks`.`plays`, `tracks`.`created_at` FROM `tracks` "+
-		"INNER JOIN `track_likes` ON `tracks`.`id` = `track_likes`.`track_id` WHERE `tracks`.`title` LIKE ? ORDER BY `tracks`.`plays` DESC, LOWER(`title`) LIMIT ?, ?", "%"+query+"%", (page-1)*limit, limit)
-	defer tracksQuery.Close()
-
-	// Return response
-	return c.JSON(&fiber.Map{
-		"data": models.TracksScan(c, tracksQuery, true, true),
-		"pagination": &fiber.Map{
-			"page":  page,
-			"limit": limit,
-			"total": total,
-		},
-	})
+	likedTracks := models.TrackModel(c).Join("INNER JOIN `track_likes` ON `tracks`.`id` = `track_likes`.`track_id`").
+		With("artists", "album").WhereRaw("`tracks`.`title` LIKE ?", "%"+query+"%").OrderByDesc("plays").Paginate(page, limit)
+	return c.JSON(likedTracks)
 }
 
 func UsersPlayedTracks(c *fiber.Ctx) error {
 	query, page, limit := utils.ParseIndexVars(c)
 
-	// Check auth
-	authUser := models.AuthUser(c)
-	if authUser.Role != "admin" && authUser.ID != c.Params("userID") {
-		return fiber.ErrUnauthorized
-	}
-
 	// Check if user exists
-	userQuery := database.Query("SELECT `id` FROM `users` WHERE `id` = UUID_TO_BIN(?)", c.Params("userID"))
-	defer userQuery.Close()
-	if !userQuery.Next() {
+	user := models.UserModel(c).Find(c.Params("userID"))
+	if user == nil {
 		return fiber.ErrNotFound
 	}
 
-	// Get total played tracks
-	total := database.Count("SELECT COUNT(`tracks`.`id`) FROM `tracks` INNER JOIN `track_plays` ON `tracks`.`id` = `track_plays`.`track_id` "+
-		"WHERE `tracks`.`title` LIKE ?", "%"+query+"%")
+	// Check auth
+	authUser := models.AuthUser(c)
+	if authUser.Role != "admin" && authUser.ID != user.ID {
+		return fiber.ErrUnauthorized
+	}
 
 	// Get played tracks
-	tracksQuery := database.Query("SELECT BIN_TO_UUID(`tracks`.`id`), BIN_TO_UUID(`tracks`.`album_id`), `tracks`.`title`, `tracks`.`disk`, `tracks`.`position`, `tracks`.`duration`, `tracks`.`explicit`, `tracks`.`deezer_id`, `tracks`.`youtube_id`, `tracks`.`plays`, `tracks`.`created_at` FROM `tracks` "+
-		"INNER JOIN `track_plays` ON `tracks`.`id` = `track_plays`.`track_id` WHERE `tracks`.`title` LIKE ? ORDER BY `track_plays`.`created_at` DESC LIMIT ?, ?", "%"+query+"%", (page-1)*limit, limit)
-	defer tracksQuery.Close()
-
-	// Return response
-	return c.JSON(&fiber.Map{
-		"data": models.TracksScan(c, tracksQuery, true, true),
-		"pagination": &fiber.Map{
-			"page":  page,
-			"limit": limit,
-			"total": total,
-		},
-	})
+	playedTracks := models.TrackModel(c).Join("INNER JOIN `track_plays` ON `tracks`.`id` = `track_plays`.`track_id`").
+		With("artists", "album").WhereRaw("`tracks`.`title` LIKE ?", "%"+query+"%").OrderByDesc("plays").Paginate(page, limit)
+	return c.JSON(playedTracks)
 }
 
 func UsersSessions(c *fiber.Ctx) error {
 	_, page, limit := utils.ParseIndexVars(c)
 
-	// Check auth
-	authUser := models.AuthUser(c)
-	if authUser.Role != "admin" && authUser.ID != c.Params("userID") {
-		return fiber.ErrUnauthorized
-	}
-
 	// Check if user exists
-	userQuery := database.Query("SELECT `id` FROM `users` WHERE `id` = UUID_TO_BIN(?)", c.Params("userID"))
-	defer userQuery.Close()
-	if !userQuery.Next() {
+	user := models.UserModel(c).Find(c.Params("userID"))
+	if user == nil {
 		return fiber.ErrNotFound
 	}
 
-	// Get total user sessions
-	total := database.Count("SELECT COUNT(`id`) FROM `sessions` WHERE `user_id` = UUID_TO_BIN(?)", c.Params("userID"))
+	// Check auth
+	authUser := models.AuthUser(c)
+	if authUser.Role != "admin" && authUser.ID != user.ID {
+		return fiber.ErrUnauthorized
+	}
 
 	// Get user sessions
-	sessionsQuery := database.Query("SELECT BIN_TO_UUID(`id`), BIN_TO_UUID(`user_id`), `token`, `ip`, `ip_latitude`, `ip_longitude`, `ip_country`, `ip_city`, `client_os`, `client_name`, `client_version`, `expires_at`, `created_at` FROM `sessions` WHERE `user_id` = UUID_TO_BIN(?) ORDER BY `created_at` DESC LIMIT ?, ?", c.Params("userID"), (page-1)*limit, limit)
-	defer sessionsQuery.Close()
-
-	// Return response
-	return c.JSON(&fiber.Map{
-		"data": models.SessionsScan(c, sessionsQuery, false),
-		"pagination": &fiber.Map{
-			"page":  page,
-			"limit": limit,
-			"total": total,
-		},
-	})
+	userSessions := models.SessionModel(c).Where("user_id", user.ID).OrderByDesc("created_at").Paginate(page, limit)
+	return c.JSON(userSessions)
 }
 
 func UsersDelete(c *fiber.Ctx) error {
 	// Check if user exists
-	userQuery := database.Query("SELECT `id` FROM `users` WHERE `id` = UUID_TO_BIN(?)", c.Params("userID"))
-	defer userQuery.Close()
-	if !userQuery.Next() {
+	user := models.UserModel(c).Find(c.Params("userID"))
+	if user == nil {
 		return fiber.ErrNotFound
 	}
 
 	// Delete user
-	database.Exec("DELETE FROM `users` WHERE `id` = UUID_TO_BIN(?)", c.Params("userID"))
-
-	// Return response
+	models.UserModel(c).Where("id", user.ID).Delete()
 	return c.JSON(fiber.Map{"success": true})
 }

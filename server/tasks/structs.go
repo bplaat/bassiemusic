@@ -360,8 +360,8 @@ type YoutubeVideo struct {
 	OriginalURL          string      `json:"original_url"`
 	WebpageURLBasename   string      `json:"webpage_url_basename"`
 	WebpageURLDomain     string      `json:"webpage_url_domain"`
-	Extractor            string      `json:"extractor"`
-	ExtractorKey         string      `json:"extractor_key"`
+	Joinctor             string      `json:"joinctor"`
+	JoinctorKey          string      `json:"joinctor_key"`
 	PlaylistCount        int         `json:"playlist_count"`
 	Playlist             string      `json:"playlist"`
 	PlaylistID           string      `json:"playlist_id"`
