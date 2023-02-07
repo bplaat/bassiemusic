@@ -23,3 +23,6 @@ body.is-playing .sidebar{height:calc(100% - 6rem)}
 .icon.is-inline{display:inline-block;vertical-align:middle;transform:translateY(-1px)}
 
 .ellipsis{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+.instantPlay, .trackContainer:hover .trackIndex {display:none}
+.trackIndex, .trackContainer:hover .instantPlay {display:block}

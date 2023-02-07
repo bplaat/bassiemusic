@@ -14,7 +14,6 @@ In progress:
 - bplaat: Popup shows music queue and you can add, reorder and remove songs from queue
 
 Backlog:
-- lplaat: Hover track play button but dblclick still needs to work
 - lplaat: User account sessions management UI like GitHub
 - Discover other peoples public playlists via global search and like them to add them to your sidebar
 - bplaat: Users can create, edit, delete find public and private playlists
