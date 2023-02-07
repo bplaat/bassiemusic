@@ -24,5 +24,6 @@ body.is-playing .sidebar{height:calc(100% - 6rem)}
 
 .ellipsis{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
-.instantPlay, .trackContainer:hover .trackIndex {display:none}
-.trackIndex, .trackContainer:hover .instantPlay {display:block}
+.track-play{transform:translateX(-35%)}
+.track-play,.track-container:hover .track-index{display:none}
+.track-index,.track-container:hover .track-play{display:block}
