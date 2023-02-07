@@ -11,7 +11,7 @@
         musicPlayer.set({
             action: 'init',
             queue: [lastTrack],
-            index: 0,
+            track_id: lastTrack.id,
             position: lastTrackPosition
         });
     }
