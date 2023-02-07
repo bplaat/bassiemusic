@@ -145,7 +145,7 @@
                 </li>
                 <li>
                     <a
-                        href="/liked/artists"
+                        href="/liked/tracks"
                         class:is-active={$page.url.pathname.startsWith(
                             "/liked"
                         )}
@@ -235,6 +235,7 @@
                 <p><b>{authUser.username}</b></p>
                 <p>
                     <a href="/settings" class="mr-2">Settings</a>
+                    <!-- svelte-ignore a11y-invalid-attribute -->
                     <a href="#" on:click|preventDefault={logout}>Logout</a>
                 </p>
             </div>

@@ -41,18 +41,16 @@
     </ul>
 </div>
 
-<div class="content">
-    <h1 class="title">Liked Artists</h1>
+<h1 class="title">Liked Artists</h1>
 
-    {#if artists.length > 0}
-        <div class="columns is-multiline">
-            {#each artists as artist}
-                <div class="column is-one-fifth">
-                    <ArtistCard {artist} />
-                </div>
-            {/each}
-        </div>
-    {:else}
-        <p>You have not liked any artists</p>
-    {/if}
-</div>
+{#if artists.length > 0}
+    <div class="columns is-multiline">
+        {#each artists as artist}
+            <div class="column is-one-fifth">
+                <ArtistCard {artist} />
+            </div>
+        {/each}
+    </div>
+{:else}
+    <p>You have not liked any artists</p>
+{/if}

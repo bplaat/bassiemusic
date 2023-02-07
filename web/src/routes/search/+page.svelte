@@ -90,7 +90,7 @@
         />
     </div>
     <div class="control">
-        <button class="button is-info" on:click={search}> Search </button>
+        <button class="button is-link" on:click={search}> Search </button>
     </div>
 </div>
 

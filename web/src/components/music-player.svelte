@@ -335,18 +335,18 @@
         </button>
 
         <div class="px-2" style="flex: 1;">
-            <div class="buttons has-addons m-0 is-centered">
-                <button class="button" on:click={previousTrack}>
+            <div class="buttons has-addons m-0 is-centered" style="margin-bottom: 4px;">
+                <button class="button m-0" on:click={previousTrack}>
                     <svg class="icon" viewBox="0 0 24 24">
                         <path d="M6,18V6H8V18H6M9.5,12L18,6V18L9.5,12Z" />
                     </svg>
                 </button>
-                <button class="button" on:click={seekBackward}>
+                <button class="button m-0" on:click={seekBackward}>
                     <svg class="icon" viewBox="0 0 24 24">
                         <path d="M11.5,12L20,18V6M11,18V6L2.5,12L11,18Z" />
                     </svg>
                 </button>
-                <button class="button" on:click={playPause}>
+                <button class="button m-0" on:click={playPause}>
                     <svg class="icon" viewBox="0 0 24 24">
                         {#if isPlaying}
                             <path d="M14,19H18V5H14M6,19H10V5H6V19Z" />
@@ -355,12 +355,12 @@
                         {/if}
                     </svg>
                 </button>
-                <button class="button" on:click={seekForward}>
+                <button class="button m-0" on:click={seekForward}>
                     <svg class="icon" viewBox="0 0 24 24">
                         <path d="M13,6V18L21.5,12M4,18L12.5,12L4,6V18Z" />
                     </svg>
                 </button>
-                <button class="button" on:click={nextTrack}>
+                <button class="button m-0" on:click={nextTrack}>
                     <svg class="icon" viewBox="0 0 24 24">
                         <path d="M16,18H18V6H16M6,18L14.5,12L6,6V18Z" />
                     </svg>
