@@ -261,8 +261,8 @@ func UsersAvatar(c *fiber.Ctx) error {
 	user := models.UserScan(c, userQuery)
 
 	// Remove old avatar file
-	if user.AvatarID != "" {
-		if err := os.Remove(fmt.Sprintf("storage/avatars/%s.jpg", user.AvatarID)); err != nil {
+	if user.AvatarID != nil {
+		if err := os.Remove(fmt.Sprintf("storage/avatars/%s.jpg", *user.AvatarID)); err != nil {
 			log.Fatalln(err)
 		}
 	}
@@ -301,9 +301,9 @@ func UsersAvatarDelete(c *fiber.Ctx) error {
 	user := models.UserScan(c, userQuery)
 
 	// Check if user has avatar
-	if user.AvatarID != "" {
+	if user.AvatarID != nil {
 		// Remove old avatar file
-		if err := os.Remove(fmt.Sprintf("storage/avatars/%s.jpg", user.AvatarID)); err != nil {
+		if err := os.Remove(fmt.Sprintf("storage/avatars/%s.jpg", *user.AvatarID)); err != nil {
 			log.Fatalln(err)
 		}
 

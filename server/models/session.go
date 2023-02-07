@@ -13,13 +13,13 @@ type Session struct {
 	UserID        string    `json:"-"`
 	Token         string    `json:"-"`
 	IP            string    `json:"ip"`
-	IPLatitude    string    `json:"ip_latitude"`
-	IPLongitude   string    `json:"ip_longitude"`
-	IPCountry     string    `json:"ip_country"`
-	IPCity        string    `json:"ip_city"`
-	ClientOS      string    `json:"client_os"`
-	ClientName    string    `json:"client_name"`
-	ClientVersion string    `json:"client_version"`
+	IPLatitude    *float64  `json:"ip_latitude"`
+	IPLongitude   *float64  `json:"ip_longitude"`
+	IPCountry     *string   `json:"ip_country"`
+	IPCity        *string   `json:"ip_city"`
+	ClientOS      *string   `json:"client_os"`
+	ClientName    *string   `json:"client_name"`
+	ClientVersion *string   `json:"client_version"`
 	ExpiresAt     time.Time `json:"expires_at"`
 	CreatedAt     time.Time `json:"created_at"`
 	User          User      `json:"user,omitempty"`

@@ -3,9 +3,7 @@ import { writable } from 'svelte/store';
 
 export const musicPlayer = writable({
     action: 'init',
-    queue: [],
-    index: 0,
-    position: 0
+    queue: []
 });
 
 export const audioVolume = writable(browser ? (localStorage.getItem('audio_volume') ?? 1) : 1);
