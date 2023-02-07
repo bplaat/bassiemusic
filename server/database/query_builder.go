@@ -1,6 +1,7 @@
 package database
 
 import (
+	"fmt"
 	"reflect"
 	"strconv"
 )
@@ -134,8 +135,6 @@ func (qb QueryBuilder[T]) Count() int64 {
 }
 
 func (qb QueryBuilder[T]) Get() []T {
-	// enum: TODO
-
 	selectQuery := "SELECT "
 	index := 0
 	for _, column := range qb.Model.Columns {
@@ -161,15 +160,18 @@ func (qb QueryBuilder[T]) Get() []T {
 		selectQuery += " LIMIT " + qb.LimitStr
 	}
 
+	fmt.Println(selectQuery)
+
 	query := Query(selectQuery, qb.WhereValues...)
 	defer query.Close()
 	models := []T{}
 	for query.Next() {
 		var model T
-		modelType := reflect.ValueOf(model)
+		modelType := reflect.Indirect(reflect.ValueOf(&model))
 		ptrs := []any{}
 		for _, column := range qb.Model.Columns {
-			ptrs = append(ptrs, modelType.FieldByName(column.Name).Pointer())
+			fmt.Println(column.Name)
+			ptrs = append(ptrs, modelType.FieldByName(column.Name).Addr().Interface())
 		}
 		query.Scan(ptrs...)
 

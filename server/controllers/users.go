@@ -92,91 +92,92 @@ type UsersEditParams struct {
 }
 
 func UsersEdit(c *fiber.Ctx) error {
-	// Check if user exists
-	user := models.UserModel(c).Find(c.Params("userID"))
-	if user == nil {
-		return fiber.ErrNotFound
-	}
+	return c.SendString("todo")
+	// // Check if user exists
+	// user := models.UserModel(c).Find(c.Params("userID"))
+	// if user == nil {
+	// 	return fiber.ErrNotFound
+	// }
 
-	// Check auth
-	authUser := models.AuthUser(c)
-	if authUser.Role != "admin" && authUser.ID != user.ID {
-		return fiber.ErrUnauthorized
-	}
+	// // Check auth
+	// authUser := models.AuthUser(c)
+	// if authUser.Role != "admin" && authUser.ID != user.ID {
+	// 	return fiber.ErrUnauthorized
+	// }
 
-	// Parse body
-	var params UsersEditParams
-	if err := c.BodyParser(&params); err != nil {
-		log.Println(err)
-		return fiber.ErrBadRequest
-	}
+	// // Parse body
+	// var params UsersEditParams
+	// if err := c.BodyParser(&params); err != nil {
+	// 	log.Println(err)
+	// 	return fiber.ErrBadRequest
+	// }
 
-	// Validate values
-	validate := validator.New()
-	if err := validate.Struct(params); err != nil {
-		log.Println(err)
-		return fiber.ErrBadRequest
-	}
+	// // Validate values
+	// validate := validator.New()
+	// if err := validate.Struct(params); err != nil {
+	// 	log.Println(err)
+	// 	return fiber.ErrBadRequest
+	// }
 
-	// Validate username is unique when diffrent
-	if user.Username != params.Username && models.UserModel(c).Where("username", params.Username).First() != nil {
-		log.Println("username not unique")
-		return fiber.ErrBadRequest
-	}
+	// // Validate username is unique when diffrent
+	// if user.Username != params.Username && models.UserModel(c).Where("username", params.Username).First() != nil {
+	// 	log.Println("username not unique")
+	// 	return fiber.ErrBadRequest
+	// }
 
-	// Validate email is unique
-	if user.Email != params.Email && models.UserModel(c).Where("email", params.Email).First() != nil {
-		log.Println("email not unique")
-		return fiber.ErrBadRequest
-	}
+	// // Validate email is unique
+	// if user.Email != params.Email && models.UserModel(c).Where("email", params.Email).First() != nil {
+	// 	log.Println("email not unique")
+	// 	return fiber.ErrBadRequest
+	// }
 
-	// Validate role is correct
-	if params.Role != "" && params.Role != "normal" && params.Role != "admin" {
-		log.Println("role not valid")
-		return fiber.ErrBadRequest
-	}
+	// // Validate role is correct
+	// if params.Role != "" && params.Role != "normal" && params.Role != "admin" {
+	// 	log.Println("role not valid")
+	// 	return fiber.ErrBadRequest
+	// }
 
-	// Validate theme is correct
-	if params.Theme != "system" && params.Theme != "light" && params.Theme != "dark" {
-		log.Println("theme not valid")
-		return fiber.ErrBadRequest
-	}
+	// // Validate theme is correct
+	// if params.Theme != "system" && params.Theme != "light" && params.Theme != "dark" {
+	// 	log.Println("theme not valid")
+	// 	return fiber.ErrBadRequest
+	// }
 
-	// Update user
-	var userRole models.UserRole
-	if params.Role == "normal" {
-		userRole = models.UserRoleNormal
-	}
-	if params.Role == "admin" {
-		userRole = models.UserRoleAdmin
-	}
+	// // Update user
+	// var userRole models.UserRole
+	// if params.Role == "normal" {
+	// 	userRole = models.UserRoleNormal
+	// }
+	// if params.Role == "admin" {
+	// 	userRole = models.UserRoleAdmin
+	// }
 
-	var userTheme models.UserTheme
-	if params.Theme == "system" {
-		userTheme = models.UserThemeSystem
-	}
-	if params.Theme == "light" {
-		userTheme = models.UserThemeLight
-	}
-	if params.Theme == "dark" {
-		userTheme = models.UserThemeDark
-	}
+	// var userTheme models.UserTheme
+	// if params.Theme == "system" {
+	// 	userTheme = models.UserThemeSystem
+	// }
+	// if params.Theme == "light" {
+	// 	userTheme = models.UserThemeLight
+	// }
+	// if params.Theme == "dark" {
+	// 	userTheme = models.UserThemeDark
+	// }
 
-	if params.Role != "" {
-		if params.Password != "" {
-			database.Exec("UPDATE `users` SET `username` = ?, `email` = ?, `password` = ?, `role` = ?, theme = ? WHERE `id` = UUID_TO_BIN(?)", params.Username, params.Email, utils.HashPassword(params.Password), userRole, userTheme, user.ID)
-		} else {
-			database.Exec("UPDATE `users` SET `username` = ?, `email` = ?, `role` = ?, `theme` = ? WHERE `id` = UUID_TO_BIN(?)", params.Username, params.Email, userRole, userTheme, user.ID)
-		}
-	} else {
-		database.Exec("UPDATE `users` SET `username` = ?, `email` = ?, `theme` = ? WHERE `id` = UUID_TO_BIN(?)", params.Username, params.Email, userTheme, user.ID)
-	}
+	// if params.Role != "" {
+	// 	if params.Password != "" {
+	// 		database.Exec("UPDATE `users` SET `username` = ?, `email` = ?, `password` = ?, `role` = ?, theme = ? WHERE `id` = UUID_TO_BIN(?)", params.Username, params.Email, utils.HashPassword(params.Password), userRole, userTheme, user.ID)
+	// 	} else {
+	// 		database.Exec("UPDATE `users` SET `username` = ?, `email` = ?, `role` = ?, `theme` = ? WHERE `id` = UUID_TO_BIN(?)", params.Username, params.Email, userRole, userTheme, user.ID)
+	// 	}
+	// } else {
+	// 	database.Exec("UPDATE `users` SET `username` = ?, `email` = ?, `theme` = ? WHERE `id` = UUID_TO_BIN(?)", params.Username, params.Email, userTheme, user.ID)
+	// }
 
-	// Get edited user and send response
-	updatedUserQuery := database.Query("SELECT BIN_TO_UUID(`id`), `username`, `email`, `password`, BIN_TO_UUID(`avatar`), `role`, `theme`, `created_at` FROM `users` WHERE `id` = UUID_TO_BIN(?)", user.ID)
-	defer updatedUserQuery.Close()
-	updatedUserQuery.Next()
-	return c.JSON(models.UserScan(c, updatedUserQuery))
+	// // Get edited user and send response
+	// updatedUserQuery := database.Query("SELECT BIN_TO_UUID(`id`), `username`, `email`, `password`, BIN_TO_UUID(`avatar`), `role`, `theme`, `created_at` FROM `users` WHERE `id` = UUID_TO_BIN(?)", user.ID)
+	// defer updatedUserQuery.Close()
+	// updatedUserQuery.Next()
+	// return c.JSON(models.UserScan(c, updatedUserQuery))
 }
 
 func UsersAvatar(c *fiber.Ctx) error {

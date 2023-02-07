@@ -2,7 +2,6 @@ package models
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/bplaat/bassiemusic/database"
 	"github.com/gofiber/fiber/v2"
@@ -13,11 +12,13 @@ type User struct {
 	Username  string    `column:"username,string" json:"username"`
 	Email     string    `column:"email,string" json:"email"`
 	Password  string    `column:"password,string" json:"-"`
-	AvatarID  string    `column:"avatar_id,uuid" json:"-"`
+	AvatarID  string    `column:"avatar,uuid" json:"-"`
 	Avatar    string    `json:"avatar,omitempty"`
-	Role      string    `column:"role,enum:normal|admin" json:"role"`
-	Theme     string    `column:"theme,enum:system|light|dark" json:"theme"`
-	CreatedAt time.Time `column:"created_at,timestamp" json:"created_at"`
+	RoleInt   UserRole  `column:"role,int" json:"-"`
+	Role      string    `json:"role"`
+	ThemeInt  UserTheme `column:"theme,int" json:"-"`
+	Theme     string    `json:"theme"`
+	CreatedAt string    `column:"created_at,timestamp" json:"created_at"`
 }
 
 type UserRole int
@@ -35,6 +36,23 @@ func UserModel(c *fiber.Ctx) database.Model[User] {
 	return database.Model[User]{
 		TableName: "users",
 		Process: func(user *User) {
+			if user.RoleInt == UserRoleNormal {
+				user.Role = "normal"
+			}
+			if user.RoleInt == UserRoleAdmin {
+				user.Role = "admin"
+			}
+
+			if user.ThemeInt == UserThemeSystem {
+				user.Theme = "system"
+			}
+			if user.ThemeInt == UserThemeLight {
+				user.Theme = "light"
+			}
+			if user.ThemeInt == UserThemeDark {
+				user.Theme = "dark"
+			}
+
 			if c != nil && user.AvatarID != "" {
 				user.Avatar = fmt.Sprintf("%s/storage/avatars/%s.jpg", c.BaseURL(), user.AvatarID)
 			}
