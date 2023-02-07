@@ -13,7 +13,7 @@ type User struct {
 	Username  string    `json:"username"`
 	Email     string    `json:"email"`
 	Password  string    `json:"-"`
-	AvatarID  string    `json:"-"`
+	AvatarID  *string   `json:"-"`
 	Avatar    string    `json:"avatar,omitempty"`
 	Role      string    `json:"role"`
 	Theme     string    `json:"theme"`
@@ -54,8 +54,8 @@ func UserScan(c *fiber.Ctx, userQuery *sql.Rows) User {
 		user.Theme = "dark"
 	}
 
-	if c != nil && user.AvatarID != "" {
-		user.Avatar = fmt.Sprintf("%s/storage/avatars/%s.jpg", c.BaseURL(), user.AvatarID)
+	if c != nil && user.AvatarID != nil {
+		user.Avatar = fmt.Sprintf("%s/storage/avatars/%s.jpg", c.BaseURL(), *user.AvatarID)
 	}
 	return user
 }
