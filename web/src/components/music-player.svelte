@@ -1,4 +1,5 @@
 <script>
+    import { page } from "$app/stores";
     import { browser } from "$app/environment";
     import {
         PLAYER_UPDATE_UI_TIMEOUT,
@@ -280,11 +281,11 @@
             >
                 <div
                     class="box is-image m-0 mr-4"
-                    style="width: 64px; height: 64px; background-image: url({track
+                    style="width: 64px; height: 64px; min-width: 64px; background-image: url({track
                         .album.small_cover});"
                 />
 
-                <div class="flex">
+                <div style="flex: 1;">
                     <p class="ellipsis">
                         <a
                             href="/albums/{track.album.id}"
@@ -377,13 +378,28 @@
                 >
             </div>
 
-            <button class="button" on:click={() => alert('TODO')}>
-                <svg class="icon" viewBox="0 0 24 24">
-                    <path
-                        d="M15,6H3V8H15V6M15,10H3V12H15V10M3,16H11V14H3V16M17,6V14.18C16.69,14.07 16.35,14 16,14A3,3 0 0,0 13,17A3,3 0 0,0 16,20A3,3 0 0,0 19,17V8H22V6H17Z"
-                    />
-                </svg>
-            </button>
+            {#if $page.url.pathname == "/queue"}
+                <!-- svelte-ignore a11y-invalid-attribute -->
+                <a
+                    class="button"
+                    href="#"
+                    on:click|preventDefault={() => history.back()}
+                >
+                    <svg class="icon" viewBox="0 0 24 24">
+                        <path
+                            d="M15,6H3V8H15V6M15,10H3V12H15V10M3,16H11V14H3V16M17,6V14.18C16.69,14.07 16.35,14 16,14A3,3 0 0,0 13,17A3,3 0 0,0 16,20A3,3 0 0,0 19,17V8H22V6H17Z"
+                        />
+                    </svg>
+                </a>
+            {:else}
+                <a class="button" href="/queue">
+                    <svg class="icon" viewBox="0 0 24 24">
+                        <path
+                            d="M15,6H3V8H15V6M15,10H3V12H15V10M3,16H11V14H3V16M17,6V14.18C16.69,14.07 16.35,14 16,14A3,3 0 0,0 13,17A3,3 0 0,0 16,20A3,3 0 0,0 19,17V8H22V6H17Z"
+                        />
+                    </svg>
+                </a>
+            {/if}
 
             <div class="p-4 flex" style="display: flex;">
                 <button class="button mr-3" on:click={toggleVolume}>

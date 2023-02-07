@@ -5,6 +5,7 @@
     export let token;
     export let tracks;
     export let showAlbum = true;
+    export let isMusicQueue = false;
 
     function playTrack(track) {
         const index = tracks.indexOf(track);
@@ -18,6 +19,13 @@
     function addTrack(track) {
         musicPlayer.update((musicPlayer) => {
             musicPlayer.queue.push(track);
+            return musicPlayer;
+        });
+    }
+
+    function removeTrack(track) {
+        musicPlayer.update((musicPlayer) => {
+            musicPlayer.queue = musicPlayer.queue.filter(otherTrack => otherTrack.id != track.id);
             return musicPlayer;
         });
     }
@@ -112,7 +120,7 @@
                 {/if}
                 <td>{formatDuration(track.duration)}</td>
                 <td>{track.plays}</td>
-                <td class="p-0 pr-2">
+                <td class="pl-0 pr-2">
                     <button class="button" on:click={() => likeTrack(track)}>
                         {#if track.liked}
                             <svg class="icon is-colored" viewBox="0 0 24 24">
@@ -130,14 +138,27 @@
                         {/if}
                     </button>
                 </td>
-                <td class="p-0">
-                    <button class="button" on:click={() => addTrack(track)}>
-                        <svg class="icon" viewBox="0 0 24 24">
-                            <path
-                                d="M3 16H10V14H3M18 14V10H16V14H12V16H16V20H18V16H22V14M14 6H3V8H14M14 10H3V12H14V10Z"
-                            />
-                        </svg>
-                    </button>
+                <td class="pl-0">
+                    {#if isMusicQueue}
+                        <button
+                            class="button"
+                            on:click={() => removeTrack(track)}
+                        >
+                            <svg class="icon" viewBox="0 0 24 24">
+                                <path
+                                    d="M14 10H3V12H14V10M14 6H3V8H14V6M3 16H10V14H3V16M14.4 22L17 19.4L19.6 22L21 20.6L18.4 18L21 15.4L19.6 14L17 16.6L14.4 14L13 15.4L15.6 18L13 20.6L14.4 22Z"
+                                />
+                            </svg>
+                        </button>
+                    {:else}
+                        <button class="button" on:click={() => addTrack(track)}>
+                            <svg class="icon" viewBox="0 0 24 24">
+                                <path
+                                    d="M3 16H10V14H3M18 14V10H16V14H12V16H16V20H18V16H22V14M14 6H3V8H14M14 10H3V12H14V10Z"
+                                />
+                            </svg>
+                        </button>
+                    {/if}
                 </td>
             </tr>
         {/each}

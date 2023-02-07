@@ -9,7 +9,7 @@ export async function load({ fetch, cookies, params }) {
             Authorization: `Bearer ${cookies.get('token')}`
         }
     });
-    if (response.status === 404) {
+    if (response.status == 404) {
         throw error(404, 'Not Found');
     }
     const album = await response.json();
