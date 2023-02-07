@@ -7,6 +7,7 @@
     } from "../consts.js";
     import { musicPlayer, audioVolume } from "../stores.js";
     import { formatDuration } from "../filters.js";
+    import { onMount } from 'svelte';
 
     export let token;
     let isPlaying = false,
@@ -15,7 +16,11 @@
         audioCurrentTime,
         updateUiTimeout,
         updateServerTimeout,
-        ignoreMusicPlayerUpdate = false;
+        ignoreMusicPlayerUpdate = false,
+        thumb,
+        slider,
+        container;
+
 
     $: track = $musicPlayer.queue[$musicPlayer.index];
 
@@ -44,6 +49,7 @@
                     musicPlayer.action == "init" ? musicPlayer.position : 0;
                 audioDuration = audio.duration;
                 audioCurrentTime = audio.currentTime;
+                sliderSeek(audioCurrentTime / audioDuration)
 
                 if (musicPlayer.action == "play") {
                     play();
@@ -92,6 +98,8 @@
 
     function updatePositionState() {
         audioCurrentTime = audio.currentTime;
+        sliderSeek(audioCurrentTime / audioDuration)
+
         if ("mediaSession" in navigator) {
             navigator.mediaSession.setPositionState({
                 duration: audio.duration,
@@ -103,6 +111,8 @@
 
     function updateUiLoop() {
         audioCurrentTime = audio.currentTime;
+        sliderSeek(audioCurrentTime / audioDuration)
+
         if (isPlaying) {
             updateUiTimeout = setTimeout(
                 updateUiLoop,
@@ -141,16 +151,9 @@
         }
     }
 
-    function seekTo(details) {
+    function seekTo(seekTime) {
         if (!isPlaying) play();
-        audio.currentTime = details.seekTime;
-        sendTrackPlay();
-        updatePositionState();
-    }
-
-    function seekToInput(event) {
-        if (!isPlaying) play();
-        audio.currentTime = event.target.value;
+        audio.currentTime = seekTime;
         sendTrackPlay();
         updatePositionState();
     }
@@ -270,6 +273,55 @@
             }
         }
     }
+
+    function sliderSeek(percentage) {
+        let newThumbPosition = container.offsetWidth * percentage;
+        thumb.style.left = newThumbPosition - thumb.offsetWidth / 2 + "px";
+        slider.style.width = newThumbPosition + "px";
+    }
+
+    onMount(() => {
+        thumb = document.querySelector(".slider-thumb");
+        slider = document.querySelector(".slider");
+        container = document.querySelector(".slider-container");
+
+        container.addEventListener("click", function(event) {
+            let newThumbPosition = event.pageX - container.getBoundingClientRect().left;
+
+            if (newThumbPosition >= 0 && newThumbPosition <= container.offsetWidth) {
+                thumb.style.left = newThumbPosition - thumb.offsetWidth / 2 + "px";
+                slider.style.width = newThumbPosition + "px";
+                seekTo(((parseInt(slider.style.width) / container.offsetWidth)) * audioDuration)
+            }
+        });
+
+        thumb.addEventListener("mousedown", function(event) {
+            let thumbPosition = event.pageX - container.getBoundingClientRect().left;
+            thumb.classList.add("active");
+
+            let mouseMoveHandler = function(event) {
+                let newThumbPosition = event.pageX - container.getBoundingClientRect().left;
+                audioCurrentTime = (parseInt(slider.style.width) / container.offsetWidth) * audioDuration
+                updatePositionState()
+
+                if (newThumbPosition >= 0 && newThumbPosition <= container.offsetWidth) {
+                    thumbPosition = newThumbPosition;
+                    thumb.style.left = thumbPosition - thumb.offsetWidth / 2 + "px";
+                    slider.style.width = thumbPosition + "px";
+                    seekTo(((parseInt(slider.style.width) / container.offsetWidth)) * audioDuration)
+                }
+            };
+
+            let mouseUpHandler = function() {
+                thumb.classList.remove("active");
+                document.removeEventListener("mousemove", mouseMoveHandler);
+                document.removeEventListener("mouseup", mouseUpHandler);
+            };
+
+            document.addEventListener("mousemove", mouseMoveHandler);
+            document.addEventListener("mouseup", mouseUpHandler);
+        });
+    });
 </script>
 
 {#if $musicPlayer.queue.length > 0}
@@ -359,14 +411,10 @@
                 <span class="mr-3" style="width: 4rem; text-align: right;"
                     >{formatDuration(audioCurrentTime)}</span
                 >
-                <input
-                    type="range"
-                    style="flex: 1;"
-                    value={audioCurrentTime}
-                    on:input={seekToInput}
-                    min="0"
-                    max={audioDuration}
-                />
+                <div class="slider-container" style="flex:1;">
+                    <div class="slider"></div>
+                    <div class="slider-thumb"></div>
+                </div>
                 <span class="ml-3" style="width: 4rem;"
                     >-{formatDuration(audioDuration - audioCurrentTime)}</span
                 >
