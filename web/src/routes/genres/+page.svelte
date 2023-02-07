@@ -1,4 +1,6 @@
 <script>
+    import GenreCard from "../../components/genre-card.svelte";
+
     export let data;
     let { token, genres } = data;
 
@@ -34,15 +36,7 @@
 <div class="columns is-multiline">
     {#each genres as genre}
         <div class="column is-one-fifth">
-            <a class="card" href="/genres/{genre.id}">
-                <div
-                    class="card-image"
-                    style="background-image: url({genre.medium_image});"
-                />
-                <div class="card-content">
-                    <h3 class="title is-6">{genre.name}</h3>
-                </div>
-            </a>
+            <GenreCard {genre}/>
         </div>
     {/each}
 </div>

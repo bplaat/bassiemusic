@@ -66,11 +66,21 @@
     <tbody>
         {#each tracks as track, index}
             <tr
+                class="track-container"
                 on:dblclick|preventDefault={() => playTrack(track)}
                 class:has-background-light={$musicPlayer.queue.length > 0 &&
                     $musicPlayer.track_id == track.id}
             >
-                <td>{index + 1}</td>
+                <td>
+                    <span class="track-index">{index + 1}</span>
+
+                    <button class="button is-small track-play" on:click={() => playTrack(track)}>
+                        <svg class="icon" viewBox="0 0 24 24">
+                            <path d="M8,5.14V19.14L19,12.14L8,5.14Z" />
+                        </svg>
+                    </button>
+                </td>
+
                 {#if showAlbum}
                     <td style="display: flex;">
                         <div
