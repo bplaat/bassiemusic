@@ -3,6 +3,7 @@ package controllers
 import (
 	"time"
 
+	"github.com/bplaat/bassiemusic/database"
 	"github.com/bplaat/bassiemusic/models"
 	"github.com/bplaat/bassiemusic/utils"
 	"github.com/gofiber/fiber/v2"
@@ -10,11 +11,11 @@ import (
 
 func SessionsIndex(c *fiber.Ctx) error {
 	_, page, limit := utils.ParseIndexVars(c)
-	return c.JSON(models.SessionModel(c).Paginate(page, limit))
+	return c.JSON(models.SessionModel().Paginate(page, limit))
 }
 
 func SessionsShow(c *fiber.Ctx) error {
-	session := models.SessionModel(c).With("albums").Find(c.Params("sessionID"))
+	session := models.SessionModel().With("albums").Find(c.Params("sessionID"))
 	if session == nil {
 		return fiber.ErrNotFound
 	}
@@ -23,13 +24,14 @@ func SessionsShow(c *fiber.Ctx) error {
 
 func SessionsRevoke(c *fiber.Ctx) error {
 	// Get session
-	session := models.SessionModel(c).With("albums").Find(c.Params("sessionID"))
+	session := models.SessionModel().With("albums").Find(c.Params("sessionID"))
 	if session == nil {
 		return fiber.ErrNotFound
 	}
 
 	// Revoke session
-	session.ExpiresAt = time.Now()
-	models.SessionModel(c).Update(session)
+	models.SessionModel().Where("id", session.ID).Update(database.Map{
+		"expires_at": time.Now(),
+	})
 	return c.JSON(fiber.Map{"success": true})
 }

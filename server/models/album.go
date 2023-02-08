@@ -2,6 +2,7 @@ package models
 
 import (
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/bplaat/bassiemusic/database"
@@ -32,8 +33,8 @@ const AlbumTypeAlbum AlbumType = 0
 const AlbumTypeEP AlbumType = 1
 const AlbumTypeSingle AlbumType = 2
 
-func AlbumModel(c *fiber.Ctx) database.Model[Album] {
-	return database.Model[Album]{
+func AlbumModel(c *fiber.Ctx) *database.Model[Album] {
+	return (&database.Model[Album]{
 		TableName: "albums",
 		Process: func(album *Album) {
 			if album.TypeInt == AlbumTypeAlbum {
@@ -46,11 +47,11 @@ func AlbumModel(c *fiber.Ctx) database.Model[Album] {
 				album.Type = "single"
 			}
 
-			if c != nil {
-				album.SmallCover = fmt.Sprintf("%s/storage/albums/small/%s.jpg", c.BaseURL(), album.ID)
-				album.MediumCover = fmt.Sprintf("%s/storage/albums/medium/%s.jpg", c.BaseURL(), album.ID)
-				album.LargeCover = fmt.Sprintf("%s/storage/albums/large/%s.jpg", c.BaseURL(), album.ID)
+			album.SmallCover = fmt.Sprintf("%s/storage/albums/small/%s.jpg", os.Getenv("APP_URL"), album.ID)
+			album.MediumCover = fmt.Sprintf("%s/storage/albums/medium/%s.jpg", os.Getenv("APP_URL"), album.ID)
+			album.LargeCover = fmt.Sprintf("%s/storage/albums/large/%s.jpg", os.Getenv("APP_URL"), album.ID)
 
+			if c != nil {
 				album.Liked = AlbumLikeModel().Where("album_id", album.ID).Where("user_id", AuthUser(c).ID).First() != nil
 			}
 		},
@@ -65,7 +66,7 @@ func AlbumModel(c *fiber.Ctx) database.Model[Album] {
 				album.Tracks = TrackModel(c).With("artists").Where("album_id", album.ID).OrderByRaw("`disk`, `position`").Get()
 			},
 		},
-	}.Init()
+	}).Init()
 }
 
 // Album Like
@@ -76,8 +77,8 @@ type AlbumLike struct {
 	CreatedAt time.Time `column:"created_at,timestamp"`
 }
 
-func AlbumLikeModel() database.Model[AlbumLike] {
-	return database.Model[AlbumLike]{
+func AlbumLikeModel() *database.Model[AlbumLike] {
+	return (&database.Model[AlbumLike]{
 		TableName: "album_likes",
-	}.Init()
+	}).Init()
 }

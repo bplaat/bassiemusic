@@ -7,6 +7,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/bplaat/bassiemusic/database"
 	"github.com/bplaat/bassiemusic/models"
 	"github.com/bplaat/bassiemusic/utils"
 	"github.com/gofiber/fiber/v2"
@@ -25,7 +26,7 @@ func AuthLogin(c *fiber.Ctx) error {
 	}
 
 	// Get user by username or email
-	user := models.UserModel(c).Where("username", params.Logon).WhereOr("email", params.Logon).First()
+	user := models.UserModel().Where("username", params.Logon).WhereOr("email", params.Logon).First()
 	if user == nil {
 		return c.JSON(fiber.Map{
 			"success": false,
@@ -51,16 +52,15 @@ func AuthLogin(c *fiber.Ctx) error {
 
 	// Create new session
 	agent := useragent.Parse(c.Get("User-Agent"))
-	session := models.Session{
-		UserID:        user.ID,
-		Token:         token,
-		IP:            c.IP(),
-		ClientOS:      &agent.OS,
-		ClientName:    &agent.Name,
-		ClientVersion: &agent.Version,
-		ExpiresAt:     time.Now().Add(365 * 24 * 60 * 60 * time.Second),
-	}
-	models.SessionModel(c).Create(&session)
+	models.SessionModel().Create(database.Map{
+		"user_id":        user.ID,
+		"token":          token,
+		"ip":             c.IP(),
+		"client_os":      &agent.OS,
+		"client_name":    &agent.Name,
+		"client_version": &agent.Version,
+		"expires_at":     time.Now().Add(365 * 24 * 60 * 60 * time.Second),
+	})
 
 	// Return response
 	return c.JSON(fiber.Map{
@@ -97,13 +97,14 @@ func AuthLogout(c *fiber.Ctx) error {
 	token := utils.ParseTokenVar(c)
 
 	// Get session
-	session := models.SessionModel(c).Where("token", token).First()
+	session := models.SessionModel().Where("token", token).First()
 	if session == nil {
 		return c.JSON(fiber.Map{"success": false})
 	}
 
 	// Revoke session
-	session.ExpiresAt = time.Now()
-	models.SessionModel(c).Update(session)
+	models.SessionModel().Where("id", session.ID).Update(database.Map{
+		"expires_at": time.Now(),
+	})
 	return c.JSON(fiber.Map{"success": true})
 }

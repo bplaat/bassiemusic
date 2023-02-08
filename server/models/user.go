@@ -2,9 +2,9 @@ package models
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/bplaat/bassiemusic/database"
-	"github.com/gofiber/fiber/v2"
 )
 
 type User struct {
@@ -32,8 +32,8 @@ const UserThemeSystem UserTheme = 0
 const UserThemeLight UserTheme = 1
 const UserThemeDark UserTheme = 2
 
-func UserModel(c *fiber.Ctx) database.Model[User] {
-	return database.Model[User]{
+func UserModel() *database.Model[User] {
+	return (&database.Model[User]{
 		TableName: "users",
 		Process: func(user *User) {
 			if user.RoleInt == UserRoleNormal {
@@ -53,9 +53,9 @@ func UserModel(c *fiber.Ctx) database.Model[User] {
 				user.Theme = "dark"
 			}
 
-			if c != nil && user.AvatarID != nil {
-				user.Avatar = fmt.Sprintf("%s/storage/avatars/%s.jpg", c.BaseURL(), *user.AvatarID)
+			if *user.AvatarID != "" {
+				user.Avatar = fmt.Sprintf("%s/storage/avatars/%s.jpg", os.Getenv("APP_URL"), *user.AvatarID)
 			}
 		},
-	}.Init()
+	}).Init()
 }

@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"github.com/bplaat/bassiemusic/database"
 	"github.com/bplaat/bassiemusic/models"
 	"github.com/bplaat/bassiemusic/utils"
 	"github.com/gofiber/fiber/v2"
@@ -35,11 +36,10 @@ func ArtistsLike(c *fiber.Ctx) error {
 	}
 
 	// Like artist
-	newArtistLike := models.ArtistLike{
-		ArtistID: c.Params("artistID"),
-		UserID:   authUser.ID,
-	}
-	models.ArtistLikeModel().Create(&newArtistLike)
+	models.ArtistLikeModel().Create(database.Map{
+		"artist_id": c.Params("artistID"),
+		"user_id":   authUser.ID,
+	})
 
 	return c.JSON(fiber.Map{"success": true})
 }

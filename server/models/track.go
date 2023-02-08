@@ -2,6 +2,7 @@ package models
 
 import (
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/bplaat/bassiemusic/database"
@@ -27,13 +28,13 @@ type Track struct {
 	Artists   []Artist  `json:"artists,omitempty"`
 }
 
-func TrackModel(c *fiber.Ctx) database.Model[Track] {
-	return database.Model[Track]{
+func TrackModel(c *fiber.Ctx) *database.Model[Track] {
+	return (&database.Model[Track]{
 		TableName: "tracks",
 		Process: func(track *Track) {
-			if c != nil {
-				track.Music = fmt.Sprintf("%s/storage/tracks/%s.jpg", c.BaseURL(), track.ID)
+			track.Music = fmt.Sprintf("%s/storage/tracks/%s.m4a", os.Getenv("APP_URL"), track.ID)
 
+			if c != nil {
 				track.Liked = TrackLikeModel().Where("track_id", track.ID).Where("user_id", AuthUser(c).ID).First() != nil
 			}
 		},
@@ -45,7 +46,7 @@ func TrackModel(c *fiber.Ctx) database.Model[Track] {
 				track.Artists = ArtistModel(c).WhereIn("track_artist", "artist_id", "track_id", track.ID).OrderByRaw("LOWER(`name`)").Get()
 			},
 		},
-	}.Init()
+	}).Init()
 }
 
 // Track Like
@@ -56,10 +57,10 @@ type TrackLike struct {
 	CreatedAt time.Time `column:"created_at,timestamp"`
 }
 
-func TrackLikeModel() database.Model[TrackLike] {
-	return database.Model[TrackLike]{
+func TrackLikeModel() *database.Model[TrackLike] {
+	return (&database.Model[TrackLike]{
 		TableName: "track_likes",
-	}.Init()
+	}).Init()
 }
 
 // Track Play
@@ -71,8 +72,8 @@ type TrackPlay struct {
 	CreatedAt time.Time `column:"created_at,timestamp"`
 }
 
-func TrackPlayModel() database.Model[TrackPlay] {
-	return database.Model[TrackPlay]{
+func TrackPlayModel() *database.Model[TrackPlay] {
+	return (&database.Model[TrackPlay]{
 		TableName: "track_plays",
-	}.Init()
+	}).Init()
 }

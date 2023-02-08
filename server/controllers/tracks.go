@@ -3,6 +3,7 @@ package controllers
 import (
 	"strconv"
 
+	"github.com/bplaat/bassiemusic/database"
 	"github.com/bplaat/bassiemusic/models"
 	"github.com/bplaat/bassiemusic/utils"
 	"github.com/gofiber/fiber/v2"
@@ -37,11 +38,10 @@ func TracksLike(c *fiber.Ctx) error {
 	}
 
 	// Like track
-	newTrackLike := models.TrackLike{
-		TrackID: c.Params("trackID"),
-		UserID:  authUser.ID,
-	}
-	models.TrackLikeModel().Create(&newTrackLike)
+	models.TrackLikeModel().Create(database.Map{
+		"track_id": c.Params("trackID"),
+		"user_id":  authUser.ID,
+	})
 
 	return c.JSON(fiber.Map{"success": true})
 }
@@ -85,22 +85,23 @@ func TracksPlay(c *fiber.Ctx) error {
 	trackPlay := models.TrackPlayModel().Where("user_id", authUser.ID).OrderByDesc("created_at").First()
 	if trackPlay != nil {
 		if track.ID == trackPlay.TrackID {
-			trackPlay.Position = position
-			models.TrackPlayModel().Update(trackPlay)
+			models.TrackPlayModel().Where("id", trackPlay.ID).Update(database.Map{
+				"position": position,
+			})
 			return c.JSON(fiber.Map{"success": true})
 		}
 	}
 
 	// Create new track play
-	newTrackPlay := models.TrackPlay{
-		TrackID:  track.ID,
-		UserID:   authUser.ID,
-		Position: position,
-	}
-	models.TrackPlayModel().Create(&newTrackPlay)
+	models.TrackPlayModel().Create(database.Map{
+		"track_id": track.ID,
+		"user_id":  authUser.ID,
+		"position": position,
+	})
 
 	// Increment global track plays count
-	track.Plays += 1
-	models.TrackModel(c).Update(track)
+	models.TrackModel(c).Where("id", track.ID).Update(database.Map{
+		"plays": track.Plays + 1,
+	})
 	return c.JSON(fiber.Map{"success": true})
 }

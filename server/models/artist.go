@@ -2,6 +2,7 @@ package models
 
 import (
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/bplaat/bassiemusic/database"
@@ -22,15 +23,15 @@ type Artist struct {
 	TopTracks   []Track   `json:"top_tracks,omitempty"`
 }
 
-func ArtistModel(c *fiber.Ctx) database.Model[Artist] {
-	return database.Model[Artist]{
+func ArtistModel(c *fiber.Ctx) *database.Model[Artist] {
+	return (&database.Model[Artist]{
 		TableName: "artists",
 		Process: func(artist *Artist) {
-			if c != nil {
-				artist.SmallImage = fmt.Sprintf("%s/storage/artists/small/%s.jpg", c.BaseURL(), artist.ID)
-				artist.MediumImage = fmt.Sprintf("%s/storage/artists/medium/%s.jpg", c.BaseURL(), artist.ID)
-				artist.LargeImage = fmt.Sprintf("%s/storage/artists/large/%s.jpg", c.BaseURL(), artist.ID)
+			artist.SmallImage = fmt.Sprintf("%s/storage/artists/small/%s.jpg", os.Getenv("APP_URL"), artist.ID)
+			artist.MediumImage = fmt.Sprintf("%s/storage/artists/medium/%s.jpg", os.Getenv("APP_URL"), artist.ID)
+			artist.LargeImage = fmt.Sprintf("%s/storage/artists/large/%s.jpg", os.Getenv("APP_URL"), artist.ID)
 
+			if c != nil {
 				artist.Liked = ArtistLikeModel().Where("artist_id", artist.ID).Where("user_id", AuthUser(c).ID).First() != nil
 			}
 		},
@@ -42,7 +43,7 @@ func ArtistModel(c *fiber.Ctx) database.Model[Artist] {
 				artist.TopTracks = TrackModel(c).With("artists", "album").WhereIn("track_artist", "track_id", "artist_id", artist.ID).OrderByDesc("plays").Limit("5").Get()
 			},
 		},
-	}.Init()
+	}).Init()
 }
 
 // Artist Like
@@ -53,8 +54,8 @@ type ArtistLike struct {
 	CreatedAt time.Time `column:"created_at,timestamp"`
 }
 
-func ArtistLikeModel() database.Model[ArtistLike] {
-	return database.Model[ArtistLike]{
+func ArtistLikeModel() *database.Model[ArtistLike] {
+	return (&database.Model[ArtistLike]{
 		TableName: "artist_likes",
-	}.Init()
+	}).Init()
 }

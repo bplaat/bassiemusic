@@ -2,6 +2,7 @@ package models
 
 import (
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/bplaat/bassiemusic/database"
@@ -19,20 +20,18 @@ type Genre struct {
 	Albums      []Album   `json:"albums,omitempty"`
 }
 
-func GenreModel(c *fiber.Ctx) database.Model[Genre] {
-	return database.Model[Genre]{
+func GenreModel(c *fiber.Ctx) *database.Model[Genre] {
+	return (&database.Model[Genre]{
 		TableName: "genres",
 		Process: func(genre *Genre) {
-			if c != nil {
-				genre.SmallImage = fmt.Sprintf("%s/storage/artists/small/%s.jpg", c.BaseURL(), genre.ID)
-				genre.MediumImage = fmt.Sprintf("%s/storage/artists/medium/%s.jpg", c.BaseURL(), genre.ID)
-				genre.LargeImage = fmt.Sprintf("%s/storage/artists/large/%s.jpg", c.BaseURL(), genre.ID)
-			}
+			genre.SmallImage = fmt.Sprintf("%s/storage/genres/small/%s.jpg", os.Getenv("APP_URL"), genre.ID)
+			genre.MediumImage = fmt.Sprintf("%s/storage/genres/medium/%s.jpg", os.Getenv("APP_URL"), genre.ID)
+			genre.LargeImage = fmt.Sprintf("%s/storage/genres/large/%s.jpg", os.Getenv("APP_URL"), genre.ID)
 		},
 		Relationships: map[string]database.QueryBuilderProcess[Genre]{
 			"albums": func(genre *Genre) {
 				genre.Albums = AlbumModel(c).With("artists", "genres").WhereIn("album_genre", "album_id", "genre_id", genre.ID).OrderByDesc("released_at").Get()
 			},
 		},
-	}.Init()
+	}).Init()
 }

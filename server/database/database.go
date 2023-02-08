@@ -43,13 +43,3 @@ func Exec(query string, args ...any) sql.Result {
 	}
 	return result
 }
-
-// Deprecated
-func Count(query string, args ...any) int64 {
-	countQuery := Query(query, args...)
-	defer countQuery.Close()
-	countQuery.Next()
-	var count int64
-	countQuery.Scan(&count)
-	return count
-}

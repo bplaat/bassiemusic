@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"os"
 
 	"github.com/bplaat/bassiemusic/controllers"
 	"github.com/bplaat/bassiemusic/tasks"
@@ -22,7 +23,7 @@ func serve() {
 
 	// Start server
 	app := fiber.New(fiber.Config{
-		AppName: "BassieMusic",
+		AppName: os.Getenv("APP_NAME"),
 	})
 	app.Use(compress.New())
 	app.Use(cors.New())
@@ -30,7 +31,7 @@ func serve() {
 	app.Use(logger.New())
 
 	app.Get("/", func(c *fiber.Ctx) error {
-		return c.SendString("BassieMusic API")
+		return c.SendString(os.Getenv("APP_NAME") + " API v" + os.Getenv("APP_VERSION"))
 	})
 
 	app.Use("/storage", filesystem.New(filesystem.Config{

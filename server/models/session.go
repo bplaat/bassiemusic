@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/bplaat/bassiemusic/database"
-	"github.com/gofiber/fiber/v2"
 )
 
 type Session struct {
@@ -24,13 +23,13 @@ type Session struct {
 	User          User      `json:"user,omitempty"`
 }
 
-func SessionModel(c *fiber.Ctx) database.Model[Session] {
-	return database.Model[Session]{
+func SessionModel() *database.Model[Session] {
+	return (&database.Model[Session]{
 		TableName: "sessions",
 		Relationships: map[string]database.QueryBuilderProcess[Session]{
 			"user": func(session *Session) {
-				session.User = *UserModel(c).Find(session.UserID)
+				session.User = *UserModel().Find(session.UserID)
 			},
 		},
-	}.Init()
+	}).Init()
 }
