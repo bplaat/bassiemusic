@@ -8,6 +8,7 @@
     } from "../consts.js";
     import { musicPlayer, audioVolume } from "../stores.js";
     import { formatDuration } from "../filters.js";
+    import Slider from "./slider.svelte";
 
     export let token;
     let playingMusicPlayerTrackId,
@@ -16,7 +17,9 @@
         audioDuration,
         audioCurrentTime,
         updateUiTimeout,
-        updateServerTimeout;
+        updateServerTimeout,
+        musicSlider,
+        volumeSlider;
 
     $: track = $musicPlayer.queue.find(
         (track) => track.id == $musicPlayer.track_id
@@ -50,6 +53,12 @@
                     musicPlayer.action == "init" ? musicPlayer.position : 0;
                 audioDuration = audio.duration;
                 audioCurrentTime = audio.currentTime;
+
+                //will crash when hot save ¯\_(ツ)_/¯
+                try {
+                    musicSlider.seekToValue(audioCurrentTime, audioDuration);
+                    volumeSlider.seekToValue($audioVolume);
+                } catch (e) {}
 
                 if (musicPlayer.action == "play") {
                     play();
@@ -98,6 +107,7 @@
 
     function updatePositionState() {
         audioCurrentTime = audio.currentTime;
+        musicSlider.seekToValue(audioCurrentTime, audioDuration);
         if ("mediaSession" in navigator && audio.readyState >= 1) {
             navigator.mediaSession.setPositionState({
                 duration: audio.duration,
@@ -109,6 +119,8 @@
 
     function updateUiLoop() {
         audioCurrentTime = audio.currentTime;
+        musicSlider.seekToValue(audioCurrentTime, audioDuration);
+
         if (isPlaying) {
             updateUiTimeout = setTimeout(
                 updateUiLoop,
@@ -147,16 +159,16 @@
         }
     }
 
-    function seekTo(details) {
+    function seekTo(event) {
         if (!isPlaying) play();
-        audio.currentTime = details.seekTime;
+        audio.currentTime = event.target.value;
         sendTrackPlay();
         updatePositionState();
     }
 
-    function seekToInput(event) {
+    function sliderSeek(event) {
         if (!isPlaying) play();
-        audio.currentTime = event.target.value;
+        audio.currentTime = event.detail.value;
         sendTrackPlay();
         updatePositionState();
     }
@@ -271,16 +283,23 @@
         }
     });
 
+    function volumeSeek(event) {
+        audioVolume.set(event.detail.value);
+    }
+
     function toggleVolume() {
         if ($audioVolume > 0) {
             oldAudioVolume = $audioVolume;
             audioVolume.set(0);
+            volumeSlider.seekToValue(0);
         } else {
             if (oldAudioVolume != undefined) {
                 audioVolume.set(oldAudioVolume);
+                volumeSlider.seekToValue(oldAudioVolume);
                 oldAudioVolume = undefined;
             } else {
                 audioVolume.set(1);
+                volumeSlider.seekToValue(1);
             }
         }
     }
@@ -335,7 +354,10 @@
         </button>
 
         <div class="px-2" style="flex: 1;">
-            <div class="buttons has-addons m-0 is-centered" style="margin-bottom: 4px;">
+            <div
+                class="buttons has-addons m-0 is-centered"
+                style="margin-bottom: 4px;"
+            >
                 <button class="button m-0" on:click={previousTrack}>
                     <svg class="icon" viewBox="0 0 24 24">
                         <path d="M6,18V6H8V18H6M9.5,12L18,6V18L9.5,12Z" />
@@ -371,13 +393,10 @@
                 <span class="mr-3" style="width: 4rem; text-align: right;"
                     >{formatDuration(audioCurrentTime)}</span
                 >
-                <input
-                    type="range"
-                    class="flex"
-                    value={audioCurrentTime}
-                    on:input={seekToInput}
-                    min="0"
-                    max={audioDuration}
+                <Slider
+                    maxValue={audioDuration}
+                    bind:this={musicSlider}
+                    on:newValue={sliderSeek}
                 />
                 <span class="ml-3" style="width: 4rem;"
                     >-{formatDuration(audioDuration - audioCurrentTime)}</span
@@ -431,14 +450,13 @@
                     {/if}
                 </svg>
             </button>
-            <input
-                type="range"
-                style="width: 8rem;"
-                bind:value={$audioVolume}
-                min="0"
-                max="1"
-                step="0.01"
-            />
+            <div style="margin-top: 8px; flex: 1;">
+                <Slider
+                    bind:this={volumeSlider}
+                    on:newValue={volumeSeek}
+                    maxValue="1"
+                />
+            </div>
         </div>
     </div>
 {/if}
