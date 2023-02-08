@@ -11,7 +11,7 @@ import (
 
 func TracksIndex(c *fiber.Ctx) error {
 	query, page, limit := utils.ParseIndexVars(c)
-	return c.JSON(models.TrackModel(c).With("artists", "album").WhereRaw("`title` LIKE ?", "%"+query+"%").OrderByRaw("LOWER(`title`)").Paginate(page, limit))
+	return c.JSON(models.TrackModel(c).With("artists", "album").WhereRaw("`title` LIKE ?", "%"+query+"%").OrderByRaw("`plays` DESC, `updated_at` DESC").Paginate(page, limit))
 }
 
 func TracksShow(c *fiber.Ctx) error {
