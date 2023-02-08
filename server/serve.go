@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/bplaat/bassiemusic/controllers"
+	"github.com/bplaat/bassiemusic/middlewares"
 	"github.com/bplaat/bassiemusic/tasks"
 	"github.com/bplaat/bassiemusic/utils"
 	"github.com/gofiber/fiber/v2"
@@ -52,7 +53,7 @@ func serve() {
 		return err
 	})
 
-	// app.Use(middlewares.IsAuthed)
+	app.Use(middlewares.IsAuthed)
 
 	app.Get("/auth/validate", controllers.AuthValidate)
 	app.Get("/auth/logout", controllers.AuthLogout)
@@ -88,7 +89,7 @@ func serve() {
 	app.Post("/users/:userID/avatar", controllers.UsersAvatar)
 	app.Get("/users/:userID/avatar/delete", controllers.UsersAvatarDelete)
 
-	// app.Use(middlewares.IsAdmin)
+	app.Use(middlewares.IsAdmin)
 
 	app.Get("/download/artist", controllers.DownloadArtist)
 	app.Get("/download/album", controllers.DownloadAlbum)
