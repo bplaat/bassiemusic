@@ -26,16 +26,13 @@ func AuthLogin(c *fiber.Ctx) error {
 	}
 
 	// Get user by username or email
-	userQuery := database.Query("SELECT BIN_TO_UUID(`id`), `username`, `email`, `password`, BIN_TO_UUID(`avatar`), `role`, `theme`, `created_at` FROM `users` WHERE `username` = ? OR `email` = ?", params.Logon, params.Logon)
-	defer userQuery.Close()
-
-	if !userQuery.Next() {
+	user := models.UserModel().Where("username", params.Logon).WhereOr("email", params.Logon).First()
+	if user == nil {
 		return c.JSON(fiber.Map{
 			"success": false,
 			"message": "Wrong username, email or password",
 		})
 	}
-	user := models.UserScan(c, userQuery)
 
 	// Verify user password
 	if !utils.VerifyPassword(params.Password, user.Password) {
@@ -54,10 +51,16 @@ func AuthLogin(c *fiber.Ctx) error {
 	token := base64.StdEncoding.EncodeToString(randomBytes)
 
 	// Create new session
-	ua := useragent.Parse(c.Get("User-Agent"))
-	database.Exec("INSERT INTO `sessions` (`id`, `user_id`, `token`, `ip`, `client_os`, `client_name`, `client_version`, `expires_at`) VALUES "+
-		"(UUID_TO_BIN(UUID()), UUID_TO_BIN(?), ?, ?, ?, ?, ?, ?)",
-		user.ID, token, c.IP(), ua.OS, ua.Name, ua.Version, time.Now().Add(365*24*60*60*time.Second).Format(time.DateTime))
+	agent := useragent.Parse(c.Get("User-Agent"))
+	models.SessionModel().Create(database.Map{
+		"user_id":        user.ID,
+		"token":          token,
+		"ip":             c.IP(),
+		"client_os":      &agent.OS,
+		"client_name":    &agent.Name,
+		"client_version": &agent.Version,
+		"expires_at":     time.Now().Add(365 * 24 * 60 * 60 * time.Second),
+	})
 
 	// Return response
 	return c.JSON(fiber.Map{
@@ -70,25 +73,16 @@ func AuthLogin(c *fiber.Ctx) error {
 func AuthValidate(c *fiber.Ctx) error {
 	authUser := models.AuthUser(c)
 
-	// Get last track plays binding
-	trackPlayQuery := database.Query("SELECT BIN_TO_UUID(`track_id`), `position` FROM `track_plays` WHERE `user_id` = UUID_TO_BIN(?) ORDER BY `created_at` DESC LIMIT 1", authUser.ID)
-	defer trackPlayQuery.Close()
+	// Get last track play
+	lastTackplay := models.TrackPlayModel().Where("user_id", authUser.ID).OrderByDesc("created_at").First()
 
 	// When we have a last played track get it
-	if trackPlayQuery.Next() {
-		var lastTrackID string
-		var lastTrackPosition float32
-		trackPlayQuery.Scan(&lastTrackID, &lastTrackPosition)
-		trackQuery := database.Query("SELECT BIN_TO_UUID(`id`), BIN_TO_UUID(`album_id`), `title`, `disk`, `position`, `duration`, `explicit`, `deezer_id`, `youtube_id`, `plays`, `created_at` FROM `tracks` WHERE `id` = UUID_TO_BIN(?)", lastTrackID)
-		defer trackQuery.Close()
-		trackQuery.Next()
-
-		// Return response
+	if lastTackplay != nil {
 		return c.JSON(fiber.Map{
 			"success":             true,
 			"user":                authUser,
-			"last_track":          models.TrackScan(c, trackQuery, true, true),
-			"last_track_position": lastTrackPosition,
+			"last_track":          models.TrackModel(c).With("artists", "album").Find(lastTackplay.TrackID),
+			"last_track_position": lastTackplay.Position,
 		})
 	}
 
@@ -101,15 +95,16 @@ func AuthValidate(c *fiber.Ctx) error {
 
 func AuthLogout(c *fiber.Ctx) error {
 	token := utils.ParseTokenVar(c)
-	if token == "" {
-		return c.JSON(fiber.Map{
-			"success": false,
-		})
+
+	// Get session
+	session := models.SessionModel().Where("token", token).First()
+	if session == nil {
+		return c.JSON(fiber.Map{"success": false})
 	}
 
 	// Revoke session
-	database.Exec("UPDATE `sessions` SET `expires_at` = NOW() WHERE `token` = ?", token)
-
-	// Return response
+	models.SessionModel().Where("id", session.ID).Update(database.Map{
+		"expires_at": time.Now(),
+	})
 	return c.JSON(fiber.Map{"success": true})
 }

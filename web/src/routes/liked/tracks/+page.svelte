@@ -41,12 +41,10 @@
     </ul>
 </div>
 
-<div class="content">
-    <h1 class="title">Liked Tracks</h1>
+<h1 class="title">Liked Tracks</h1>
 
-    {#if tracks.length > 0}
-        <TracksTable {token} {tracks} />
-    {:else}
-        <p>You have not liked any tracks</p>
-    {/if}
-</div>
+{#if tracks.length > 0}
+    <TracksTable {token} {tracks} />
+{:else}
+    <p>You have not liked any tracks</p>
+{/if}

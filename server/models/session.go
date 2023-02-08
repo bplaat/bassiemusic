@@ -1,52 +1,35 @@
 package models
 
 import (
-	"database/sql"
 	"time"
 
 	"github.com/bplaat/bassiemusic/database"
-	"github.com/gofiber/fiber/v2"
 )
 
 type Session struct {
-	ID            string    `json:"id"`
-	UserID        string    `json:"-"`
-	Token         string    `json:"-"`
-	IP            string    `json:"ip"`
-	IPLatitude    string    `json:"ip_latitude"`
-	IPLongitude   string    `json:"ip_longitude"`
-	IPCountry     string    `json:"ip_country"`
-	IPCity        string    `json:"ip_city"`
-	ClientOS      string    `json:"client_os"`
-	ClientName    string    `json:"client_name"`
-	ClientVersion string    `json:"client_version"`
-	ExpiresAt     time.Time `json:"expires_at"`
-	CreatedAt     time.Time `json:"created_at"`
-	User          User      `json:"user,omitempty"`
+	ID            string    `column:"id,uuid" json:"id"`
+	UserID        string    `column:"user_id,uuid" json:"-"`
+	Token         string    `column:"token,string" json:"-"`
+	IP            string    `column:"ip,string" json:"ip"`
+	IPLatitude    *float64  `column:"ip_latitude,string" json:"ip_latitude"`
+	IPLongitude   *float64  `column:"ip_longitude,string" json:"ip_longitude"`
+	IPCountry     *string   `column:"ip_country,string" json:"ip_country"`
+	IPCity        *string   `column:"ip_city,string" json:"ip_city"`
+	ClientOS      *string   `column:"client_os,string" json:"client_os"`
+	ClientName    *string   `column:"client_name,string" json:"client_name"`
+	ClientVersion *string   `column:"client_version,string" json:"client_version"`
+	ExpiresAt     time.Time `column:"expires_at,timestamp" json:"expires_at"`
+	CreatedAt     time.Time `column:"created_at,timestamp" json:"created_at"`
+	User          *User     `json:"user,omitempty"`
 }
 
-func SessionScan(c *fiber.Ctx, sessionQuery *sql.Rows, withUser bool) Session {
-	var session Session
-	sessionQuery.Scan(&session.ID, &session.UserID, &session.Token, &session.IP, &session.IPLatitude,
-		&session.IPLongitude, &session.IPCountry, &session.IPCity, &session.ClientOS, &session.ClientName,
-		&session.ClientVersion, &session.ExpiresAt, &session.CreatedAt)
-	if withUser {
-		session.User = SessionUser(c, &session)
-	}
-	return session
-}
-
-func SessionsScan(c *fiber.Ctx, sessionsQuery *sql.Rows, withUser bool) []Session {
-	sessions := []Session{}
-	for sessionsQuery.Next() {
-		sessions = append(sessions, SessionScan(c, sessionsQuery, withUser))
-	}
-	return sessions
-}
-
-func SessionUser(c *fiber.Ctx, session *Session) User {
-	userQuery := database.Query("SELECT BIN_TO_UUID(`id`), `username`, `email`, `password`, BIN_TO_UUID(`avatar`), `role`, `theme`, `created_at` FROM `users` WHERE `id` = UUID_TO_BIN(?)", session.UserID)
-	defer userQuery.Close()
-	userQuery.Next()
-	return UserScan(c, userQuery)
+func SessionModel() *database.Model[Session] {
+	return (&database.Model[Session]{
+		TableName: "sessions",
+		Relationships: map[string]database.QueryBuilderProcess[Session]{
+			"user": func(session *Session) {
+				session.User = UserModel().Find(session.UserID)
+			},
+		},
+	}).Init()
 }

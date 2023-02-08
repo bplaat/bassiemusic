@@ -55,7 +55,7 @@
 
 <div class="columns">
     <div class="column">
-        <h2 class="title">Admin User</h2>
+        <h2 class="title">Admin Users</h2>
     </div>
     <div class="column">
         <div class="buttons is-pulled-right">

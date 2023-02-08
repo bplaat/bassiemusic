@@ -158,31 +158,28 @@ func DownloadTask() {
 	for {
 		time.Sleep(time.Second)
 
-		downloadTaskQuery := database.Query("SELECT BIN_TO_UUID(`id`), `type`, `deezer_id`, `singles`, `created_at` FROM `download_tasks` ORDER BY `created_at` LIMIT 2")
-		if !downloadTaskQuery.Next() {
-			downloadTaskQuery.Close()
+		// Get first download task
+		downloadTask := models.DownloadTaskModel().First()
+		if downloadTask == nil {
 			continue
 		}
 
-		task := models.DownloadTaskScan(downloadTaskQuery)
-		downloadTaskQuery.Close()
-
-		if task.Type == "deezer_artist" {
+		// Do download task
+		if downloadTask.Type == "deezer_artist" {
 			var artistAlbums DeezerArtistAlbums
-			utils.FetchJson(fmt.Sprintf("https://api.deezer.com/artist/%d/albums", task.DeezerID), &artistAlbums)
+			utils.FetchJson(fmt.Sprintf("https://api.deezer.com/artist/%d/albums", downloadTask.DeezerID), &artistAlbums)
 			for _, album := range artistAlbums.Data {
-				if !task.Singles && album.RecordType == "single" {
+				if !downloadTask.Singles && album.RecordType == "single" {
 					continue
 				}
 				downloadAlbum(album.ID)
 			}
 		}
-
-		if task.Type == "deezer_album" {
-			downloadAlbum(int(task.DeezerID))
+		if downloadTask.Type == "deezer_album" {
+			downloadAlbum(int(downloadTask.DeezerID))
 		}
 
 		// Delete download task when done
-		database.Exec("DELETE FROM `download_tasks` WHERE `id` = UUID_TO_BIN(?)", task.ID)
+		models.DownloadTaskModel().Where("id", downloadTask.ID).Delete()
 	}
 }

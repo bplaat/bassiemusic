@@ -145,7 +145,7 @@
                 </li>
                 <li>
                     <a
-                        href="/liked/artists"
+                        href="/liked/tracks"
                         class:is-active={$page.url.pathname.startsWith(
                             "/liked"
                         )}
@@ -225,16 +225,17 @@
     {#if authUser != null}
         <div style="display: flex; align-items: center;" class="mb-5">
             <div
-                class="box is-image mr-4 mb-0"
+                class="box is-image m-0 mr-4"
                 style="width: 48px; height: 48px; background-image: url({authUser.avatar
                     ? authUser.avatar
                     : '/images/avatar-default.svg'});"
             />
 
-            <div style="flex: 1;">
+            <div class="flex">
                 <p><b>{authUser.username}</b></p>
                 <p>
                     <a href="/settings" class="mr-2">Settings</a>
+                    <!-- svelte-ignore a11y-invalid-attribute -->
                     <a href="#" on:click|preventDefault={logout}>Logout</a>
                 </p>
             </div>

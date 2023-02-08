@@ -17,9 +17,7 @@ func restore() {
 	database.Exec("UPDATE `users` SET `avatar` = NULL")
 
 	// Redownload all artist images
-	artistsQuery := database.Query("SELECT BIN_TO_UUID(`id`), `name`, `deezer_id`, `created_at` FROM `artists`")
-	defer artistsQuery.Close()
-	artists := models.ArtistsScan(nil, artistsQuery, false, false)
+	artists := models.ArtistModel(nil).Get()
 	for index, artist := range artists {
 		if _, err := os.Stat(fmt.Sprintf("storage/artists/small/%s.jpg", artist.ID)); !os.IsNotExist(err) {
 			continue
@@ -33,9 +31,7 @@ func restore() {
 	}
 
 	// Redownload all genre images
-	genresQuery := database.Query("SELECT BIN_TO_UUID(`id`), `name`, `deezer_id`, `created_at` FROM `genres`")
-	defer genresQuery.Close()
-	genres := models.GenresScan(nil, genresQuery, false)
+	genres := models.GenreModel(nil).Get()
 	for index, genre := range genres {
 		if _, err := os.Stat(fmt.Sprintf("storage/genres/small/%s.jpg", genre.ID)); !os.IsNotExist(err) {
 			continue
@@ -55,9 +51,7 @@ func restore() {
 	}
 
 	// Redownload all album covers
-	albumsQuery := database.Query("SELECT BIN_TO_UUID(`id`), `type`, `title`, `released_at`, `explicit`, `deezer_id`, `created_at` FROM `albums`")
-	defer albumsQuery.Close()
-	albums := models.AlbumsScan(nil, albumsQuery, false, false, false)
+	albums := models.AlbumModel(nil).Get()
 	for index, album := range albums {
 		if _, err := os.Stat(fmt.Sprintf("storage/albums/small/%s.jpg", album.ID)); !os.IsNotExist(err) {
 			continue
@@ -71,9 +65,7 @@ func restore() {
 	}
 
 	// Redownload all tracks
-	tracksQuery := database.Query("SELECT BIN_TO_UUID(`id`), BIN_TO_UUID(`album_id`), `title`, `disk`, `position`, `duration`, `explicit`, `deezer_id`, `youtube_id`, `plays`, `created_at` FROM `tracks`")
-	defer tracksQuery.Close()
-	tracks := models.TracksScan(nil, tracksQuery, false, false)
+	tracks := models.TrackModel(nil).Get()
 	for index, track := range tracks {
 		if _, err := os.Stat(fmt.Sprintf("storage/tracks/%s.m4a", track.ID)); !os.IsNotExist(err) {
 			continue

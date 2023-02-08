@@ -9,58 +9,38 @@ import (
 
 func ArtistsIndex(c *fiber.Ctx) error {
 	query, page, limit := utils.ParseIndexVars(c)
-
-	// Get total artists
-	total := database.Count("SELECT COUNT(`id`) FROM `artists` WHERE `name` LIKE ?", "%"+query+"%")
-
-	// Get artists
-	artistsQuery := database.Query("SELECT BIN_TO_UUID(`id`), `name`, `deezer_id`, `created_at` FROM `artists` WHERE `name` LIKE ? ORDER BY LOWER(`name`) LIMIT ?, ?", "%"+query+"%", (page-1)*limit, limit)
-	defer artistsQuery.Close()
-
-	// Return response
-	return c.JSON(&fiber.Map{
-		"data": models.ArtistsScan(c, artistsQuery, false, false),
-		"pagination": &fiber.Map{
-			"page":  page,
-			"limit": limit,
-			"total": total,
-		},
-	})
+	return c.JSON(models.ArtistModel(c).WhereRaw("`name` LIKE ?", "%"+query+"%").OrderByRaw("LOWER(`name`)").Paginate(page, limit))
 }
 
 func ArtistsShow(c *fiber.Ctx) error {
-	// Check if artist exists
-	artistQuery := database.Query("SELECT BIN_TO_UUID(`id`), `name`, `deezer_id`, `created_at` FROM `artists` WHERE `id` = UUID_TO_BIN(?)", c.Params("artistID"))
-	defer artistQuery.Close()
-	if !artistQuery.Next() {
+	artist := models.ArtistModel(c).With("albums", "top_tracks").Find(c.Params("artistID"))
+	if artist == nil {
 		return fiber.ErrNotFound
 	}
-
-	// Return response
-	return c.JSON(models.ArtistScan(c, artistQuery, true, true))
+	return c.JSON(artist)
 }
 
 func ArtistsLike(c *fiber.Ctx) error {
 	authUser := models.AuthUser(c)
 
 	// Check if artist exists
-	artistQuery := database.Query("SELECT `id` FROM `artists` WHERE `id` = UUID_TO_BIN(?)", c.Params("artistID"))
-	defer artistQuery.Close()
-	if !artistQuery.Next() {
+	artist := models.ArtistModel(c).Find(c.Params("artistID"))
+	if artist == nil {
 		return fiber.ErrNotFound
 	}
 
-	// Check if artist_likes binding exists
-	artistLikeQuery := database.Query("SELECT `id` FROM `artist_likes` WHERE `artist_id` = UUID_TO_BIN(?) AND `user_id` = UUID_TO_BIN(?)", c.Params("artistID"), authUser.ID)
-	defer artistLikeQuery.Close()
-	if artistLikeQuery.Next() {
+	// Check if artist already liked
+	artistLike := models.ArtistLikeModel().Where("artist_id", c.Params("artistID")).Where("user_id", authUser.ID).First()
+	if artistLike != nil {
 		return c.JSON(fiber.Map{"success": true})
 	}
 
-	// Create artist_likes binding
-	database.Exec("INSERT INTO `artist_likes` (`id`, `artist_id`, `user_id`) VALUES (UUID_TO_BIN(UUID()), UUID_TO_BIN(?), UUID_TO_BIN(?))", c.Params("artistID"), authUser.ID)
+	// Like artist
+	models.ArtistLikeModel().Create(database.Map{
+		"artist_id": c.Params("artistID"),
+		"user_id":   authUser.ID,
+	})
 
-	// Send successfull response
 	return c.JSON(fiber.Map{"success": true})
 }
 
@@ -68,22 +48,18 @@ func ArtistsLikeDelete(c *fiber.Ctx) error {
 	authUser := models.AuthUser(c)
 
 	// Check if artist exists
-	artistQuery := database.Query("SELECT `id` FROM `artists` WHERE `id` = UUID_TO_BIN(?)", c.Params("artistID"))
-	defer artistQuery.Close()
-	if !artistQuery.Next() {
+	artist := models.ArtistModel(c).Find(c.Params("artistID"))
+	if artist == nil {
 		return fiber.ErrNotFound
 	}
 
-	// Check if artist_likes binding doesn't exists
-	artistLikeQuery := database.Query("SELECT `id` FROM `artist_likes` WHERE `artist_id` = UUID_TO_BIN(?) AND `user_id` = UUID_TO_BIN(?)", c.Params("artistID"), authUser.ID)
-	defer artistLikeQuery.Close()
-	if !artistLikeQuery.Next() {
+	// Check if artist not liked
+	artistLike := models.ArtistLikeModel().Where("artist_id", c.Params("artistID")).Where("user_id", authUser.ID).First()
+	if artistLike == nil {
 		return c.JSON(fiber.Map{"success": true})
 	}
 
-	// Delete artist_likes binding
-	database.Exec("DELETE FROM `artist_likes` WHERE `artist_id` = UUID_TO_BIN(?) AND `user_id` = UUID_TO_BIN(?)", c.Params("artistID"), authUser.ID)
-
-	// Send successfull response
+	// Delete like
+	models.ArtistLikeModel().Where("artist_id", c.Params("artistID")).Where("user_id", authUser.ID).Delete()
 	return c.JSON(fiber.Map{"success": true})
 }
