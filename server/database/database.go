@@ -2,7 +2,9 @@ package database
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
+	"os"
 	"time"
 )
 
@@ -11,7 +13,7 @@ var db *sql.DB
 func Connect() {
 	// Connect to the database
 	var err error
-	db, err = sql.Open("mysql", "bassiemusic:bassiemusic@tcp(127.0.0.1:3306)/bassiemusic?parseTime=true")
+	db, err = sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true", os.Getenv("DATABASE_USER"), os.Getenv("DATABASE_PASSWORD"), os.Getenv("DATABASE_HOST"), os.Getenv("DATABASE_PORT"), os.Getenv("DATABASE_NAME")))
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -42,6 +44,7 @@ func Exec(query string, args ...any) sql.Result {
 	return result
 }
 
+// Deprecated
 func Count(query string, args ...any) int64 {
 	countQuery := Query(query, args...)
 	defer countQuery.Close()
