@@ -7,8 +7,13 @@
         slider,
         container;
 
-    function seekToValue(value) {
+    function seekToValue(value, tempMaxValue) {
+        if(tempMaxValue != undefined){
+            maxValue = tempMaxValue
+        }
+
         let newThumbPosition = container.offsetWidth * (value / maxValue);
+
         thumb.style.left = newThumbPosition - thumb.offsetWidth / 2 + "px";
         slider.style.width = newThumbPosition + "px";
     }
@@ -19,9 +24,6 @@
     }
 
     onMount(() => {
-        thumb = document.querySelector(".slider-thumb");
-        slider = document.querySelector(".slider");
-        container = document.querySelector(".slider-container");
         container.addEventListener("click", function(event) {
             let newThumbPosition = event.pageX - container.getBoundingClientRect().left;
             if (newThumbPosition >= 0 && newThumbPosition <= container.offsetWidth) {
@@ -60,7 +62,7 @@
     export {seekToValue}
 </script>
 
-<div class="slider-container" style="flex:1;">
-    <div class="slider"></div>
-    <div class="slider-thumb"></div>
+<div class="slider-container" bind:this={container} style="flex:1;">
+    <div class="slider" bind:this={slider}></div>
+    <div class="slider-thumb" bind:this={thumb}></div>
 </div>

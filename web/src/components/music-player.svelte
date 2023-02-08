@@ -17,6 +17,7 @@
         updateUiTimeout,
         updateServerTimeout,
         musicSlider,
+        volumeSlider,
         ignoreMusicPlayerUpdate = false;
 
     $: track = $musicPlayer.queue[$musicPlayer.index];
@@ -46,6 +47,12 @@
                     musicPlayer.action == "init" ? musicPlayer.position : 0;
                 audioDuration = audio.duration;
                 audioCurrentTime = audio.currentTime;
+
+                //will crash when hot save ¯\_(ツ)_/¯
+                try {
+                    musicSlider.seekToValue(audioCurrentTime, audioDuration)
+                    volumeSlider.seekToValue($audioVolume)
+                } catch (e) {}
 
                 if (musicPlayer.action == "play") {
                     play();
@@ -94,7 +101,7 @@
 
     function updatePositionState() {
         audioCurrentTime = audio.currentTime;
-        musicSlider.seekToValue(audioCurrentTime)
+        musicSlider.seekToValue(audioCurrentTime, audioDuration)
 
         if ("mediaSession" in navigator) {
             navigator.mediaSession.setPositionState({
@@ -107,7 +114,7 @@
 
     function updateUiLoop() {
         audioCurrentTime = audio.currentTime;
-        musicSlider.seekToValue(audioCurrentTime)
+        musicSlider.seekToValue(audioCurrentTime, audioDuration)
 
         if (isPlaying) {
             updateUiTimeout = setTimeout(
@@ -263,16 +270,23 @@
         }
     });
 
+    function volumeSeek(event){
+        audioVolume.set(event.detail.value);
+    }
+
     function toggleVolume() {
         if ($audioVolume > 0) {
             oldAudioVolume = $audioVolume;
             audioVolume.set(0);
+            volumeSlider.seekToValue(0)
         } else {
             if (oldAudioVolume != undefined) {
                 audioVolume.set(oldAudioVolume);
+                volumeSlider.seekToValue(oldAudioVolume)
                 oldAudioVolume = undefined;
             } else {
                 audioVolume.set(1);
+                volumeSlider.seekToValue(1)
             }
         }
     }
@@ -394,14 +408,9 @@
                         {/if}
                     </svg>
                 </button>
-                <input
-                    type="range"
-                    style="flex: 1;"
-                    bind:value={$audioVolume}
-                    min="0"
-                    max="1"
-                    step="0.01"
-                />
+                <div style="margin-top: 8px; flex: 1;">
+                    <Slider bind:this={volumeSlider} on:newValue={volumeSeek} maxValue="1" />
+                </div>
             </div>
         </div>
     </div>
