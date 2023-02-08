@@ -7,15 +7,18 @@ import (
 )
 
 func DownloadArtist(c *fiber.Ctx) error {
-	database.Exec("INSERT INTO `download_tasks` (`id`, `type`, `deezer_id`, `singles`) VALUES (UUID_TO_BIN(UUID()), ?, ?, ?)",
-		models.DownloadTaskTypeDeezerArtist, c.Query("deezer_id"), c.Query("singles"))
-
+	models.DownloadTaskModel().Create(database.Map{
+		"type":      models.DownloadTaskTypeDeezerArtist,
+		"deezer_id": c.Query("deezer_id"),
+		"singles":   c.Query("singles"),
+	})
 	return c.JSON(fiber.Map{"success": true})
 }
 
 func DownloadAlbum(c *fiber.Ctx) error {
-	database.Exec("INSERT INTO `download_tasks` (`id`, `type`, `deezer_id`) VALUES (UUID_TO_BIN(UUID()), ?, ?)",
-		models.DownloadTaskTypeDeezerAlbum, c.Query("deezer_id"))
-
+	models.DownloadTaskModel().Create(database.Map{
+		"type":      models.DownloadTaskTypeDeezerAlbum,
+		"deezer_id": c.Query("deezer_id"),
+	})
 	return c.JSON(fiber.Map{"success": true})
 }

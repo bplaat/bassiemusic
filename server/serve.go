@@ -4,9 +4,9 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"os"
 
 	"github.com/bplaat/bassiemusic/controllers"
-	"github.com/bplaat/bassiemusic/middlewares"
 	"github.com/bplaat/bassiemusic/tasks"
 	"github.com/bplaat/bassiemusic/utils"
 	"github.com/gofiber/fiber/v2"
@@ -23,7 +23,7 @@ func serve() {
 
 	// Start server
 	app := fiber.New(fiber.Config{
-		AppName: "BassieMusic",
+		AppName: os.Getenv("APP_NAME"),
 	})
 	app.Use(compress.New())
 	app.Use(cors.New())
@@ -31,7 +31,7 @@ func serve() {
 	app.Use(logger.New())
 
 	app.Get("/", func(c *fiber.Ctx) error {
-		return c.SendString("BassieMusic API")
+		return c.SendString(os.Getenv("APP_NAME") + " API v" + os.Getenv("APP_VERSION"))
 	})
 
 	app.Use("/storage", filesystem.New(filesystem.Config{
@@ -52,7 +52,7 @@ func serve() {
 		return err
 	})
 
-	app.Use(middlewares.IsAuthed)
+	// app.Use(middlewares.IsAuthed)
 
 	app.Get("/auth/validate", controllers.AuthValidate)
 	app.Get("/auth/logout", controllers.AuthLogout)
@@ -74,9 +74,9 @@ func serve() {
 
 	app.Get("/tracks", controllers.TracksIndex)
 	app.Get("/tracks/:trackID", controllers.TracksShow)
-	app.Get("/tracks/:trackID/play", controllers.TracksPlay)
 	app.Get("/tracks/:trackID/like", controllers.TracksLike)
 	app.Get("/tracks/:trackID/like/delete", controllers.TracksLikeDelete)
+	app.Get("/tracks/:trackID/play", controllers.TracksPlay)
 
 	app.Get("/users/:userID", controllers.UsersShow)
 	app.Get("/users/:userID/liked_artists", controllers.UsersLikedArtists)
@@ -88,7 +88,7 @@ func serve() {
 	app.Post("/users/:userID/avatar", controllers.UsersAvatar)
 	app.Get("/users/:userID/avatar/delete", controllers.UsersAvatarDelete)
 
-	app.Use(middlewares.IsAdmin)
+	// app.Use(middlewares.IsAdmin)
 
 	app.Get("/download/artist", controllers.DownloadArtist)
 	app.Get("/download/album", controllers.DownloadAlbum)

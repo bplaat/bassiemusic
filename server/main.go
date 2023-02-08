@@ -7,6 +7,7 @@ import (
 
 	"github.com/bplaat/bassiemusic/database"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/joho/godotenv"
 )
 
 func createDirIfNotExists(path string) {
@@ -36,6 +37,12 @@ func createStorageDirs() {
 func main() {
 	// Set log settings
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
+
+	// Load .env file
+	err := godotenv.Load(".env")
+	if err != nil {
+		log.Fatalln(err)
+	}
 
 	// Create missing storage dirs
 	createStorageDirs()

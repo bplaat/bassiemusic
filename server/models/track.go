@@ -1,73 +1,79 @@
 package models
 
 import (
-	"database/sql"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/bplaat/bassiemusic/database"
 	"github.com/gofiber/fiber/v2"
 )
 
+// Track
 type Track struct {
-	ID        string    `json:"id"`
-	AlbumID   string    `json:"-"`
-	Title     string    `json:"title"`
-	Disk      int       `json:"disk"`
-	Position  int       `json:"position"`
-	Duration  int       `json:"duration"`
-	Explicit  bool      `json:"explicit"`
-	DeezerID  int64     `json:"-"`
-	YoutubeID string    `json:"-"`
-	Plays     int64     `json:"plays"`
+	ID        string    `column:"id,uuid" json:"id"`
+	AlbumID   string    `column:"album_id,uuid" json:"-"`
+	Title     string    `column:"title,string" json:"title"`
+	Disk      int       `column:"disk,int" json:"disk"`
+	Position  int       `column:"position,int" json:"position"`
+	Duration  float32   `column:"duration,float" json:"duration"`
+	Explicit  bool      `column:"explicit,bool" json:"explicit"`
+	DeezerID  int64     `column:"deezer_id,bigint" json:"-"`
+	YoutubeID string    `column:"youtube_id,string" json:"-"`
+	Plays     int64     `column:"plays,bigint" json:"plays"`
 	Music     string    `json:"music"`
 	Liked     bool      `json:"liked"`
-	CreatedAt time.Time `json:"created_at"`
+	CreatedAt time.Time `column:"created_at,timestamp" json:"created_at"`
 	Album     *Album    `json:"album,omitempty"`
 	Artists   []Artist  `json:"artists,omitempty"`
 }
 
-func TrackScan(c *fiber.Ctx, trackQuery *sql.Rows, withAlbum bool, withArtists bool) Track {
-	var track Track
-	trackQuery.Scan(&track.ID, &track.AlbumID, &track.Title, &track.Disk, &track.Position, &track.Duration, &track.Explicit, &track.DeezerID, &track.YoutubeID, &track.Plays, &track.CreatedAt)
-	if c != nil {
-		track.Music = fmt.Sprintf("%s/storage/tracks/%s.m4a", c.BaseURL(), track.ID)
-		if withAlbum {
-			album := TrackAlbum(c, &track)
-			track.Album = &album
-		}
-		if withArtists {
-			track.Artists = TrackArtists(c, &track)
-		}
-		track.Liked = TrackLiked(c, &track)
-	}
-	return track
+func TrackModel(c *fiber.Ctx) *database.Model[Track] {
+	return (&database.Model[Track]{
+		TableName: "tracks",
+		Process: func(track *Track) {
+			track.Music = fmt.Sprintf("%s/storage/tracks/%s.m4a", os.Getenv("APP_URL"), track.ID)
+
+			if c != nil {
+				track.Liked = TrackLikeModel().Where("track_id", track.ID).Where("user_id", AuthUser(c).ID).First() != nil
+			}
+		},
+		Relationships: map[string]database.QueryBuilderProcess[Track]{
+			"album": func(track *Track) {
+				track.Album = AlbumModel(c).Find(track.AlbumID)
+			},
+			"artists": func(track *Track) {
+				track.Artists = ArtistModel(c).WhereIn("track_artist", "artist_id", "track_id", track.ID).OrderByRaw("LOWER(`name`)").Get()
+			},
+		},
+	}).Init()
 }
 
-func TracksScan(c *fiber.Ctx, tracksQuery *sql.Rows, withAlbum bool, withArtists bool) []Track {
-	tracks := []Track{}
-	for tracksQuery.Next() {
-		tracks = append(tracks, TrackScan(c, tracksQuery, withAlbum, withArtists))
-	}
-	return tracks
+// Track Like
+type TrackLike struct {
+	ID        string    `column:"id,uuid"`
+	TrackID   string    `column:"track_id,uuid"`
+	UserID    string    `column:"user_id,uuid"`
+	CreatedAt time.Time `column:"created_at,timestamp"`
 }
 
-func TrackLiked(c *fiber.Ctx, track *Track) bool {
-	authUser := AuthUser(c)
-	trackLikeQuery := database.Query("SELECT `id` FROM `track_likes` WHERE `track_id` = UUID_TO_BIN(?) AND `user_id` = UUID_TO_BIN(?)", track.ID, authUser.ID)
-	defer trackLikeQuery.Close()
-	return trackLikeQuery.Next()
+func TrackLikeModel() *database.Model[TrackLike] {
+	return (&database.Model[TrackLike]{
+		TableName: "track_likes",
+	}).Init()
 }
 
-func TrackAlbum(c *fiber.Ctx, track *Track) Album {
-	albumQuery := database.Query("SELECT BIN_TO_UUID(`id`), `type`, `title`, `released_at`, `explicit`, `deezer_id`, `created_at` FROM `albums` WHERE `id` = UUID_TO_BIN(?)", track.AlbumID)
-	defer albumQuery.Close()
-	albumQuery.Next()
-	return AlbumScan(c, albumQuery, true, true, false)
+// Track Play
+type TrackPlay struct {
+	ID        string    `column:"id,uuid"`
+	TrackID   string    `column:"track_id,uuid"`
+	UserID    string    `column:"user_id,uuid"`
+	Position  float32   `column:"position,float"`
+	CreatedAt time.Time `column:"created_at,timestamp"`
 }
 
-func TrackArtists(c *fiber.Ctx, track *Track) []Artist {
-	artistsQuery := database.Query("SELECT BIN_TO_UUID(`id`), `name`, `deezer_id`, `created_at` FROM `artists` WHERE `id` IN (SELECT `artist_id` FROM `track_artist` WHERE `track_id` = UUID_TO_BIN(?)) ORDER BY LOWER(`name`)", track.ID)
-	defer artistsQuery.Close()
-	return ArtistsScan(c, artistsQuery, false, false)
+func TrackPlayModel() *database.Model[TrackPlay] {
+	return (&database.Model[TrackPlay]{
+		TableName: "track_plays",
+	}).Init()
 }
