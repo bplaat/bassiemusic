@@ -51,17 +51,25 @@
     }
 </script>
 
-<table class="table" style="width: 100%;">
+<table class="table" style="width: 100%; table-layout: fixed;">
     <thead>
-        <th style="width: 10%;">#</th>
-        <th style="width: 30%;">Title</th>
         {#if showAlbum}
-            <th style="width: 30%;">Album</th>
+            <th style="width: 10%;"><div class="track-index">#</div></th>
+            <th style="width: calc(64px + 1.5em);">Title</th>
+            <th style="width: 35%;" />
+            <th style="width: 35%;">Album</th>
+            <th style="width: 10%;">Duration</th>
+            <th style="width: 10%;">Plays</th>
+            <th style="width: calc(40px + .75em);" />
+            <th style="width: calc(40px + .75em);" />
+        {:else}
+            <th style="width: 10%;"><div class="track-index">#</div></th>
+            <th style="width: 50%;">Title</th>
+            <th style="width: 20%;">Duration</th>
+            <th style="width: 20%;">Plays</th>
+            <th style="width: calc(40px + .75em);" />
+            <th style="width: calc(40px + .75em);" />
         {/if}
-        <th style="width: 15%;">Duration</th>
-        <th style="width: 14%;">Plays</th>
-        <th style="width: 1%;" />
-        <th style="width: 1%;" />
     </thead>
     <tbody>
         {#each tracks as track, index}
@@ -72,58 +80,44 @@
                     $musicPlayer.track_id == track.id}
             >
                 <td>
-                    <span class="track-index">{index + 1}</span>
-
-                    <button class="button is-small track-play" on:click={() => playTrack(track)}>
+                    <div class="track-index">{index + 1}</div>
+                    <button
+                        class="button is-small track-play"
+                        on:click={() => playTrack(track)}
+                    >
                         <svg class="icon" viewBox="0 0 24 24">
                             <path d="M8,5.14V19.14L19,12.14L8,5.14Z" />
                         </svg>
                     </button>
                 </td>
-
                 {#if showAlbum}
-                    <td style="display: flex;">
+                    <td>
                         <div
-                            class="box is-image mr-4 mb-0"
+                            class="box is-image m-0"
                             style="width: 64px; height: 64px; background-image: url({track
                                 .album.small_cover});"
                         />
-                        <div class="flex">
-                            <p>
-                                <a
-                                    href="/albums/{track.album.id}"
-                                    style="font-weight: 500;">{track.title}</a
-                                >
-                            </p>
-                            <p>
-                                {#if track.explicit}
-                                    <span class="tag is-danger mr-1">E</span>
-                                {/if}
-                                {#each track.artists as artist}
-                                    <a href="/artists/{artist.id}" class="mr-2"
-                                        >{artist.name}</a
-                                    >
-                                {/each}
-                            </p>
-                        </div>
-                    </td>
-                {:else}
-                    <td>
-                        <p style="font-weight: 500;">{track.title}</p>
-                        <p>
-                            {#if track.explicit}
-                                <span class="tag is-danger mr-1">E</span>
-                            {/if}
-                            {#each track.artists as artist}
-                                <a href="/artists/{artist.id}" class="mr-2"
-                                    >{artist.name}</a
-                                >
-                            {/each}
-                        </p>
                     </td>
                 {/if}
+                <td>
+                    <p class="ellipsis mb-1" style="font-weight: 500;">
+                        <a href="/albums/{track.album.id}"
+                            >{track.title}</a
+                        >
+                    </p>
+                    <p class="ellipsis">
+                        {#if track.explicit}
+                            <span class="tag is-danger mr-1">E</span>
+                        {/if}
+                        {#each track.artists as artist}
+                            <a href="/artists/{artist.id}" class="mr-2"
+                                >{artist.name}</a
+                            >
+                        {/each}
+                    </p>
+                </td>
                 {#if showAlbum}
-                    <td
+                    <td class="ellipsis"
                         ><a href="/albums/{track.album.id}"
                             >{track.album.title}</a
                         ></td
@@ -131,7 +125,7 @@
                 {/if}
                 <td>{formatDuration(track.duration)}</td>
                 <td>{track.plays}</td>
-                <td class="pl-0 pr-2">
+                <td class="px-0">
                     <button class="button" on:click={() => likeTrack(track)}>
                         {#if track.liked}
                             <svg class="icon is-colored" viewBox="0 0 24 24">
