@@ -1,7 +1,6 @@
 package database
 
 import (
-	"fmt"
 	"reflect"
 	"strings"
 
@@ -71,8 +70,6 @@ func (m *Model[T]) Create(values Map) *T {
 		index++
 	}
 	insertQuery += ") VALUES (" + valuesStr + ")"
-
-	fmt.Println(insertQuery, queryValues)
 
 	Exec(insertQuery, queryValues...)
 	return m.Find(values[m.PrimaryKey])

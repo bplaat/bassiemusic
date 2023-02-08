@@ -1,6 +1,7 @@
 package database
 
 import (
+	"log"
 	"reflect"
 	"strconv"
 )
@@ -38,7 +39,13 @@ func (qb *QueryBuilder[T]) Join(join string) *QueryBuilder[T] {
 }
 
 func (qb *QueryBuilder[T]) With(relationships ...string) *QueryBuilder[T] {
-	qb.Withs = append(qb.Withs, relationships...)
+	for _, relationship := range relationships {
+		if _, ok := qb.Model.Relationships[relationship]; ok {
+			qb.Withs = append(qb.Withs, relationship)
+		} else {
+			log.Fatalln("QueryBuilder: relationship '" + relationship + "' doesn't exists")
+		}
+	}
 	return qb
 }
 

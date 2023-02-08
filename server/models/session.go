@@ -20,7 +20,7 @@ type Session struct {
 	ClientVersion *string   `column:"client_version,string" json:"client_version"`
 	ExpiresAt     time.Time `column:"expires_at,timestamp" json:"expires_at"`
 	CreatedAt     time.Time `column:"created_at,timestamp" json:"created_at"`
-	User          User      `json:"user,omitempty"`
+	User          *User     `json:"user,omitempty"`
 }
 
 func SessionModel() *database.Model[Session] {
@@ -28,7 +28,7 @@ func SessionModel() *database.Model[Session] {
 		TableName: "sessions",
 		Relationships: map[string]database.QueryBuilderProcess[Session]{
 			"user": func(session *Session) {
-				session.User = *UserModel().Find(session.UserID)
+				session.User = UserModel().Find(session.UserID)
 			},
 		},
 	}).Init()

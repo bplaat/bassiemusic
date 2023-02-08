@@ -75,7 +75,7 @@ func UsersCreate(c *fiber.Ctx) error {
 }
 
 func UsersShow(c *fiber.Ctx) error {
-	user := models.UserModel().With("albums", "top_tracks").Find(c.Params("userID"))
+	user := models.UserModel().Find(c.Params("userID"))
 	if user == nil {
 		return fiber.ErrNotFound
 	}
@@ -192,7 +192,7 @@ func UsersAvatar(c *fiber.Ctx) error {
 	}
 
 	// Remove old avatar file
-	if *user.AvatarID != "" {
+	if user.AvatarID != nil {
 		if err := os.Remove(fmt.Sprintf("storage/avatars/%s.jpg", *user.AvatarID)); err != nil {
 			log.Fatalln(err)
 		}
@@ -229,7 +229,7 @@ func UsersAvatarDelete(c *fiber.Ctx) error {
 	}
 
 	// Check if user has avatar
-	if *user.AvatarID != "" {
+	if user.AvatarID != nil {
 		// Remove old avatar file
 		if err := os.Remove(fmt.Sprintf("storage/avatars/%s.jpg", *user.AvatarID)); err != nil {
 			log.Fatalln(err)
@@ -341,7 +341,7 @@ func UsersSessions(c *fiber.Ctx) error {
 	}
 
 	// Get user sessions
-	userSessions := models.SessionModel().Where("user_id", user.ID).OrderByDesc("created_at").Paginate(page, limit)
+	userSessions := models.SessionModel().Where("user_id", user.ID).OrderByDesc("expires_at").Paginate(page, limit)
 	return c.JSON(userSessions)
 }
 
