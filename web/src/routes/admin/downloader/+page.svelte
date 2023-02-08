@@ -97,25 +97,23 @@
             </form>
 
             {#each artists as artist}
-                <div>
-                    <div style="display:flex">
-                        <img
-                            src={artist.picture_medium}
-                            alt="Image of artist {artist.name}"
-                            class="mr-3"
-                            style="width: 64px; height: 64px;"
-                        />
-                        <div style="flex: 1">
-                            <b>{artist.name}</b>
-                        </div>
-                        <button
-                            class="button is-link"
-                            on:click={() => downloadArtist(artist)}
-                            >Add to BassieMusic</button
-                        >
+                <div style="display: flex;">
+                    <img
+                        src={artist.picture_medium}
+                        alt="Image of artist {artist.name}"
+                        class="mr-3"
+                        style="width: 64px; height: 64px;"
+                    />
+                    <div style="flex: 1">
+                        <b>{artist.name}</b>
                     </div>
-                    <hr />
+                    <button
+                        class="button is-link"
+                        on:click={() => downloadArtist(artist)}
+                        >Add to BassieMusic</button
+                    >
                 </div>
+                <hr />
             {/each}
         </div>
     </div>
@@ -145,26 +143,24 @@
             </form>
 
             {#each albums as album}
-                <div>
-                    <div style="display:flex">
-                        <img
-                            src={album.cover_medium}
-                            alt="Cover of album {album.title}"
-                            class="mr-3"
-                            style="width: 64px; height: 64px;"
-                        />
-                        <div style="flex: 1">
-                            <b>{album.title}</b><br />
-                            By {album.artist.name}
-                        </div>
-                        <button
-                            class="button is-link"
-                            on:click={() => downloadAlbum(album)}
-                            >Add to BassieMusic</button
-                        >
+                <div style="display: flex;">
+                    <img
+                        src={album.cover_medium}
+                        alt="Cover of album {album.title}"
+                        class="mr-3"
+                        style="width: 64px; height: 64px;"
+                    />
+                    <div style="flex: 1">
+                        <b>{album.title}</b><br />
+                        By {album.artist.name}
                     </div>
-                    <hr />
+                    <button
+                        class="button is-link"
+                        on:click={() => downloadAlbum(album)}
+                        >Add to BassieMusic</button
+                    >
                 </div>
+                <hr />
             {/each}
         </div>
     </div>
