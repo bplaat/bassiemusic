@@ -16,6 +16,7 @@ type QueryBuilder[T any] struct {
 	WhereValues []any
 	OrderByStr  string
 	LimitStr    string
+	Paginated   bool
 }
 
 type QueryBuilderColumn struct {
@@ -134,7 +135,7 @@ func (qb *QueryBuilder[T]) Count() int64 {
 	if qb.WhereStr != "" {
 		countQuery += " WHERE " + qb.WhereStr
 	}
-	if qb.LimitStr != "" {
+	if qb.LimitStr != "" && !qb.Paginated {
 		countQuery += " LIMIT " + qb.LimitStr
 	}
 
@@ -243,6 +244,7 @@ func (qb *QueryBuilder[T]) Delete() {
 }
 
 func (qb *QueryBuilder[T]) Paginate(page int, limit int) QueryBuilderPaginated[T] {
+	qb.Paginated = true
 	paginated := QueryBuilderPaginated[T]{}
 	paginated.Data = qb.Limit(strconv.Itoa((page-1)*limit) + ", " + strconv.Itoa(limit)).Get()
 	paginated.Pagination.Page = page
