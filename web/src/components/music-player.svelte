@@ -7,7 +7,7 @@
     } from "../consts.js";
     import { musicPlayer, audioVolume } from "../stores.js";
     import { formatDuration } from "../filters.js";
-    import { onMount } from 'svelte';
+    import Slider from "./slider.svelte";
 
     export let token;
     let isPlaying = false,
@@ -16,11 +16,8 @@
         audioCurrentTime,
         updateUiTimeout,
         updateServerTimeout,
-        ignoreMusicPlayerUpdate = false,
-        thumb,
-        slider,
-        container;
-
+        musicSlider,
+        ignoreMusicPlayerUpdate = false;
 
     $: track = $musicPlayer.queue[$musicPlayer.index];
 
@@ -49,7 +46,6 @@
                     musicPlayer.action == "init" ? musicPlayer.position : 0;
                 audioDuration = audio.duration;
                 audioCurrentTime = audio.currentTime;
-                sliderSeek(audioCurrentTime / audioDuration)
 
                 if (musicPlayer.action == "play") {
                     play();
@@ -98,7 +94,7 @@
 
     function updatePositionState() {
         audioCurrentTime = audio.currentTime;
-        sliderSeek(audioCurrentTime / audioDuration)
+        musicSlider.seekToValue(audioCurrentTime)
 
         if ("mediaSession" in navigator) {
             navigator.mediaSession.setPositionState({
@@ -111,7 +107,7 @@
 
     function updateUiLoop() {
         audioCurrentTime = audio.currentTime;
-        sliderSeek(audioCurrentTime / audioDuration)
+        musicSlider.seekToValue(audioCurrentTime)
 
         if (isPlaying) {
             updateUiTimeout = setTimeout(
@@ -151,9 +147,16 @@
         }
     }
 
-    function seekTo(seekTime) {
+    function seekTo(event) {
         if (!isPlaying) play();
-        audio.currentTime = seekTime;
+        audio.currentTime = event.target.value;;
+        sendTrackPlay();
+        updatePositionState();
+    }
+
+    function sliderSeek(event){
+        if (!isPlaying) play();
+        audio.currentTime = event.detail.value;
         sendTrackPlay();
         updatePositionState();
     }
@@ -273,55 +276,6 @@
             }
         }
     }
-
-    function sliderSeek(percentage) {
-        let newThumbPosition = container.offsetWidth * percentage;
-        thumb.style.left = newThumbPosition - thumb.offsetWidth / 2 + "px";
-        slider.style.width = newThumbPosition + "px";
-    }
-
-    onMount(() => {
-        thumb = document.querySelector(".slider-thumb");
-        slider = document.querySelector(".slider");
-        container = document.querySelector(".slider-container");
-
-        container.addEventListener("click", function(event) {
-            let newThumbPosition = event.pageX - container.getBoundingClientRect().left;
-
-            if (newThumbPosition >= 0 && newThumbPosition <= container.offsetWidth) {
-                thumb.style.left = newThumbPosition - thumb.offsetWidth / 2 + "px";
-                slider.style.width = newThumbPosition + "px";
-                seekTo(((parseInt(slider.style.width) / container.offsetWidth)) * audioDuration)
-            }
-        });
-
-        thumb.addEventListener("mousedown", function(event) {
-            let thumbPosition = event.pageX - container.getBoundingClientRect().left;
-            thumb.classList.add("active");
-
-            let mouseMoveHandler = function(event) {
-                let newThumbPosition = event.pageX - container.getBoundingClientRect().left;
-                audioCurrentTime = (parseInt(slider.style.width) / container.offsetWidth) * audioDuration
-                updatePositionState()
-
-                if (newThumbPosition >= 0 && newThumbPosition <= container.offsetWidth) {
-                    thumbPosition = newThumbPosition;
-                    thumb.style.left = thumbPosition - thumb.offsetWidth / 2 + "px";
-                    slider.style.width = thumbPosition + "px";
-                    seekTo(((parseInt(slider.style.width) / container.offsetWidth)) * audioDuration)
-                }
-            };
-
-            let mouseUpHandler = function() {
-                thumb.classList.remove("active");
-                document.removeEventListener("mousemove", mouseMoveHandler);
-                document.removeEventListener("mouseup", mouseUpHandler);
-            };
-
-            document.addEventListener("mousemove", mouseMoveHandler);
-            document.addEventListener("mouseup", mouseUpHandler);
-        });
-    });
 </script>
 
 {#if $musicPlayer.queue.length > 0}
@@ -411,10 +365,7 @@
                 <span class="mr-3" style="width: 4rem; text-align: right;"
                     >{formatDuration(audioCurrentTime)}</span
                 >
-                <div class="slider-container" style="flex:1;">
-                    <div class="slider"></div>
-                    <div class="slider-thumb"></div>
-                </div>
+                <Slider maxValue={audioDuration} bind:this={musicSlider} on:newValue={sliderSeek} />
                 <span class="ml-3" style="width: 4rem;"
                     >-{formatDuration(audioDuration - audioCurrentTime)}</span
                 >
