@@ -1,68 +1,63 @@
 <script>
-    import { onMount, createEventDispatcher  } from 'svelte';
+    import { onMount, createEventDispatcher } from "svelte";
 
     export let maxValue;
 
-    let thumb,
-        slider,
-        container;
+    let thumb, slider, container;
 
     function seekToValue(value, tempMaxValue) {
-        if(tempMaxValue != undefined){
-            maxValue = tempMaxValue
+        if (tempMaxValue != undefined) {
+            maxValue = tempMaxValue;
         }
-
         let newThumbPosition = container.offsetWidth * (value / maxValue);
-
         thumb.style.left = newThumbPosition - thumb.offsetWidth / 2 + "px";
         slider.style.width = newThumbPosition + "px";
     }
 
     const dispatch = createEventDispatcher();
-    function newValue(value){
+    function newValue(value) {
         dispatch("newValue", { value: value });
     }
 
     onMount(() => {
-        container.addEventListener("click", function(event) {
-            let newThumbPosition = event.pageX - container.getBoundingClientRect().left;
-            if (newThumbPosition >= 0 && newThumbPosition <= container.offsetWidth) {
-                thumb.style.left = newThumbPosition - thumb.offsetWidth / 2 + "px";
-                slider.style.width = newThumbPosition + "px";
-
-                newValue(((parseInt(slider.style.width) / container.offsetWidth)) * maxValue)
+        let drag = false;
+        function updateValue(event) {
+            let newThumbPosition =
+                event.pageX - container.getBoundingClientRect().left;
+            if (
+                newThumbPosition >= 0 &&
+                newThumbPosition <= container.offsetWidth
+            ) {
+                thumb.style.left = `${
+                    newThumbPosition - thumb.offsetWidth / 2
+                }px`;
+                slider.style.width = `${newThumbPosition}px`;
+                newValue(
+                    (parseInt(slider.style.width) / container.offsetWidth) *
+                        maxValue
+                );
             }
+        }
+        container.addEventListener("mousedown", (event) => {
+            drag = true;
+            updateValue(event);
         });
-
-        thumb.addEventListener("mousedown", function(event) {
-            let thumbPosition = event.pageX - container.getBoundingClientRect().left;
-            thumb.classList.add("active");
-            let mouseMoveHandler = function(event) {
-                let newThumbPosition = event.pageX - container.getBoundingClientRect().left;
-
-                if (newThumbPosition >= 0 && newThumbPosition <= container.offsetWidth) {
-                    thumbPosition = newThumbPosition;
-                    thumb.style.left = thumbPosition - thumb.offsetWidth / 2 + "px";
-                    slider.style.width = thumbPosition + "px";
-                    
-                    newValue(((parseInt(slider.style.width) / container.offsetWidth)) * maxValue)
-                }
-            };
-
-            let mouseUpHandler = function() {
-                thumb.classList.remove("active");
-                document.removeEventListener("mousemove", mouseMoveHandler);
-                document.removeEventListener("mouseup", mouseUpHandler);
-            };
-            document.addEventListener("mousemove", mouseMoveHandler);
-            document.addEventListener("mouseup", mouseUpHandler);
+        thumb.addEventListener("mousedown", (event) => {
+            drag = true;
+            updateValue(event);
+        });
+        window.addEventListener("mousemove", (event) => {
+            if (drag) updateValue(event);
+        });
+        window.addEventListener("mouseup", () => {
+            drag = false;
         });
     });
 
-    export {seekToValue}
+    export { seekToValue };
 </script>
 
-<div class="slider-container" bind:this={container} style="flex:1;">
-    <div class="slider" bind:this={slider}></div>
-    <div class="slider-thumb" bind:this={thumb}></div>
+<div class="slider-container" bind:this={container} style="flex: 1;">
+    <div class="slider" bind:this={slider} />
+    <div class="slider-thumb" bind:this={thumb} />
 </div>
