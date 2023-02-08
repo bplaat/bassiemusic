@@ -100,12 +100,12 @@
                     </td>
                 {/if}
                 <td>
-                    <div class="ellipsis mb-1" style="font-weight: 500;">
+                    <p class="ellipsis mb-1" style="font-weight: 500;">
                         <a href="/albums/{track.album.id}"
-                            >{track.album.title}</a
+                            >{track.title}</a
                         >
-                    </div>
-                    <div class="ellipsis">
+                    </p>
+                    <p class="ellipsis">
                         {#if track.explicit}
                             <span class="tag is-danger mr-1">E</span>
                         {/if}
@@ -114,7 +114,7 @@
                                 >{artist.name}</a
                             >
                         {/each}
-                    </div>
+                    </p>
                 </td>
                 {#if showAlbum}
                     <td class="ellipsis"

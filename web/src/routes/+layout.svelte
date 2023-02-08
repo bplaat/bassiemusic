@@ -29,16 +29,16 @@
             <link rel="stylesheet" href="/css/bulma-dark.min.css" />
             <style>
                 /* slider dark mode */
-                .slider-container {position:relative;margin-top:9px;width:100%;height:5px;background-color:lightgray;}
-                .slider {position:absolute;width:100%;height: 100%;background-color:#0099ff;}
-                .slider-thumb {position:absolute;top:-5px;width:15px;height:15px;background-color:white;border-radius:50%;cursor: pointer;}
+                .slider-container{position:relative;height:5px;background-color:lightgray}
+                .slider{position:absolute;width:100%;height:100%;background-color:#0099ff}
+                .slider-thumb{position:absolute;top:-5px;width:15px;height:15px;background-color:white;border-radius:50%;cursor:pointer}
             </style>
         {:else}
             <style>
                 /* slider light mode */
-                .slider-container {position:relative;margin-top:9px;width:100%;height:5px;background-color:lightgray;}
-                .slider {position:absolute;width:100%;height: 100%;background-color:#0099ff;}
-                .slider-thumb {position:absolute;top:-5px;width:15px;height:15px;background-color:#999999;border-radius:50%;cursor: pointer;}
+                .slider-container{position:relative;width:100%;height:5px;background-color:lightgray}
+                .slider{position:absolute;width:100%;height:100%;background-color:#0099ff}
+                .slider-thumb{position:absolute;top:-5px;width:15px;height:15px;background-color:#999999;border-radius:50%;cursor:pointer}
             </style>
         {/if}
     {:else}

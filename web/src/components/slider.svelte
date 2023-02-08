@@ -2,6 +2,7 @@
     import { onMount, createEventDispatcher } from "svelte";
 
     export let maxValue;
+    export let style;
 
     let thumb, slider, container;
 
@@ -57,7 +58,7 @@
     export { seekToValue };
 </script>
 
-<div class="slider-container" bind:this={container} style="flex: 1;">
+<div class="slider-container" style="{style};" bind:this={container}>
     <div class="slider" bind:this={slider} />
     <div class="slider-thumb" bind:this={thumb} />
 </div>
