@@ -28,3 +28,5 @@ body.is-playing .sidebar{height:calc(100% - 6rem)}
 .track-index{width:30px;text-align:center}
 .track-play,.track-container:hover .track-index{display:none}
 .track-index,.track-container:hover .track-play{display:block}
+
+::-webkit-scrollbar{width:8px}
