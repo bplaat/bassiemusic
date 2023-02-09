@@ -6,11 +6,22 @@
 NSApplication *application;
 NSWindow *window;
 WKWebView *webview;
+NSString *appVersion;
 
 @interface WindowDragger : NSView
 @end
 
 @implementation WindowDragger
+- (void)mouseUp:(NSEvent *)event {
+    if ([event clickCount] == 2) {
+        [self mouseDoubleClick:event];
+    }
+}
+
+- (void)mouseDoubleClick:(NSEvent *)event {
+    [window zoom:self];
+}
+
 - (void)mouseDragged:(NSEvent *)event {
     [window performWindowDragWithEvent:event];
 }
@@ -22,6 +33,14 @@ WindowDragger *dragger;
 @end
 
 @implementation WindowDelegate
+- (void)windowWillEnterFullScreen:(NSNotification *)notification {
+    [webview evaluateJavaScript:@"document.body.classList.add('macos-is-fullscreen');" completionHandler:NULL];
+}
+
+- (void)windowWillExitFullScreen:(NSNotification *)notification {
+    [webview evaluateJavaScript:@"document.body.classList.remove('macos-is-fullscreen');" completionHandler:NULL];
+}
+
 - (void)windowDidResize:(NSNotification *)notification {
     webview.frame = [window.contentView bounds];
     dragger.frame = NSMakeRect(0, NSHeight(window.frame) - 28, NSWidth(window.frame), 28);
@@ -33,6 +52,9 @@ WindowDragger *dragger;
 
 @implementation AppDelegate
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
+    // Get app version
+    appVersion = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleShortVersionString"];
+
     // Create menu
     NSMenu *menubar = [[NSMenu alloc] init];
     application.mainMenu = menubar;
@@ -66,18 +88,13 @@ WindowDragger *dragger;
     [window setFrame:NSMakeRect(windowX, windowY, NSWidth(window.frame), NSHeight(window.frame)) display:YES];
     window.minSize = NSMakeSize(640, 480);
     window.backgroundColor = [NSColor colorWithRed:(0x0a / 255.f) green:(0x0a / 255.f) blue:(0x0a / 255.f) alpha:1];
+    window.frameAutosaveName = @"window";
     window.delegate = [[WindowDelegate alloc] init];
 
     // Create webview
     webview = [[WKWebView alloc] initWithFrame:[window.contentView bounds]];
+    webview.customUserAgent = [[NSString alloc] initWithFormat:@"BassieMusic macOS App v%@", appVersion];
     [webview setValue:@NO forKey:@"drawsBackground"];
-
-    WKUserScript *script = [[WKUserScript alloc] initWithSource:@"const style = document.createElement('style');\n\
-        style.innerText = '.sidebar{padding-top:calc(20px + 1.25rem)!important}';\n\
-        document.head.appendChild(style);"
-        injectionTime:WKUserScriptInjectionTimeAtDocumentEnd
-        forMainFrameOnly:YES];
-    [[[webview configuration] userContentController] addUserScript: script];
 
     NSURL *url = [NSURL URLWithString:LocalizedString(@"webview_url")];
     NSURLRequest *request = [NSURLRequest requestWithURL:url];
@@ -101,7 +118,7 @@ WindowDragger *dragger;
 - (void)openAboutAlert:(NSNotification *)aNotification {
     NSAlert *alert = [[NSAlert alloc] init];
     alert.messageText = LocalizedString(@"about_title");
-    alert.informativeText = LocalizedString(@"about_text");
+    alert.informativeText = [[NSString alloc] initWithFormat:LocalizedString(@"about_text"), appVersion];
     [alert runModal];
 }
 @end

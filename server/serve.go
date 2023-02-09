@@ -39,6 +39,11 @@ func serve() {
 		Root: http.Dir("./storage"),
 	}))
 
+	// Get agent information
+	app.Get("/agent", func(c *fiber.Ctx) error {
+		return c.JSON(utils.ParseUserAgent(c))
+	})
+
 	app.Post("/auth/login", controllers.AuthLogin)
 
 	// Deezer API proxies
