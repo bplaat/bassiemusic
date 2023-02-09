@@ -103,9 +103,9 @@
 
 <h2 class="title mt-5">Albums</h2>
 {#if artist.albums != undefined}
-    <div class="columns is-multiline">
+    <div class="columns is-multiline is-mobile">
         {#each artist.albums as album}
-            <div class="column is-one-fifth">
+            <div class="column is-half-mobile is-one-third-tablet is-one-quarter-desktop is-one-fifth-widescreen">
                 <AlbumCard {album} />
             </div>
         {/each}

@@ -246,7 +246,7 @@
 <div class="box">
     <h3 class="title is-4">Sessions management</h3>
 
-    <div class="columns is-multiline">
+    <div class="columns is-multiline is-mobile">
         {#each sessions as session}
             {#if new Date(session.expires_at).getTime() >= Date.now()}
                 <div class="column is-half">

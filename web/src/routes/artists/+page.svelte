@@ -33,9 +33,9 @@
 
 <h2 class="title">Artists</h2>
 
-<div class="columns is-multiline">
+<div class="columns is-multiline is-mobile">
     {#each artists as artist}
-        <div class="column is-one-fifth">
+        <div class="column is-half-mobile is-one-third-tablet is-one-quarter-desktop is-one-fifth-widescreen">
             <ArtistCard {artist} />
         </div>
     {/each}

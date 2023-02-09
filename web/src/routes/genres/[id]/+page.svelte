@@ -55,9 +55,9 @@
 
 <h2 class="title">Albums</h2>
 {#if genre.albums != undefined}
-    <div class="columns is-multiline">
+    <div class="columns is-multiline is-mobile">
         {#each genre.albums as album}
-            <div class="column is-one-fifth">
+            <div class="column is-half-mobile is-one-third-tablet is-one-quarter-desktop is-one-fifth-widescreen">
                 <AlbumCard {album} />
             </div>
         {/each}

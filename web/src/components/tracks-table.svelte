@@ -57,7 +57,7 @@
             <th style="width: 10%;"><div class="track-index">#</div></th>
             <th style="width: calc(64px + 1.5em);">Title</th>
             <th style="width: 35%;" />
-            <th style="width: 35%;">Album</th>
+            <th style="width: 35%;" class="is-hidden-touch">Album</th>
             <th style="width: 10%;">Duration</th>
             <th style="width: 10%;">Plays</th>
             <th style="width: calc(40px + .75em);" />
@@ -117,7 +117,7 @@
                     </p>
                 </td>
                 {#if showAlbum}
-                    <td class="ellipsis"
+                    <td class="ellipsis is-hidden-touch"
                         ><a href="/albums/{track.album.id}"
                             >{track.album.title}</a
                         ></td

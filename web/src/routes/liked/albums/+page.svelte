@@ -44,9 +44,9 @@
 <h1 class="title">Liked Albums</h1>
 
 {#if albums.length > 0}
-    <div class="columns is-multiline">
+    <div class="columns is-multiline is-mobile">
         {#each albums as album}
-            <div class="column is-one-fifth">
+            <div class="column is-half-mobile is-one-third-tablet is-one-quarter-desktop is-one-fifth-widescreen">
                 <AlbumCard {album} />
             </div>
         {/each}
