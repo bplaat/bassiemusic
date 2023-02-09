@@ -1,4 +1,5 @@
-body{margin-left:16.5rem;user-select:none;cursor:default}
+html{overflow:hidden;height:100%}
+body{height:100%;overflow:auto;margin-left:16.5rem;-webkit-user-select:none;user-select:none;cursor:default}
 
 a{color:currentColor}a:not(.card):hover,a:not(.card):focus{text-decoration:underline}
 .menu-list a{text-decoration:none!important}
@@ -8,7 +9,7 @@ a{color:currentColor}a:not(.card):hover,a:not(.card):focus{text-decoration:under
 .sidebar{position:fixed;top:0;left:0;width:16.5rem;height:100%;overflow-y:auto;display:flex;flex-direction:column}
 .flex{flex:1}
 .player-controls{position:fixed;left:0;bottom:0;width:100%;height:6rem}
-body.is-playing{margin-bottom:6rem}
+body.is-playing{height:calc(100% - 6rem);margin-bottom:6rem}
 body.is-playing .sidebar{height:calc(100% - 6rem)}
 
 .column>.card{display:flex;flex-direction:column;height:100%;margin-bottom:0;overflow:hidden}

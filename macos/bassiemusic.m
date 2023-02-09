@@ -7,12 +7,24 @@ NSApplication *application;
 NSWindow *window;
 WKWebView *webview;
 
+@interface WindowDragger : NSView
+@end
+
+@implementation WindowDragger
+- (void)mouseDragged:(NSEvent *)event {
+    [window performWindowDragWithEvent:event];
+}
+@end
+
+WindowDragger *dragger;
+
 @interface WindowDelegate : NSObject <NSWindowDelegate>
 @end
 
 @implementation WindowDelegate
 - (void)windowDidResize:(NSNotification *)notification {
     webview.frame = [window.contentView bounds];
+    dragger.frame = NSMakeRect(0, NSHeight(window.frame) - 28, NSWidth(window.frame), 28);
 }
 @end
 
@@ -72,6 +84,11 @@ WKWebView *webview;
     [webview loadRequest:request];
 
     [window.contentView addSubview:webview];
+
+    // Create window dragger
+    dragger = [[WindowDragger alloc] initWithFrame:NSMakeRect(0, NSHeight(window.frame) - 28, NSWidth(window.frame), 28)];
+    [window.contentView addSubview:dragger];
+
     [window makeKeyAndOrderFront:nil];
 }
 
