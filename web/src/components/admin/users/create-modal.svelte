@@ -34,8 +34,8 @@
                 theme: user.theme,
             }),
         });
-        const createdUser = await response.json();
         if (response.status == 200) {
+            const createdUser = await response.json();
             close();
             dispatch("createUser", { user: createdUser });
         }

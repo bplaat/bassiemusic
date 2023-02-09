@@ -16,7 +16,11 @@ func ParseTokenVar(c *fiber.Ctx) string {
 	return ""
 }
 
-func AuthUser(c *fiber.Ctx) User {
+func AuthSession(c *fiber.Ctx) Session {
 	token := ParseTokenVar(c)
-	return *SessionModel().With("user").Where("token", token).First().User
+	return *SessionModel().With("user").Where("token", token).First()
+}
+
+func AuthUser(c *fiber.Ctx) User {
+	return *AuthSession(c).User
 }

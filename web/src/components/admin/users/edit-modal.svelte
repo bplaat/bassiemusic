@@ -3,7 +3,7 @@
 
     export let token;
     export let user;
-    let newPassword = '';
+    let newPassword = "";
 
     let isOpen = false;
     export function open() {
@@ -27,12 +27,12 @@
                     email: user.email,
                     password: newPassword,
                     role: user.role,
-                    theme: user.theme
+                    theme: user.theme,
                 }),
             }
         );
-        const updatedUser = await response.json();
         if (response.status == 200) {
+            const updatedUser = await response.json();
             close();
             dispatch("updateUser", { user: updatedUser });
         }
@@ -60,8 +60,7 @@
             <div class="columns">
                 <div class="column">
                     <div class="field">
-                        <label class="label" for="edit-username"
-                            >Username</label
+                        <label class="label" for="edit-username">Username</label
                         >
                         <div class="control">
                             <input

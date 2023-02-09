@@ -3,9 +3,10 @@
     import {  musicPlayer } from "../stores.js";
     import Sidebar from "../components/sidebar.svelte";
     import MusicPlayer from "../components/music-player.svelte";
+    import { not_equal } from "svelte/internal";
 
     export let data;
-    const { token, authUser, lastTrack, lastTrackPosition } = data;
+    const { token, authUser, agent, lastTrack, lastTrackPosition } = data;
 
     if (browser && lastTrack) {
         musicPlayer.set({
@@ -18,31 +19,48 @@
 </script>
 
 <svelte:head>
-    {#if authUser}
-        {#if authUser.theme == "system"}
-            <link rel="stylesheet" href="/css/bulma-system.min.css" />
-        {/if}
-        {#if authUser.theme == "light"}
-            <link rel="stylesheet" href="/css/bulma-light.min.css" />
-        {/if}
-        {#if authUser.theme == "dark"}
-            <link rel="stylesheet" href="/css/bulma-dark.min.css" />
-            <style>
-                /* slider dark mode */
+    <!-- Themes -->
+    {#if authUser == undefined || (authUser != undefined && authUser.theme == "system")}
+        <link rel="stylesheet" href="/css/bulma-system.min.css" />
+        <style>
+            /* slider light mode */
+            .slider-container{position:relative;width:100%;height:5px;background-color:lightgray}
+            .slider{position:absolute;width:100%;height:100%;background-color:#0099ff}
+            .slider-thumb{position:absolute;top:-5px;width:15px;height:15px;background-color:#999999;border-radius:50%;cursor:pointer}
+
+            /* slider dark mode */
+            @media (prefers-color-scheme: dark) {
                 .slider-container{position:relative;height:5px;background-color:lightgray}
                 .slider{position:absolute;width:100%;height:100%;background-color:#0099ff}
                 .slider-thumb{position:absolute;top:-5px;width:15px;height:15px;background-color:white;border-radius:50%;cursor:pointer}
-            </style>
-        {:else}
-            <style>
-                /* slider light mode */
-                .slider-container{position:relative;width:100%;height:5px;background-color:lightgray}
-                .slider{position:absolute;width:100%;height:100%;background-color:#0099ff}
-                .slider-thumb{position:absolute;top:-5px;width:15px;height:15px;background-color:#999999;border-radius:50%;cursor:pointer}
-            </style>
-        {/if}
-    {:else}
-        <link rel="stylesheet" href="/css/bulma-system.min.css" />
+            }
+        </style>
+    {/if}
+    {#if authUser != undefined && authUser.theme == "light"}
+        <link rel="stylesheet" href="/css/bulma-light.min.css" />
+        <style>
+            /* slider light mode */
+            .slider-container{position:relative;width:100%;height:5px;background-color:lightgray}
+            .slider{position:absolute;width:100%;height:100%;background-color:#0099ff}
+            .slider-thumb{position:absolute;top:-5px;width:15px;height:15px;background-color:#999999;border-radius:50%;cursor:pointer}
+        </style>
+    {/if}
+    {#if authUser != undefined && authUser.theme == "dark"}
+        <link rel="stylesheet" href="/css/bulma-dark.min.css" />
+        <style>
+            /* slider dark mode */
+            .slider-container{position:relative;height:5px;background-color:lightgray}
+            .slider{position:absolute;width:100%;height:100%;background-color:#0099ff}
+            .slider-thumb{position:absolute;top:-5px;width:15px;height:15px;background-color:white;border-radius:50%;cursor:pointer}
+        </style>
+    {/if}
+
+    <!-- Custom CSS for BassieMusic apps -->
+    {#if agent.os == "macOS" && agent.name == "BassieMusic App"}
+        <style>
+            .sidebar{padding-top:calc(28px + 1.25rem)!important}
+            .macos-is-fullscreen .sidebar{padding-top:calc(1.25rem)!important}
+        </style>
     {/if}
 </svelte:head>
 

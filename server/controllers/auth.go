@@ -11,7 +11,6 @@ import (
 	"github.com/bplaat/bassiemusic/models"
 	"github.com/bplaat/bassiemusic/utils"
 	"github.com/gofiber/fiber/v2"
-	"github.com/mileusna/useragent"
 )
 
 type AuthLoginParams struct {
@@ -51,7 +50,7 @@ func AuthLogin(c *fiber.Ctx) error {
 	token := base64.StdEncoding.EncodeToString(randomBytes)
 
 	// Create new session
-	agent := useragent.Parse(c.Get("User-Agent"))
+	agent := utils.ParseUserAgent(c)
 	models.SessionModel().Create(database.Map{
 		"user_id":        user.ID,
 		"token":          token,
@@ -73,6 +72,10 @@ func AuthLogin(c *fiber.Ctx) error {
 func AuthValidate(c *fiber.Ctx) error {
 	authUser := models.AuthUser(c)
 
+	// Get session agent
+	session := models.AuthSession(c)
+	agent := utils.Agent{OS: *session.ClientOS, Name: *session.ClientName, Version: *session.ClientVersion}
+
 	// Get last track play
 	lastTackplay := models.TrackPlayModel().Where("user_id", authUser.ID).OrderByDesc("created_at").First()
 
@@ -81,6 +84,7 @@ func AuthValidate(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{
 			"success":             true,
 			"user":                authUser,
+			"agent":               agent,
 			"last_track":          models.TrackModel(c).With("artists", "album").Find(lastTackplay.TrackID),
 			"last_track_position": lastTackplay.Position,
 		})
@@ -90,6 +94,7 @@ func AuthValidate(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{
 		"success": true,
 		"user":    authUser,
+		"agent":   agent,
 	})
 }
 
