@@ -37,8 +37,8 @@ STRINGTABLE LANGUAGE LANG_DUTCH, SUBLANG_DUTCH
 
 // Version Information
 VS_VERSION_INFO VERSIONINFO
-FILEVERSION 1,0,0,0
-PRODUCTVERSION 1,0,0,0
+FILEVERSION 0,1,0,0
+PRODUCTVERSION 0,1,0,0
 FILEFLAGSMASK 0
 FILEFLAGS 0
 FILEOS VOS__WINDOWS32
@@ -51,12 +51,12 @@ FILESUBTYPE VFT2_UNKNOWN
         {
             VALUE "CompanyName", "PlaatSoft"
             VALUE "FileDescription", "BassieMusic"
-            VALUE "FileVersion", "1.0.0.0"
+            VALUE "FileVersion", "0.1.0.0"
             VALUE "InternalName", "BassieMusic"
             VALUE "LegalCopyright", "Copyright \xA9 2021 - 2022 PlaatSoft"
             VALUE "OriginalFilename", "bassiemusic.exe"
             VALUE "ProductName", "BassieMusic"
-            VALUE "ProductVersion", "1.0.0.0"
+            VALUE "ProductVersion", "0.1.0.0"
         }
     }
     BLOCK "VarFileInfo"

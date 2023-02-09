@@ -303,9 +303,18 @@ ControllerCompletedHandler_Invoke(ICoreWebView2CreateCoreWebView2ControllerCompl
 
     ICoreWebView2Settings *settings;
     ICoreWebView2_get_Settings(webview2, &settings);
+    UINT app_version[4];
     ICoreWebView2Settings_put_AreDefaultContextMenusEnabled(settings, FALSE);
     ICoreWebView2Settings_put_IsStatusBarEnabled(settings, FALSE);
     ICoreWebView2Settings_Release(settings);
+
+    ICoreWebView2Settings2 *settings2;
+    ICoreWebView2_QueryInterface(settings, &IID_ICoreWebView2Settings2, (void **)&settings2);
+    GetAppVersion(app_version);
+    wchar_t user_agent[255];
+    wsprintfW(user_agent, L"BassieMusic Windows App v%d.%d.%d.%d", app_version[0], app_version[1], app_version[2], app_version[3]);
+    ICoreWebView2Settings2_put_UserAgent(settings2, user_agent);
+    ICoreWebView2Settings2_Release(settings2);
 
     ICoreWebView2NewWindowRequestedEventHandler *newWindowRequestedHandler =
         malloc(sizeof(ICoreWebView2NewWindowRequestedEventHandler));
