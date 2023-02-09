@@ -22,15 +22,17 @@ static void app_activate(GtkApplication *app) {
     gtk_window_set_titlebar(GTK_WINDOW(window), header_bar);
 
     // Create webview
-    WebKitWebView *webview = WEBKIT_WEB_VIEW(webkit_web_view_new());
+    WebKitSettings *settings = webkit_settings_new();
+    webkit_settings_set_user_agent(settings, "BassieMusic Linux App v0.1.0");
+    GtkWidget *webview = webkit_web_view_new_with_settings(settings);
     gtk_container_add(GTK_CONTAINER(window), GTK_WIDGET(webview));
-    WebKitWebsiteDataManager *website_data_manager = webkit_web_view_get_website_data_manager(webview);
+    WebKitWebsiteDataManager *website_data_manager = webkit_web_view_get_website_data_manager(WEBKIT_WEB_VIEW(webview));
     WebKitCookieManager *cookie_manager = webkit_website_data_manager_get_cookie_manager(website_data_manager);
     char cookies_path[512];
     sprintf(cookies_path, "%s/cookies", storage_path);
     webkit_cookie_manager_set_persistent_storage(cookie_manager, cookies_path, WEBKIT_COOKIE_PERSISTENT_STORAGE_TEXT);
-    webkit_web_view_load_uri(webview, "http://localhost:5173/");
-    gtk_widget_grab_focus(GTK_WIDGET(webview));
+    webkit_web_view_load_uri(WEBKIT_WEB_VIEW(webview), "http://localhost:5173/");
+    gtk_widget_grab_focus(webview);
 
     // Show window
     gtk_widget_show_all(window);
