@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=BassieMusic
+Icon=nl.plaatsoft.BassieMusic
+Categories=AudioVideo;Audio;Player;
+Exec=nl.plaatsoft.BassieMusic
+Terminal=false
