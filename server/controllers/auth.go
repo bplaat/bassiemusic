@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"io"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/bplaat/bassiemusic/database"
@@ -12,6 +13,20 @@ import (
 	"github.com/bplaat/bassiemusic/utils"
 	"github.com/gofiber/fiber/v2"
 )
+
+type IPInfo struct {
+	IP       string `json:"ip"`
+	Bogon    bool   `json:"bogon"`
+	Hostname string `json:"hostname"`
+	City     string `json:"city"`
+	Region   string `json:"region"`
+	Country  string `json:"country"`
+	Loc      string `json:"loc"`
+	Org      string `json:"org"`
+	Postal   string `json:"postal"`
+	Timezone string `json:"timezone"`
+	Readme   string `json:"readme"`
+}
 
 type AuthLoginParams struct {
 	Logon    string `form:"logon"`
@@ -49,17 +64,28 @@ func AuthLogin(c *fiber.Ctx) error {
 	}
 	token := base64.StdEncoding.EncodeToString(randomBytes)
 
+	// Fetch ip info
+	var ipInfo IPInfo
+	utils.FetchJson("https://ipinfo.io/"+c.IP()+"/json", &ipInfo)
+
 	// Create new session
 	agent := utils.ParseUserAgent(c)
-	models.SessionModel().Create(database.Map{
+	session := database.Map{
 		"user_id":        user.ID,
 		"token":          token,
-		"ip":             c.IP(),
+		"ip":             ipInfo.IP,
 		"client_os":      &agent.OS,
 		"client_name":    &agent.Name,
 		"client_version": &agent.Version,
 		"expires_at":     time.Now().Add(365 * 24 * 60 * 60 * time.Second),
-	})
+	}
+	if !ipInfo.Bogon {
+		session["ip_latitude"] = strings.Split(ipInfo.Loc, ",")[0]
+		session["ip_longitude"] = strings.Split(ipInfo.Loc, ",")[1]
+		session["ip_country"] = ipInfo.Country
+		session["ip_city"] = ipInfo.City
+	}
+	models.SessionModel().Create(session)
 
 	// Return response
 	return c.JSON(fiber.Map{
@@ -84,6 +110,7 @@ func AuthValidate(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{
 			"success":             true,
 			"user":                authUser,
+			"session":             session,
 			"agent":               agent,
 			"last_track":          models.TrackModel(c).With("artists", "album").Find(lastTackplay.TrackID),
 			"last_track_position": lastTackplay.Position,
@@ -94,6 +121,7 @@ func AuthValidate(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{
 		"success": true,
 		"user":    authUser,
+		"session": session,
 		"agent":   agent,
 	})
 }

@@ -1,6 +1,8 @@
 <script>
     export let data;
-    const { token, authUser } = data;
+    let { token, authUser, currentSession, sessions } = data;
+
+    // Change details
     let newPassword = "";
 
     async function changeDetails() {
@@ -26,6 +28,7 @@
         }
     }
 
+    // Change avatar
     let avatarInput;
 
     async function changeAvatar() {
@@ -72,6 +75,48 @@
             window.location = "/settings";
         } else {
             alert("Error!");
+        }
+    }
+
+    // Sessions management
+    async function fetchSessionsPage(page) {
+        const response = await fetch(
+            `${import.meta.env.VITE_API_URL}/sessions?${new URLSearchParams({
+                page,
+            })}`,
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            }
+        );
+        const { data: newSessions, pagination } = await response.json();
+        sessions.push(...newSessions);
+        sessions = sessions;
+        if (sessions.length != pagination.total) {
+            fetchPage(page + 1);
+        }
+    }
+    if (sessions.length != data.sessionsTotal) {
+        fetchSessionsPage(2);
+    }
+
+    function updateSessions() {
+        sessions = [];
+        fetchSessionsPage(1);
+    }
+
+    async function revokeSession(session) {
+        fetch(`${import.meta.env.VITE_API_URL}/sessions/${session.id}/revoke`, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+        if (currentSession.id == session.id) {
+            document.cookie = `token=; expires=${new Date(0).toUTCString()}`;
+            window.location = "/auth/login";
+        } else {
+            updateSessions();
         }
     }
 </script>
@@ -171,7 +216,9 @@
                         id="avatar"
                         bind:this={avatarInput}
                     />
-                    <p class="help">You can upload an squared .jpg or .png image</p>
+                    <p class="help">
+                        You can upload an squared .jpg or .png image
+                    </p>
                 </div>
             </div>
 
@@ -192,5 +239,54 @@
                 </div>
             </div>
         </form>
+    </div>
+</div>
+
+<!-- Sessions management -->
+<div class="box">
+    <h3 class="title is-4">Sessions management</h3>
+
+    <div class="columns is-multiline">
+        {#each sessions as session}
+            {#if new Date(session.expires_at).getTime() >= Date.now()}
+                <div class="column is-half">
+                    <div class="box content">
+                        <h3 class="title is-4">
+                            {session.client_name} on {session.client_os}
+                            {#if currentSession.id == session.id}
+                                <span class="tag is-link is-pulled-right"
+                                    >CURRENT</span
+                                >
+                            {/if}
+                        </h3>
+                        <p>
+                            With {session.ip} at
+                            {#if session.ip_city != null && session.ip_country != null}
+                                {session.ip_city}, {session.ip_country}
+                            {:else}
+                                Unknown location
+                            {/if}
+                        </p>
+                        <p>
+                            Created at: {new Date(
+                                session.created_at
+                            ).toLocaleString()}
+                        </p>
+                        <p>
+                            Expires at: {new Date(
+                                session.expires_at
+                            ).toLocaleString()}
+                        </p>
+                        <div class="buttons">
+                            <button
+                                class="button is-danger"
+                                on:click={() => revokeSession(session)}
+                                >Revoke session</button
+                            >
+                        </div>
+                    </div>
+                </div>
+            {/if}
+        {/each}
     </div>
 </div>

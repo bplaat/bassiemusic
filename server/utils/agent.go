@@ -29,5 +29,14 @@ func ParseUserAgent(c *fiber.Ctx) Agent {
 
 	// Parse browser agent
 	parsedAgent := useragent.Parse(agent)
+	if parsedAgent.OS == "" {
+		parsedAgent.OS = "?"
+	}
+	if parsedAgent.Name == "" {
+		parsedAgent.Name = "?"
+	}
+	if parsedAgent.Version == "" {
+		parsedAgent.Version = "?"
+	}
 	return Agent{parsedAgent.OS, parsedAgent.Name, parsedAgent.Version}
 }
