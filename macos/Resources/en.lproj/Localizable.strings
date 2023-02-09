@@ -1,0 +1,6 @@
+"app_name" = "BassieMusic";
+"menu_about" = "About BassieMusic";
+"menu_quit" = "Quit BassieMusic";
+"webview_url" = "http://localhost:5173/";
+"about_title" = "About BassieMusic macOS App";
+"about_text" = "Made by PlaatSoft\nCopyright © 2022 - 2023 PlaatSoft";
