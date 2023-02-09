@@ -1,12 +1,37 @@
 <script>
+    import { page } from "$app/stores";
+    import { browser } from "$app/environment";
     import TracksTable from "../../../components/tracks-table.svelte";
 
     export let data;
-    const { token, album } = data;
+    let { token, album } = data;
     album.tracks = album.tracks.slice().map((track) => {
         track.album = album;
         return track;
     });
+
+    if (browser) {
+        page.subscribe(async (page) => {
+            if (
+                page.url.pathname.startsWith("/albums/") &&
+                page.url.pathname != `/albums/${album.id}`
+            ) {
+                const response = await fetch(
+                    `${import.meta.env.VITE_API_URL}/albums/${page.params.id}`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
+                    }
+                );
+                album = await response.json();
+                album.tracks = album.tracks.slice().map((track) => {
+                    track.album = album;
+                    return track;
+                });
+            }
+        });
+    }
 
     let tracksTable;
 

@@ -1,8 +1,29 @@
 <script>
+    import { page } from "$app/stores";
+    import { browser } from "$app/environment";
     import AlbumCard from "../../../components/album-card.svelte";
 
     export let data;
-    const { genre } = data;
+    let { token, genre } = data;
+
+    if (browser) {
+        page.subscribe(async (page) => {
+            if (
+                page.url.pathname.startsWith("/genres/") &&
+                page.url.pathname != `/genres/${genre.id}`
+            ) {
+                const response = await fetch(
+                    `${import.meta.env.VITE_API_URL}/genres/${page.params.id}`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
+                    }
+                );
+                genre = await response.json();
+            }
+        });
+    }
 </script>
 
 <svelte:head>
