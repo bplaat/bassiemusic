@@ -1,11 +1,12 @@
 #define UNICODE
-#include <windows.h>
-#include <shlobj.h>
 #include <objbase.h>
+#include <shlobj.h>
+#include <windows.h>
 #define COBJMACROS
 #include <wincodec.h>
-#include "WebView2.h"
+
 #include "../res/resource.h"
+#include "WebView2.h"
 
 #define ID_MENU_ABOUT 2
 #define WINDOW_STYLE WS_OVERLAPPEDWINDOW
@@ -20,13 +21,9 @@ UINT about_window_dpi;
 HBITMAP about_image;
 
 // Standard C Library wrapper functions
-void *malloc(size_t size) {
-    return HeapAlloc(GetProcessHeap(), 0, size);
-}
+void *malloc(size_t size) { return HeapAlloc(GetProcessHeap(), 0, size); }
 
-void free(void *ptr) {
-    HeapFree(GetProcessHeap(), 0, ptr);
-}
+void free(void *ptr) { HeapFree(GetProcessHeap(), 0, ptr); }
 
 size_t wcslen(const wchar_t *string) {
     wchar_t *c = (wchar_t *)string;
@@ -36,7 +33,8 @@ size_t wcslen(const wchar_t *string) {
 
 wchar_t *wcscpy(wchar_t *dest, const wchar_t *src) {
     wchar_t *start = dest;
-    while ((*dest++ = *src++) != '\0');
+    while ((*dest++ = *src++) != '\0')
+        ;
     return start;
 }
 
@@ -50,9 +48,12 @@ wchar_t *wcscat(wchar_t *dest, const wchar_t *src) {
 // Helper functions
 #define DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1 19
 #define DWMWA_USE_IMMERSIVE_DARK_MODE 20
-typedef HRESULT (STDMETHODCALLTYPE *_DwmSetWindowAttribute)(HWND hwnd, DWORD dwAttribute, LPCVOID pvAttribute, DWORD cbAttribute);
+typedef HRESULT(STDMETHODCALLTYPE *_DwmSetWindowAttribute)(HWND hwnd, DWORD dwAttribute, LPCVOID pvAttribute,
+                                                           DWORD cbAttribute);
 
-typedef HRESULT (STDMETHODCALLTYPE *_CreateCoreWebView2EnvironmentWithOptions)(PCWSTR browserExecutableFolder, PCWSTR userDataFolder, ICoreWebView2EnvironmentOptions *environmentOptions, ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler *environmentCreatedHandler);
+typedef HRESULT(STDMETHODCALLTYPE *_CreateCoreWebView2EnvironmentWithOptions)(
+    PCWSTR browserExecutableFolder, PCWSTR userDataFolder, ICoreWebView2EnvironmentOptions *environmentOptions,
+    ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler *environmentCreatedHandler);
 
 UINT GetPrimaryDesktopDpi(void) {
     HDC hdc = GetDC(HWND_DESKTOP);
@@ -61,37 +62,38 @@ UINT GetPrimaryDesktopDpi(void) {
     return dpi;
 }
 
-typedef BOOL (STDMETHODCALLTYPE *_AdjustWindowRectExForDpi)(RECT *lpRect, DWORD dwStyle, BOOL bMenu, DWORD dwExStyle, UINT dpi);
+typedef BOOL(STDMETHODCALLTYPE *_AdjustWindowRectExForDpi)(RECT *lpRect, DWORD dwStyle, BOOL bMenu, DWORD dwExStyle,
+                                                           UINT dpi);
 
 BOOL AdjustWindowRectExForDpi(RECT *lpRect, DWORD dwStyle, BOOL bMenu, DWORD dwExStyle, UINT dpi) {
     HMODULE huser32 = LoadLibrary(L"user32.dll");
-    _AdjustWindowRectExForDpi AdjustWindowRectExForDpi = (_AdjustWindowRectExForDpi)GetProcAddress(huser32, "AdjustWindowRectExForDpi");
+    _AdjustWindowRectExForDpi AdjustWindowRectExForDpi =
+        (_AdjustWindowRectExForDpi)GetProcAddress(huser32, "AdjustWindowRectExForDpi");
     if (AdjustWindowRectExForDpi) {
         return AdjustWindowRectExForDpi(lpRect, dwStyle, bMenu, dwExStyle, dpi);
     }
     return AdjustWindowRectEx(lpRect, dwStyle, bMenu, dwExStyle);
 }
 
-WINDOWPLACEMENT previousPlacement = { sizeof(previousPlacement) };
+WINDOWPLACEMENT previousPlacement = {sizeof(previousPlacement)};
 
 void SetWindowFullscreen(HWND hwnd, BOOL enabled) {
     DWORD dwStyle = GetWindowLong(hwnd, GWL_STYLE);
     if (enabled) {
-        MONITORINFO monitorInfo = { sizeof(monitorInfo) };
-        if (
-            GetWindowPlacement(hwnd, &previousPlacement) &&
-            GetMonitorInfo(MonitorFromWindow(hwnd, MONITOR_DEFAULTTOPRIMARY), &monitorInfo)
-        ) {
+        MONITORINFO monitorInfo = {sizeof(monitorInfo)};
+        if (GetWindowPlacement(hwnd, &previousPlacement) &&
+            GetMonitorInfo(MonitorFromWindow(hwnd, MONITOR_DEFAULTTOPRIMARY), &monitorInfo)) {
             SetWindowLong(hwnd, GWL_STYLE, dwStyle & ~WS_OVERLAPPEDWINDOW);
             SetWindowPos(hwnd, HWND_TOP, monitorInfo.rcMonitor.left, monitorInfo.rcMonitor.top,
-                monitorInfo.rcMonitor.right - monitorInfo.rcMonitor.left,
-                monitorInfo.rcMonitor.bottom - monitorInfo.rcMonitor.top,
-                SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
+                         monitorInfo.rcMonitor.right - monitorInfo.rcMonitor.left,
+                         monitorInfo.rcMonitor.bottom - monitorInfo.rcMonitor.top,
+                         SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
         }
     } else {
         SetWindowLong(hwnd, GWL_STYLE, dwStyle | WS_OVERLAPPEDWINDOW);
         SetWindowPlacement(hwnd, &previousPlacement);
-        SetWindowPos(hwnd, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
+        SetWindowPos(hwnd, NULL, 0, 0, 0, 0,
+                     SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
     }
 }
 
@@ -104,17 +106,19 @@ wchar_t *GetString(UINT id) {
 HBITMAP LoadPNGFromResource(wchar_t *type, wchar_t *name) {
     HRSRC hsrc = FindResourceW(NULL, name, type);
 
-    CLSID CLSID_WICImagingFactory = { 0xcacaf262, 0x9370, 0x4615, { 0xa1, 0x3b, 0x9f, 0x55, 0x39, 0xda, 0x4c, 0x0a } };
-    IID IID_IWICImagingFactory = { 0xec5ec8a9, 0xc395, 0x4314, { 0x9c, 0x77, 0x54, 0xd7, 0xa9, 0x35, 0xff, 0x70 } };
+    CLSID CLSID_WICImagingFactory = {0xcacaf262, 0x9370, 0x4615, {0xa1, 0x3b, 0x9f, 0x55, 0x39, 0xda, 0x4c, 0x0a}};
+    IID IID_IWICImagingFactory = {0xec5ec8a9, 0xc395, 0x4314, {0x9c, 0x77, 0x54, 0xd7, 0xa9, 0x35, 0xff, 0x70}};
     IWICImagingFactory *wicFactory;
-    CoCreateInstance(&CLSID_WICImagingFactory, NULL, CLSCTX_INPROC_SERVER, &IID_IWICImagingFactory, (void **)&wicFactory);
+    CoCreateInstance(&CLSID_WICImagingFactory, NULL, CLSCTX_INPROC_SERVER, &IID_IWICImagingFactory,
+                     (void **)&wicFactory);
 
     IWICStream *wicStream;
     IWICImagingFactory_CreateStream(wicFactory, &wicStream);
     IWICStream_InitializeFromMemory(wicStream, LockResource(LoadResource(NULL, hsrc)), SizeofResource(NULL, hsrc));
 
     IWICBitmapDecoder *wicDecoder;
-    IWICImagingFactory_CreateDecoderFromStream(wicFactory, (IStream *)wicStream, NULL, WICDecodeMetadataCacheOnDemand, &wicDecoder);
+    IWICImagingFactory_CreateDecoderFromStream(wicFactory, (IStream *)wicStream, NULL, WICDecodeMetadataCacheOnDemand,
+                                               &wicDecoder);
 
     IWICBitmapFrameDecode *wicFrame;
     IWICBitmapDecoder_GetFrame(wicDecoder, 0, &wicFrame);
@@ -123,10 +127,11 @@ HBITMAP LoadPNGFromResource(wchar_t *type, wchar_t *name) {
 
     IWICFormatConverter *wicConverter;
     IWICImagingFactory_CreateFormatConverter(wicFactory, &wicConverter);
-    GUID GUID_WICPixelFormat24bppBGR = { 0x6fddc324, 0x4e03, 0x4bfe, { 0xb1, 0x85, 0x3d, 0x77, 0x76, 0x8d, 0xc9, 0x0c } };
-    IWICFormatConverter_Initialize(wicConverter, (IWICBitmapSource *)wicFrame, &GUID_WICPixelFormat24bppBGR, WICBitmapDitherTypeNone, NULL, 0, WICBitmapPaletteTypeCustom);
+    GUID GUID_WICPixelFormat24bppBGR = {0x6fddc324, 0x4e03, 0x4bfe, {0xb1, 0x85, 0x3d, 0x77, 0x76, 0x8d, 0xc9, 0x0c}};
+    IWICFormatConverter_Initialize(wicConverter, (IWICBitmapSource *)wicFrame, &GUID_WICPixelFormat24bppBGR,
+                                   WICBitmapDitherTypeNone, NULL, 0, WICBitmapPaletteTypeCustom);
 
-    IID IID_IWICBitmapSource = { 0x00000120, 0xa8f2, 0x4877, { 0xba, 0x0a, 0xfd, 0x2b, 0x66, 0x45, 0xfb, 0x94 } };
+    IID IID_IWICBitmapSource = {0x00000120, 0xa8f2, 0x4877, {0xba, 0x0a, 0xfd, 0x2b, 0x66, 0x45, 0xfb, 0x94}};
     IWICBitmapSource *wicConvertedSource;
     IWICFormatConverter_QueryInterface(wicConverter, &IID_IWICBitmapSource, (void **)&wicConvertedSource);
 
@@ -203,13 +208,9 @@ HRESULT STDMETHODCALLTYPE Unknown_QueryInterface(IUnknown *This, REFIID riid, vo
     return E_NOINTERFACE;
 }
 
-ULONG STDMETHODCALLTYPE Unknown_AddRef(IUnknown *This) {
-    return E_NOTIMPL;
-}
+ULONG STDMETHODCALLTYPE Unknown_AddRef(IUnknown *This) { return E_NOTIMPL; }
 
-ULONG STDMETHODCALLTYPE Unknown_Release(IUnknown *This) {
-    return E_NOTIMPL;
-}
+ULONG STDMETHODCALLTYPE Unknown_Release(IUnknown *This) { return E_NOTIMPL; }
 
 // Forward interface reference
 ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandlerVtbl EnvironmentCompletedHandlerVtbl;
@@ -217,25 +218,30 @@ ICoreWebView2NewWindowRequestedEventHandlerVtbl NewWindowRequestedHandlerVtbl;
 ICoreWebView2CreateCoreWebView2ControllerCompletedHandlerVtbl ControllerCompletedHandlerVtbl;
 
 // ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler
-HRESULT STDMETHODCALLTYPE EnvironmentCompletedHandler_Invoke(ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler *This, HRESULT result, ICoreWebView2Environment *created_environment) {
+HRESULT STDMETHODCALLTYPE
+EnvironmentCompletedHandler_Invoke(ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler *This, HRESULT result,
+                                   ICoreWebView2Environment *created_environment) {
     if (FAILED(result)) {
         FatalError(L"Failed to create ICoreWebView2Environment");
     }
-    ICoreWebView2CreateCoreWebView2ControllerCompletedHandler *controllerCompletedHandler = malloc(sizeof(ICoreWebView2CreateCoreWebView2ControllerCompletedHandler));
+    ICoreWebView2CreateCoreWebView2ControllerCompletedHandler *controllerCompletedHandler =
+        malloc(sizeof(ICoreWebView2CreateCoreWebView2ControllerCompletedHandler));
     controllerCompletedHandler->lpVtbl = &ControllerCompletedHandlerVtbl;
     ICoreWebView2Environment_CreateCoreWebView2Controller(created_environment, window_hwnd, controllerCompletedHandler);
     return S_OK;
 }
 
 ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandlerVtbl EnvironmentCompletedHandlerVtbl = {
-    (HRESULT (STDMETHODCALLTYPE *)(ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler *This, REFIID riid, void **ppvObject))Unknown_QueryInterface,
-    (ULONG (STDMETHODCALLTYPE *)(ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler *This))Unknown_AddRef,
-    (ULONG (STDMETHODCALLTYPE *)(ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler *This))Unknown_Release,
-    EnvironmentCompletedHandler_Invoke
-};
+    (HRESULT(STDMETHODCALLTYPE *)(ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler * This, REFIID riid,
+                                  void **ppvObject)) Unknown_QueryInterface,
+    (ULONG(STDMETHODCALLTYPE *)(ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler * This)) Unknown_AddRef,
+    (ULONG(STDMETHODCALLTYPE *)(ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler * This)) Unknown_Release,
+    EnvironmentCompletedHandler_Invoke};
 
 // ICoreWebView2AcceleratorKeyPressedEventHandler
-HRESULT STDMETHODCALLTYPE AcceleratorKeyPressedHandler_Invoke(ICoreWebView2AcceleratorKeyPressedEventHandler *This, ICoreWebView2Controller *sender, ICoreWebView2AcceleratorKeyPressedEventArgs *args) {
+HRESULT STDMETHODCALLTYPE AcceleratorKeyPressedHandler_Invoke(ICoreWebView2AcceleratorKeyPressedEventHandler *This,
+                                                              ICoreWebView2Controller *sender,
+                                                              ICoreWebView2AcceleratorKeyPressedEventArgs *args) {
     COREWEBVIEW2_KEY_EVENT_KIND state;
     ICoreWebView2AcceleratorKeyPressedEventArgs_get_KeyEventKind(args, &state);
     UINT key;
@@ -247,14 +253,16 @@ HRESULT STDMETHODCALLTYPE AcceleratorKeyPressedHandler_Invoke(ICoreWebView2Accel
 }
 
 ICoreWebView2AcceleratorKeyPressedEventHandlerVtbl AcceleratorKeyPressedHandlerVtbl = {
-    (HRESULT (STDMETHODCALLTYPE *)(ICoreWebView2AcceleratorKeyPressedEventHandler *This, REFIID riid, void **ppvObject))Unknown_QueryInterface,
-    (ULONG (STDMETHODCALLTYPE *)(ICoreWebView2AcceleratorKeyPressedEventHandler *This))Unknown_AddRef,
-    (ULONG (STDMETHODCALLTYPE *)(ICoreWebView2AcceleratorKeyPressedEventHandler *This))Unknown_Release,
-    AcceleratorKeyPressedHandler_Invoke
-};
+    (HRESULT(STDMETHODCALLTYPE *)(ICoreWebView2AcceleratorKeyPressedEventHandler * This, REFIID riid, void **ppvObject))
+        Unknown_QueryInterface,
+    (ULONG(STDMETHODCALLTYPE *)(ICoreWebView2AcceleratorKeyPressedEventHandler * This)) Unknown_AddRef,
+    (ULONG(STDMETHODCALLTYPE *)(ICoreWebView2AcceleratorKeyPressedEventHandler * This)) Unknown_Release,
+    AcceleratorKeyPressedHandler_Invoke};
 
 // ICoreWebView2NewWindowRequestedEventHandler
-HRESULT STDMETHODCALLTYPE NewWindowRequestedHandler_Invoke(ICoreWebView2NewWindowRequestedEventHandler *This, ICoreWebView2 *sender, ICoreWebView2NewWindowRequestedEventArgs *args) {
+HRESULT STDMETHODCALLTYPE NewWindowRequestedHandler_Invoke(ICoreWebView2NewWindowRequestedEventHandler *This,
+                                                           ICoreWebView2 *sender,
+                                                           ICoreWebView2NewWindowRequestedEventArgs *args) {
     ICoreWebView2NewWindowRequestedEventArgs_put_Handled(args, TRUE);
     wchar_t *url;
     ICoreWebView2NewWindowRequestedEventArgs_get_Uri(args, &url);
@@ -263,14 +271,16 @@ HRESULT STDMETHODCALLTYPE NewWindowRequestedHandler_Invoke(ICoreWebView2NewWindo
 }
 
 ICoreWebView2NewWindowRequestedEventHandlerVtbl NewWindowRequestedHandlerVtbl = {
-    (HRESULT (STDMETHODCALLTYPE *)(ICoreWebView2NewWindowRequestedEventHandler *This, REFIID riid, void **ppvObject))Unknown_QueryInterface,
-    (ULONG (STDMETHODCALLTYPE *)(ICoreWebView2NewWindowRequestedEventHandler *This))Unknown_AddRef,
-    (ULONG (STDMETHODCALLTYPE *)(ICoreWebView2NewWindowRequestedEventHandler *This))Unknown_Release,
-    NewWindowRequestedHandler_Invoke
-};
+    (HRESULT(STDMETHODCALLTYPE *)(ICoreWebView2NewWindowRequestedEventHandler * This, REFIID riid, void **ppvObject))
+        Unknown_QueryInterface,
+    (ULONG(STDMETHODCALLTYPE *)(ICoreWebView2NewWindowRequestedEventHandler * This)) Unknown_AddRef,
+    (ULONG(STDMETHODCALLTYPE *)(ICoreWebView2NewWindowRequestedEventHandler * This)) Unknown_Release,
+    NewWindowRequestedHandler_Invoke};
 
 // ICoreWebView2CreateCoreWebView2ControllerCompletedHandler
-HRESULT STDMETHODCALLTYPE ControllerCompletedHandler_Invoke(ICoreWebView2CreateCoreWebView2ControllerCompletedHandler *This, HRESULT result, ICoreWebView2Controller *new_controller) {
+HRESULT STDMETHODCALLTYPE
+ControllerCompletedHandler_Invoke(ICoreWebView2CreateCoreWebView2ControllerCompletedHandler *This, HRESULT result,
+                                  ICoreWebView2Controller *new_controller) {
     if (FAILED(result)) {
         FatalError(L"Failed to create ICoreWebView2Controller");
     }
@@ -278,7 +288,8 @@ HRESULT STDMETHODCALLTYPE ControllerCompletedHandler_Invoke(ICoreWebView2CreateC
     ICoreWebView2Controller_AddRef(controller);
     ICoreWebView2Controller_get_CoreWebView2(controller, &webview2);
 
-    ICoreWebView2AcceleratorKeyPressedEventHandler *newAcceleratorKeyPressedHandler = malloc(sizeof(ICoreWebView2AcceleratorKeyPressedEventHandler));
+    ICoreWebView2AcceleratorKeyPressedEventHandler *newAcceleratorKeyPressedHandler =
+        malloc(sizeof(ICoreWebView2AcceleratorKeyPressedEventHandler));
     newAcceleratorKeyPressedHandler->lpVtbl = &AcceleratorKeyPressedHandlerVtbl;
     ICoreWebView2Controller_add_AcceleratorKeyPressed(controller, newAcceleratorKeyPressedHandler, NULL);
 
@@ -296,7 +307,8 @@ HRESULT STDMETHODCALLTYPE ControllerCompletedHandler_Invoke(ICoreWebView2CreateC
     ICoreWebView2Settings_put_IsStatusBarEnabled(settings, FALSE);
     ICoreWebView2Settings_Release(settings);
 
-    ICoreWebView2NewWindowRequestedEventHandler *newWindowRequestedHandler = malloc(sizeof(ICoreWebView2NewWindowRequestedEventHandler));
+    ICoreWebView2NewWindowRequestedEventHandler *newWindowRequestedHandler =
+        malloc(sizeof(ICoreWebView2NewWindowRequestedEventHandler));
     newWindowRequestedHandler->lpVtbl = &NewWindowRequestedHandlerVtbl;
     ICoreWebView2_add_NewWindowRequested(webview2, newWindowRequestedHandler, NULL);
 
@@ -306,9 +318,10 @@ HRESULT STDMETHODCALLTYPE ControllerCompletedHandler_Invoke(ICoreWebView2CreateC
 }
 
 ICoreWebView2CreateCoreWebView2ControllerCompletedHandlerVtbl ControllerCompletedHandlerVtbl = {
-    (HRESULT (STDMETHODCALLTYPE *)(ICoreWebView2CreateCoreWebView2ControllerCompletedHandler *This, REFIID riid, void **ppvObject))Unknown_QueryInterface,
-    (ULONG (STDMETHODCALLTYPE *)(ICoreWebView2CreateCoreWebView2ControllerCompletedHandler *This))Unknown_AddRef,
-    (ULONG (STDMETHODCALLTYPE *)(ICoreWebView2CreateCoreWebView2ControllerCompletedHandler *This))Unknown_Release,
+    (HRESULT(STDMETHODCALLTYPE *)(ICoreWebView2CreateCoreWebView2ControllerCompletedHandler * This, REFIID riid,
+                                  void **ppvObject)) Unknown_QueryInterface,
+    (ULONG(STDMETHODCALLTYPE *)(ICoreWebView2CreateCoreWebView2ControllerCompletedHandler * This)) Unknown_AddRef,
+    (ULONG(STDMETHODCALLTYPE *)(ICoreWebView2CreateCoreWebView2ControllerCompletedHandler * This)) Unknown_Release,
     ControllerCompletedHandler_Invoke,
 };
 
@@ -325,7 +338,7 @@ LRESULT WINAPI AboutWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         about_window_dpi = HIWORD(wParam);
         RECT *window_rect = (RECT *)lParam;
         SetWindowPos(hwnd, NULL, window_rect->left, window_rect->top, window_rect->right - window_rect->left,
-            window_rect->bottom - window_rect->top, SWP_NOZORDER | SWP_NOACTIVATE);
+                     window_rect->bottom - window_rect->top, SWP_NOZORDER | SWP_NOACTIVATE);
         return 0;
     }
 
@@ -348,7 +361,7 @@ LRESULT WINAPI AboutWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
         // Draw background color
         HBRUSH brush = CreateSolidBrush(0x0a0a0a);
-        RECT rect = { 0, 0, clientRect.right, clientRect.bottom };
+        RECT rect = {0, 0, clientRect.right, clientRect.bottom};
         FillRect(hdcBuffer, &rect, brush);
         DeleteObject(brush);
 
@@ -357,32 +370,38 @@ LRESULT WINAPI AboutWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         SelectObject(hdcImage, about_image);
         SetStretchBltMode(hdcBuffer, STRETCH_HALFTONE);
         StretchBlt(hdcBuffer, MulDiv(16, about_window_dpi, 96), MulDiv(16 + 16, about_window_dpi, 96),
-            MulDiv(128, about_window_dpi, 96), MulDiv(128, about_window_dpi, 96), hdcImage, 0, 0, 256, 256, SRCCOPY);
+                   MulDiv(128, about_window_dpi, 96), MulDiv(128, about_window_dpi, 96), hdcImage, 0, 0, 256, 256,
+                   SRCCOPY);
         DeleteDC(hdcImage);
 
         // Draw about title
-        HFONT titleFont = CreateFont(MulDiv(32, about_window_dpi, 96), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
-            OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, L"Segoe UI");
+        HFONT titleFont = CreateFont(MulDiv(32, about_window_dpi, 96), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+                                     ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY,
+                                     DEFAULT_PITCH | FF_DONTCARE, L"Segoe UI");
         SelectObject(hdcBuffer, titleFont);
         SetTextColor(hdcBuffer, 0xffffff);
-        TextOutW(hdcBuffer, MulDiv(16 + 128 + 24, about_window_dpi, 96), MulDiv(32, about_window_dpi, 96), GetString(ID_STRING_ABOUT_TITLE), wcslen(GetString(ID_STRING_ABOUT_TITLE)));
+        TextOutW(hdcBuffer, MulDiv(16 + 128 + 24, about_window_dpi, 96), MulDiv(32, about_window_dpi, 96),
+                 GetString(ID_STRING_ABOUT_TITLE), wcslen(GetString(ID_STRING_ABOUT_TITLE)));
         DeleteObject(titleFont);
 
         // Draw about text
         UINT app_version[4];
         GetAppVersion(app_version);
         wchar_t about_text[512];
-        wsprintf(about_text, GetString(ID_STRING_ABOUT_TEXT_FORMAT), app_version[0], app_version[1], app_version[2], app_version[3]);
+        wsprintf(about_text, GetString(ID_STRING_ABOUT_TEXT_FORMAT), app_version[0], app_version[1], app_version[2],
+                 app_version[3]);
 
-        HFONT textFont = CreateFont(MulDiv(20, about_window_dpi, 96), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
-            OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, L"Segoe UI");
+        HFONT textFont = CreateFont(MulDiv(20, about_window_dpi, 96), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+                                    ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY,
+                                    DEFAULT_PITCH | FF_DONTCARE, L"Segoe UI");
         SelectObject(hdcBuffer, textFont);
-        int y =32 + 32 + 16;
+        int y = 32 + 32 + 16;
         wchar_t *c = about_text;
         for (;;) {
             wchar_t *lineStart = c;
             while (*c != '\n' && *c != '\0') c++;
-            TextOutW(hdcBuffer, MulDiv(16 + 128 + 24, about_window_dpi, 96), MulDiv(y, about_window_dpi, 96), lineStart, c - lineStart);
+            TextOutW(hdcBuffer, MulDiv(16 + 128 + 24, about_window_dpi, 96), MulDiv(y, about_window_dpi, 96), lineStart,
+                     c - lineStart);
             if (*c == '\0') break;
             c++;
             y += 20 + 8;
@@ -414,10 +433,12 @@ void OpenAboutWindow(void) {
     wc.style = CS_HREDRAW | CS_VREDRAW;
     wc.lpfnWndProc = AboutWndProc;
     wc.hInstance = instance;
-    wc.hIcon = (HICON)LoadImage(instance, MAKEINTRESOURCE(ID_ICON_APP), IMAGE_ICON, 0, 0, LR_DEFAULTSIZE | LR_DEFAULTCOLOR | LR_SHARED);
+    wc.hIcon = (HICON)LoadImage(instance, MAKEINTRESOURCE(ID_ICON_APP), IMAGE_ICON, 0, 0,
+                                LR_DEFAULTSIZE | LR_DEFAULTCOLOR | LR_SHARED);
     wc.hCursor = LoadCursor(NULL, IDC_ARROW);
     wc.lpszClassName = L"bassiemusic-about";
-    wc.hIconSm = (HICON)LoadImage(instance, MAKEINTRESOURCE(ID_ICON_APP), IMAGE_ICON, GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), LR_DEFAULTCOLOR | LR_SHARED);
+    wc.hIconSm = (HICON)LoadImage(instance, MAKEINTRESOURCE(ID_ICON_APP), IMAGE_ICON, GetSystemMetrics(SM_CXSMICON),
+                                  GetSystemMetrics(SM_CYSMICON), LR_DEFAULTCOLOR | LR_SHARED);
     RegisterClassEx(&wc);
 
     // Create centered window
@@ -430,14 +451,14 @@ void OpenAboutWindow(void) {
     window_rect.right = window_rect.left + window_width;
     window_rect.bottom = window_rect.top + window_height;
     AdjustWindowRectExForDpi(&window_rect, ABOUT_WINDOW_STYLE, FALSE, 0, about_window_dpi);
-    HWND hwnd = CreateWindowEx(0, wc.lpszClassName, GetString(ID_STRING_ABOUT_TITLE),
-        ABOUT_WINDOW_STYLE, window_rect.left, window_rect.top,
-        window_rect.right - window_rect.left, window_rect.bottom - window_rect.top,
-        HWND_DESKTOP, NULL, instance, NULL);
+    HWND hwnd = CreateWindowEx(0, wc.lpszClassName, GetString(ID_STRING_ABOUT_TITLE), ABOUT_WINDOW_STYLE,
+                               window_rect.left, window_rect.top, window_rect.right - window_rect.left,
+                               window_rect.bottom - window_rect.top, HWND_DESKTOP, NULL, instance, NULL);
 
     // Enable dark window decoration
     HMODULE hdwmapi = LoadLibrary(L"dwmapi.dll");
-    _DwmSetWindowAttribute DwmSetWindowAttribute = (_DwmSetWindowAttribute)GetProcAddress(hdwmapi, "DwmSetWindowAttribute");
+    _DwmSetWindowAttribute DwmSetWindowAttribute =
+        (_DwmSetWindowAttribute)GetProcAddress(hdwmapi, "DwmSetWindowAttribute");
     if (DwmSetWindowAttribute != NULL) {
         BOOL enabled = TRUE;
         if (FAILED(DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &enabled, sizeof(BOOL)))) {
@@ -474,7 +495,7 @@ LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         window_dpi = HIWORD(wParam);
         RECT *window_rect = (RECT *)lParam;
         SetWindowPos(hwnd, NULL, window_rect->left, window_rect->top, window_rect->right - window_rect->left,
-            window_rect->bottom - window_rect->top, SWP_NOZORDER | SWP_NOACTIVATE);
+                     window_rect->bottom - window_rect->top, SWP_NOZORDER | SWP_NOACTIVATE);
         return 0;
     }
 
@@ -492,7 +513,7 @@ LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
     // Set window min size
     if (msg == WM_GETMINMAXINFO) {
-        RECT window_rect = { 0, 0, MulDiv(640, window_dpi, 96), MulDiv(480, window_dpi, 96) };
+        RECT window_rect = {0, 0, MulDiv(640, window_dpi, 96), MulDiv(480, window_dpi, 96)};
         AdjustWindowRectExForDpi(&window_rect, WINDOW_STYLE, FALSE, 0, window_dpi);
         MINMAXINFO *minMaxInfo = (MINMAXINFO *)lParam;
         minMaxInfo->ptMinTrackSize.x = window_rect.right - window_rect.left;
@@ -518,11 +539,13 @@ void _start(void) {
     wc.cbSize = sizeof(WNDCLASSEX);
     wc.lpfnWndProc = WndProc;
     wc.hInstance = instance;
-    wc.hIcon = (HICON)LoadImage(instance, MAKEINTRESOURCE(ID_ICON_APP), IMAGE_ICON, 0, 0, LR_DEFAULTSIZE | LR_DEFAULTCOLOR | LR_SHARED);
+    wc.hIcon = (HICON)LoadImage(instance, MAKEINTRESOURCE(ID_ICON_APP), IMAGE_ICON, 0, 0,
+                                LR_DEFAULTSIZE | LR_DEFAULTCOLOR | LR_SHARED);
     wc.hCursor = LoadCursor(NULL, IDC_ARROW);
     wc.hbrBackground = CreateSolidBrush(0x0a0a0a);
     wc.lpszClassName = L"bassiemusic";
-    wc.hIconSm = (HICON)LoadImage(instance, MAKEINTRESOURCE(ID_ICON_APP), IMAGE_ICON, GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), LR_DEFAULTCOLOR | LR_SHARED);
+    wc.hIconSm = (HICON)LoadImage(instance, MAKEINTRESOURCE(ID_ICON_APP), IMAGE_ICON, GetSystemMetrics(SM_CXSMICON),
+                                  GetSystemMetrics(SM_CYSMICON), LR_DEFAULTCOLOR | LR_SHARED);
     RegisterClassEx(&wc);
 
     // Create centered window
@@ -535,14 +558,14 @@ void _start(void) {
     window_rect.right = window_rect.left + window_width;
     window_rect.bottom = window_rect.top + window_height;
     AdjustWindowRectExForDpi(&window_rect, WINDOW_STYLE, FALSE, 0, window_dpi);
-    window_hwnd = CreateWindowEx(0, wc.lpszClassName, GetString(ID_STRING_APP_NAME),
-        WINDOW_STYLE, window_rect.left, window_rect.top,
-        window_rect.right - window_rect.left, window_rect.bottom - window_rect.top,
-        HWND_DESKTOP, NULL, instance, NULL);
+    window_hwnd = CreateWindowEx(0, wc.lpszClassName, GetString(ID_STRING_APP_NAME), WINDOW_STYLE, window_rect.left,
+                                 window_rect.top, window_rect.right - window_rect.left,
+                                 window_rect.bottom - window_rect.top, HWND_DESKTOP, NULL, instance, NULL);
 
     // Enable dark window decoration
     HMODULE hdwmapi = LoadLibrary(L"dwmapi.dll");
-    _DwmSetWindowAttribute DwmSetWindowAttribute = (_DwmSetWindowAttribute)GetProcAddress(hdwmapi, "DwmSetWindowAttribute");
+    _DwmSetWindowAttribute DwmSetWindowAttribute =
+        (_DwmSetWindowAttribute)GetProcAddress(hdwmapi, "DwmSetWindowAttribute");
     if (DwmSetWindowAttribute != NULL) {
         BOOL enabled = TRUE;
         if (FAILED(DwmSetWindowAttribute(window_hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &enabled, sizeof(BOOL)))) {
@@ -557,7 +580,8 @@ void _start(void) {
     // Load webview2 laoder
     HMODULE hWebview2Loader = LoadLibrary(L"WebView2Loader.dll");
     _CreateCoreWebView2EnvironmentWithOptions __CreateCoreWebView2EnvironmentWithOptions =
-        (_CreateCoreWebView2EnvironmentWithOptions)GetProcAddress(hWebview2Loader, "CreateCoreWebView2EnvironmentWithOptions");
+        (_CreateCoreWebView2EnvironmentWithOptions)GetProcAddress(hWebview2Loader,
+                                                                  "CreateCoreWebView2EnvironmentWithOptions");
     if (__CreateCoreWebView2EnvironmentWithOptions != NULL) {
         // Find app data path
         wchar_t appDataPath[MAX_PATH];
@@ -566,7 +590,8 @@ void _start(void) {
 
         // Init webview2 stuff
         SetEnvironmentVariable(L"WEBVIEW2_DEFAULT_BACKGROUND_COLOR", L"0a0a0a");
-        ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler *environmentCompletedHandler = malloc(sizeof(ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler));
+        ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler *environmentCompletedHandler =
+            malloc(sizeof(ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler));
         environmentCompletedHandler->lpVtbl = &EnvironmentCompletedHandlerVtbl;
         if (FAILED(__CreateCoreWebView2EnvironmentWithOptions(NULL, appDataPath, NULL, environmentCompletedHandler))) {
             FatalError(L"Failed to call CreateCoreWebView2EnvironmentWithOptions");
