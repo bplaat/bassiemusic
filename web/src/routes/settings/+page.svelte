@@ -79,7 +79,7 @@
         sessions.push(...newSessions);
         sessions = sessions;
         if (sessions.length != pagination.total) {
-            fetchPage(page + 1);
+            fetchSessionsPage(page + 1);
         }
     }
     if (sessions.length != data.sessionsTotal) {

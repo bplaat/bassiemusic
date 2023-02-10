@@ -9,18 +9,12 @@
 
     if (browser) {
         page.subscribe(async (page) => {
-            if (
-                page.url.pathname.startsWith('/artists/') &&
-                page.url.pathname != `/artists/${artist.id}`
-            ) {
-                const response = await fetch(
-                    `${import.meta.env.VITE_API_URL}/artists/${page.params.id}`,
-                    {
-                        headers: {
-                            Authorization: `Bearer ${token}`,
-                        },
-                    }
-                );
+            if (page.url.pathname.startsWith('/artists/') && page.url.pathname != `/artists/${artist.id}`) {
+                const response = await fetch(`${import.meta.env.VITE_API_URL}/artists/${page.params.id}`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
                 artist = await response.json();
             }
         });
@@ -29,16 +23,11 @@
     let topTracksTable;
 
     function likeArtist() {
-        fetch(
-            `${import.meta.env.VITE_API_URL}/artists/${artist.id}/like${
-                artist.liked ? '/delete' : ''
-            }`,
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            }
-        );
+        fetch(`${import.meta.env.VITE_API_URL}/artists/${artist.id}/like${artist.liked ? '/delete' : ''}`, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
         artist.liked = !artist.liked;
     }
 
@@ -58,9 +47,7 @@
 <div class="buttons">
     <button class="button" on:click={() => history.back()}>
         <svg class="icon" viewBox="0 0 24 24">
-            <path
-                d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z"
-            />
+            <path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" />
         </svg>
     </button>
 </div>
@@ -68,26 +55,15 @@
 <div class="columns">
     <div class="column is-one-quarter mr-5">
         <div class="box p-0">
-            <img
-                style="aspect-ratio: 1;"
-                src={artist.large_image}
-                alt="Image of artist {artist.name}"
-                loading="lazy"
-            />
+            <img style="aspect-ratio: 1;" src={artist.large_image} alt="Image of artist {artist.name}" loading="lazy" />
         </div>
     </div>
 
-    <div
-        class="column"
-        style="display: flex; flex-direction: column; justify-content: center;"
-    >
+    <div class="column" style="display: flex; flex-direction: column; justify-content: center;">
         <h2 class="title">{artist.name}</h2>
 
         <div class="buttons">
-            <button
-                class="button is-large"
-                on:click={topTracksTable.playFirstTrack}
-            >
+            <button class="button is-large" on:click={topTracksTable.playFirstTrack}>
                 <svg class="icon" viewBox="0 0 24 24">
                     <path d="M8,5.14V19.14L19,12.14L8,5.14Z" />
                 </svg>
@@ -122,31 +98,19 @@
         <ul>
             <li class:is-active={albumType == 'all'}>
                 <!-- svelte-ignore a11y-invalid-attribute -->
-                <a href="#" on:click|preventDefault={() => (albumType = 'all')}
-                    >All</a
-                >
+                <a href="#" on:click|preventDefault={() => (albumType = 'all')}>All</a>
             </li>
             <li class:is-active={albumType == 'album'}>
                 <!-- svelte-ignore a11y-invalid-attribute -->
-                <a
-                    href="#"
-                    on:click|preventDefault={() => (albumType = 'album')}
-                    >Albums</a
-                >
+                <a href="#" on:click|preventDefault={() => (albumType = 'album')}>Albums</a>
             </li>
             <li class:is-active={albumType == 'ep'}>
                 <!-- svelte-ignore a11y-invalid-attribute -->
-                <a href="#" on:click|preventDefault={() => (albumType = 'ep')}
-                    >EPs</a
-                >
+                <a href="#" on:click|preventDefault={() => (albumType = 'ep')}>EPs</a>
             </li>
             <li class:is-active={albumType == 'single'}>
                 <!-- svelte-ignore a11y-invalid-attribute -->
-                <a
-                    href="#"
-                    on:click|preventDefault={() => (albumType = 'single')}
-                    >Singles</a
-                >
+                <a href="#" on:click|preventDefault={() => (albumType = 'single')}>Singles</a>
             </li>
         </ul>
     </div>
@@ -154,9 +118,7 @@
     {#if filteredAlbums.length > 0}
         <div class="columns is-multiline is-mobile">
             {#each filteredAlbums as album}
-                <div
-                    class="column is-half-mobile is-one-third-tablet is-one-quarter-desktop is-one-fifth-widescreen"
-                >
+                <div class="column is-half-mobile is-one-third-tablet is-one-quarter-desktop is-one-fifth-widescreen">
                     <AlbumCard {album} />
                 </div>
             {/each}
