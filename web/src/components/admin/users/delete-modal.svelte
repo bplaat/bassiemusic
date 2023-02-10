@@ -35,6 +35,7 @@
     on:submit|preventDefault={deleteUser}
     style="z-index: 99999;"
 >
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div class="modal-background" on:click={close} />
     <div class="modal-card">
         <header class="modal-card-head">

@@ -80,9 +80,7 @@
             artists = data.artists;
             albums = data.albums;
             tracks = data.tracks;
-            if (data.genres.length > 0) {
-                genres = data.genres;
-            }
+            genres = data.genres;
         } else {
             genres = allGenres;
             hasResult = false;
@@ -100,7 +98,7 @@
 <h2 class="title">Search</h2>
 
 <form on:submit|preventDefault={search} class="field has-addons mb-5">
-    <div class="control">
+    <div class="control" style="width: 100%;">
         <input
             class="input"
             type="text"

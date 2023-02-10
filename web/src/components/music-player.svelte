@@ -307,10 +307,7 @@
 </script>
 
 {#if $musicPlayer.queue.length > 0}
-    <div
-        class="player-controls box m-0 p-0 pl-4 pr-5 has-background-white-bis"
-        style="display: flex; align-items: center;"
-    >
+    <div class="player-controls box m-0 p-0 pl-4 pr-5 has-background-white-bis">
         <div class="box m-0 p-0 mr-4">
             <img
                 style="width: 64px; height: 64px;"
