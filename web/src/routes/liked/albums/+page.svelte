@@ -1,4 +1,5 @@
 <script>
+    import { onMount,  onDestroy } from "svelte";
     import AlbumCard from "../../../components/album-card.svelte";
 
     export let data;
@@ -6,9 +7,7 @@
 
     async function fetchPage(page) {
         const response = await fetch(
-            `${import.meta.env.VITE_API_URL}/users/${
-                authUser.id
-            }/liked_albums?${new URLSearchParams({
+            `${import.meta.env.VITE_API_URL}/users/${authUser.id}/liked_albums?${new URLSearchParams({
                 page,
             })}`,
             {
@@ -17,15 +16,35 @@
                 },
             }
         );
-        const { data: newAlbums, pagination } = await response.json();
+        const { data: newAlbums } = await response.json();
         albums.push(...newAlbums);
         albums = albums;
-        if (albums.length != pagination.total) {
-            fetchPage(page + 1);
-        }
     }
+
+    let bottom;
     if (albums.length != data.total) {
-        fetchPage(2);
+        let observer;
+        onMount(() => {
+            let page = 2;
+            observer = new IntersectionObserver(
+                (entries, observer) => {
+                    for (const entry of entries) {
+                        if (albums.length >= data.total) {
+                            observer.unobserve(entry.target);
+                        } else {
+                            fetchPage(page++);
+                        }
+                    }
+                },
+                {
+                    root: document.body,
+                }
+            );
+            observer.observe(bottom);
+        });
+        onDestroy(() => {
+            observer.unobserve(bottom);
+        });
     }
 </script>
 
@@ -54,3 +73,5 @@
 {:else}
     <p>You have not liked any albums</p>
 {/if}
+
+<div bind:this={bottom} />

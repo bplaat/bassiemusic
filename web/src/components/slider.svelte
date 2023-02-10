@@ -1,12 +1,12 @@
 <script>
-    import { onMount, createEventDispatcher } from "svelte";
+    import { createEventDispatcher } from "svelte";
 
     export let maxValue;
     export let style;
 
     let thumb, slider, container;
 
-    function seekToValue(value, tempMaxValue) {
+    export function seekToValue(value, tempMaxValue) {
         if (tempMaxValue != undefined) {
             maxValue = tempMaxValue;
         }
@@ -20,45 +20,41 @@
         dispatch("newValue", { value: value });
     }
 
-    onMount(() => {
-        let drag = false;
-        function updateValue(event) {
-            let newThumbPosition =
-                event.pageX - container.getBoundingClientRect().left;
-            if (
-                newThumbPosition >= 0 &&
-                newThumbPosition <= container.offsetWidth
-            ) {
-                thumb.style.left = `${
-                    newThumbPosition - thumb.offsetWidth / 2
-                }px`;
-                slider.style.width = `${newThumbPosition}px`;
-                newValue(
-                    (parseInt(slider.style.width) / container.offsetWidth) *
-                        maxValue
-                );
-            }
-        }
-        container.addEventListener("mousedown", (event) => {
-            drag = true;
-            updateValue(event);
-        });
-        thumb.addEventListener("mousedown", (event) => {
-            drag = true;
-            updateValue(event);
-        });
-        window.addEventListener("mousemove", (event) => {
-            if (drag) updateValue(event);
-        });
-        window.addEventListener("mouseup", () => {
-            drag = false;
-        });
-    });
+    let drag = false;
 
-    export { seekToValue };
+    function updateValue(event) {
+        let newThumbPosition =
+            event.pageX - container.getBoundingClientRect().left;
+        if (
+            newThumbPosition >= 0 &&
+            newThumbPosition <= container.offsetWidth
+        ) {
+            thumb.style.left = `${newThumbPosition - thumb.offsetWidth / 2}px`;
+            slider.style.width = `${newThumbPosition}px`;
+            newValue(
+                (parseInt(slider.style.width) / container.offsetWidth) *
+                    maxValue
+            );
+        }
+    }
+
+    function onMousedown(event) {
+        drag = true;
+        updateValue(event);
+    }
+
+    function onMousemove(event) {
+        if (drag) updateValue(event);
+    }
+
+    function onMouseup() {
+        drag = false;
+    }
 </script>
 
-<div class="slider-container" style="{style};" bind:this={container}>
+<svelte:window on:mousemove|preventDefault={onMousemove} on:mouseup|preventDefault={onMouseup} />
+
+<div class="slider-container" style="{style};" bind:this={container} on:mousedown|preventDefault={onMousedown}>
     <div class="slider" bind:this={slider} />
-    <div class="slider-thumb" bind:this={thumb} />
+    <div class="slider-thumb" bind:this={thumb} on:mousedown|preventDefault={onMousedown} />
 </div>

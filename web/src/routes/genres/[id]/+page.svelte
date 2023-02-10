@@ -42,7 +42,14 @@
 
 <div class="columns">
     <div class="column is-one-quarter mr-5">
-        <div class="box is-image is-squared" style="background-image: url({genre.large_image});"></div>
+        <div class="box m-0">
+            <img
+                style="aspect-ratio: 1;"
+                src={genre.large_image}
+                alt="Image of genre {genre.name}"
+                loading="lazy"
+            />
+        </div>
     </div>
 
     <div

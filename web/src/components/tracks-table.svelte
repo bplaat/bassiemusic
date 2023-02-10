@@ -92,18 +92,19 @@
                 </td>
                 {#if showAlbum}
                     <td>
-                        <div
-                            class="box is-image m-0"
-                            style="width: 64px; height: 64px; background-image: url({track
-                                .album.small_cover});"
-                        />
+                        <div class="box m-0 p-0">
+                            <img
+                                style="width: 64px; height: 64px;"
+                                src={track.album.small_cover}
+                                alt="Cover of album {track.album}"
+                                loading="lazy"
+                            />
+                        </div>
                     </td>
                 {/if}
                 <td>
                     <p class="ellipsis mb-1" style="font-weight: 500;">
-                        <a href="/albums/{track.album.id}"
-                            >{track.title}</a
-                        >
+                        <a href="/albums/{track.album.id}">{track.title}</a>
                     </p>
                     <p class="ellipsis">
                         {#if track.explicit}

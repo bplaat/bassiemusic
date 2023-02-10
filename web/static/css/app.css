@@ -19,11 +19,10 @@ body.is-playing .sidebar{height:calc(100% - 6rem)}
 
 .column>.card{display:flex;flex-direction:column;height:100%;margin-bottom:0;overflow:hidden}
 .column>.card>.card-content{flex:1;margin-bottom:0}
-.card-image{padding-top:100%;background-size:cover;background-position:center center}
-.card-image-tags{position:absolute;top:.5rem;right:.5rem}
-
-.box.is-image{position:relative;padding:0;background-size:cover;background-position:center center}
-.box.is-squared{padding-top:100%}
+.card-image>img{aspect-ratio:1;background-color:#333}
+.box{overflow:hidden}.box>img{display:block}
+.has-image-tags{position:relative}
+.image-tags{position:absolute;top:.5rem;right:.5rem}
 
 .icon{display:block;width:24px;height:24px}.icon:not(.is-colored) path{fill:currentColor}
 .icon.is-inline{display:inline-block;vertical-align:middle;transform:translateY(-1px)}

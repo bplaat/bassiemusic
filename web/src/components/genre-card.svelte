@@ -3,11 +3,14 @@
 </script>
 
 <a class="card" href="/genres/{genre.id}">
-    <div
-        class="card-image"
-        style="background-image: url({genre.medium_image});"
-    />
+    <div class="card-image">
+        <img
+            src={genre.medium_image}
+            alt="Image of genre {genre.name}"
+            loading="lazy"
+        />
+    </div>
     <div class="card-content">
-        <h3 class="title is-6">{genre.name}</h3>
+        <h3 class="title is-6 ellipsis">{genre.name}</h3>
     </div>
 </a>
