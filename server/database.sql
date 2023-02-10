@@ -1,15 +1,5 @@
 -- BassieMusic database
 
--- Create BassieMusic MySQL user
--- CREATE USER 'bassiemusic'@'localhost' IDENTIFIED BY 'bassiemusic';
--- CREATE DATABASE `bassiemusic` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
--- GRANT ALL PRIVILEGES ON `bassiemusic`.* TO 'bassiemusic'@'localhost';
--- FLUSH PRIVILEGES;
-
--- MariaDB UUID_TO_BIN and BIN_TO_UUID pollyfills:
--- https://gist.github.com/bplaat/1d8d1bba135c726178ebdfc9df08e2ca
-
--- Tables
 CREATE TABLE `users` (
     `id` BINARY(16) NOT NULL,
     `username` VARCHAR(255) NOT NULL,
@@ -26,8 +16,7 @@ CREATE TABLE `users` (
 );
 
 INSERT INTO `users` (`id`, `username`, `email`, `password`, `role`, `theme`) VALUES
-    (UUID_TO_BIN(UUID()), 'bplaat', 'bastiaan.v.d.plaat@gmail.com', '$2a$10$21hEKLKeYntMkANwm.RCludVDbMU12PRqmc.k6febZUkJHNDoLEAq', 1, 0),
-    (UUID_TO_BIN(UUID()), 'lplaat', 'leonard.van.der.plaat@gmail.com', '$2a$10$21hEKLKeYntMkANwm.RCludVDbMU12PRqmc.k6febZUkJHNDoLEAq', 1, 0);
+    (UUID_TO_BIN(UUID()), 'admin', 'admin@bassiemusic.ml', '$2a$10$GwDKz/4HjEklaq3FtdMYo.p3ildTU36iX1.29rdDRIIi9qgIlT7n2', 1, 0);
 
 CREATE TABLE `sessions` (
     `id` BINARY(16) NOT NULL,

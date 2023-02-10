@@ -1,9 +1,7 @@
+<p align="center"><img src="web/static/images/icon-192x192.png" width="96" height="96" alt="BassieMusic logo"></p>
+
 # BassieMusic
 An online music streaming platform with download capabilities
 
-## Dependencies
-- Go 1.20 or higher
-- MySQL or MariaDB with [pollyfill functions](https://gist.github.com/bplaat/1d8d1bba135c726178ebdfc9df08e2ca)
-- Node.js 18 or higher
-- yt-dlp in PATH
-- ffmpeg in PATH
+## Documentation
+- [Installation documentation](docs/installation.md)
