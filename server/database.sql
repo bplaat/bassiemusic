@@ -1,5 +1,4 @@
 -- BassieMusic database
-
 CREATE TABLE `users` (
     `id` BINARY(16) NOT NULL,
     `username` VARCHAR(255) NOT NULL,
@@ -64,6 +63,7 @@ CREATE TABLE `albums` (
     `title` VARCHAR(255) NOT NULL,
     `released_at` DATE NOT NULL,
     `explicit` TINYINT(1) UNSIGNED NOT NULL,
+    `verified` TINYINT(1) UNSIGNED NOT NULL DEFAULT 0,
     `deezer_id` BIGINT UNSIGNED NOT NULL,
     `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

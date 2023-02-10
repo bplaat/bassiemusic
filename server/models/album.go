@@ -16,6 +16,7 @@ type Album struct {
 	Title       string    `column:"title,string" json:"title"`
 	ReleasedAt  time.Time `column:"released_at,date" json:"released_at"`
 	Explicit    bool      `column:"explicit,bool" json:"explicit"`
+	Verified    bool      `column:"verified,bool" json:"verified"`
 	DeezerID    int64     `column:"deezer_id,bigint" json:"-"`
 	SmallCover  string    `json:"small_cover"`
 	MediumCover string    `json:"medium_cover"`
