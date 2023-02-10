@@ -53,7 +53,7 @@ func UserModel() *database.Model[User] {
 				user.Theme = "dark"
 			}
 
-			if user.AvatarID != nil {
+			if user.AvatarID != nil && *user.AvatarID != "" {
 				user.Avatar = fmt.Sprintf("%s/storage/avatars/%s.jpg", os.Getenv("APP_URL"), *user.AvatarID)
 			}
 		},

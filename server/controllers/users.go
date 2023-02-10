@@ -58,11 +58,28 @@ func UsersCreate(c *fiber.Ctx) error {
 		log.Println("role not valid")
 		return fiber.ErrBadRequest
 	}
+	var userRole models.UserRole
+	if params.Role == "normal" {
+		userRole = models.UserRoleNormal
+	}
+	if params.Role == "admin" {
+		userRole = models.UserRoleAdmin
+	}
 
 	// Validate theme is correct
 	if params.Theme != "system" && params.Theme != "light" && params.Theme != "dark" {
 		log.Println("theme not valid")
 		return fiber.ErrBadRequest
+	}
+	var userTheme models.UserTheme
+	if params.Theme == "system" {
+		userTheme = models.UserThemeSystem
+	}
+	if params.Theme == "light" {
+		userTheme = models.UserThemeLight
+	}
+	if params.Theme == "dark" {
+		userTheme = models.UserThemeDark
 	}
 
 	// Create user
@@ -70,7 +87,8 @@ func UsersCreate(c *fiber.Ctx) error {
 		"username": params.Username,
 		"email":    params.Email,
 		"password": utils.HashPassword(params.Password),
-		"role":     params.Role,
+		"role":     userRole,
+		"theme":    userTheme,
 	}))
 }
 
@@ -192,7 +210,7 @@ func UsersAvatar(c *fiber.Ctx) error {
 	}
 
 	// Remove old avatar file
-	if user.AvatarID != nil {
+	if user.AvatarID != nil && *user.AvatarID != "" {
 		if err := os.Remove(fmt.Sprintf("storage/avatars/%s.jpg", *user.AvatarID)); err != nil {
 			log.Fatalln(err)
 		}
@@ -229,7 +247,7 @@ func UsersAvatarDelete(c *fiber.Ctx) error {
 	}
 
 	// Check if user has avatar
-	if user.AvatarID != nil {
+	if user.AvatarID != nil && *user.AvatarID != "" {
 		// Remove old avatar file
 		if err := os.Remove(fmt.Sprintf("storage/avatars/%s.jpg", *user.AvatarID)); err != nil {
 			log.Fatalln(err)
