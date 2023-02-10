@@ -5,6 +5,7 @@
 <a class="card" href="/albums/{album.id}">
     <div class="card-image has-image-tags">
         <img
+            style="aspect-ratio: 1;"
             src={album.medium_cover}
             alt="Cover of album {album.name}"
             loading="lazy"

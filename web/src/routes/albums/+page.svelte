@@ -43,7 +43,7 @@
             observer.observe(bottom);
         });
         onDestroy(() => {
-            observer.unobserve(bottom);
+            if (observer) observer.unobserve(bottom);
         });
     }
 </script>

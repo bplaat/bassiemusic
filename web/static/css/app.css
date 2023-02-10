@@ -1,7 +1,8 @@
 html{overflow:hidden;height:100%}
 body{height:100%;overflow:auto;-webkit-user-select:none;user-select:none;cursor:default}
 
-a{color:currentColor}a:not(.card):hover,a:not(.card):focus{text-decoration:underline}
+a{color:currentColor}a:hover,a:focus{text-decoration:underline}
+.card a,.tabs a,.sidebar .title a{text-decoration:none!important}
 .menu-list a{text-decoration:none!important}
 
 .table td{vertical-align:middle}
@@ -19,7 +20,6 @@ body.is-playing .sidebar{height:calc(100% - 6rem)}
 
 .column>.card{display:flex;flex-direction:column;height:100%;margin-bottom:0;overflow:hidden}
 .column>.card>.card-content{flex:1;margin-bottom:0}
-.card-image>img{aspect-ratio:1;background-color:#333}
 .box{overflow:hidden}.box>img{display:block}
 .has-image-tags{position:relative}
 .image-tags{position:absolute;top:.5rem;right:.5rem}

@@ -43,7 +43,7 @@
             observer.observe(bottom);
         });
         onDestroy(() => {
-            observer.unobserve(bottom);
+            if (observer) observer.unobserve(bottom);
         });
     }
 </script>
@@ -52,7 +52,7 @@
     <title>Albums - Liked - BassieMusic</title>
 </svelte:head>
 
-<div class="tabs">
+<div class="tabs is-toggle">
     <ul>
         <li><a href="/liked/artists">Artists</a></li>
         <li class="is-active"><a href="/liked/albums">Albums</a></li>

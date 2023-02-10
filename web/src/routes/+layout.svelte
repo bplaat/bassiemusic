@@ -30,14 +30,15 @@
         <link rel="stylesheet" href="/css/bulma-light.min.css" media="(prefers-color-scheme: light)" />
         <link rel="stylesheet" href="/css/bulma-dark.min.css"  media="(prefers-color-scheme: dark)"/>
         <style>
+            .card-image>img{background-color:#ccc}
             .slider-container{position:relative;width:100%;height:5px;background-color:lightgray}
             .slider{position:absolute;width:100%;height:100%;background-color:#0099ff}
             .slider-thumb{position:absolute;top:-5px;width:15px;height:15px;background-color:#999999;border-radius:50%;cursor:pointer}
             ::-webkit-scrollbar-thumb{background-color:rgba(0,0,0,.3)}
 
             @media (prefers-color-scheme: dark) {
+                .card-image>img{background-color:#333}
                 .slider-container{background-color:lightgray}
-                .slider{background-color:#0099ff}
                 .slider-thumb{background-color:white}
                 ::-webkit-scrollbar-thumb{background-color:rgba(255,255,255,.3)}
             }
@@ -47,6 +48,7 @@
     {#if authUser != undefined && authUser.theme == "light"}
         <link rel="stylesheet" href="/css/bulma-light.min.css" />
         <style>
+            .card-image>img{background-color:#ccc}
             .slider-container{position:relative;width:100%;height:5px;background-color:lightgray}
             .slider{position:absolute;width:100%;height:100%;background-color:#0099ff}
             .slider-thumb{position:absolute;top:-5px;width:15px;height:15px;background-color:#999999;border-radius:50%;cursor:pointer}
@@ -57,6 +59,7 @@
     {#if authUser != undefined && authUser.theme == "dark"}
         <link rel="stylesheet" href="/css/bulma-dark.min.css" />
         <style>
+            .card-image>img{background-color:#333}
             .slider-container{position:relative;height:5px;background-color:lightgray}
             .slider{position:absolute;width:100%;height:100%;background-color:#0099ff}
             .slider-thumb{position:absolute;top:-5px;width:15px;height:15px;background-color:white;border-radius:50%;cursor:pointer}

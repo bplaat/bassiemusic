@@ -5,6 +5,7 @@
 <a class="card" href="/genres/{genre.id}">
     <div class="card-image">
         <img
+            style="aspect-ratio: 1;"
             src={genre.medium_image}
             alt="Image of genre {genre.name}"
             loading="lazy"
