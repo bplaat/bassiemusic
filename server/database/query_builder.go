@@ -139,7 +139,7 @@ func (qb *QueryBuilder[T]) Count() int64 {
 	defer query.Close()
 	query.Next()
 	var count int64
-	query.Scan(&count)
+	_ = query.Scan(&count)
 	return count
 }
 
@@ -179,7 +179,7 @@ func (qb *QueryBuilder[T]) Get() []T {
 		for _, column := range qb.Model.Columns {
 			ptrs = append(ptrs, modelType.FieldByName(column.Name).Addr().Interface())
 		}
-		query.Scan(ptrs...)
+		_ = query.Scan(ptrs...)
 
 		if qb.Model.Process != nil {
 			qb.Model.Process(&model)

@@ -58,8 +58,7 @@ func AuthLogin(c *fiber.Ctx) error {
 
 	// Generate new token
 	randomBytes := make([]byte, 128)
-	_, err := io.ReadFull(rand.Reader, randomBytes)
-	if err != nil {
+	if _, err := io.ReadFull(rand.Reader, randomBytes); err != nil {
 		log.Fatalln(err)
 	}
 	token := base64.StdEncoding.EncodeToString(randomBytes)

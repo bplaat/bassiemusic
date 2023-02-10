@@ -22,7 +22,7 @@ func createArtist(id int, name string) string {
 
 	if artists.Next() {
 		var artistID string
-		artists.Scan(&artistID)
+		_ = artists.Scan(&artistID)
 		return artistID
 	}
 
@@ -43,7 +43,7 @@ func createGenre(id int, name string) string {
 
 	if genres.Next() {
 		var genreID string
-		genres.Scan(&genreID)
+		_ = genres.Scan(&genreID)
 		return genreID
 	}
 
@@ -127,7 +127,9 @@ func downloadAlbum(id int) {
 			}
 
 			if track.Duration >= video.Duration-TRACK_DURATION_SLACK && track.Duration <= video.Duration+TRACK_DURATION_SLACK {
-				searchCommand.Process.Signal(syscall.SIGTERM)
+				if err := searchCommand.Process.Signal(syscall.SIGTERM); err != nil {
+					log.Fatalln(err)
+				}
 
 				trackID := uuid.NewV4()
 				database.Exec("INSERT INTO `tracks` (`id`, `album_id`, `title`, `disk`, `position`, `duration`, `explicit`, `deezer_id`, `youtube_id`) VALUES (UUID_TO_BIN(?), UUID_TO_BIN(?), ?, ?, ?, ?, ?, ?, ?)",

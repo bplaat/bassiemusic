@@ -3,7 +3,6 @@ package utils
 import (
 	"encoding/json"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -15,7 +14,7 @@ func Fetch(url string) []byte {
 		log.Fatalln(err)
 	}
 	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -23,7 +22,9 @@ func Fetch(url string) []byte {
 }
 
 func FetchJson(url string, data any) {
-	json.Unmarshal(Fetch(url), data)
+	if err := json.Unmarshal(Fetch(url), data); err != nil {
+		log.Fatalln(err)
+	}
 }
 
 func FetchFile(url string, path string) {
@@ -37,8 +38,7 @@ func FetchFile(url string, path string) {
 		log.Fatalln(err)
 	}
 	defer out.Close()
-	_, err = io.Copy(out, resp.Body)
-	if err != nil {
+	if _, err = io.Copy(out, resp.Body); err != nil {
 		log.Fatalln(err)
 	}
 }

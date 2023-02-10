@@ -22,8 +22,7 @@ func Connect() {
 	db.SetConnMaxLifetime(time.Minute)
 
 	// Ping the database
-	err = db.Ping()
-	if err != nil {
+	if err = db.Ping(); err != nil {
 		log.Fatalln(err)
 	}
 }

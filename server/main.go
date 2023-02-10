@@ -12,7 +12,9 @@ import (
 
 func createDirIfNotExists(path string) {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
-		os.Mkdir(path, 0755)
+		if err := os.Mkdir(path, 0755); err != nil {
+			log.Fatalln(err)
+		}
 	}
 }
 
@@ -39,8 +41,7 @@ func main() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
 	// Load .env file
-	err := godotenv.Load(".env")
-	if err != nil {
+	if err := godotenv.Load(".env"); err != nil {
 		log.Fatalln(err)
 	}
 
