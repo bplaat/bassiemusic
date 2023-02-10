@@ -1,6 +1,6 @@
 <script>
-    import TracksTable from "../../components/tracks-table.svelte";
-    import { musicPlayer } from "../../stores";
+    import TracksTable from '../../components/tracks-table.svelte';
+    import { musicPlayer } from '../../stores';
 
     export let data;
     const { token } = data;
@@ -13,9 +13,7 @@
 <div class="buttons">
     <button class="button" on:click={() => history.back()}>
         <svg class="icon" viewBox="0 0 24 24">
-            <path
-                d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z"
-            />
+            <path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" />
         </svg>
     </button>
 </div>

@@ -5,10 +5,15 @@ export async function load({ cookies, fetch }) {
 
     const response = await fetch(`${import.meta.env.VITE_API_URL}/users/${authUser.id}/liked_artists`, {
         headers: {
-            Authorization: `Bearer ${cookies.get('token')}`
-        }
+            Authorization: `Bearer ${cookies.get('token')}`,
+        },
     });
     const { data: artists, pagination } = await response.json();
 
-    return { token: cookies.get('token'), authUser, artists, total: pagination.total };
+    return {
+        token: cookies.get('token'),
+        authUser,
+        artists,
+        total: pagination.total,
+    };
 }

@@ -1,6 +1,6 @@
 <script>
-    import { onMount,  onDestroy } from "svelte";
-    import ArtistCard from "../../components/artist-card.svelte";
+    import { onMount, onDestroy } from 'svelte';
+    import ArtistCard from '../../components/artist-card.svelte';
 
     export let data;
     let { token, artists } = data;
@@ -56,9 +56,7 @@
 
 <div class="columns is-multiline is-mobile">
     {#each artists as artist}
-        <div
-            class="column is-half-mobile is-one-third-tablet is-one-quarter-desktop is-one-fifth-widescreen"
-        >
+        <div class="column is-half-mobile is-one-third-tablet is-one-quarter-desktop is-one-fifth-widescreen">
             <ArtistCard {artist} />
         </div>
     {/each}

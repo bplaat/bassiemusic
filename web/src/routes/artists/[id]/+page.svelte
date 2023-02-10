@@ -1,8 +1,8 @@
 <script>
-    import { page } from "$app/stores";
-    import { browser } from "$app/environment";
-    import TracksTable from "../../../components/tracks-table.svelte";
-    import AlbumCard from "../../../components/album-card.svelte";
+    import { page } from '$app/stores';
+    import { browser } from '$app/environment';
+    import TracksTable from '../../../components/tracks-table.svelte';
+    import AlbumCard from '../../../components/album-card.svelte';
 
     export let data;
     let { token, artist } = data;
@@ -10,7 +10,7 @@
     if (browser) {
         page.subscribe(async (page) => {
             if (
-                page.url.pathname.startsWith("/artists/") &&
+                page.url.pathname.startsWith('/artists/') &&
                 page.url.pathname != `/artists/${artist.id}`
             ) {
                 const response = await fetch(
@@ -31,7 +31,7 @@
     function likeArtist() {
         fetch(
             `${import.meta.env.VITE_API_URL}/artists/${artist.id}/like${
-                artist.liked ? "/delete" : ""
+                artist.liked ? '/delete' : ''
             }`,
             {
                 headers: {
@@ -42,12 +42,12 @@
         artist.liked = !artist.liked;
     }
 
-    let albumType = "all";
+    let albumType = 'all';
     $: filteredAlbums = artist.albums.filter((album) => {
-        if (albumType == "all") return true;
-        if (albumType == "album") return album.type == "album";
-        if (albumType == "ep") return album.type == "ep";
-        if (albumType == "single") return album.type == "single";
+        if (albumType == 'all') return true;
+        if (albumType == 'album') return album.type == 'album';
+        if (albumType == 'ep') return album.type == 'ep';
+        if (albumType == 'single') return album.type == 'single';
     });
 </script>
 
@@ -120,31 +120,31 @@
 {#if artist.albums != undefined}
     <div class="tabs is-toggle">
         <ul>
-            <li class:is-active={albumType == "all"}>
+            <li class:is-active={albumType == 'all'}>
                 <!-- svelte-ignore a11y-invalid-attribute -->
-                <a href="#" on:click|preventDefault={() => (albumType = "all")}
+                <a href="#" on:click|preventDefault={() => (albumType = 'all')}
                     >All</a
                 >
             </li>
-            <li class:is-active={albumType == "album"}>
+            <li class:is-active={albumType == 'album'}>
                 <!-- svelte-ignore a11y-invalid-attribute -->
                 <a
                     href="#"
-                    on:click|preventDefault={() => (albumType = "album")}
+                    on:click|preventDefault={() => (albumType = 'album')}
                     >Albums</a
                 >
             </li>
-            <li class:is-active={albumType == "ep"}>
+            <li class:is-active={albumType == 'ep'}>
                 <!-- svelte-ignore a11y-invalid-attribute -->
-                <a href="#" on:click|preventDefault={() => (albumType = "ep")}
+                <a href="#" on:click|preventDefault={() => (albumType = 'ep')}
                     >EPs</a
                 >
             </li>
-            <li class:is-active={albumType == "single"}>
+            <li class:is-active={albumType == 'single'}>
                 <!-- svelte-ignore a11y-invalid-attribute -->
                 <a
                     href="#"
-                    on:click|preventDefault={() => (albumType = "single")}
+                    on:click|preventDefault={() => (albumType = 'single')}
                     >Singles</a
                 >
             </li>

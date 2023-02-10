@@ -1,6 +1,6 @@
 <script>
-    import { onMount,  onDestroy } from "svelte";
-    import TracksTable from "../../components/tracks-table.svelte";
+    import { onMount, onDestroy } from 'svelte';
+    import TracksTable from '../../components/tracks-table.svelte';
 
     export let data;
     let { token, tracks } = data;

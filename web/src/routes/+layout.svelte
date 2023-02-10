@@ -1,16 +1,16 @@
 <script>
-    import { browser } from "$app/environment";
-    import { afterNavigate } from "$app/navigation";
-    import Sidebar from "../components/sidebar.svelte";
-    import MusicPlayer from "../components/music-player.svelte";
-    import { musicPlayer } from "../stores.js";
+    import { browser } from '$app/environment';
+    import { afterNavigate } from '$app/navigation';
+    import Sidebar from '../components/sidebar.svelte';
+    import MusicPlayer from '../components/music-player.svelte';
+    import { musicPlayer } from '../stores.js';
 
     export let data;
     const { token, authUser, agent, lastTrack, lastTrackPosition } = data;
 
     if (browser && lastTrack) {
         musicPlayer.set({
-            action: "init",
+            action: 'init',
             queue: [lastTrack],
             track_id: lastTrack.id,
             position: lastTrackPosition,
@@ -28,17 +28,9 @@
 
 <svelte:head>
     <!-- Themes -->
-    {#if authUser == undefined || (authUser != undefined && authUser.theme == "system")}
-        <link
-            rel="stylesheet"
-            href="/css/bulma-light.min.css"
-            media="(prefers-color-scheme: light)"
-        />
-        <link
-            rel="stylesheet"
-            href="/css/bulma-dark.min.css"
-            media="(prefers-color-scheme: dark)"
-        />
+    {#if authUser == undefined || (authUser != undefined && authUser.theme == 'system')}
+        <link rel="stylesheet" href="/css/bulma-light.min.css" media="(prefers-color-scheme: light)" />
+        <link rel="stylesheet" href="/css/bulma-dark.min.css" media="(prefers-color-scheme: dark)" />
         <style>
             .card-image > img {
                 background-color: #ccc;
@@ -85,7 +77,7 @@
         </style>
     {/if}
 
-    {#if authUser != undefined && authUser.theme == "light"}
+    {#if authUser != undefined && authUser.theme == 'light'}
         <link rel="stylesheet" href="/css/bulma-light.min.css" />
         <style>
             .card-image > img {
@@ -118,7 +110,7 @@
         </style>
     {/if}
 
-    {#if authUser != undefined && authUser.theme == "dark"}
+    {#if authUser != undefined && authUser.theme == 'dark'}
         <link rel="stylesheet" href="/css/bulma-dark.min.css" />
         <style>
             .card-image > img {
@@ -151,7 +143,7 @@
     {/if}
 
     <!-- Custom CSS for BassieMusic apps -->
-    {#if agent.os == "macOS" && agent.name == "BassieMusic App"}
+    {#if agent.os == 'macOS' && agent.name == 'BassieMusic App'}
         <style>
             .navbar {
                 padding-top: 28px !important;
@@ -174,17 +166,12 @@
 <nav class="navbar is-light is-fixed-top is-hidden-desktop">
     <div class="navbar-brand">
         <!-- svelte-ignore a11y-invalid-attribute -->
-        <a
-            href="#"
-            class="navbar-burger ml-0"
-            on:click|preventDefault={() => (isSidebarOpen = true)}
-        >
+        <a href="#" class="navbar-burger ml-0" on:click|preventDefault={() => (isSidebarOpen = true)}>
             <span />
             <span />
             <span />
         </a>
-        <a class="navbar-item" href="/" style="font-weight: 500;">BassieMusic</a
-        >
+        <a class="navbar-item" href="/" style="font-weight: 500;">BassieMusic</a>
     </div>
 </nav>
 

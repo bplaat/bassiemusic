@@ -1,6 +1,6 @@
 <script>
-    import { onMount,  onDestroy } from "svelte";
-    import ArtistCard from "../../../components/artist-card.svelte";
+    import { onMount, onDestroy } from 'svelte';
+    import ArtistCard from '../../../components/artist-card.svelte';
 
     export let data;
     let { token, authUser, artists } = data;

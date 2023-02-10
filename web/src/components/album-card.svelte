@@ -4,20 +4,15 @@
 
 <a class="card" href="/albums/{album.id}">
     <div class="card-image has-image-tags">
-        <img
-            style="aspect-ratio: 1;"
-            src={album.medium_cover}
-            alt="Cover of album {album.name}"
-            loading="lazy"
-        />
+        <img style="aspect-ratio: 1;" src={album.medium_cover} alt="Cover of album {album.name}" loading="lazy" />
         <div class="image-tags">
-            {#if album.type == "album"}
+            {#if album.type == 'album'}
                 <span class="tag">ALBUM</span>
             {/if}
-            {#if album.type == "ep"}
+            {#if album.type == 'ep'}
                 <span class="tag">EP</span>
             {/if}
-            {#if album.type == "single"}
+            {#if album.type == 'single'}
                 <span class="tag">SINGLE</span>
             {/if}
             {#if album.explicit}

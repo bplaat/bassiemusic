@@ -3,28 +3,25 @@
     let { token, authUser, currentSession, sessions } = data;
 
     // Change details
-    let newPassword = "";
+    let newPassword = '';
 
     async function changeDetails() {
-        const response = await fetch(
-            `${import.meta.env.VITE_API_URL}/users/${authUser.id}`,
-            {
-                method: "POST",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-                body: new URLSearchParams({
-                    username: authUser.username,
-                    email: authUser.email,
-                    password: newPassword,
-                    theme: authUser.theme,
-                }),
-            }
-        );
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/users/${authUser.id}`, {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+            body: new URLSearchParams({
+                username: authUser.username,
+                email: authUser.email,
+                password: newPassword,
+                theme: authUser.theme,
+            }),
+        });
         if (response.status == 200) {
-            window.location = "/settings";
+            window.location = '/settings';
         } else {
-            alert("Error!");
+            alert('Error!');
         }
     }
 
@@ -37,44 +34,32 @@
         }
 
         const formData = new FormData();
-        formData.append(
-            "avatar",
-            avatarInput.files[0],
-            avatarInput.files[0].name
-        );
+        formData.append('avatar', avatarInput.files[0], avatarInput.files[0].name);
 
-        const response = await fetch(
-            `${import.meta.env.VITE_API_URL}/users/${authUser.id}/avatar`,
-            {
-                method: "POST",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-                body: formData,
-            }
-        );
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/users/${authUser.id}/avatar`, {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+            body: formData,
+        });
         if (response.status == 200) {
-            window.location = "/settings";
+            window.location = '/settings';
         } else {
-            alert("Error!");
+            alert('Error!');
         }
     }
 
     async function deleteAvatar() {
-        const response = await fetch(
-            `${import.meta.env.VITE_API_URL}/users/${
-                authUser.id
-            }/avatar/delete`,
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            }
-        );
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/users/${authUser.id}/avatar/delete`, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
         if (response.status == 200) {
-            window.location = "/settings";
+            window.location = '/settings';
         } else {
-            alert("Error!");
+            alert('Error!');
         }
     }
 
@@ -109,9 +94,9 @@
         });
         if (currentSession.id == session.id) {
             document.cookie = `token=; expires=${new Date(0).toUTCString()}`;
-            window.location = "/auth/login";
+            window.location = '/auth/login';
         } else {
-            sessions = sessions.filter(otherSession => otherSession.id != session.id);
+            sessions = sessions.filter((otherSession) => otherSession.id != session.id);
         }
     }
 </script>
@@ -133,13 +118,7 @@
                     <div class="field">
                         <label class="label" for="username">Username</label>
                         <div class="control">
-                            <input
-                                class="input"
-                                type="text"
-                                id="username"
-                                bind:value={authUser.username}
-                                required
-                            />
+                            <input class="input" type="text" id="username" bind:value={authUser.username} required />
                         </div>
                     </div>
                 </div>
@@ -148,29 +127,16 @@
                     <div class="field">
                         <label class="label" for="email">Email</label>
                         <div class="control">
-                            <input
-                                class="input"
-                                type="email"
-                                id="email"
-                                bind:value={authUser.email}
-                                required
-                            />
+                            <input class="input" type="email" id="email" bind:value={authUser.email} required />
                         </div>
                     </div>
                 </div>
             </div>
 
             <div class="field">
-                <label class="label" for="password"
-                    >Password (leave empty to not change)</label
-                >
+                <label class="label" for="password">Password (leave empty to not change)</label>
                 <div class="control">
-                    <input
-                        class="input"
-                        type="password"
-                        id="password"
-                        bind:value={newPassword}
-                    />
+                    <input class="input" type="password" id="password" bind:value={newPassword} />
                 </div>
             </div>
 
@@ -189,9 +155,7 @@
 
             <div class="field">
                 <div class="buttons">
-                    <button type="submit" class="button is-link"
-                        >Change details</button
-                    >
+                    <button type="submit" class="button is-link">Change details</button>
                 </div>
             </div>
         </form>
@@ -205,29 +169,17 @@
             <div class="field">
                 <label class="label" for="avatar">Avatar file</label>
                 <div class="control">
-                    <input
-                        class="input"
-                        type="file"
-                        id="avatar"
-                        bind:this={avatarInput}
-                    />
-                    <p class="help">
-                        You can upload an squared .jpg or .png image
-                    </p>
+                    <input class="input" type="file" id="avatar" bind:this={avatarInput} />
+                    <p class="help">You can upload an squared .jpg or .png image</p>
                 </div>
             </div>
 
             <div class="field">
                 <div class="buttons">
-                    <button type="submit" class="button is-link"
-                        >Change avatar</button
-                    >
+                    <button type="submit" class="button is-link">Change avatar</button>
 
                     {#if authUser.avatar}
-                        <button
-                            type="button"
-                            class="button is-danger"
-                            on:click|preventDefault={deleteAvatar}
+                        <button type="button" class="button is-danger" on:click|preventDefault={deleteAvatar}
                             >Delete avatar</button
                         >
                     {/if}
@@ -249,9 +201,7 @@
                         <h3 class="title is-4">
                             {session.client_name} on {session.client_os}
                             {#if currentSession.id == session.id}
-                                <span class="tag is-link is-pulled-right"
-                                    >CURRENT</span
-                                >
+                                <span class="tag is-link is-pulled-right">CURRENT</span>
                             {/if}
                         </h3>
                         <p>
@@ -263,19 +213,13 @@
                             {/if}
                         </p>
                         <p>
-                            Created at: {new Date(
-                                session.created_at
-                            ).toLocaleString()}
+                            Created at: {new Date(session.created_at).toLocaleString()}
                         </p>
                         <p>
-                            Expires at: {new Date(
-                                session.expires_at
-                            ).toLocaleString()}
+                            Expires at: {new Date(session.expires_at).toLocaleString()}
                         </p>
                         <div class="buttons">
-                            <button
-                                class="button is-danger"
-                                on:click={() => revokeSession(session)}
+                            <button class="button is-danger" on:click={() => revokeSession(session)}
                                 >Revoke session</button
                             >
                         </div>

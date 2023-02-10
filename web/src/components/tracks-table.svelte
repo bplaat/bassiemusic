@@ -1,6 +1,6 @@
 <script>
-    import { musicPlayer } from "../stores.js";
-    import { formatDuration } from "../filters.js";
+    import { musicPlayer } from '../stores.js';
+    import { formatDuration } from '../filters.js';
 
     export let token;
     export let tracks;
@@ -9,7 +9,7 @@
 
     function playTrack(track) {
         musicPlayer.set({
-            action: "play",
+            action: 'play',
             queue: tracks.slice(),
             track_id: track.id,
         });
@@ -24,9 +24,7 @@
 
     function removeTrack(track) {
         musicPlayer.update((musicPlayer) => {
-            musicPlayer.queue = musicPlayer.queue.filter(
-                (otherTrack) => otherTrack.id != track.id
-            );
+            musicPlayer.queue = musicPlayer.queue.filter((otherTrack) => otherTrack.id != track.id);
             return musicPlayer;
         });
     }
@@ -36,16 +34,11 @@
     }
 
     function likeTrack(track) {
-        fetch(
-            `${import.meta.env.VITE_API_URL}/tracks/${track.id}/like${
-                track.liked ? "/delete" : ""
-            }`,
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            }
-        );
+        fetch(`${import.meta.env.VITE_API_URL}/tracks/${track.id}/like${track.liked ? '/delete' : ''}`, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
         track.liked = !track.liked;
         tracks = tracks;
     }
@@ -76,15 +69,11 @@
             <tr
                 class="track-container"
                 on:dblclick|preventDefault={() => playTrack(track)}
-                class:has-background-light={$musicPlayer.queue.length > 0 &&
-                    $musicPlayer.track_id == track.id}
+                class:has-background-light={$musicPlayer.queue.length > 0 && $musicPlayer.track_id == track.id}
             >
                 <td>
                     <div class="track-index">{index + 1}</div>
-                    <button
-                        class="button is-small track-play"
-                        on:click={() => playTrack(track)}
-                    >
+                    <button class="button is-small track-play" on:click={() => playTrack(track)}>
                         <svg class="icon" viewBox="0 0 24 24">
                             <path d="M8,5.14V19.14L19,12.14L8,5.14Z" />
                         </svg>
@@ -111,18 +100,12 @@
                             <span class="tag is-danger mr-1">E</span>
                         {/if}
                         {#each track.artists as artist}
-                            <a href="/artists/{artist.id}" class="mr-2"
-                                >{artist.name}</a
-                            >
+                            <a href="/artists/{artist.id}" class="mr-2">{artist.name}</a>
                         {/each}
                     </p>
                 </td>
                 {#if showAlbum}
-                    <td class="ellipsis is-hidden-touch"
-                        ><a href="/albums/{track.album.id}"
-                            >{track.album.title}</a
-                        ></td
-                    >
+                    <td class="ellipsis is-hidden-touch"><a href="/albums/{track.album.id}">{track.album.title}</a></td>
                 {/if}
                 <td>{formatDuration(track.duration)}</td>
                 <td>{track.plays}</td>
@@ -149,8 +132,7 @@
                         <button
                             class="button"
                             on:click={() => removeTrack(track)}
-                            disabled={$musicPlayer.queue.length > 0 &&
-                                $musicPlayer.track_id == track.id}
+                            disabled={$musicPlayer.queue.length > 0 && $musicPlayer.track_id == track.id}
                         >
                             <svg class="icon" viewBox="0 0 24 24">
                                 <path

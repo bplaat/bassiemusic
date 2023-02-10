@@ -3,14 +3,12 @@
     let { token } = data;
 
     // Artists
-    let artistQuery = "";
+    let artistQuery = '';
     let artists = [];
 
     async function searchArtists() {
         const response = await fetch(
-            `${
-                import.meta.env.VITE_API_URL
-            }/deezer/artists?${new URLSearchParams({
+            `${import.meta.env.VITE_API_URL}/deezer/artists?${new URLSearchParams({
                 q: artistQuery,
             })}`
         );
@@ -20,9 +18,7 @@
 
     async function downloadArtist(artist) {
         await fetch(
-            `${
-                import.meta.env.VITE_API_URL
-            }/download/artist?${new URLSearchParams({
+            `${import.meta.env.VITE_API_URL}/download/artist?${new URLSearchParams({
                 deezer_id: artist.id,
             })}`,
             {
@@ -34,14 +30,12 @@
     }
 
     // Albums
-    let albumQuery = "";
+    let albumQuery = '';
     let albums = [];
 
     async function searchAlbums() {
         const response = await fetch(
-            `${
-                import.meta.env.VITE_API_URL
-            }/deezer/albums?${new URLSearchParams({
+            `${import.meta.env.VITE_API_URL}/deezer/albums?${new URLSearchParams({
                 q: albumQuery,
             })}`
         );
@@ -51,9 +45,7 @@
 
     async function downloadAlbum(album) {
         await fetch(
-            `${
-                import.meta.env.VITE_API_URL
-            }/download/album?${new URLSearchParams({
+            `${import.meta.env.VITE_API_URL}/download/album?${new URLSearchParams({
                 deezer_id: album.id,
             })}`,
             {
@@ -77,22 +69,12 @@
         <div class="box">
             <h2 class="title is-4">Download Artist</h2>
 
-            <form
-                on:submit|preventDefault={searchArtists}
-                class="field has-addons"
-            >
+            <form on:submit|preventDefault={searchArtists} class="field has-addons">
                 <div class="control">
-                    <input
-                        class="input"
-                        type="text"
-                        bind:value={artistQuery}
-                        placeholder="Search an artist..."
-                    />
+                    <input class="input" type="text" bind:value={artistQuery} placeholder="Search an artist..." />
                 </div>
                 <div class="control">
-                    <button type="submit" class="button is-link">
-                        Search
-                    </button>
+                    <button type="submit" class="button is-link"> Search </button>
                 </div>
             </form>
 
@@ -107,11 +89,7 @@
                     <div style="flex: 1">
                         <b>{artist.name}</b>
                     </div>
-                    <button
-                        class="button is-link"
-                        on:click={() => downloadArtist(artist)}
-                        >Add to BassieMusic</button
-                    >
+                    <button class="button is-link" on:click={() => downloadArtist(artist)}>Add to BassieMusic</button>
                 </div>
                 <hr />
             {/each}
@@ -123,22 +101,12 @@
         <div class="box">
             <h2 class="title is-4">Download Album</h2>
 
-            <form
-                on:submit|preventDefault={searchAlbums}
-                class="field has-addons"
-            >
+            <form on:submit|preventDefault={searchAlbums} class="field has-addons">
                 <div class="control">
-                    <input
-                        class="input"
-                        type="text"
-                        bind:value={albumQuery}
-                        placeholder="Search an album..."
-                    />
+                    <input class="input" type="text" bind:value={albumQuery} placeholder="Search an album..." />
                 </div>
                 <div class="control">
-                    <button type="submit" class="button is-link">
-                        Search
-                    </button>
+                    <button type="submit" class="button is-link"> Search </button>
                 </div>
             </form>
 
@@ -154,11 +122,7 @@
                         <b>{album.title}</b><br />
                         By {album.artist.name}
                     </div>
-                    <button
-                        class="button is-link"
-                        on:click={() => downloadAlbum(album)}
-                        >Add to BassieMusic</button
-                    >
+                    <button class="button is-link" on:click={() => downloadAlbum(album)}>Add to BassieMusic</button>
                 </div>
                 <hr />
             {/each}

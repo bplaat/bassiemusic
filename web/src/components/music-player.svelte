@@ -1,14 +1,10 @@
 <script>
-    import { page } from "$app/stores";
-    import { browser } from "$app/environment";
-    import {
-        PLAYER_UPDATE_UI_TIMEOUT,
-        PLAYER_UPDATE_SERVER_TIMEOUT,
-        PLAYER_SEEK_TIME,
-    } from "../consts.js";
-    import { musicPlayer, audioVolume } from "../stores.js";
-    import { formatDuration } from "../filters.js";
-    import Slider from "./slider.svelte";
+    import { page } from '$app/stores';
+    import { browser } from '$app/environment';
+    import { PLAYER_UPDATE_UI_TIMEOUT, PLAYER_UPDATE_SERVER_TIMEOUT, PLAYER_SEEK_TIME } from '../consts.js';
+    import { musicPlayer, audioVolume } from '../stores.js';
+    import { formatDuration } from '../filters.js';
+    import Slider from './slider.svelte';
 
     export let token;
     let playingMusicPlayerTrackId,
@@ -21,17 +17,13 @@
         musicSlider,
         volumeSlider;
 
-    $: track = $musicPlayer.queue.find(
-        (track) => track.id == $musicPlayer.track_id
-    );
+    $: track = $musicPlayer.queue.find((track) => track.id == $musicPlayer.track_id);
 
     if (browser) {
         musicPlayer.subscribe((musicPlayer) => {
             if (musicPlayer.queue.length == 0) return;
             if (playingMusicPlayerTrackId == musicPlayer.track_id) return;
-            const track = musicPlayer.queue.find(
-                (track) => track.id == musicPlayer.track_id
-            );
+            const track = musicPlayer.queue.find((track) => track.id == musicPlayer.track_id);
             playingMusicPlayerTrackId = musicPlayer.track_id;
 
             if (audio != undefined) {
@@ -44,13 +36,12 @@
                 clearTimeout(updateServerTimeout);
             }
 
-            document.body.classList.add("is-playing");
+            document.body.classList.add('is-playing');
 
             audio = new Audio(track.music);
             audio.volume = $audioVolume;
             audio.onloadedmetadata = () => {
-                audio.currentTime =
-                    musicPlayer.action == "init" ? musicPlayer.position : 0;
+                audio.currentTime = musicPlayer.action == 'init' ? musicPlayer.position : 0;
                 audioDuration = audio.duration;
                 audioCurrentTime = audio.currentTime;
 
@@ -61,7 +52,7 @@
                     volumeSlider.seekToValue($audioVolume);
                 }
 
-                if (musicPlayer.action == "play") {
+                if (musicPlayer.action == 'play') {
                     play();
                 }
             };
@@ -75,41 +66,35 @@
     }
 
     function setMediaSession(track) {
-        if ("mediaSession" in navigator) {
+        if ('mediaSession' in navigator) {
             navigator.mediaSession.metadata = new MediaMetadata({
                 title: track.title,
-                artist: track.artists.map((artist) => artist.name).join(", "),
+                artist: track.artists.map((artist) => artist.name).join(', '),
                 album: track.album.title,
                 artwork: [
                     {
-                        type: "image/jpeg",
+                        type: 'image/jpeg',
                         src: track.album.large_cover,
-                        sizes: "1024x1024",
+                        sizes: '1024x1024',
                     },
                 ],
             });
 
-            navigator.mediaSession.setActionHandler("play", play);
-            navigator.mediaSession.setActionHandler("pause", pause);
-            navigator.mediaSession.setActionHandler("stop", pause);
-            navigator.mediaSession.setActionHandler(
-                "seekbackward",
-                seekBackward
-            );
-            navigator.mediaSession.setActionHandler("seekforward", seekForward);
-            navigator.mediaSession.setActionHandler("seekto", seekTo);
-            navigator.mediaSession.setActionHandler(
-                "previoustrack",
-                previousTrack
-            );
-            navigator.mediaSession.setActionHandler("nexttrack", nextTrack);
+            navigator.mediaSession.setActionHandler('play', play);
+            navigator.mediaSession.setActionHandler('pause', pause);
+            navigator.mediaSession.setActionHandler('stop', pause);
+            navigator.mediaSession.setActionHandler('seekbackward', seekBackward);
+            navigator.mediaSession.setActionHandler('seekforward', seekForward);
+            navigator.mediaSession.setActionHandler('seekto', seekTo);
+            navigator.mediaSession.setActionHandler('previoustrack', previousTrack);
+            navigator.mediaSession.setActionHandler('nexttrack', nextTrack);
         }
     }
 
     function updatePositionState() {
         audioCurrentTime = audio.currentTime;
         musicSlider.seekToValue(audioCurrentTime, audioDuration);
-        if ("mediaSession" in navigator && audio.readyState >= 1) {
+        if ('mediaSession' in navigator && audio.readyState >= 1) {
             navigator.mediaSession.setPositionState({
                 duration: audio.duration,
                 playbackRate: audio.playbackRate,
@@ -123,10 +108,7 @@
         musicSlider.seekToValue(audioCurrentTime, audioDuration);
 
         if (isPlaying) {
-            updateUiTimeout = setTimeout(
-                updateUiLoop,
-                PLAYER_UPDATE_UI_TIMEOUT
-            );
+            updateUiTimeout = setTimeout(updateUiLoop, PLAYER_UPDATE_UI_TIMEOUT);
         }
     }
 
@@ -136,9 +118,7 @@
         if (isSendingTrackPlay) return;
         isSendingTrackPlay = true;
         await fetch(
-            `${import.meta.env.VITE_API_URL}/tracks/${
-                track.id
-            }/play?${new URLSearchParams({
+            `${import.meta.env.VITE_API_URL}/tracks/${track.id}/play?${new URLSearchParams({
                 position: audio.currentTime,
             })}`,
             {
@@ -153,10 +133,7 @@
     async function updateServerLoop() {
         await sendTrackPlay();
         if (isPlaying) {
-            updateServerTimeout = setTimeout(
-                updateServerLoop,
-                PLAYER_UPDATE_SERVER_TIMEOUT
-            );
+            updateServerTimeout = setTimeout(updateServerLoop, PLAYER_UPDATE_SERVER_TIMEOUT);
         }
     }
 
@@ -177,37 +154,29 @@
     function previousTrack() {
         playingMusicPlayerTrackId = undefined;
         musicPlayer.update((musicPlayer) => {
-            const track = musicPlayer.queue.find(
-                (track) => track.id == musicPlayer.track_id
-            );
+            const track = musicPlayer.queue.find((track) => track.id == musicPlayer.track_id);
             const index = musicPlayer.queue.indexOf(track);
-            musicPlayer.track_id =
-                musicPlayer.queue[
-                    index - 1 >= 0 ? index - 1 : musicPlayer.queue.length - 1
-                ].id;
+            musicPlayer.track_id = musicPlayer.queue[index - 1 >= 0 ? index - 1 : musicPlayer.queue.length - 1].id;
             return musicPlayer;
         });
     }
 
     function seekBackward(details) {
         if (!isPlaying) play();
-        audio.currentTime = Math.max(
-            0,
-            audio.currentTime - (details.seekOffset || PLAYER_SEEK_TIME)
-        );
+        audio.currentTime = Math.max(0, audio.currentTime - (details.seekOffset || PLAYER_SEEK_TIME));
         sendTrackPlay();
         updatePositionState();
     }
 
     function play() {
         musicPlayer.update((musicPlayer) => {
-            musicPlayer.action = "play";
+            musicPlayer.action = 'play';
             return musicPlayer;
         });
 
         audio.play();
-        if ("mediaSession" in navigator) {
-            navigator.mediaSession.playbackState = "playing";
+        if ('mediaSession' in navigator) {
+            navigator.mediaSession.playbackState = 'playing';
         }
         isPlaying = true;
         updateUiLoop();
@@ -217,8 +186,8 @@
 
     function pause() {
         audio.pause();
-        if ("mediaSession" in navigator) {
-            navigator.mediaSession.playbackState = "paused";
+        if ('mediaSession' in navigator) {
+            navigator.mediaSession.playbackState = 'paused';
         }
         isPlaying = false;
     }
@@ -233,10 +202,7 @@
 
     function seekForward(details) {
         if (!isPlaying) play();
-        audio.currentTime = Math.min(
-            audio.duration,
-            audio.currentTime + (details.seekOffset || PLAYER_SEEK_TIME)
-        );
+        audio.currentTime = Math.min(audio.duration, audio.currentTime + (details.seekOffset || PLAYER_SEEK_TIME));
         sendTrackPlay();
         updatePositionState();
     }
@@ -244,33 +210,21 @@
     function nextTrack() {
         playingMusicPlayerTrackId = undefined;
         musicPlayer.update((musicPlayer) => {
-            const track = musicPlayer.queue.find(
-                (track) => track.id == musicPlayer.track_id
-            );
+            const track = musicPlayer.queue.find((track) => track.id == musicPlayer.track_id);
             const index = musicPlayer.queue.indexOf(track);
-            musicPlayer.track_id =
-                musicPlayer.queue[
-                    index + 1 <= musicPlayer.queue.length - 1 ? index + 1 : 0
-                ].id;
+            musicPlayer.track_id = musicPlayer.queue[index + 1 <= musicPlayer.queue.length - 1 ? index + 1 : 0].id;
             return musicPlayer;
         });
     }
 
     // Like
     function likeTrack() {
-        const track = $musicPlayer.queue.find(
-            (track) => track.id == $musicPlayer.track_id
-        );
-        fetch(
-            `${import.meta.env.VITE_API_URL}/tracks/${track.id}/like${
-                track.liked ? "/delete" : ""
-            }`,
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            }
-        );
+        const track = $musicPlayer.queue.find((track) => track.id == $musicPlayer.track_id);
+        fetch(`${import.meta.env.VITE_API_URL}/tracks/${track.id}/like${track.liked ? '/delete' : ''}`, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
         track.liked = !track.liked;
         $musicPlayer = $musicPlayer;
     }
@@ -319,14 +273,11 @@
 
         <div class="mr-4" style="width: calc(13.5rem - 64px);">
             <p class="ellipsis">
-                <a href="/albums/{track.album.id}" style="font-weight: 500;"
-                    >{track.title}</a
-                >
+                <a href="/albums/{track.album.id}" style="font-weight: 500;">{track.title}</a>
             </p>
             <p class="ellipsis">
                 {#each track.artists as artist}
-                    <a href="/artists/{artist.id}" class="mr-2">{artist.name}</a
-                    >
+                    <a href="/artists/{artist.id}" class="mr-2">{artist.name}</a>
                 {/each}
             </p>
         </div>
@@ -380,26 +331,13 @@
             </button>
         </div>
 
-        <span class="mr-3" style="width: 4rem; text-align: right;"
-            >{formatDuration(audioCurrentTime)}</span
-        >
-        <Slider
-            style="flex: 1;"
-            maxValue={audioDuration}
-            bind:this={musicSlider}
-            on:newValue={sliderSeek}
-        />
-        <span class="ml-3" style="width: 4rem;"
-            >-{formatDuration(audioDuration - audioCurrentTime)}</span
-        >
+        <span class="mr-3" style="width: 4rem; text-align: right;">{formatDuration(audioCurrentTime)}</span>
+        <Slider style="flex: 1;" maxValue={audioDuration} bind:this={musicSlider} on:newValue={sliderSeek} />
+        <span class="ml-3" style="width: 4rem;">-{formatDuration(audioDuration - audioCurrentTime)}</span>
 
-        {#if $page.url.pathname == "/queue"}
+        {#if $page.url.pathname == '/queue'}
             <!-- svelte-ignore a11y-invalid-attribute -->
-            <a
-                class="button mr-4"
-                href="#"
-                on:click|preventDefault={() => history.back()}
-            >
+            <a class="button mr-4" href="#" on:click|preventDefault={() => history.back()}>
                 <svg class="icon" viewBox="0 0 24 24">
                     <path
                         d="M15,6H3V8H15V6M15,10H3V12H15V10M3,16H11V14H3V16M17,6V14.18C16.69,14.07 16.35,14 16,14A3,3 0 0,0 13,17A3,3 0 0,0 16,20A3,3 0 0,0 19,17V8H22V6H17Z"
@@ -439,11 +377,6 @@
             </svg>
         </button>
 
-        <Slider
-            style="width: 8rem;"
-            bind:this={volumeSlider}
-            on:newValue={volumeSeek}
-            maxValue="1"
-        />
+        <Slider style="width: 8rem;" bind:this={volumeSlider} on:newValue={volumeSeek} maxValue="1" />
     </div>
 {/if}

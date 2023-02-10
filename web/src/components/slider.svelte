@@ -1,5 +1,5 @@
 <script>
-    import { createEventDispatcher } from "svelte";
+    import { createEventDispatcher } from 'svelte';
 
     export let maxValue;
     export let style;
@@ -11,30 +11,23 @@
             maxValue = tempMaxValue;
         }
         let newThumbPosition = container.offsetWidth * (value / maxValue);
-        thumb.style.left = newThumbPosition - thumb.offsetWidth / 2 + "px";
-        slider.style.width = newThumbPosition + "px";
+        thumb.style.left = newThumbPosition - thumb.offsetWidth / 2 + 'px';
+        slider.style.width = newThumbPosition + 'px';
     }
 
     const dispatch = createEventDispatcher();
     function newValue(value) {
-        dispatch("newValue", { value: value });
+        dispatch('newValue', { value: value });
     }
 
     let drag = false;
 
     function updateValue(event) {
-        let newThumbPosition =
-            event.pageX - container.getBoundingClientRect().left;
-        if (
-            newThumbPosition >= 0 &&
-            newThumbPosition <= container.offsetWidth
-        ) {
+        let newThumbPosition = event.pageX - container.getBoundingClientRect().left;
+        if (newThumbPosition >= 0 && newThumbPosition <= container.offsetWidth) {
             thumb.style.left = `${newThumbPosition - thumb.offsetWidth / 2}px`;
             slider.style.width = `${newThumbPosition}px`;
-            newValue(
-                (parseInt(slider.style.width) / container.offsetWidth) *
-                    maxValue
-            );
+            newValue((parseInt(slider.style.width) / container.offsetWidth) * maxValue);
         }
     }
 

@@ -1,7 +1,7 @@
 <script>
-    import CreateModal from "../../../components/admin/users/create-modal.svelte";
-    import EditModal from "../../../components/admin/users/edit-modal.svelte";
-    import DeleteModal from "../../../components/admin/users/delete-modal.svelte";
+    import CreateModal from '../../../components/admin/users/create-modal.svelte';
+    import EditModal from '../../../components/admin/users/edit-modal.svelte';
+    import DeleteModal from '../../../components/admin/users/delete-modal.svelte';
 
     export let data;
     let { token, users } = data;
@@ -78,17 +78,11 @@
                 <td>{index + 1}</td>
                 <td>{user.username}</td>
                 <td>{user.email}</td>
-                <td>{user.role == "normal" ? "Normal" : "Admin"}</td>
+                <td>{user.role == 'normal' ? 'Normal' : 'Admin'}</td>
                 <td>
                     <div class="buttons">
-                        <button
-                            class="button is-link is-small"
-                            on:click={() => editUser(user)}>Edit</button
-                        >
-                        <button
-                            class="button is-danger is-small"
-                            on:click={() => deleteUser(user)}>Delete</button
-                        >
+                        <button class="button is-link is-small" on:click={() => editUser(user)}>Edit</button>
+                        <button class="button is-danger is-small" on:click={() => deleteUser(user)}>Delete</button>
                     </div>
                 </td>
             </tr>
@@ -96,22 +90,8 @@
     </tbody>
 </table>
 
-<CreateModal
-    bind:this={createModal}
-    {token}
-    on:createUser={updateUsers}
-/>
+<CreateModal bind:this={createModal} {token} on:createUser={updateUsers} />
 
-<EditModal
-    bind:this={editModal}
-    {token}
-    user={selectedUser}
-    on:updateUser={updateUsers}
-/>
+<EditModal bind:this={editModal} {token} user={selectedUser} on:updateUser={updateUsers} />
 
-<DeleteModal
-    bind:this={deleteModal}
-    {token}
-    user={selectedUser}
-    on:deleteUser={updateUsers}
-/>
+<DeleteModal bind:this={deleteModal} {token} user={selectedUser} on:deleteUser={updateUsers} />

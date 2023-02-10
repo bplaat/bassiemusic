@@ -6,8 +6,8 @@ export async function load({ fetch, cookies, params }) {
 
     const response = await fetch(`${import.meta.env.VITE_API_URL}/artists/${params.id}`, {
         headers: {
-            Authorization: `Bearer ${cookies.get('token')}`
-        }
+            Authorization: `Bearer ${cookies.get('token')}`,
+        },
     });
     if (response.status == 404) {
         throw error(404, 'Not Found');

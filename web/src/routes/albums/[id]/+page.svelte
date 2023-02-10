@@ -1,7 +1,7 @@
 <script>
-    import { page } from "$app/stores";
-    import { browser } from "$app/environment";
-    import TracksTable from "../../../components/tracks-table.svelte";
+    import { page } from '$app/stores';
+    import { browser } from '$app/environment';
+    import TracksTable from '../../../components/tracks-table.svelte';
 
     export let data;
     let { token, album } = data;
@@ -12,18 +12,12 @@
 
     if (browser) {
         page.subscribe(async (page) => {
-            if (
-                page.url.pathname.startsWith("/albums/") &&
-                page.url.pathname != `/albums/${album.id}`
-            ) {
-                const response = await fetch(
-                    `${import.meta.env.VITE_API_URL}/albums/${page.params.id}`,
-                    {
-                        headers: {
-                            Authorization: `Bearer ${token}`,
-                        },
-                    }
-                );
+            if (page.url.pathname.startsWith('/albums/') && page.url.pathname != `/albums/${album.id}`) {
+                const response = await fetch(`${import.meta.env.VITE_API_URL}/albums/${page.params.id}`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
                 album = await response.json();
                 album.tracks = album.tracks.slice().map((track) => {
                     track.album = album;
@@ -36,16 +30,11 @@
     let tracksTable;
 
     function likeAlbum() {
-        fetch(
-            `${import.meta.env.VITE_API_URL}/albums/${album.id}/like${
-                album.liked ? "/delete" : ""
-            }`,
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            }
-        );
+        fetch(`${import.meta.env.VITE_API_URL}/albums/${album.id}/like${album.liked ? '/delete' : ''}`, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
         album.liked = !album.liked;
     }
 </script>
@@ -57,9 +46,7 @@
 <div class="buttons">
     <button class="button" on:click={() => history.back()}>
         <svg class="icon" viewBox="0 0 24 24">
-            <path
-                d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z"
-            />
+            <path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" />
         </svg>
     </button>
 </div>
@@ -67,21 +54,16 @@
 <div class="columns">
     <div class="column is-one-quarter mr-5">
         <div class="box p-0 has-image-tags">
-            <img
-                style="aspect-ratio: 1;"
-                src={album.large_cover}
-                alt="Cover of album {album.title}"
-                loading="lazy"
-            />
+            <img style="aspect-ratio: 1;" src={album.large_cover} alt="Cover of album {album.title}" loading="lazy" />
 
             <div class="image-tags">
-                {#if album.type == "album"}
+                {#if album.type == 'album'}
                     <span class="tag">ALBUM</span>
                 {/if}
-                {#if album.type == "ep"}
+                {#if album.type == 'ep'}
                     <span class="tag">EP</span>
                 {/if}
-                {#if album.type == "single"}
+                {#if album.type == 'single'}
                     <span class="tag">SINGLE</span>
                 {/if}
                 {#if album.explicit}
@@ -91,12 +73,9 @@
         </div>
     </div>
 
-    <div
-        class="column"
-        style="display: flex; flex-direction: column; justify-content: center;"
-    >
+    <div class="column" style="display: flex; flex-direction: column; justify-content: center;">
         <h2 class="title mb-3">{album.title}</h2>
-        <p class="mb-3">{album.released_at.split("T")[0]}</p>
+        <p class="mb-3">{album.released_at.split('T')[0]}</p>
         {#if album.genres != undefined}
             <p class="mb-3">
                 {#each album.genres as genre}
@@ -111,10 +90,7 @@
         </p>
 
         <div class="buttons">
-            <button
-                class="button is-large"
-                on:click={tracksTable.playFirstTrack}
-            >
+            <button class="button is-large" on:click={tracksTable.playFirstTrack}>
                 <svg class="icon" viewBox="0 0 24 24">
                     <path d="M8,5.14V19.14L19,12.14L8,5.14Z" />
                 </svg>
@@ -141,9 +117,4 @@
 </div>
 
 <h3 class="title is-4">Tracks</h3>
-<TracksTable
-    bind:this={tracksTable}
-    {token}
-    tracks={album.tracks}
-    showAlbum={false}
-/>
+<TracksTable bind:this={tracksTable} {token} tracks={album.tracks} showAlbum={false} />

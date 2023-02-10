@@ -8,16 +8,18 @@
             method: 'POST',
             body: new URLSearchParams({
                 logon,
-                password
-            })
+                password,
+            }),
         });
         const { success, token } = await response.json();
         if (success) {
-            document.cookie = `token=${token}; path=/; samesite=strict; expires=${new Date(Date.now() + 356 * 24 * 60 * 60 + 1000).toUTCString()}`;
+            document.cookie = `token=${token}; path=/; samesite=strict; expires=${new Date(
+                Date.now() + 356 * 24 * 60 * 60 + 1000
+            ).toUTCString()}`;
             window.location = '/';
         } else {
             errors = {
-                logon: 'Wrong username, email address or password'
+                logon: 'Wrong username, email address or password',
             };
         }
     }
@@ -34,19 +36,33 @@
         <div class="field">
             <label class="label" for="logon">Username or email address</label>
             <div class="control">
-                <input class="input" class:is-danger="{errors.logon}" type="text" id="logon" bind:value={logon}
-                    autofocus required>
+                <!-- svelte-ignore a11y-autofocus -->
+                <input
+                    class="input"
+                    class:is-danger={errors.logon}
+                    type="text"
+                    id="logon"
+                    bind:value={logon}
+                    autofocus
+                    required
+                />
             </div>
             {#if errors.logon}
-            <p class="help is-danger">{errors.logon}</p>
+                <p class="help is-danger">{errors.logon}</p>
             {/if}
         </div>
 
         <div class="field">
             <label class="label" for="password">Password</label>
             <div class="control">
-                <input class="input" class:is-danger="{errors.logon}" type="password" id="password"
-                    bind:value={password} required>
+                <input
+                    class="input"
+                    class:is-danger={errors.logon}
+                    type="password"
+                    id="password"
+                    bind:value={password}
+                    required
+                />
             </div>
         </div>
 

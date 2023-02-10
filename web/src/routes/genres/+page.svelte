@@ -1,6 +1,6 @@
 <script>
-    import { onDestroy, onMount } from "svelte";
-    import GenreCard from "../../components/genre-card.svelte";
+    import { onDestroy, onMount } from 'svelte';
+    import GenreCard from '../../components/genre-card.svelte';
 
     export let data;
     let { token, genres } = data;
@@ -56,9 +56,7 @@
 
 <div class="columns is-multiline is-mobile">
     {#each genres as genre}
-        <div
-            class="column is-half-mobile is-one-third-tablet is-one-quarter-desktop is-one-fifth-widescreen"
-        >
+        <div class="column is-half-mobile is-one-third-tablet is-one-quarter-desktop is-one-fifth-widescreen">
             <GenreCard {genre} />
         </div>
     {/each}
