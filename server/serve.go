@@ -107,5 +107,5 @@ func serve() {
 	app.Get("/sessions/:sessionID", controllers.SessionsShow)
 	app.Get("/sessions/:sessionID/revoke", controllers.SessionsRevoke)
 
-	log.Fatal(app.Listen(":8080"))
+	log.Fatal(app.Listen(":" + os.Getenv("SERVER_PORT")))
 }
