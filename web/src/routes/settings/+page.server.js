@@ -25,6 +25,6 @@ export async function load({ cookies, fetch }) {
         authUser,
         currentSession,
         sessions,
-        sessionsToal: pagination.total,
+        sessionsTotal: pagination.total,
     };
 }
