@@ -15,7 +15,7 @@ ID_IMAGE_ICON IMAGE "icon.png"
 STRINGTABLE LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 {
     ID_STRING_APP_NAME "BassieMusic\x00"
-    ID_STRING_WEBVIEW_URL "http://localhost:5173/\x00"
+    ID_STRING_WEBVIEW_URL "https://bassiemusic.plaatsoft.nl/\x00"
     ID_STRING_ABOUT_MENU "About\x00"
     ID_STRING_ABOUT_TITLE "About BassieMusic Windows App\x00"
     ID_STRING_ABOUT_TEXT_FORMAT "BassieMusic Windows App v%d.%d.%d.%d\n"
@@ -27,7 +27,7 @@ STRINGTABLE LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 STRINGTABLE LANGUAGE LANG_DUTCH, SUBLANG_DUTCH
 {
     ID_STRING_APP_NAME "BassieMusic\x00"
-    ID_STRING_WEBVIEW_URL "http://localhost:5173/\x00"
+    ID_STRING_WEBVIEW_URL "https://bassiemusic.plaatsoft.nl/\x00"
     ID_STRING_ABOUT_MENU "Over\x00"
     ID_STRING_ABOUT_TITLE "Over BassieMusic Windows App\x00"
     ID_STRING_ABOUT_TEXT_FORMAT "BassieMusic Windows App v%d.%d.%d.%d\n"

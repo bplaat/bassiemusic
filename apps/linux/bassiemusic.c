@@ -31,7 +31,7 @@ static void app_activate(GtkApplication *app) {
     char cookies_path[512];
     sprintf(cookies_path, "%s/cookies", storage_path);
     webkit_cookie_manager_set_persistent_storage(cookie_manager, cookies_path, WEBKIT_COOKIE_PERSISTENT_STORAGE_TEXT);
-    webkit_web_view_load_uri(WEBKIT_WEB_VIEW(webview), "http://localhost:5173/");
+    webkit_web_view_load_uri(WEBKIT_WEB_VIEW(webview), "https://bassiemusic.plaatsoft.nl/");
     gtk_widget_grab_focus(webview);
 
     // Show window
