@@ -41,6 +41,14 @@
         );
         artist.liked = !artist.liked;
     }
+
+    let albumType = "all";
+    $: filteredAlbums = artist.albums.filter((album) => {
+        if (albumType == "all") return true;
+        if (albumType == "album") return album.type == "album";
+        if (albumType == "ep") return album.type == "ep";
+        if (albumType == "single") return album.type == "single";
+    });
 </script>
 
 <svelte:head>
@@ -110,15 +118,52 @@
 
 <h2 class="title mt-5">Albums</h2>
 {#if artist.albums != undefined}
-    <div class="columns is-multiline is-mobile">
-        {#each artist.albums as album}
-            <div
-                class="column is-half-mobile is-one-third-tablet is-one-quarter-desktop is-one-fifth-widescreen"
-            >
-                <AlbumCard {album} />
-            </div>
-        {/each}
+    <div class="tabs is-toggle">
+        <ul>
+            <li class:is-active={albumType == "all"}>
+                <!-- svelte-ignore a11y-invalid-attribute -->
+                <a href="#" on:click|preventDefault={() => (albumType = "all")}
+                    >All</a
+                >
+            </li>
+            <li class:is-active={albumType == "album"}>
+                <!-- svelte-ignore a11y-invalid-attribute -->
+                <a
+                    href="#"
+                    on:click|preventDefault={() => (albumType = "album")}
+                    >Albums</a
+                >
+            </li>
+            <li class:is-active={albumType == "ep"}>
+                <!-- svelte-ignore a11y-invalid-attribute -->
+                <a href="#" on:click|preventDefault={() => (albumType = "ep")}
+                    >EPs</a
+                >
+            </li>
+            <li class:is-active={albumType == "single"}>
+                <!-- svelte-ignore a11y-invalid-attribute -->
+                <a
+                    href="#"
+                    on:click|preventDefault={() => (albumType = "single")}
+                    >Singles</a
+                >
+            </li>
+        </ul>
     </div>
+
+    {#if filteredAlbums.length > 0}
+        <div class="columns is-multiline is-mobile">
+            {#each filteredAlbums as album}
+                <div
+                    class="column is-half-mobile is-one-third-tablet is-one-quarter-desktop is-one-fifth-widescreen"
+                >
+                    <AlbumCard {album} />
+                </div>
+            {/each}
+        </div>
+    {:else}
+        <p><i>This artist has no albums of the selected type</i></p>
+    {/if}
 {:else}
     <p><i>This artist has no albums</i></p>
 {/if}

@@ -13,7 +13,7 @@ body.is-playing{height:calc(100% - 6rem);margin-bottom:6rem}
 }
 @media (min-width: 1024px) {
     body{margin-left:16.5rem}
-    .sidebar{left:0}
+    .sidebar{left:0;z-index:100}.player-controls{z-index:300}
     body.is-playing .sidebar{height:calc(100% - 6rem)}
 }
 

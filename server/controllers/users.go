@@ -321,7 +321,7 @@ func UsersPlayedTracks(c *fiber.Ctx) error {
 
 	// Get played tracks
 	playedTracks := models.TrackModel(c).Join("INNER JOIN `track_plays` ON `tracks`.`id` = `track_plays`.`track_id`").
-		With("artists", "album").WhereRaw("`tracks`.`title` LIKE ?", "%"+query+"%").OrderByDesc("plays").Paginate(page, limit)
+		With("artists", "album").WhereRaw("`tracks`.`title` LIKE ?", "%"+query+"%").OrderByRaw("`track_plays`.`updated_at` DESC").Paginate(page, limit)
 	return c.JSON(playedTracks)
 }
 
