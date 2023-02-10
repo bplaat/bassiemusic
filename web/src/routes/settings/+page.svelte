@@ -213,7 +213,7 @@
                             {/if}
                         </p>
                         <p>
-                            Created at: {new Date(session.created_at).toLocaleString()}
+                            Logged in at: {new Date(session.created_at).toLocaleString()}
                         </p>
                         <p>
                             Expires at: {new Date(session.expires_at).toLocaleString()}

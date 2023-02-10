@@ -99,11 +99,13 @@
 
 <form on:submit|preventDefault={search} class="field has-addons mb-5">
     <div class="control" style="width: 100%;">
+        <!-- svelte-ignore a11y-autofocus -->
         <input
             class="input"
             type="text"
-            bind:value={searchTerm}
             placeholder="Find a track, album, artist or genre..."
+            bind:value={searchTerm}
+            autofocus
         />
     </div>
     <div class="control">
