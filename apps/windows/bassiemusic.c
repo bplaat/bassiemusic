@@ -1,4 +1,5 @@
 #define UNICODE
+#include <dwmapi.h>
 #include <objbase.h>
 #include <shlobj.h>
 #include <windows.h>
@@ -48,8 +49,6 @@ wchar_t *wcscat(wchar_t *dest, const wchar_t *src) {
 // Helper functions
 #define DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1 19
 #define DWMWA_USE_IMMERSIVE_DARK_MODE 20
-typedef HRESULT(STDMETHODCALLTYPE *_DwmSetWindowAttribute)(HWND hwnd, DWORD dwAttribute, LPCVOID pvAttribute,
-                                                           DWORD cbAttribute);
 
 typedef HRESULT(STDMETHODCALLTYPE *_CreateCoreWebView2EnvironmentWithOptions)(
     PCWSTR browserExecutableFolder, PCWSTR userDataFolder, ICoreWebView2EnvironmentOptions *environmentOptions,
@@ -311,9 +310,10 @@ ControllerCompletedHandler_Invoke(ICoreWebView2CreateCoreWebView2ControllerCompl
     ICoreWebView2Settings2 *settings2;
     ICoreWebView2_QueryInterface(settings, &IID_ICoreWebView2Settings2, (void **)&settings2);
     GetAppVersion(app_version);
-    wchar_t user_agent[255];
-    wsprintfW(user_agent, L"BassieMusic Windows App v%d.%d.%d.%d", app_version[0], app_version[1], app_version[2], app_version[3]);
-    ICoreWebView2Settings2_put_UserAgent(settings2, user_agent);
+    wchar_t userAgent[255];
+    wsprintfW(userAgent, L"BassieMusic Windows App v%d.%d.%d.%d", app_version[0], app_version[1], app_version[2],
+              app_version[3]);
+    ICoreWebView2Settings2_put_UserAgent(settings2, userAgent);
     ICoreWebView2Settings2_Release(settings2);
 
     ICoreWebView2NewWindowRequestedEventHandler *newWindowRequestedHandler =
@@ -465,14 +465,9 @@ void OpenAboutWindow(void) {
                                window_rect.bottom - window_rect.top, HWND_DESKTOP, NULL, instance, NULL);
 
     // Enable dark window decoration
-    HMODULE hdwmapi = LoadLibrary(L"dwmapi.dll");
-    _DwmSetWindowAttribute DwmSetWindowAttribute =
-        (_DwmSetWindowAttribute)GetProcAddress(hdwmapi, "DwmSetWindowAttribute");
-    if (DwmSetWindowAttribute != NULL) {
-        BOOL enabled = TRUE;
-        if (FAILED(DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &enabled, sizeof(BOOL)))) {
-            DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1, &enabled, sizeof(BOOL));
-        }
+    BOOL enabled = TRUE;
+    if (FAILED(DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &enabled, sizeof(BOOL)))) {
+        DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1, &enabled, sizeof(BOOL));
     }
 
     // Show window
@@ -530,6 +525,21 @@ LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         return 0;
     }
 
+    // Save window state
+    if (msg == WM_CLOSE) {
+        wchar_t windowStatePath[MAX_PATH];
+        SHGetFolderPath(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, windowStatePath);
+        wcscat(windowStatePath, L"\\bassiemusic\\window");
+        HANDLE windowStateFile =
+            CreateFile(windowStatePath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        WINDOWPLACEMENT windowState;
+        GetWindowPlacement(hwnd, &windowState);
+        WriteFile(windowStateFile, &windowState, sizeof(WINDOWPLACEMENT), NULL, NULL);
+        CloseHandle(windowStateFile);
+        DestroyWindow(hwnd);
+        return 0;
+    }
+
     // Quit application
     if (msg == WM_DESTROY) {
         PostQuitMessage(0);
@@ -572,18 +582,27 @@ void _start(void) {
                                  window_rect.bottom - window_rect.top, HWND_DESKTOP, NULL, instance, NULL);
 
     // Enable dark window decoration
-    HMODULE hdwmapi = LoadLibrary(L"dwmapi.dll");
-    _DwmSetWindowAttribute DwmSetWindowAttribute =
-        (_DwmSetWindowAttribute)GetProcAddress(hdwmapi, "DwmSetWindowAttribute");
-    if (DwmSetWindowAttribute != NULL) {
-        BOOL enabled = TRUE;
-        if (FAILED(DwmSetWindowAttribute(window_hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &enabled, sizeof(BOOL)))) {
-            DwmSetWindowAttribute(window_hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1, &enabled, sizeof(BOOL));
-        }
+    BOOL enabled = TRUE;
+    if (FAILED(DwmSetWindowAttribute(window_hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &enabled, sizeof(BOOL)))) {
+        DwmSetWindowAttribute(window_hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1, &enabled, sizeof(BOOL));
+    }
+
+    // Restore old window state
+    wchar_t windowStatePath[MAX_PATH];
+    SHGetFolderPath(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, windowStatePath);
+    wcscat(windowStatePath, L"\\bassiemusic\\window");
+    HANDLE windowStateFile =
+        CreateFile(windowStatePath, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (windowStateFile != INVALID_HANDLE_VALUE) {
+        WINDOWPLACEMENT windowState;
+        ReadFile(windowStateFile, &windowState, sizeof(WINDOWPLACEMENT), NULL, NULL);
+        SetWindowPlacement(window_hwnd, &windowState);
+        CloseHandle(windowStateFile);
+    } else {
+        ShowWindow(window_hwnd, window_width >= GetSystemMetrics(SM_CXSCREEN) ? SW_SHOWMAXIMIZED : SW_SHOWDEFAULT);
     }
 
     // Show window
-    ShowWindow(window_hwnd, window_width >= GetSystemMetrics(SM_CXSCREEN) ? SW_SHOWMAXIMIZED : SW_SHOWDEFAULT);
     UpdateWindow(window_hwnd);
 
     // Load webview2 laoder
