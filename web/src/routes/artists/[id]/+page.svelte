@@ -90,7 +90,11 @@
 </div>
 
 <h2 class="title mt-5">Top Tracks</h2>
-<TracksTable bind:this={topTracksTable} {token} tracks={artist.top_tracks} />
+{#if artist.top_tracks.length > 0}
+    <TracksTable bind:this={topTracksTable} {token} tracks={artist.top_tracks} />
+{:else}
+    <p><i>This artist doens't have any top tracks</i></p>
+{/if}
 
 <h2 class="title mt-5">Albums</h2>
 {#if artist.albums != undefined}

@@ -22,5 +22,5 @@
 {#if $musicPlayer.queue.length > 0}
     <TracksTable {token} isMusicQueue={true} tracks={$musicPlayer.queue} />
 {:else}
-    <p>The music player queue is empty</p>
+    <p><i>The music player queue is empty</i></p>
 {/if}

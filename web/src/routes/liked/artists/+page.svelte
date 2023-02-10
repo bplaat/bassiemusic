@@ -71,7 +71,7 @@
         {/each}
     </div>
 {:else}
-    <p>You have not liked any artists</p>
+    <p><i>You have not liked any artists</i></p>
 {/if}
 
 <div bind:this={bottom} />

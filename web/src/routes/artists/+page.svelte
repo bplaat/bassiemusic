@@ -54,12 +54,16 @@
 
 <h2 class="title">Artists</h2>
 
-<div class="columns is-multiline is-mobile">
-    {#each artists as artist}
-        <div class="column is-half-mobile is-one-third-tablet is-one-quarter-desktop is-one-fifth-widescreen">
-            <ArtistCard {artist} />
-        </div>
-    {/each}
-</div>
+{#if artists.length > 0}
+    <div class="columns is-multiline is-mobile">
+        {#each artists as artist}
+            <div class="column is-half-mobile is-one-third-tablet is-one-quarter-desktop is-one-fifth-widescreen">
+                <ArtistCard {artist} />
+            </div>
+        {/each}
+    </div>
+{:else}
+    <p><i>You don't have added any artists</i></p>
+{/if}
 
 <div bind:this={bottom} />

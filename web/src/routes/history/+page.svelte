@@ -57,7 +57,7 @@
 {#if tracks.length > 0}
     <TracksTable {token} {tracks} />
 {:else}
-    <p>You have not listened to any tracks</p>
+    <p><i>You have not listened to any tracks</i></p>
 {/if}
 
 <div bind:this={bottom} />

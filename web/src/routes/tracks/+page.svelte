@@ -53,6 +53,10 @@
 </svelte:head>
 
 <h2 class="title">Tracks</h2>
-<TracksTable {token} {tracks} />
+{#if tracks.length > 0}
+    <TracksTable {token} {tracks} />
+{:else}
+    <p><i>You don't have added any tracks</i></p>
+{/if}
 
 <div bind:this={bottom} />
