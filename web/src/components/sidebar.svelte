@@ -1,6 +1,7 @@
 <script>
     import { page } from "$app/stores";
 
+    export let open;
     export let token;
     export let authUser;
 
@@ -15,7 +16,7 @@
     }
 </script>
 
-<div class="sidebar box has-background-white-bis m-0" style="border-radius: 0;">
+<div class="sidebar box has-background-white-bis m-0" class:is-open={open}>
     <h1 class="title is-4 mb-5"><a href="/">BassieMusic</a></h1>
     <div class="menu">
         {#if authUser == null}
@@ -224,12 +225,16 @@
 
     {#if authUser != null}
         <div style="display: flex; align-items: center;" class="mb-5">
-            <div
-                class="box is-image m-0 mr-4"
-                style="width: 48px; height: 48px; background-image: url({authUser.avatar
-                    ? authUser.avatar
-                    : '/images/avatar-default.svg'});"
-            />
+            <div class="box m-0 p-0 mr-4">
+                <img
+                    style="width: 48px; height: 48px;"
+                    src={authUser.avatar
+                        ? authUser.avatar
+                        : "/images/avatar-default.svg"}
+                    alt="Avatar of user {authUser.username}"
+                    loading="lazy"
+                />
+            </div>
 
             <div class="flex">
                 <p><b>{authUser.username}</b></p>

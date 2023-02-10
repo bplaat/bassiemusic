@@ -522,7 +522,7 @@ LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
     // Set window min size
     if (msg == WM_GETMINMAXINFO) {
-        RECT window_rect = {0, 0, MulDiv(640, window_dpi, 96), MulDiv(480, window_dpi, 96)};
+        RECT window_rect = {0, 0, MulDiv(480, window_dpi, 96), MulDiv(480, window_dpi, 96)};
         AdjustWindowRectExForDpi(&window_rect, WINDOW_STYLE, FALSE, 0, window_dpi);
         MINMAXINFO *minMaxInfo = (MINMAXINFO *)lParam;
         minMaxInfo->ptMinTrackSize.x = window_rect.right - window_rect.left;

@@ -1,4 +1,5 @@
 <script>
+    import { onDestroy, onMount } from "svelte";
     import GenreCard from "../../components/genre-card.svelte";
 
     export let data;
@@ -15,15 +16,35 @@
                 },
             }
         );
-        const { data: newGenres, pagination } = await response.json();
+        const { data: newGenres } = await response.json();
         genres.push(...newGenres);
         genres = genres;
-        if (genres.length != pagination.total) {
-            fetchPage(page + 1);
-        }
     }
+
+    let bottom;
     if (genres.length != data.total) {
-        fetchPage(2);
+        let observer;
+        onMount(() => {
+            let page = 2;
+            observer = new IntersectionObserver(
+                (entries, observer) => {
+                    for (const entry of entries) {
+                        if (genres.length >= data.total) {
+                            observer.unobserve(entry.target);
+                        } else {
+                            fetchPage(page++);
+                        }
+                    }
+                },
+                {
+                    root: document.body,
+                }
+            );
+            observer.observe(bottom);
+        });
+        onDestroy(() => {
+            if (observer) observer.unobserve(bottom);
+        });
     }
 </script>
 
@@ -33,10 +54,14 @@
 
 <h2 class="title">Genres</h2>
 
-<div class="columns is-multiline">
+<div class="columns is-multiline is-mobile">
     {#each genres as genre}
-        <div class="column is-one-fifth">
-            <GenreCard {genre}/>
+        <div
+            class="column is-half-mobile is-one-third-tablet is-one-quarter-desktop is-one-fifth-widescreen"
+        >
+            <GenreCard {genre} />
         </div>
     {/each}
 </div>
+
+<div bind:this={bottom} />

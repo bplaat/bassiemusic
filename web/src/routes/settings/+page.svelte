@@ -101,11 +101,6 @@
         fetchSessionsPage(2);
     }
 
-    function updateSessions() {
-        sessions = [];
-        fetchSessionsPage(1);
-    }
-
     async function revokeSession(session) {
         fetch(`${import.meta.env.VITE_API_URL}/sessions/${session.id}/revoke`, {
             headers: {
@@ -116,7 +111,7 @@
             document.cookie = `token=; expires=${new Date(0).toUTCString()}`;
             window.location = "/auth/login";
         } else {
-            updateSessions();
+            sessions = sessions.filter(otherSession => otherSession.id != session.id);
         }
     }
 </script>
@@ -246,7 +241,7 @@
 <div class="box">
     <h3 class="title is-4">Sessions management</h3>
 
-    <div class="columns is-multiline">
+    <div class="columns is-multiline is-mobile">
         {#each sessions as session}
             {#if new Date(session.expires_at).getTime() >= Date.now()}
                 <div class="column is-half">

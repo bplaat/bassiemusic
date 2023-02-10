@@ -3,8 +3,14 @@
 </script>
 
 <a class="card" href="/albums/{album.id}">
-    <div class="card-image" style="background-image: url({album.medium_cover});">
-        <div class="card-image-tags">
+    <div class="card-image has-image-tags">
+        <img
+            style="aspect-ratio: 1;"
+            src={album.medium_cover}
+            alt="Cover of album {album.name}"
+            loading="lazy"
+        />
+        <div class="image-tags">
             {#if album.type == "album"}
                 <span class="tag">ALBUM</span>
             {/if}
@@ -20,8 +26,8 @@
         </div>
     </div>
     <div class="card-content">
-        <h3 class="title is-6 mb-2">{album.title}</h3>
-        <p>
+        <h3 class="title is-6 mb-2 ellipsis">{album.title}</h3>
+        <p class="ellipsis">
             {#each album.artists as artist}
                 <a href="/artists/{artist.id}" class="mr-2">{artist.name}</a>
             {/each}

@@ -1,4 +1,5 @@
 <script>
+    import { onMount,  onDestroy } from "svelte";
     import TracksTable from "../../../components/tracks-table.svelte";
 
     export let data;
@@ -6,9 +7,7 @@
 
     async function fetchPage(page) {
         const response = await fetch(
-            `${import.meta.env.VITE_API_URL}/users/${
-                authUser.id
-            }/liked_tracks?${new URLSearchParams({
+            `${import.meta.env.VITE_API_URL}/users/${authUser.id}/liked_tracks?${new URLSearchParams({
                 page,
             })}`,
             {
@@ -17,15 +16,35 @@
                 },
             }
         );
-        const { data: newTracks, pagination } = await response.json();
+        const { data: newTracks } = await response.json();
         tracks.push(...newTracks);
         tracks = tracks;
-        if (tracks.length != pagination.total) {
-            fetchPage(page + 1);
-        }
     }
+
+    let bottom;
     if (tracks.length != data.total) {
-        fetchPage(2);
+        let observer;
+        onMount(() => {
+            let page = 2;
+            observer = new IntersectionObserver(
+                (entries, observer) => {
+                    for (const entry of entries) {
+                        if (tracks.length >= data.total) {
+                            observer.unobserve(entry.target);
+                        } else {
+                            fetchPage(page++);
+                        }
+                    }
+                },
+                {
+                    root: document.body,
+                }
+            );
+            observer.observe(bottom);
+        });
+        onDestroy(() => {
+            if (observer) observer.unobserve(bottom);
+        });
     }
 </script>
 
@@ -33,7 +52,7 @@
     <title>Tracks - Liked - BassieMusic</title>
 </svelte:head>
 
-<div class="tabs">
+<div class="tabs is-toggle">
     <ul>
         <li><a href="/liked/artists">Artists</a></li>
         <li><a href="/liked/albums">Albums</a></li>
@@ -48,3 +67,5 @@
 {:else}
     <p>You have not liked any tracks</p>
 {/if}
+
+<div bind:this={bottom} />

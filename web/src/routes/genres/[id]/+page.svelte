@@ -42,7 +42,14 @@
 
 <div class="columns">
     <div class="column is-one-quarter mr-5">
-        <div class="box is-image is-squared" style="background-image: url({genre.large_image});"></div>
+        <div class="box m-0">
+            <img
+                style="aspect-ratio: 1;"
+                src={genre.large_image}
+                alt="Image of genre {genre.name}"
+                loading="lazy"
+            />
+        </div>
     </div>
 
     <div
@@ -55,9 +62,9 @@
 
 <h2 class="title">Albums</h2>
 {#if genre.albums != undefined}
-    <div class="columns is-multiline">
+    <div class="columns is-multiline is-mobile">
         {#each genre.albums as album}
-            <div class="column is-one-fifth">
+            <div class="column is-half-mobile is-one-third-tablet is-one-quarter-desktop is-one-fifth-widescreen">
                 <AlbumCard {album} />
             </div>
         {/each}

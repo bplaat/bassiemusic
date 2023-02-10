@@ -57,7 +57,7 @@
             <th style="width: 10%;"><div class="track-index">#</div></th>
             <th style="width: calc(64px + 1.5em);">Title</th>
             <th style="width: 35%;" />
-            <th style="width: 35%;">Album</th>
+            <th style="width: 35%;" class="is-hidden-touch">Album</th>
             <th style="width: 10%;">Duration</th>
             <th style="width: 10%;">Plays</th>
             <th style="width: calc(40px + .75em);" />
@@ -92,18 +92,19 @@
                 </td>
                 {#if showAlbum}
                     <td>
-                        <div
-                            class="box is-image m-0"
-                            style="width: 64px; height: 64px; background-image: url({track
-                                .album.small_cover});"
-                        />
+                        <div class="box m-0 p-0">
+                            <img
+                                style="width: 64px; height: 64px;"
+                                src={track.album.small_cover}
+                                alt="Cover of album {track.album}"
+                                loading="lazy"
+                            />
+                        </div>
                     </td>
                 {/if}
                 <td>
                     <p class="ellipsis mb-1" style="font-weight: 500;">
-                        <a href="/albums/{track.album.id}"
-                            >{track.title}</a
-                        >
+                        <a href="/albums/{track.album.id}">{track.title}</a>
                     </p>
                     <p class="ellipsis">
                         {#if track.explicit}
@@ -117,7 +118,7 @@
                     </p>
                 </td>
                 {#if showAlbum}
-                    <td class="ellipsis"
+                    <td class="ellipsis is-hidden-touch"
                         ><a href="/albums/{track.album.id}"
                             >{track.album.title}</a
                         ></td

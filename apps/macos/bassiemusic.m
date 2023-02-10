@@ -86,7 +86,7 @@ WindowDragger *dragger;
     CGFloat windowX = (NSWidth(window.screen.frame) - NSWidth(window.frame)) / 2;
     CGFloat windowY = (NSHeight(window.screen.frame) - NSHeight(window.frame)) / 2;
     [window setFrame:NSMakeRect(windowX, windowY, NSWidth(window.frame), NSHeight(window.frame)) display:YES];
-    window.minSize = NSMakeSize(640, 480);
+    window.minSize = NSMakeSize(480, 480);
     window.backgroundColor = [NSColor colorWithRed:(0x0a / 255.f) green:(0x0a / 255.f) blue:(0x0a / 255.f) alpha:1];
     window.frameAutosaveName = @"window";
     window.delegate = [[WindowDelegate alloc] init];

@@ -1,4 +1,5 @@
 <script>
+    import { onMount,  onDestroy } from "svelte";
     import ArtistCard from "../../components/artist-card.svelte";
 
     export let data;
@@ -15,15 +16,35 @@
                 },
             }
         );
-        const { data: newArtists, pagination } = await response.json();
+        const { data: newArtists } = await response.json();
         artists.push(...newArtists);
         artists = artists;
-        if (artists.length != pagination.total) {
-            fetchPage(page + 1);
-        }
     }
+
+    let bottom;
     if (artists.length != data.total) {
-        fetchPage(2);
+        let observer;
+        onMount(() => {
+            let page = 2;
+            observer = new IntersectionObserver(
+                (entries, observer) => {
+                    for (const entry of entries) {
+                        if (artists.length >= data.total) {
+                            observer.unobserve(entry.target);
+                        } else {
+                            fetchPage(page++);
+                        }
+                    }
+                },
+                {
+                    root: document.body,
+                }
+            );
+            observer.observe(bottom);
+        });
+        onDestroy(() => {
+            if (observer) observer.unobserve(bottom);
+        });
     }
 </script>
 
@@ -33,10 +54,14 @@
 
 <h2 class="title">Artists</h2>
 
-<div class="columns is-multiline">
+<div class="columns is-multiline is-mobile">
     {#each artists as artist}
-        <div class="column is-one-fifth">
+        <div
+            class="column is-half-mobile is-one-third-tablet is-one-quarter-desktop is-one-fifth-widescreen"
+        >
             <ArtistCard {artist} />
         </div>
     {/each}
 </div>
+
+<div bind:this={bottom} />
