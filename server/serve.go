@@ -36,7 +36,8 @@ func serve() {
 	})
 
 	app.Use("/storage", filesystem.New(filesystem.Config{
-		Root: http.Dir("./storage"),
+		Root:   http.Dir("./storage"),
+		MaxAge: 24 * 60 * 60,
 	}))
 
 	// Get agent information

@@ -139,13 +139,6 @@
 
     function seekTo(event) {
         if (!isPlaying) play();
-        audio.currentTime = event.target.value;
-        sendTrackPlay();
-        updatePositionState();
-    }
-
-    function sliderSeek(event) {
-        if (!isPlaying) play();
         audio.currentTime = event.detail.value;
         sendTrackPlay();
         updatePositionState();
@@ -332,7 +325,7 @@
         </div>
 
         <span class="mr-3" style="width: 4rem; text-align: right;">{formatDuration(audioCurrentTime)}</span>
-        <Slider style="flex: 1;" maxValue={audioDuration} bind:this={musicSlider} on:newValue={sliderSeek} />
+        <Slider style="flex: 1;" maxValue={audioDuration} bind:this={musicSlider} on:newValue={seekTo} />
         <span class="ml-3" style="width: 4rem;">-{formatDuration(audioDuration - audioCurrentTime)}</span>
 
         {#if $page.url.pathname == '/queue'}

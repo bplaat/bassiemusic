@@ -8,6 +8,9 @@ export async function load({ cookies, fetch }) {
         },
     });
     if (validateResponse.status !== 200) {
+        cookies.delete('token', {
+            path: '/',
+        });
         throw redirect(307, '/auth/login');
     }
     const { user: authUser, session: currentSession } = await validateResponse.json();
