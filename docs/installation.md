@@ -9,7 +9,6 @@
 - In the setup also install HeidiSQL
 - Login as root to your database with HeidiSQL
 - Create BassieMusic user and database
-
     ```sql
     CREATE USER 'bassiemusic'@'localhost' IDENTIFIED BY 'bassiemusic';
     CREATE DATABASE `bassiemusic` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -17,7 +16,7 @@
     FLUSH PRIVILEGES;
     ```
 - Create MariaDB UUID_TO_BIN and BIN_TO_UUID [pollyfills](https://gist.github.com/bplaat/1d8d1bba135c726178ebdfc9df08e2ca)
-- Create the tables in [`server/database.sql`](server/database.sql)
+- Create the tables in [`server/database.sql`](../server/database.sql)
 
 ### Server
 - Download and install [Go compiler](https://go.dev/dl/) 1.20 or higher
@@ -36,7 +35,7 @@
 ### Youtube downloader
 - Download and install [yt-dlp](https://github.com/yt-dlp/yt-dlp#installation)
 - Move `yt-dlp.exe` executable to folder that is in your path
-- Download and install [FFMPEG](https://www.gyan.dev/ffmpeg/builds/)
+- Download and install [FFmpeg](https://www.gyan.dev/ffmpeg/builds/)
 - Add the `ffmpeg/bin/` folder to your path
 
 ### You're done, now login as admin
@@ -52,7 +51,6 @@
 - Install the latest stable MySQL with `brew install mysql`
 - Login as root to your database with `sudo mysql`
 - Create BassieMusic user and database
-
     ```sql
     CREATE USER 'bassiemusic'@'localhost' IDENTIFIED BY 'bassiemusic';
     CREATE DATABASE `bassiemusic` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -90,7 +88,6 @@
 - Install the latest stable MySQL with `sudo apt install mysql`
 - Login as root to your database with `sudo mysql`
 - Create BassieMusic user and database
-
     ```sql
     CREATE USER 'bassiemusic'@'localhost' IDENTIFIED BY 'bassiemusic';
     CREATE DATABASE `bassiemusic` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
