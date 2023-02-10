@@ -15,6 +15,7 @@
     GRANT ALL PRIVILEGES ON `bassiemusic`.* TO 'bassiemusic'@'localhost';
     FLUSH PRIVILEGES;
     ```
+- Change database with `use bassiemusic;`
 - Create MariaDB UUID_TO_BIN and BIN_TO_UUID [pollyfills](https://gist.github.com/bplaat/1d8d1bba135c726178ebdfc9df08e2ca)
 - Create the tables in [`server/database.sql`](../server/database.sql)
 
@@ -40,9 +41,9 @@
 
 ### You're done, now login as admin
 - Now run the server and the web frontend and go to http://localhost:5173/
-- Login as admin with the username: admin, password: admin
+- Login as admin with the username: **admin**, password: **admin**
 - Go to the Admin Downloader page, search and download an album you like
-- It will so up in the global Albums page and you can listen to it
+- It will show up in the global Albums page and you can listen to it
 
 ## macOS
 
@@ -57,6 +58,7 @@
     GRANT ALL PRIVILEGES ON `bassiemusic`.* TO 'bassiemusic'@'localhost';
     FLUSH PRIVILEGES;
     ```
+- Change database with `use bassiemusic;`
 - Create the tables in [`server/database.sql`](../server/database.sql)
 
 ### Server
@@ -78,14 +80,14 @@
 
 ### You're done, now login as admin
 - Now run the server and the web frontend and go to http://localhost:5173/
-- Login as admin with the username: admin, password: admin
+- Login as admin with the username: **admin**, password: **admin**
 - Go to the Admin Downloader page, search and download an album you like
-- It will so up in the global Albums page and you can listen to it
+- It will show up in the global Albums page and you can listen to it
 
 ## Linux (Ubuntu based distro's)
 
 ### Database
-- Install the latest stable MySQL with `sudo apt install mysql`
+- Install the latest stable MySQL with `sudo apt install mysql-server`
 - Login as root to your database with `sudo mysql`
 - Create BassieMusic user and database
     ```sql
@@ -94,6 +96,7 @@
     GRANT ALL PRIVILEGES ON `bassiemusic`.* TO 'bassiemusic'@'localhost';
     FLUSH PRIVILEGES;
     ```
+- Change database with `use bassiemusic;`
 - Create the tables in [`server/database.sql`](../server/database.sql)
 
 ### Server
@@ -119,6 +122,6 @@
 
 ### You're done, now login as admin
 - Now run the server and the web frontend and go to http://localhost:5173/
-- Login as admin with the username: admin, password: admin
+- Login as admin with the username: **admin**, password: **admin**
 - Go to the Admin Downloader page, search and download an album you like
-- It will so up in the global Albums page and you can listen to it
+- It will show up in the global Albums page and you can listen to it
