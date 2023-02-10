@@ -276,7 +276,8 @@ func UsersLikedArtists(c *fiber.Ctx) error {
 
 	// Get liked artists
 	likedArtists := models.ArtistModel(c).Join("INNER JOIN `artist_likes` ON `artists`.`id` = `artist_likes`.`artist_id`").
-		WhereRaw("`artists`.`name` LIKE ?", "%"+query+"%").OrderByRaw("LOWER(`artists`.`name`)").Paginate(page, limit)
+		WhereRaw("`artist_likes`.`user_id` = UUID_TO_BIN(?)", authUser.ID).WhereRaw("`artists`.`name` LIKE ?", "%"+query+"%").
+		OrderByRaw("LOWER(`artists`.`name`)").Paginate(page, limit)
 	return c.JSON(likedArtists)
 }
 
@@ -297,7 +298,8 @@ func UsersLikedAlbums(c *fiber.Ctx) error {
 
 	// Get liked albums
 	likedAlbums := models.AlbumModel(c).Join("INNER JOIN `album_likes` ON `albums`.`id` = `album_likes`.`album_id`").
-		With("artists", "genres").WhereRaw("`albums`.`title` LIKE ?", "%"+query+"%").OrderByRaw("LOWER(`albums`.`title`)").Paginate(page, limit)
+		With("artists", "genres").WhereRaw("`album_likes`.`user_id` = UUID_TO_BIN(?)", authUser.ID).
+		WhereRaw("`albums`.`title` LIKE ?", "%"+query+"%").OrderByRaw("LOWER(`albums`.`title`)").Paginate(page, limit)
 	return c.JSON(likedAlbums)
 }
 
@@ -318,7 +320,8 @@ func UsersLikedTracks(c *fiber.Ctx) error {
 
 	// Get liked tracks
 	likedTracks := models.TrackModel(c).Join("INNER JOIN `track_likes` ON `tracks`.`id` = `track_likes`.`track_id`").
-		With("artists", "album").WhereRaw("`tracks`.`title` LIKE ?", "%"+query+"%").OrderByDesc("plays").Paginate(page, limit)
+		With("artists", "album").WhereRaw("`track_likes`.`user_id` = UUID_TO_BIN(?)", authUser.ID).
+		WhereRaw("`tracks`.`title` LIKE ?", "%"+query+"%").OrderByDesc("plays").Paginate(page, limit)
 	return c.JSON(likedTracks)
 }
 
@@ -339,7 +342,8 @@ func UsersPlayedTracks(c *fiber.Ctx) error {
 
 	// Get played tracks
 	playedTracks := models.TrackModel(c).Join("INNER JOIN `track_plays` ON `tracks`.`id` = `track_plays`.`track_id`").
-		With("artists", "album").WhereRaw("`tracks`.`title` LIKE ?", "%"+query+"%").OrderByRaw("`track_plays`.`updated_at` DESC").Paginate(page, limit)
+		With("artists", "album").WhereRaw("`track_plays`.`user_id` = UUID_TO_BIN(?)", authUser.ID).
+		WhereRaw("`tracks`.`title` LIKE ?", "%"+query+"%").OrderByRaw("`track_plays`.`updated_at` DESC").Paginate(page, limit)
 	return c.JSON(playedTracks)
 }
 
