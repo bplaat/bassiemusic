@@ -1,8 +1,11 @@
-import adapter from '@sveltejs/adapter-auto';
+import adapter from '@sveltejs/adapter-vercel';
 
 const config = {
     kit: {
-        adapter: adapter(),
+        adapter: adapter({
+            runtime: 'edge',
+            regions: ['fra1'],
+        }),
     },
 };
 
