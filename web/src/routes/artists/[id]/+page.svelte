@@ -43,7 +43,7 @@
     }
 
     let albumType = 'all';
-    $: filteredAlbums = artist.albums.filter((album) => {
+    $: filteredAlbums = (artist.albums || []).filter((album) => {
         if (albumType == 'all') return true;
         if (albumType == 'album') return album.type == 'album';
         if (albumType == 'ep') return album.type == 'ep';
