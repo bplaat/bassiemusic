@@ -35,6 +35,12 @@ func serve() {
 		return c.SendString(os.Getenv("APP_NAME") + " API v" + os.Getenv("APP_VERSION"))
 	})
 
+	app.Use("/storage", func(c *fiber.Ctx) error {
+		// Fix bug in Chrome where you can't seek in media files when HTTP range request won't work
+		// so fake it by saying we support it but we really dont ;)
+		c.Response().Header.Add("Accept-Ranges", "bytes")
+		return c.Next()
+	})
 	app.Use("/storage", filesystem.New(filesystem.Config{
 		Root:   http.Dir("./storage"),
 		MaxAge: 24 * 60 * 60,
