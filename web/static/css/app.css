@@ -47,6 +47,11 @@ img {
     display: flex;
     flex-direction: column;
     border-radius: 0;
+    transition: left 0.1s ease-in-out;
+}
+
+.is-resizing .sidebar {
+    transition: none;
 }
 
 .player-controls {
@@ -103,7 +108,7 @@ body.is-playing {
     }
 }
 
-.column>.card {
+.column > .card {
     display: flex;
     flex-direction: column;
     height: 100%;
@@ -111,7 +116,7 @@ body.is-playing {
     overflow: hidden;
 }
 
-.column>.card>.card-content {
+.column > .card > .card-content {
     flex: 1;
     margin-bottom: 0;
 }
@@ -134,12 +139,13 @@ body.is-playing {
     .tabs {
         width: 100%;
     }
+
     .tabs li {
         flex: 1;
     }
 
     .mr-0-mobile {
-        margin-right: 0!important;
+        margin-right: 0 !important;
     }
 }
 

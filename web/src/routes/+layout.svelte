@@ -22,9 +22,19 @@
         isSidebarOpen = false;
         document.body.scrollTop = 0;
     });
+
+    let windowResizeTimeout;
+    function windowResize() {
+        document.body.classList.add('is-resizing');
+        if (windowResizeTimeout) clearTimeout(windowResizeTimeout);
+        windowResizeTimeout = setTimeout(() => {
+            windowResizeTimeout = undefined;
+            document.body.classList.remove('is-resizing');
+        }, 100);
+    }
 </script>
 
-<svelte:window on:contextmenu|preventDefault={() => {}} />
+<svelte:window on:contextmenu|preventDefault={() => {}} on:resize={windowResize} />
 
 <svelte:head>
     <!-- Themes -->
