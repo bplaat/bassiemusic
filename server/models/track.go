@@ -40,7 +40,7 @@ func TrackModel(c *fiber.Ctx) *database.Model[Track] {
 		},
 		Relationships: map[string]database.QueryBuilderProcess[Track]{
 			"album": func(track *Track) {
-				track.Album = AlbumModel(c).Find(track.AlbumID)
+				track.Album = AlbumModel(c).With("genres", "artists").Find(track.AlbumID)
 			},
 			"artists": func(track *Track) {
 				track.Artists = ArtistModel(c).WhereIn("track_artist", "artist_id", "track_id", track.ID).OrderByRaw("LOWER(`name`)").Get()
