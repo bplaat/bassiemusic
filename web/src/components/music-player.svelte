@@ -1,12 +1,40 @@
 <script>
     import { page } from '$app/stores';
     import { browser } from '$app/environment';
-    import { PLAYER_UPDATE_UI_TIMEOUT, PLAYER_UPDATE_SERVER_TIMEOUT, PLAYER_SEEK_TIME } from '../consts.js';
+    import {
+        WEBSOCKET_RECONNECT_TIMEOUT,
+        PLAYER_UPDATE_UI_TIMEOUT,
+        PLAYER_UPDATE_SERVER_TIMEOUT,
+        PLAYER_SEEK_TIME,
+    } from '../consts.js';
     import { musicPlayer, audioVolume } from '../stores.js';
     import { formatDuration } from '../filters.js';
     import Slider from './slider.svelte';
+    import { onMount, onDestroy } from 'svelte';
 
     export let token;
+
+    // Websocket connection
+    let ws;
+    let connected = false;
+    function websocketConnect() {
+        ws = new WebSocket(import.meta.env.VITE_WEBSOCKET_URL);
+        ws.onopen = () => {
+            connected = true;
+            ws.send(JSON.stringify({ type: 'auth', token }));
+        };
+        ws.disconnect = () => {
+            connected = false;
+            setTimeout(websocketConnect, WEBSOCKET_RECONNECT_TIMEOUT);
+        };
+    }
+    onMount(websocketConnect);
+    onDestroy(() => {
+        if (!connected) return;
+        ws.close();
+    });
+
+    // Music player
     let playingMusicPlayerTrackId,
         isPlaying = false,
         audio,
@@ -112,22 +140,9 @@
         }
     }
 
-    let isSendingTrackPlay = false;
-
-    async function sendTrackPlay() {
-        if (isSendingTrackPlay) return;
-        isSendingTrackPlay = true;
-        await fetch(
-            `${import.meta.env.VITE_API_URL}/tracks/${track.id}/play?${new URLSearchParams({
-                position: audio.currentTime,
-            })}`,
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            }
-        );
-        isSendingTrackPlay = false;
+    function sendTrackPlay() {
+        if (!connected) return;
+        ws.send(JSON.stringify({ type: 'track_play', track_id: track.id, position: audio.currentTime }));
     }
 
     async function updateServerLoop() {

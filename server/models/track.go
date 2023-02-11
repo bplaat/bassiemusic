@@ -77,3 +77,35 @@ func TrackPlayModel() *database.Model[TrackPlay] {
 		TableName: "track_plays",
 	}).Init()
 }
+
+func HandleTrackPlay(authUser User, trackID string, position float32) bool {
+	// Check if track exists
+	track := TrackModel(nil).Find(trackID)
+	if track == nil {
+		return false
+	}
+
+	// Get user last track play and update if latest
+	trackPlay := TrackPlayModel().Where("user_id", authUser.ID).OrderByDesc("created_at").First()
+	if trackPlay != nil {
+		if track.ID == trackPlay.TrackID {
+			TrackPlayModel().Where("id", trackPlay.ID).Update(database.Map{
+				"position": position,
+			})
+			return true
+		}
+	}
+
+	// Create new track play
+	TrackPlayModel().Create(database.Map{
+		"track_id": track.ID,
+		"user_id":  authUser.ID,
+		"position": position,
+	})
+
+	// Increment global track plays count
+	TrackModel(nil).Where("id", track.ID).Update(database.Map{
+		"plays": track.Plays + 1,
+	})
+	return true
+}
