@@ -139,8 +139,8 @@
             </ul>
 
             {#if authUser.role === 'admin'}
-                <p class="menu-label">Admin</p>
-                <ul class="menu-list mb-5">
+                <p class="menu-label is-hidden-mobile">Admin</p>
+                <ul class="menu-list mb-5 is-hidden-mobile">
                     <li>
                         <a href="/admin/users" class:is-active={$page.url.pathname == '/admin/users'}>
                             <svg class="icon is-inline mr-2" viewBox="0 0 24 24">
@@ -170,9 +170,8 @@
 
     {#if authUser != null}
         <div style="display: flex; align-items: center;" class="mb-5">
-            <div class="box m-0 p-0 mr-4">
+            <div class="box m-0 p-0 mr-4" style="width: 48px; height: 48px;">
                 <img
-                    style="width: 48px; height: 48px;"
                     src={authUser.avatar ? authUser.avatar : '/images/avatar-default.svg'}
                     alt="Avatar of user {authUser.username}"
                     loading="lazy"

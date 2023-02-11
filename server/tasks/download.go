@@ -149,7 +149,6 @@ func downloadAlbum(id int) {
 				}
 
 				fmt.Printf("%d. %s\n", track.TrackPosition, track.Title)
-
 				break
 			}
 		}

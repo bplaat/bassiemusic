@@ -2,6 +2,7 @@ html {
     overflow: hidden;
     height: 100%;
 }
+
 body {
     height: 100%;
     overflow: auto;
@@ -9,13 +10,16 @@ body {
     user-select: none;
     cursor: default;
 }
+
 a {
     color: currentColor;
 }
+
 a:hover,
 a:focus {
     text-decoration: underline;
 }
+
 .navbar a,
 a.card,
 .tabs a,
@@ -23,6 +27,11 @@ a.card,
 .menu-list a {
     text-decoration: none !important;
 }
+
+img {
+    display: block;
+}
+
 .table td {
     vertical-align: middle;
 }
@@ -39,6 +48,7 @@ a.card,
     flex-direction: column;
     border-radius: 0;
 }
+
 .player-controls {
     position: fixed;
     left: 0;
@@ -50,58 +60,87 @@ a.card,
     display: flex;
     align-items: center;
 }
+
 body.is-playing {
     height: calc(100% - 6rem);
     margin-bottom: 6rem;
 }
+
 @media (max-width: 1024px) {
     body {
-        margin-top: calc(52px - 1.5rem);
+        margin-top: 52px;
     }
+
+    body.is-playing {
+        height: calc(100% - 52px - 6rem);
+    }
+
+    .section {
+        padding: 1.5rem;
+    }
+
     .sidebar.is-open {
         left: 0;
     }
 }
+
 @media (min-width: 1024px) {
     body {
         margin-left: 16.5rem;
     }
+
     .sidebar {
         left: 0;
         z-index: 100;
     }
-    .player-controls {
-        z-index: 300;
-    }
+
     body.is-playing .sidebar {
         height: calc(100% - 6rem);
     }
+
+    .player-controls {
+        z-index: 300;
+    }
 }
 
-.column > .card {
+.column>.card {
     display: flex;
     flex-direction: column;
     height: 100%;
     margin-bottom: 0;
     overflow: hidden;
 }
-.column > .card > .card-content {
+
+.column>.card>.card-content {
     flex: 1;
     margin-bottom: 0;
 }
+
 .box {
     overflow: hidden;
 }
-.box > img {
-    display: block;
-}
+
 .has-image-tags {
     position: relative;
 }
+
 .image-tags {
     position: absolute;
     top: 0.5rem;
     right: 0.5rem;
+}
+
+@media (max-width: 768px) {
+    .tabs {
+        width: 100%;
+    }
+    .tabs li {
+        flex: 1;
+    }
+
+    .mr-0-mobile {
+        margin-right: 0!important;
+    }
 }
 
 .icon {
@@ -109,36 +148,27 @@ body.is-playing {
     width: 24px;
     height: 24px;
 }
+
 .icon:not(.is-colored) path {
     fill: currentColor;
 }
+
 .icon.is-inline {
     display: inline-block;
     vertical-align: middle;
     transform: translateY(-1px);
 }
 
-.track-index {
-    width: 30px;
-    text-align: center;
-}
-.track-play,
-.track-container:hover .track-index {
-    display: none;
-}
-.track-index,
-.track-container:hover .track-play {
-    display: block;
-}
-
 .flex {
     flex: 1;
 }
+
 .ellipsis {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
+
 ::-webkit-scrollbar {
     width: 8px;
 }

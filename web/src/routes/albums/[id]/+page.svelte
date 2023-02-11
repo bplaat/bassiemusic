@@ -52,7 +52,7 @@
 </div>
 
 <div class="columns">
-    <div class="column is-one-quarter mr-5">
+    <div class="column is-one-quarter mr-5 mr-0-mobile">
         <div class="box p-0 has-image-tags">
             <img style="aspect-ratio: 1;" src={album.large_cover} alt="Cover of album {album.title}" loading="lazy" />
 

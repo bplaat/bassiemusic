@@ -255,13 +255,8 @@
 
 {#if $musicPlayer.queue.length > 0}
     <div class="player-controls box m-0 p-0 pl-4 pr-5 has-background-white-bis">
-        <div class="box m-0 p-0 mr-4">
-            <img
-                style="width: 64px; height: 64px;"
-                src={track.album.small_cover}
-                alt="Cover of album {track.album}"
-                loading="lazy"
-            />
+        <div class="box m-0 p-0 mr-4" style="width: 64px; height: 64px;">
+            <img src={track.album.small_cover} alt="Cover of album {track.album}" loading="lazy" />
         </div>
 
         <div class="mr-4" style="width: calc(13.5rem - 64px);">

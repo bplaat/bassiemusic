@@ -49,19 +49,19 @@
         {#if showAlbum}
             <th style="width: 10%;"><div class="track-index">#</div></th>
             <th style="width: calc(64px + 1.5em);">Title</th>
-            <th style="width: 35%;" />
-            <th style="width: 35%;" class="is-hidden-touch">Album</th>
-            <th style="width: 10%;">Duration</th>
-            <th style="width: 10%;">Plays</th>
+            <th class="track-title" />
+            <th style="width: 30%;" class="is-hidden-mobile">Album</th>
+            <th style="width: 15%;">Duration</th>
+            <th style="width: 15%;" class="is-hidden-mobile">Plays</th>
             <th style="width: calc(40px + .75em);" />
-            <th style="width: calc(40px + .75em);" />
+            <th style="width: calc(40px + .75em);" class:is-hidden-mobile={!isMusicQueue} />
         {:else}
             <th style="width: 10%;"><div class="track-index">#</div></th>
             <th style="width: 50%;">Title</th>
             <th style="width: 20%;">Duration</th>
-            <th style="width: 20%;">Plays</th>
+            <th class="is-hidden-mobile">Plays</th>
             <th style="width: calc(40px + .75em);" />
-            <th style="width: calc(40px + .75em);" />
+            <th style="width: calc(40px + .75em);" class:is-hidden-mobile={!isMusicQueue} />
         {/if}
     </thead>
     <tbody>
@@ -81,13 +81,8 @@
                 </td>
                 {#if showAlbum}
                     <td>
-                        <div class="box m-0 p-0">
-                            <img
-                                style="width: 64px; height: 64px;"
-                                src={track.album.small_cover}
-                                alt="Cover of album {track.album}"
-                                loading="lazy"
-                            />
+                        <div class="box m-0 p-0" style="width: 64px; height: 64px;">
+                            <img src={track.album.small_cover} alt="Cover of album {track.album}" loading="lazy" />
                         </div>
                     </td>
                 {/if}
@@ -105,10 +100,11 @@
                     </p>
                 </td>
                 {#if showAlbum}
-                    <td class="ellipsis is-hidden-touch"><a href="/albums/{track.album.id}">{track.album.title}</a></td>
+                    <td class="ellipsis is-hidden-mobile"><a href="/albums/{track.album.id}">{track.album.title}</a></td
+                    >
                 {/if}
                 <td>{formatDuration(track.duration)}</td>
-                <td>{track.plays}</td>
+                <td class="is-hidden-mobile">{track.plays}</td>
                 <td class="px-0">
                     <button class="button" on:click={() => likeTrack(track)}>
                         {#if track.liked}
@@ -127,7 +123,7 @@
                         {/if}
                     </button>
                 </td>
-                <td class="pl-0">
+                <td class="pl-0" class:is-hidden-mobile={!isMusicQueue}>
                     {#if isMusicQueue}
                         <button
                             class="button"
@@ -154,3 +150,27 @@
         {/each}
     </tbody>
 </table>
+
+<style>
+    .track-title {
+        width: 50%;
+    }
+    @media (min-width: 768px) {
+        .track-title {
+            width: 30%;
+        }
+    }
+
+    .track-index {
+        width: 30px;
+        text-align: center;
+    }
+    .track-play,
+    .track-container:hover .track-index {
+        display: none;
+    }
+    .track-index,
+    .track-container:hover .track-play {
+        display: block;
+    }
+</style>

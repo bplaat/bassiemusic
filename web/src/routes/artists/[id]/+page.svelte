@@ -53,7 +53,7 @@
 </div>
 
 <div class="columns">
-    <div class="column is-one-quarter mr-5">
+    <div class="column is-one-quarter mr-5 mr-0-mobile">
         <div class="box p-0">
             <img style="aspect-ratio: 1;" src={artist.large_image} alt="Image of artist {artist.name}" loading="lazy" />
         </div>

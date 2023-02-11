@@ -172,13 +172,13 @@
             <span />
             <span />
         </a>
-        <a class="navbar-item" href="/" style="font-weight: 500;">BassieMusic</a>
+        <div class="navbar-item" style="font-weight: 500;">BassieMusic</div>
     </div>
 </nav>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
-    class="modal-background"
+    class="modal-background is-hidden-desktop"
     class:is-hidden={!isSidebarOpen}
     on:click={() => (isSidebarOpen = false)}
     style="z-index: 200;"
