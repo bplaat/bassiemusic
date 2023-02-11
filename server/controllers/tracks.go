@@ -67,41 +67,10 @@ func TracksLikeDelete(c *fiber.Ctx) error {
 }
 
 func TracksPlay(c *fiber.Ctx) error {
-	authUser := models.AuthUser(c)
-
-	// Check if track exists
-	track := models.TrackModel(c).Find(c.Params("trackID"))
-	if track == nil {
-		return fiber.ErrNotFound
-	}
-
-	// Parse position get variable
 	var position float32
 	if positionFloat, err := strconv.ParseFloat(c.Query("position", "0"), 32); err == nil {
 		position = float32(positionFloat)
 	}
-
-	// Get user last track play and update if latest
-	trackPlay := models.TrackPlayModel().Where("user_id", authUser.ID).OrderByDesc("created_at").First()
-	if trackPlay != nil {
-		if track.ID == trackPlay.TrackID {
-			models.TrackPlayModel().Where("id", trackPlay.ID).Update(database.Map{
-				"position": position,
-			})
-			return c.JSON(fiber.Map{"success": true})
-		}
-	}
-
-	// Create new track play
-	models.TrackPlayModel().Create(database.Map{
-		"track_id": track.ID,
-		"user_id":  authUser.ID,
-		"position": position,
-	})
-
-	// Increment global track plays count
-	models.TrackModel(c).Where("id", track.ID).Update(database.Map{
-		"plays": track.Plays + 1,
-	})
+	models.HandleTrackPlay(models.AuthUser(c), c.Params("trackID"), position)
 	return c.JSON(fiber.Map{"success": true})
 }

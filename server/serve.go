@@ -46,6 +46,9 @@ func serve() {
 		MaxAge: 30 * 24 * 60 * 60,
 	}))
 
+	// Websocket
+	app.Get("/ws", controllers.Websocket)
+
 	// Get agent information
 	app.Get("/agent", func(c *fiber.Ctx) error {
 		return c.JSON(utils.ParseUserAgent(c))
