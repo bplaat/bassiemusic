@@ -119,6 +119,10 @@
     @media (max-width: 1024px) {
         .app.is-macos-app {
             margin-top: 80px !important;
+            height: calc(100% - 80px) !important;
+        }
+        .app.is-playing {
+            height: calc(100% - 80px - 10rem) !important;
         }
     }
 </style>

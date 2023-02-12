@@ -11,6 +11,12 @@
     import { formatDuration } from '../filters.js';
     import { onMount, onDestroy } from 'svelte';
 
+    // Utils
+    function rand(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    // Interface
     export let token;
     export let queue = [];
     export let track = undefined;
@@ -63,7 +69,8 @@
     let isPlaying = false,
         audio,
         updateUiTimeout,
-        updateServerTimeout;
+        updateServerTimeout,
+        isShuffling = false;
 
     function loadAndPlayTrack(autoplay) {
         if (audio != undefined) {
@@ -117,10 +124,18 @@
     }
     onMount(() => {
         musicState.set({ queue, track });
+
+        isShuffling = localStorage.getItem('player-shuffling') ?? false;
+
         if (track != undefined) {
             loadAndPlayTrack(false);
         }
     });
+
+    function setIsShuffling(newIsShuffling) {
+        isShuffling = newIsShuffling;
+        localStorage.setItem('player-shuffling', newIsShuffling);
+    }
 
     function updatePlaybackState() {
         position = audio.currentTime;
@@ -161,8 +176,12 @@
         if (audio.currentTime * 1000 > PLAYER_PREVIOUS_RESET_TIMEOUT) {
             seekTo({ seekTime: 0 });
         } else {
-            const index = queue.indexOf(track);
-            track = queue[index - 1 >= 0 ? index - 1 : queue.length - 1];
+            if (isShuffling) {
+                track = queue[rand(0, queue.length - 1)];
+            } else {
+                const index = queue.indexOf(track);
+                track = queue[index - 1 >= 0 ? index - 1 : queue.length - 1];
+            }
             musicState.update((musicState) => {
                 musicState.track = track;
                 return musicState;
@@ -213,8 +232,12 @@
     }
 
     function nextTrack() {
-        const index = queue.indexOf(track);
-        track = queue[index + 1 <= queue.length - 1 ? index + 1 : 0];
+        if (isShuffling) {
+            track = queue[rand(0, queue.length - 1)];
+        } else {
+            const index = queue.indexOf(track);
+            track = queue[index + 1 <= queue.length - 1 ? index + 1 : 0];
+        }
         musicState.update((musicState) => {
             musicState.track = track;
             return musicState;
@@ -342,6 +365,18 @@
                     />
                 </svg>
             {/if}
+        </button>
+
+        <button
+            class="button is-hidden-touch ml-4"
+            class:is-link={isShuffling}
+            on:click={() => setIsShuffling(!isShuffling)}
+        >
+            <svg class="icon" viewBox="0 0 24 24">
+                <path
+                    d="M14.83,13.41L13.42,14.82L16.55,17.95L14.5,20H20V14.5L17.96,16.54L14.83,13.41M14.5,4L16.54,6.04L4,18.59L5.41,20L17.96,7.46L20,9.5V4M10.59,9.17L5.41,4L4,5.41L9.17,10.58L10.59,9.17Z"
+                />
+            </svg>
         </button>
 
         <div class="music-player-controls px-4 py-2">
