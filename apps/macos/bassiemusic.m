@@ -34,11 +34,11 @@ WindowDragger *dragger;
 
 @implementation WindowDelegate
 - (void)windowWillEnterFullScreen:(NSNotification *)notification {
-    [webview evaluateJavaScript:@"document.body.classList.add('macos-is-fullscreen');" completionHandler:NULL];
+    [webview evaluateJavaScript:@"document.querySelector('.app').classList.add('macos-is-fullscreen');" completionHandler:NULL];
 }
 
 - (void)windowWillExitFullScreen:(NSNotification *)notification {
-    [webview evaluateJavaScript:@"document.body.classList.remove('macos-is-fullscreen');" completionHandler:NULL];
+    [webview evaluateJavaScript:@"document.querySelector('.app').classList.remove('macos-is-fullscreen');" completionHandler:NULL];
 }
 
 - (void)windowDidResize:(NSNotification *)notification {

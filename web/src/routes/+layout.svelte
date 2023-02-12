@@ -1,22 +1,11 @@
 <script>
-    import { browser } from '$app/environment';
+    import { musicPlayer } from '../stores.js';
     import { afterNavigate } from '$app/navigation';
     import Sidebar from '../components/sidebar.svelte';
     import MusicPlayer from '../components/music-player.svelte';
-    import { musicPlayer } from '../stores.js';
 
     export let data;
     const { token, authUser, agent, lastTrack, lastTrackPosition } = data;
-
-    // Init last played track
-    if (browser && lastTrack) {
-        musicPlayer.set({
-            action: 'init',
-            queue: [lastTrack],
-            track_id: lastTrack.id,
-            position: lastTrackPosition,
-        });
-    }
 
     // Sidebar
     let sidebar;
@@ -25,14 +14,15 @@
         sidebar.close();
     });
 
-    // Window is-resizing
-    let windowResizeTimeout;
+    // App is-resizing
+    let resizing = false;
+    let resizeTimeout;
     function windowResize() {
-        document.body.classList.add('is-resizing');
-        if (windowResizeTimeout) clearTimeout(windowResizeTimeout);
-        windowResizeTimeout = setTimeout(() => {
-            windowResizeTimeout = undefined;
-            document.body.classList.remove('is-resizing');
+        resizing = true;
+        if (resizeTimeout) clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+            resizeTimeout = undefined;
+            resizing = false;
         }, 100);
     }
 </script>
@@ -60,6 +50,8 @@
     class:is-linux-app={agent.os == 'Linux' && agent.name == 'BassieMusic App'}
     class:is-light={authUser != undefined && authUser.theme == 'light'}
     class:is-dark={authUser != undefined && authUser.theme == 'dark'}
+    class:is-playing={lastTrack != undefined}
+    class:is-resizing={resizing}
 >
     <nav class="navbar has-background-white-bis is-fixed-top is-hidden-desktop">
         <div class="navbar-brand">
@@ -79,5 +71,54 @@
         <slot />
     </div>
 
-    <MusicPlayer {token} />
+    {#if lastTrack != undefined}
+        <MusicPlayer
+            bind:this={$musicPlayer}
+            {token}
+            queue={[lastTrack]}
+            track={lastTrack}
+            position={lastTrackPosition}
+            duration={lastTrack.duration}
+        />
+    {:else}
+        <MusicPlayer bind:this={$musicPlayer} {token} />
+    {/if}
 </div>
+
+<style>
+    .app {
+        overflow-y: auto;
+        margin-top: 52px;
+        height: calc(100% - 52px);
+    }
+    .app.is-playing {
+        margin-bottom: 10rem;
+        height: calc(100% - 52px - 10rem);
+    }
+    @media (max-width: 1024px) {
+        .section {
+            padding: 1.5rem;
+        }
+    }
+    @media (min-width: 1024px) {
+        .app {
+            margin-top: 0;
+            margin-left: 16.5rem;
+            height: 100%;
+        }
+        .app.app.is-playing {
+            margin-bottom: 6rem;
+            height: calc(100% - 6rem);
+        }
+    }
+
+    /* macOS app */
+    .app.is-macos-app .navbar {
+        padding-top: 28px !important;
+    }
+    @media (max-width: 1024px) {
+        .app.is-macos-app {
+            margin-top: 80px !important;
+        }
+    }
+</style>

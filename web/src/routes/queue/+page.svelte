@@ -1,6 +1,6 @@
 <script>
     import TracksTable from '../../components/tracks-table.svelte';
-    import { musicPlayer } from '../../stores';
+    import { musicState } from '../../stores';
 
     export let data;
     const { token } = data;
@@ -19,8 +19,8 @@
 </div>
 
 <h2 class="title">Play Queue</h2>
-{#if $musicPlayer.queue.length > 0}
-    <TracksTable {token} isMusicQueue={true} tracks={$musicPlayer.queue} />
+{#if $musicState.queue.length > 0}
+    <TracksTable {token} isMusicQueue={true} tracks={$musicState.queue} />
 {:else}
     <p><i>The music player queue is empty</i></p>
 {/if}

@@ -231,13 +231,16 @@
         overflow-y: auto;
         transition: left 0.1s ease-in-out;
     }
-    :global(body.is-resizing .sidebar) {
+    .sidebar.is-open {
+        left: 0;
+    }
+    :global(.app.is-resizing .sidebar) {
         transition: none !important;
     }
     :global(.app.is-macos-app .sidebar) {
         padding-top: calc(28px + 1.25rem) !important;
     }
-    :global(.app.is-macos-app.is-fullscreen .sidebar) {
+    :global(.app.macos-is-fullscreen .sidebar) {
         padding-top: calc(1.25rem) !important;
     }
 
@@ -245,18 +248,12 @@
         text-decoration: none !important;
     }
 
-    @media (max-width: 1024px) {
-        .sidebar.is-open {
-            left: 0;
-        }
-    }
-
     @media (min-width: 1024px) {
         .sidebar {
-            left: 0;
+            left: 0 !important;
             z-index: 100;
         }
-        :global(body.is-playing .sidebar) {
+        :global(.app.is-playing .sidebar) {
             height: calc(100% - 6rem) !important;
         }
     }

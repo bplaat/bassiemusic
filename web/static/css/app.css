@@ -1,18 +1,15 @@
 html {
     overflow: hidden;
-    height: 100%;
 }
-
 body {
-    height: 100%;
     overflow: auto;
     -webkit-user-select: none;
     user-select: none;
     cursor: default;
 }
-body.is-playing {
-    height: calc(100% - 6rem);
-    margin-bottom: 6rem;
+html,
+body {
+    height: 100%;
 }
 
 a {
@@ -22,7 +19,6 @@ a:hover,
 a:focus {
     text-decoration: underline;
 }
-.navbar a,
 a.card,
 .tabs a,
 .menu-list a {
@@ -105,35 +101,6 @@ img {
 
     .mr-0-mobile {
         margin-right: 0 !important;
-    }
-}
-
-@media (max-width: 1024px) {
-    body {
-        margin-top: 52px;
-    }
-    body.is-playing {
-        height: calc(100% - 52px - 6rem);
-    }
-
-    .section {
-        padding: 1.5rem;
-    }
-}
-
-@media (min-width: 1024px) {
-    body {
-        margin-left: 16.5rem;
-    }
-}
-
-/* macOS app */
-.app.is-macos-app .navbar {
-    padding-top: 28px !important;
-}
-@media (max-width: 1024px) {
-    .app.is-macos-app {
-        margin-top: calc(80px - 1.5rem) !important;
     }
 }
 
