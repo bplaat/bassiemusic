@@ -102,6 +102,16 @@
                 artwork: [
                     {
                         type: 'image/jpeg',
+                        src: track.album.small_cover,
+                        sizes: '256x256',
+                    },
+                    {
+                        type: 'image/jpeg',
+                        src: track.album.medium_cover,
+                        sizes: '512x512',
+                    },
+                    {
+                        type: 'image/jpeg',
                         src: track.album.large_cover,
                         sizes: '1024x1024',
                     },
@@ -130,7 +140,6 @@
             });
         }
     }
-
     function updateUiLoop() {
         audioCurrentTime = audio.currentTime;
         musicSlider.seekToValue(audioCurrentTime, audioDuration);
@@ -144,9 +153,8 @@
         if (!connected) return;
         ws.send(JSON.stringify({ type: 'track_play', track_id: track.id, position: audio.currentTime }));
     }
-
     async function updateServerLoop() {
-        await sendTrackPlay();
+        sendTrackPlay();
         if (isPlaying) {
             updateServerTimeout = setTimeout(updateServerLoop, PLAYER_UPDATE_SERVER_TIMEOUT);
         }
@@ -155,8 +163,8 @@
     function seekTo(event) {
         if (!isPlaying) play();
         audio.currentTime = event.detail.value;
-        sendTrackPlay();
         updatePositionState();
+        sendTrackPlay();
     }
 
     function previousTrack() {
@@ -172,8 +180,8 @@
     function seekBackward(details) {
         if (!isPlaying) play();
         audio.currentTime = Math.max(0, audio.currentTime - (details.seekOffset || PLAYER_SEEK_TIME));
-        sendTrackPlay();
         updatePositionState();
+        sendTrackPlay();
     }
 
     function play() {
@@ -269,7 +277,7 @@
 </script>
 
 {#if $musicPlayer.queue.length > 0}
-    <div class="player-controls box m-0 p-0 pl-4 pr-5 has-background-white-bis">
+    <div class="music-player box m-0 p-0 pl-4 pr-5 has-background-white-bis">
         <div class="box m-0 p-0 mr-4" style="width: 64px; height: 64px;">
             <img src={track.album.small_cover} alt="Cover of album {track.album}" loading="lazy" />
         </div>
@@ -383,3 +391,23 @@
         <Slider style="width: 8rem;" bind:this={volumeSlider} on:newValue={volumeSeek} maxValue="1" />
     </div>
 {/if}
+
+<style>
+    .music-player {
+        position: fixed;
+        left: 0;
+        bottom: 0;
+        width: 100%;
+        height: 6rem;
+        z-index: 100;
+        border-radius: 0;
+        display: flex;
+        align-items: center;
+    }
+
+    @media (min-width: 1024px) {
+        .music-player {
+            z-index: 300;
+        }
+    }
+</style>

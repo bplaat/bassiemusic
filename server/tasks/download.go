@@ -8,13 +8,12 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/bplaat/bassiemusic/consts"
 	"github.com/bplaat/bassiemusic/database"
 	"github.com/bplaat/bassiemusic/models"
 	"github.com/bplaat/bassiemusic/utils"
 	uuid "github.com/satori/go.uuid"
 )
-
-const TRACK_DURATION_SLACK int = 5
 
 func createArtist(id int, name string) string {
 	artists := database.Query("SELECT BIN_TO_UUID(`id`) FROM `artists` WHERE `name` = ?", name)
@@ -126,7 +125,7 @@ func downloadAlbum(id int) {
 				break
 			}
 
-			if track.Duration >= video.Duration-TRACK_DURATION_SLACK && track.Duration <= video.Duration+TRACK_DURATION_SLACK {
+			if track.Duration >= video.Duration-consts.TRACK_DURATION_SLACK && track.Duration <= video.Duration+consts.TRACK_DURATION_SLACK {
 				if err := searchCommand.Process.Signal(syscall.SIGTERM); err != nil {
 					log.Fatalln(err)
 				}

@@ -1,4 +1,6 @@
 <script>
+    import { AUTH_TOKEN_EXPIRES_TIMEOUT } from '../../../consts.js';
+
     let logon = '';
     let password = '';
     let errors = {};
@@ -14,7 +16,7 @@
         const { success, token } = await response.json();
         if (success) {
             document.cookie = `token=${token}; path=/; samesite=strict; expires=${new Date(
-                Date.now() + 356 * 24 * 60 * 60 + 1000
+                Date.now() + AUTH_TOKEN_EXPIRES_TIMEOUT
             ).toUTCString()}`;
             window.location = '/';
         } else {

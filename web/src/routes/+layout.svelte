@@ -8,6 +8,7 @@
     export let data;
     const { token, authUser, agent, lastTrack, lastTrackPosition } = data;
 
+    // Init last played track
     if (browser && lastTrack) {
         musicPlayer.set({
             action: 'init',
@@ -17,12 +18,14 @@
         });
     }
 
-    let isSidebarOpen = false;
+    // Sidebar
+    let sidebar;
     afterNavigate(() => {
-        isSidebarOpen = false;
         document.body.scrollTop = 0;
+        sidebar.close();
     });
 
+    // Window is-resizing
     let windowResizeTimeout;
     function windowResize() {
         document.body.classList.add('is-resizing');
@@ -37,166 +40,44 @@
 <svelte:window on:contextmenu|preventDefault={() => {}} on:resize={windowResize} />
 
 <svelte:head>
-    <!-- Themes -->
     {#if authUser == undefined || (authUser != undefined && authUser.theme == 'system')}
         <link rel="stylesheet" href="/css/bulma-light.min.css" media="(prefers-color-scheme: light)" />
         <link rel="stylesheet" href="/css/bulma-dark.min.css" media="(prefers-color-scheme: dark)" />
-        <style>
-            .card-image > img {
-                background-color: #ccc;
-            }
-            .slider-container {
-                position: relative;
-                width: 100%;
-                height: 5px;
-                background-color: lightgray;
-            }
-            .slider {
-                position: absolute;
-                width: 100%;
-                height: 100%;
-                background-color: #0099ff;
-            }
-            .slider-thumb {
-                position: absolute;
-                top: -5px;
-                width: 15px;
-                height: 15px;
-                background-color: #999999;
-                border-radius: 50%;
-                cursor: pointer;
-            }
-            ::-webkit-scrollbar-thumb {
-                background-color: rgba(0, 0, 0, 0.3);
-            }
-
-            @media (prefers-color-scheme: dark) {
-                .card-image > img {
-                    background-color: #333;
-                }
-                .slider-container {
-                    background-color: lightgray;
-                }
-                .slider-thumb {
-                    background-color: white;
-                }
-                ::-webkit-scrollbar-thumb {
-                    background-color: rgba(255, 255, 255, 0.3);
-                }
-            }
-        </style>
     {/if}
-
     {#if authUser != undefined && authUser.theme == 'light'}
         <link rel="stylesheet" href="/css/bulma-light.min.css" />
-        <style>
-            .card-image > img {
-                background-color: #ccc;
-            }
-            .slider-container {
-                position: relative;
-                width: 100%;
-                height: 5px;
-                background-color: lightgray;
-            }
-            .slider {
-                position: absolute;
-                width: 100%;
-                height: 100%;
-                background-color: #0099ff;
-            }
-            .slider-thumb {
-                position: absolute;
-                top: -5px;
-                width: 15px;
-                height: 15px;
-                background-color: #999999;
-                border-radius: 50%;
-                cursor: pointer;
-            }
-            ::-webkit-scrollbar-thumb {
-                background-color: rgba(0, 0, 0, 0.3);
-            }
-        </style>
     {/if}
-
     {#if authUser != undefined && authUser.theme == 'dark'}
         <link rel="stylesheet" href="/css/bulma-dark.min.css" />
-        <style>
-            .card-image > img {
-                background-color: #333;
-            }
-            .slider-container {
-                position: relative;
-                height: 5px;
-                background-color: lightgray;
-            }
-            .slider {
-                position: absolute;
-                width: 100%;
-                height: 100%;
-                background-color: #0099ff;
-            }
-            .slider-thumb {
-                position: absolute;
-                top: -5px;
-                width: 15px;
-                height: 15px;
-                background-color: white;
-                border-radius: 50%;
-                cursor: pointer;
-            }
-            ::-webkit-scrollbar-thumb {
-                background-color: rgba(255, 255, 255, 0.3);
-            }
-        </style>
     {/if}
     <link rel="stylesheet" href="/css/app.css" />
-
-    <!-- Custom CSS for BassieMusic apps -->
-    {#if agent.os == 'macOS' && agent.name == 'BassieMusic App'}
-        <style>
-            .navbar {
-                padding-top: 28px !important;
-            }
-            @media (max-width: 1024px) {
-                body {
-                    margin-top: calc(80px - 1.5rem) !important;
-                }
-            }
-            .sidebar {
-                padding-top: calc(28px + 1.25rem) !important;
-            }
-            .macos-is-fullscreen .sidebar {
-                padding-top: calc(1.25rem) !important;
-            }
-        </style>
-    {/if}
 </svelte:head>
 
-<nav class="navbar has-background-white-bis is-fixed-top is-hidden-desktop">
-    <div class="navbar-brand">
-        <!-- svelte-ignore a11y-invalid-attribute -->
-        <a href="#" class="navbar-burger ml-0" on:click|preventDefault={() => (isSidebarOpen = true)}>
-            <span />
-            <span />
-            <span />
-        </a>
-        <div class="navbar-item" style="font-weight: 500;">BassieMusic</div>
-    </div>
-</nav>
-
-<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
-    class="modal-background is-hidden-desktop"
-    class:is-hidden={!isSidebarOpen}
-    on:click={() => (isSidebarOpen = false)}
-    style="z-index: 200;"
-/>
-<Sidebar open={isSidebarOpen} {token} {authUser} />
+    class="app"
+    class:is-macos-app={agent.os == 'macOS' && agent.name == 'BassieMusic App'}
+    class:is-windows-app={agent.os == 'Windows' && agent.name == 'BassieMusic App'}
+    class:is-linux-app={agent.os == 'Linux' && agent.name == 'BassieMusic App'}
+    class:is-light={authUser != undefined && authUser.theme == 'light'}
+    class:is-dark={authUser != undefined && authUser.theme == 'dark'}
+>
+    <nav class="navbar has-background-white-bis is-fixed-top is-hidden-desktop">
+        <div class="navbar-brand">
+            <!-- svelte-ignore a11y-invalid-attribute -->
+            <a href="#" class="navbar-burger ml-0" on:click|preventDefault={() => sidebar.open()}>
+                <span />
+                <span />
+                <span />
+            </a>
+            <div class="navbar-item" style="font-weight: 500;">BassieMusic</div>
+        </div>
+    </nav>
 
-<div class="section">
-    <slot />
+    <Sidebar bind:this={sidebar} {token} {authUser} />
+
+    <div class="section">
+        <slot />
+    </div>
+
+    <MusicPlayer {token} />
 </div>
-
-<MusicPlayer {token} />

@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/bplaat/bassiemusic/consts"
 	"github.com/bplaat/bassiemusic/database"
 	"github.com/bplaat/bassiemusic/models"
 	"github.com/bplaat/bassiemusic/utils"
@@ -76,7 +77,7 @@ func AuthLogin(c *fiber.Ctx) error {
 		"client_os":      &agent.OS,
 		"client_name":    &agent.Name,
 		"client_version": &agent.Version,
-		"expires_at":     time.Now().Add(365 * 24 * 60 * 60 * time.Second),
+		"expires_at":     time.Now().Add(consts.AUTH_TOKEN_EXPIRES_TIMEOUT),
 	}
 	if !ipInfo.Bogon {
 		session["ip_latitude"] = strings.Split(ipInfo.Loc, ",")[0]

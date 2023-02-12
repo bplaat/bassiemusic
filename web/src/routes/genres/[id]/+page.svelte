@@ -34,7 +34,7 @@
 
 <div class="columns">
     <div class="column is-one-quarter mr-5 mr-0-mobile">
-        <div class="box m-0">
+        <div class="box m-0 p-0">
             <img style="aspect-ratio: 1;" src={genre.large_image} alt="Image of genre {genre.name}" loading="lazy" />
         </div>
     </div>

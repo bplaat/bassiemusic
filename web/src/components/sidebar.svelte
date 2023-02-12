@@ -1,9 +1,16 @@
 <script>
     import { page } from '$app/stores';
 
-    export let open;
     export let token;
     export let authUser;
+
+    let isOpen = false;
+    export function open() {
+        isOpen = true;
+    }
+    export function close() {
+        isOpen = false;
+    }
 
     async function logout() {
         await fetch(`${import.meta.env.VITE_API_URL}/auth/logout`, {
@@ -16,8 +23,14 @@
     }
 </script>
 
-<div class="sidebar box has-background-white-bis m-0" class:is-open={open}>
-    <h1 class="title is-4 mb-5"><a href="/">BassieMusic</a></h1>
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<div class="modal-background is-hidden-desktop" class:is-hidden={!isOpen} on:click={close} style="z-index: 200;" />
+
+<div class="sidebar box has-background-white-bis m-0" class:is-open={isOpen}>
+    <h1 class="title is-4 mb-5">
+        <a href="/">BassieMusic</a>
+        <button class="delete is-pulled-right is-hidden-desktop" on:click={close} />
+    </h1>
     <div class="menu">
         {#if authUser == null}
             <ul class="menu-list mb-5">
@@ -135,12 +148,12 @@
 
             <p class="menu-label">Playlists</p>
             <ul class="menu-list mb-5">
-                <li>Comming soon...</li>
+                <li>Coming soon...</li>
             </ul>
 
             {#if authUser.role === 'admin'}
-                <p class="menu-label is-hidden-mobile">Admin</p>
-                <ul class="menu-list mb-5 is-hidden-mobile">
+                <p class="menu-label">Admin</p>
+                <ul class="menu-list mb-5">
                     <li>
                         <a href="/admin/users" class:is-active={$page.url.pathname == '/admin/users'}>
                             <svg class="icon is-inline mr-2" viewBox="0 0 24 24">
@@ -169,16 +182,18 @@
     <div class="flex" />
 
     {#if authUser != null}
-        <div style="display: flex; align-items: center;" class="mb-5">
-            <div class="box m-0 p-0 mr-4" style="width: 48px; height: 48px;">
-                <img
-                    src={authUser.avatar ? authUser.avatar : '/images/avatar-default.svg'}
-                    alt="Avatar of user {authUser.username}"
-                    loading="lazy"
-                />
+        <div class="media mb-5">
+            <div class="media-left">
+                <div class="box m-0 p-0" style="width: 48px; height: 48px;">
+                    <img
+                        style="aspect-ratio: 1;"
+                        src={authUser.avatar ? authUser.avatar : '/images/avatar-default.svg'}
+                        alt="Avatar of user {authUser.username}"
+                        loading="lazy"
+                    />
+                </div>
             </div>
-
-            <div class="flex">
+            <div class="media-content">
                 <p><b>{authUser.username}</b></p>
                 <p>
                     <a href="/settings" class="mr-2">Settings</a>
@@ -201,3 +216,48 @@
         <a href="https://www.plaatsoft.nl/" target="_blank" rel="noreferrer">PlaatSoft</a>
     </p>
 </div>
+
+<style>
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: -16.5rem;
+        width: 16.5rem;
+        height: 100%;
+        z-index: 300;
+        display: flex;
+        flex-direction: column;
+        border-radius: 0;
+        overflow-y: auto;
+        transition: left 0.1s ease-in-out;
+    }
+    :global(body.is-resizing .sidebar) {
+        transition: none !important;
+    }
+    :global(.app.is-macos-app .sidebar) {
+        padding-top: calc(28px + 1.25rem) !important;
+    }
+    :global(.app.is-macos-app.is-fullscreen .sidebar) {
+        padding-top: calc(1.25rem) !important;
+    }
+
+    .title > a {
+        text-decoration: none !important;
+    }
+
+    @media (max-width: 1024px) {
+        .sidebar.is-open {
+            left: 0;
+        }
+    }
+
+    @media (min-width: 1024px) {
+        .sidebar {
+            left: 0;
+            z-index: 100;
+        }
+        :global(body.is-playing .sidebar) {
+            height: calc(100% - 6rem) !important;
+        }
+    }
+</style>
