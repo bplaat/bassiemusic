@@ -16,16 +16,16 @@
         return Object.values(uniques);
     }
 
-    $: lastPlayedAlbums = authUser != null ? uniques(lastPlayedTracks.map((track) => track.album)).slice(0, 5) : [];
+    $: lastPlayedAlbums = authUser != undefined ? uniques(lastPlayedTracks.map((track) => track.album)).slice(0, 5) : [];
     $: lastPlayedArtists =
-        authUser != null ? uniques(lastPlayedTracks.map((track) => track.artists).flat()).slice(0, 5) : [];
+        authUser != undefined ? uniques(lastPlayedTracks.map((track) => track.artists).flat()).slice(0, 5) : [];
 </script>
 
 <svelte:head>
     <title>Home - BassieMusic</title>
 </svelte:head>
 
-{#if authUser != null}
+{#if authUser != undefined}
     <h1 class="title">Hey, {authUser.username}!</h1>
 
     {#if lastPlayedTracks.length > 0}

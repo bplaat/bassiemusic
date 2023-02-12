@@ -32,7 +32,7 @@
         <button class="delete is-pulled-right is-hidden-desktop" on:click={close} />
     </h1>
     <div class="menu">
-        {#if authUser == null}
+        {#if authUser == undefined}
             <ul class="menu-list mb-5">
                 <li>
                     <a href="/" class:is-active={$page.url.pathname == '/'}>
@@ -181,7 +181,7 @@
 
     <div class="flex" />
 
-    {#if authUser != null}
+    {#if authUser != undefined}
         <div class="media mb-5">
             <div class="media-left">
                 <div class="box m-0 p-0" style="width: 48px; height: 48px;">

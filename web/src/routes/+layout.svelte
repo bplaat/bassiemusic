@@ -8,9 +8,9 @@
     const { token, authUser, agent, lastTrack, lastTrackPosition } = data;
 
     // Sidebar
-    let sidebar;
+    let app, sidebar;
     afterNavigate(() => {
-        document.body.scrollTop = 0;
+        app.scrollTop = 0;
         sidebar.close();
     });
 
@@ -44,6 +44,7 @@
 </svelte:head>
 
 <div
+    bind:this={app}
     class="app"
     class:is-macos-app={agent.os == 'macOS' && agent.name == 'BassieMusic App'}
     class:is-windows-app={agent.os == 'Windows' && agent.name == 'BassieMusic App'}

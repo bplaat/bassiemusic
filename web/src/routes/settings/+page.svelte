@@ -206,7 +206,7 @@
                         </h3>
                         <p>
                             With {session.ip} at
-                            {#if session.ip_city != null && session.ip_country != null}
+                            {#if session.ip_city != undefined && session.ip_country != undefined}
                                 {session.ip_city}, {session.ip_country}
                             {:else}
                                 Unknown location
