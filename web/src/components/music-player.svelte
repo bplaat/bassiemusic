@@ -339,7 +339,7 @@
             <img src={track.album.small_cover} alt="Cover of album {track.album}" loading="lazy" />
         </div>
 
-        <div style="width: 12rem;" class="is-hidden-touch">
+        <div style="width: 10rem;" class="is-hidden-touch">
             <p class="ellipsis">
                 <a href="/albums/{track.album.id}" style="font-weight: 500;">{track.title}</a>
             </p>
