@@ -1,5 +1,5 @@
 <script>
-    import { musicPlayer } from '../stores.js';
+    import { musicPlayer, musicState } from '../stores.js';
     import { formatDuration } from '../filters.js';
 
     export let token;
@@ -8,25 +8,7 @@
     export let isMusicQueue = false;
 
     function playTrack(track) {
-        musicPlayer.set({
-            action: 'play',
-            queue: tracks.slice(),
-            track_id: track.id,
-        });
-    }
-
-    function addTrack(track) {
-        musicPlayer.update((musicPlayer) => {
-            musicPlayer.queue.push(track);
-            return musicPlayer;
-        });
-    }
-
-    function removeTrack(track) {
-        musicPlayer.update((musicPlayer) => {
-            musicPlayer.queue = musicPlayer.queue.filter((otherTrack) => otherTrack.id != track.id);
-            return musicPlayer;
-        });
+        $musicPlayer.playTracks(tracks.slice(), track);
     }
 
     export function playFirstTrack() {
@@ -69,7 +51,7 @@
             <tr
                 class="track-container"
                 on:dblclick|preventDefault={() => playTrack(track)}
-                class:has-background-light={$musicPlayer.queue.length > 0 && $musicPlayer.track_id == track.id}
+                class:has-background-light={$musicState.track != undefined && $musicState.track.id == track.id}
             >
                 <td>
                     <div class="track-index">{index + 1}</div>
@@ -127,8 +109,8 @@
                     {#if isMusicQueue}
                         <button
                             class="button"
-                            on:click={() => removeTrack(track)}
-                            disabled={$musicPlayer.queue.length > 0 && $musicPlayer.track_id == track.id}
+                            on:click={() => $musicPlayer.removeTrack(track)}
+                            disabled={$musicState.track != undefined && $musicState.track.id == track.id}
                         >
                             <svg class="icon" viewBox="0 0 24 24">
                                 <path
@@ -137,7 +119,7 @@
                             </svg>
                         </button>
                     {:else}
-                        <button class="button" on:click={() => addTrack(track)}>
+                        <button class="button" on:click={() => $musicPlayer.addTrack(track)}>
                             <svg class="icon" viewBox="0 0 24 24">
                                 <path
                                     d="M3 16H10V14H3M18 14V10H16V14H12V16H16V20H18V16H22V14M14 6H3V8H14M14 10H3V12H14V10Z"
