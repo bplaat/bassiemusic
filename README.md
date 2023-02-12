@@ -9,6 +9,8 @@
 <br/>
 </div>
 
+## Screenshot
+![The BassieMusic macOS application playing the album Life from Knower](docs/screenshot.png)
 
 ## Documentation
 - [Installation documentation](docs/installation.md)
