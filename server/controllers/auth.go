@@ -29,6 +29,13 @@ type IPInfo struct {
 	Readme   string `json:"readme"`
 }
 
+func getIP(c *fiber.Ctx) string {
+	if len(c.IPs()) > 0 {
+		return c.IPs()[0]
+	}
+	return c.IP()
+}
+
 type AuthLoginParams struct {
 	Logon    string `form:"logon"`
 	Password string `form:"password"`
@@ -66,7 +73,7 @@ func AuthLogin(c *fiber.Ctx) error {
 
 	// Fetch ip info
 	var ipInfo IPInfo
-	utils.FetchJson("https://ipinfo.io/"+c.IP()+"/json", &ipInfo)
+	utils.FetchJson("https://ipinfo.io/"+getIP(c)+"/json", &ipInfo)
 
 	// Create new session
 	agent := utils.ParseUserAgent(c)
