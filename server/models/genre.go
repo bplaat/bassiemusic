@@ -24,9 +24,9 @@ func GenreModel(c *fiber.Ctx) *database.Model[Genre] {
 	return (&database.Model[Genre]{
 		TableName: "genres",
 		Process: func(genre *Genre) {
-			genre.SmallImage = fmt.Sprintf("%s/storage/genres/small/%s.jpg", os.Getenv("APP_URL"), genre.ID)
-			genre.MediumImage = fmt.Sprintf("%s/storage/genres/medium/%s.jpg", os.Getenv("APP_URL"), genre.ID)
-			genre.LargeImage = fmt.Sprintf("%s/storage/genres/large/%s.jpg", os.Getenv("APP_URL"), genre.ID)
+			genre.SmallImage = fmt.Sprintf("%s/genres/small/%s.jpg", os.Getenv("STORAGE_URL"), genre.ID)
+			genre.MediumImage = fmt.Sprintf("%s/genres/medium/%s.jpg", os.Getenv("STORAGE_URL"), genre.ID)
+			genre.LargeImage = fmt.Sprintf("%s/genres/large/%s.jpg", os.Getenv("STORAGE_URL"), genre.ID)
 		},
 		Relationships: map[string]database.QueryBuilderProcess[Genre]{
 			"albums": func(genre *Genre) {

@@ -54,7 +54,7 @@ func UserModel() *database.Model[User] {
 			}
 
 			if user.AvatarID != nil && *user.AvatarID != "" {
-				user.Avatar = fmt.Sprintf("%s/storage/avatars/%s.jpg", os.Getenv("APP_URL"), *user.AvatarID)
+				user.Avatar = fmt.Sprintf("%s/avatars/%s.jpg", os.Getenv("STORAGE_URL"), *user.AvatarID)
 			}
 		},
 	}).Init()

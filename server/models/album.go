@@ -48,9 +48,9 @@ func AlbumModel(c *fiber.Ctx) *database.Model[Album] {
 				album.Type = "single"
 			}
 
-			album.SmallCover = fmt.Sprintf("%s/storage/albums/small/%s.jpg", os.Getenv("APP_URL"), album.ID)
-			album.MediumCover = fmt.Sprintf("%s/storage/albums/medium/%s.jpg", os.Getenv("APP_URL"), album.ID)
-			album.LargeCover = fmt.Sprintf("%s/storage/albums/large/%s.jpg", os.Getenv("APP_URL"), album.ID)
+			album.SmallCover = fmt.Sprintf("%s/albums/small/%s.jpg", os.Getenv("STORAGE_URL"), album.ID)
+			album.MediumCover = fmt.Sprintf("%s/albums/medium/%s.jpg", os.Getenv("STORAGE_URL"), album.ID)
+			album.LargeCover = fmt.Sprintf("%s/albums/large/%s.jpg", os.Getenv("STORAGE_URL"), album.ID)
 
 			if c != nil {
 				album.Liked = AlbumLikeModel().Where("album_id", album.ID).Where("user_id", AuthUser(c).ID).First() != nil

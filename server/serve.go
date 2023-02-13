@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"net/url"
@@ -32,19 +33,22 @@ func serve() {
 	app.Use(logger.New())
 
 	app.Get("/", func(c *fiber.Ctx) error {
-		return c.SendString(os.Getenv("APP_NAME") + " API v" + os.Getenv("APP_VERSION"))
+		return c.SendString(fmt.Sprintf("%s API v%s", os.Getenv("APP_NAME"), os.Getenv("APP_VERSION")))
 	})
 
-	app.Use("/storage", func(c *fiber.Ctx) error {
-		// Fix bug in Chrome where you can't seek in media files when HTTP range request won't work
-		// so fake it by saying we support it but we really dont ;)
-		c.Response().Header.Add("Accept-Ranges", "bytes")
-		return c.Next()
-	})
-	app.Use("/storage", filesystem.New(filesystem.Config{
-		Root:   http.Dir("./storage"),
-		MaxAge: 30 * 24 * 60 * 60,
-	}))
+	// Host storage folder when in dev env
+	if os.Getenv("APP_ENV") == "dev" {
+		app.Use("/storage", func(c *fiber.Ctx) error {
+			// Fix bug in Chrome where you can't seek in media files when HTTP range request
+			// won't work so fake it by saying we support it but we really dont ;)
+			c.Response().Header.Add("Accept-Ranges", "bytes")
+			return c.Next()
+		})
+		app.Use("/storage", filesystem.New(filesystem.Config{
+			Root:   http.Dir("./storage"),
+			MaxAge: 30 * 24 * 60 * 60,
+		}))
+	}
 
 	// Websocket
 	app.Get("/ws", controllers.Websocket)
@@ -59,12 +63,12 @@ func serve() {
 	// Deezer API proxies
 	app.Get("/deezer/artists", func(c *fiber.Ctx) error {
 		c.Response().Header.Add("Content-Type", "application/json")
-		_, err := c.Write(utils.Fetch("https://api.deezer.com/search/artist?q=" + url.QueryEscape(c.Query("q"))))
+		_, err := c.Write(utils.Fetch(fmt.Sprintf("https://api.deezer.com/search/artist?q=%s", url.QueryEscape(c.Query("q")))))
 		return err
 	})
 	app.Get("/deezer/albums", func(c *fiber.Ctx) error {
 		c.Response().Header.Add("Content-Type", "application/json")
-		_, err := c.Write(utils.Fetch("https://api.deezer.com/search/album?q=" + url.QueryEscape(c.Query("q"))))
+		_, err := c.Write(utils.Fetch(fmt.Sprintf("https://api.deezer.com/search/album?q=%s", url.QueryEscape(c.Query("q")))))
 		return err
 	})
 

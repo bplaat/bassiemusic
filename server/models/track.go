@@ -32,7 +32,7 @@ func TrackModel(c *fiber.Ctx) *database.Model[Track] {
 	return (&database.Model[Track]{
 		TableName: "tracks",
 		Process: func(track *Track) {
-			track.Music = fmt.Sprintf("%s/storage/tracks/%s.m4a", os.Getenv("APP_URL"), track.ID)
+			track.Music = fmt.Sprintf("%s/tracks/%s.m4a", os.Getenv("STORAGE_URL"), track.ID)
 
 			if c != nil {
 				track.Liked = TrackLikeModel().Where("track_id", track.ID).Where("user_id", AuthUser(c).ID).First() != nil

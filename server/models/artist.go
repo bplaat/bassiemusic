@@ -27,9 +27,9 @@ func ArtistModel(c *fiber.Ctx) *database.Model[Artist] {
 	return (&database.Model[Artist]{
 		TableName: "artists",
 		Process: func(artist *Artist) {
-			artist.SmallImage = fmt.Sprintf("%s/storage/artists/small/%s.jpg", os.Getenv("APP_URL"), artist.ID)
-			artist.MediumImage = fmt.Sprintf("%s/storage/artists/medium/%s.jpg", os.Getenv("APP_URL"), artist.ID)
-			artist.LargeImage = fmt.Sprintf("%s/storage/artists/large/%s.jpg", os.Getenv("APP_URL"), artist.ID)
+			artist.SmallImage = fmt.Sprintf("%s/artists/small/%s.jpg", os.Getenv("STORAGE_URL"), artist.ID)
+			artist.MediumImage = fmt.Sprintf("%s/artists/medium/%s.jpg", os.Getenv("STORAGE_URL"), artist.ID)
+			artist.LargeImage = fmt.Sprintf("%s/artists/large/%s.jpg", os.Getenv("STORAGE_URL"), artist.ID)
 
 			if c != nil {
 				artist.Liked = ArtistLikeModel().Where("artist_id", artist.ID).Where("user_id", AuthUser(c).ID).First() != nil
