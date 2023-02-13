@@ -26,7 +26,9 @@ func createArtist(id int, name string) string {
 	}
 
 	var artist DeezerArtist
-	utils.FetchJson(fmt.Sprintf("https://api.deezer.com/artist/%d", id), &artist)
+	if err := utils.FetchJson(fmt.Sprintf("https://api.deezer.com/artist/%d", id), &artist); err != nil {
+		log.Fatalln(err)
+	}
 
 	artistID := uuid.NewV4()
 	database.Exec("INSERT INTO `artists` (`id`, `name`, `deezer_id`) VALUES (UUID_TO_BIN(?), ?, ?)", artistID.String(), name, id)
@@ -47,7 +49,9 @@ func createGenre(id int, name string) string {
 	}
 
 	var genre DeezerGenre
-	utils.FetchJson(fmt.Sprintf("https://api.deezer.com/genre/%d", id), &genre)
+	if err := utils.FetchJson(fmt.Sprintf("https://api.deezer.com/genre/%d", id), &genre); err != nil {
+		log.Fatalln(err)
+	}
 
 	genreID := uuid.NewV4()
 	database.Exec("INSERT INTO `genres` (`id`, `name`, `deezer_id`) VALUES (UUID_TO_BIN(?), ?, ?)", genreID.String(), name, id)
@@ -65,7 +69,9 @@ func createGenre(id int, name string) string {
 
 func downloadAlbum(id int) {
 	var album DeezerAlbum
-	utils.FetchJson(fmt.Sprintf("https://api.deezer.com/album/%d", id), &album)
+	if err := utils.FetchJson(fmt.Sprintf("https://api.deezer.com/album/%d", id), &album); err != nil {
+		log.Fatalln(err)
+	}
 
 	// Check if album already exists
 	albums := database.Query("SELECT BIN_TO_UUID(`id`) FROM `albums` WHERE `title` = ?", album.Title)
@@ -108,7 +114,9 @@ func downloadAlbum(id int) {
 	// Create album tracks
 	for _, incompleteTrack := range album.Tracks.Data {
 		var track DeezerTrack
-		utils.FetchJson(fmt.Sprintf("https://api.deezer.com/track/%d", incompleteTrack.ID), &track)
+		if err := utils.FetchJson(fmt.Sprintf("https://api.deezer.com/track/%d", incompleteTrack.ID), &track); err != nil {
+			log.Fatalln(err)
+		}
 
 		// Search for youtube video
 		searchCommand := exec.Command("yt-dlp", "--dump-json", fmt.Sprintf("ytsearch25:%s - %s - %s", track.Contributors[0].Name, track.Album.Title, track.Title))
@@ -167,7 +175,9 @@ func DownloadTask() {
 		// Do download task
 		if downloadTask.Type == "deezer_artist" {
 			var artistAlbums DeezerArtistAlbums
-			utils.FetchJson(fmt.Sprintf("https://api.deezer.com/artist/%d/albums", downloadTask.DeezerID), &artistAlbums)
+			if err := utils.FetchJson(fmt.Sprintf("https://api.deezer.com/artist/%d/albums", downloadTask.DeezerID), &artistAlbums); err != nil {
+				log.Fatalln(err)
+			}
 			for _, album := range artistAlbums.Data {
 				if !downloadTask.Singles && album.RecordType == "single" {
 					continue

@@ -44,7 +44,7 @@ type AuthLoginParams struct {
 func AuthLogin(c *fiber.Ctx) error {
 	var params AuthLoginParams
 	if err := c.BodyParser(&params); err != nil {
-		log.Fatalln(err)
+		return fiber.ErrBadRequest
 	}
 
 	// Get user by username or email
@@ -73,7 +73,9 @@ func AuthLogin(c *fiber.Ctx) error {
 
 	// Fetch ip info
 	var ipInfo IPInfo
-	utils.FetchJson("https://ipinfo.io/"+getIP(c)+"/json", &ipInfo)
+	if err := utils.FetchJson("https://ipinfo.io/"+getIP(c)+"/json", &ipInfo); err != nil {
+		log.Fatalln(err)
+	}
 
 	// Create new session
 	agent := utils.ParseUserAgent(c)

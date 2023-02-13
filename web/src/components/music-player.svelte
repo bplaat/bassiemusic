@@ -125,7 +125,7 @@
     onMount(() => {
         musicState.set({ queue, track });
 
-        isShuffling = localStorage.getItem('player-shuffling') ?? false;
+        isShuffling = localStorage.getItem('player-shuffling') == 'true';
 
         if (track != undefined) {
             loadAndPlayTrack(false);

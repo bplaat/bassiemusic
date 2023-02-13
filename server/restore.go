@@ -23,7 +23,9 @@ func restore() {
 			continue
 		}
 		var deezerArtist tasks.DeezerArtist
-		utils.FetchJson(fmt.Sprintf("https://api.deezer.com/artist/%d", artist.DeezerID), &deezerArtist)
+		if err := utils.FetchJson(fmt.Sprintf("https://api.deezer.com/artist/%d", artist.DeezerID), &deezerArtist); err != nil {
+			log.Fatalln(err)
+		}
 		utils.FetchFile(deezerArtist.PictureMedium, fmt.Sprintf("storage/artists/small/%s.jpg", artist.ID))
 		utils.FetchFile(deezerArtist.PictureBig, fmt.Sprintf("storage/artists/medium/%s.jpg", artist.ID))
 		utils.FetchFile(deezerArtist.PictureXl, fmt.Sprintf("storage/artists/large/%s.jpg", artist.ID))
@@ -37,7 +39,9 @@ func restore() {
 			continue
 		}
 		var deezerGenre tasks.DeezerGenre
-		utils.FetchJson(fmt.Sprintf("https://api.deezer.com/genre/%d", genre.DeezerID), &deezerGenre)
+		if err := utils.FetchJson(fmt.Sprintf("https://api.deezer.com/genre/%d", genre.DeezerID), &deezerGenre); err != nil {
+			log.Fatalln(err)
+		}
 		if deezerGenre.PictureMedium != "" {
 			utils.FetchFile(deezerGenre.PictureMedium, fmt.Sprintf("storage/genres/small/%s.jpg", genre.ID))
 			utils.FetchFile(deezerGenre.PictureBig, fmt.Sprintf("storage/genres/medium/%s.jpg", genre.ID))
@@ -57,7 +61,9 @@ func restore() {
 			continue
 		}
 		var deezerAlbum tasks.DeezerAlbum
-		utils.FetchJson(fmt.Sprintf("https://api.deezer.com/album/%d", album.DeezerID), &deezerAlbum)
+		if err := utils.FetchJson(fmt.Sprintf("https://api.deezer.com/album/%d", album.DeezerID), &deezerAlbum); err != nil {
+			log.Fatalln(err)
+		}
 		utils.FetchFile(deezerAlbum.CoverMedium, fmt.Sprintf("storage/albums/small/%s.jpg", album.ID))
 		utils.FetchFile(deezerAlbum.CoverBig, fmt.Sprintf("storage/albums/medium/%s.jpg", album.ID))
 		utils.FetchFile(deezerAlbum.CoverXl, fmt.Sprintf("storage/albums/large/%s.jpg", album.ID))
