@@ -17,9 +17,9 @@
     }
 
     // Interface
-    export let token;
+    export let token = undefined;
     export let queue = [];
-    export let track;
+    export let track = undefined;
     export let position = 0;
     export let duration = 0;
 

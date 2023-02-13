@@ -1,8 +1,8 @@
 <script>
     import { page } from '$app/stores';
 
-    export let token;
-    export let authUser;
+    export let token = undefined;
+    export let authUser = undefined;
 
     let isOpen = false;
     export function open() {
