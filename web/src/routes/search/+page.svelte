@@ -1,13 +1,13 @@
 <script>
     import { onMount, onDestroy } from 'svelte';
-    import {goto} from '$app/navigation';
+    import { goto } from '$app/navigation';
     import GenreCard from '../../components/genre-card.svelte';
     import AlbumCard from '../../components/album-card.svelte';
     import ArtistCard from '../../components/artist-card.svelte';
     import TracksTable from '../../components/tracks-table.svelte';
 
     export let data;
-    let { token, genres: allGenres, query} = data;
+    let { token, genres: allGenres, query } = data;
 
     // Lazy load all genres
     async function fetchGenresPage(page) {
@@ -90,7 +90,7 @@
         } else {
             // Remove query from url
             const newUrl = new URL(window.location.href);
-            newUrl.searchParams.delete('q')
+            newUrl.searchParams.delete('q');
             goto(newUrl);
 
             // Reset all variables
@@ -105,9 +105,9 @@
 
     // Load in past query
     onMount(() => {
-        if(query != undefined){
-            searchTerm = query
-            search()
+        if (query != undefined) {
+            searchTerm = query;
+            search();
         }
     });
 </script>
@@ -172,17 +172,15 @@
             {/each}
         </div>
     {/if}
-{:else}
-    {#if query == undefined}
-        <h2 class="title is-5">Genres</h2>
-        <div class="columns is-multiline is-mobile">
-            {#each allGenres as genre}
-                <div class="column is-half-mobile is-one-third-tablet is-one-quarter-desktop is-one-fifth-widescreen">
-                    <GenreCard {genre} />
-                </div>
-            {/each}
-        </div>
-    {/if}
+{:else if query == undefined}
+    <h2 class="title is-5">Genres</h2>
+    <div class="columns is-multiline is-mobile">
+        {#each allGenres as genre}
+            <div class="column is-half-mobile is-one-third-tablet is-one-quarter-desktop is-one-fifth-widescreen">
+                <GenreCard {genre} />
+            </div>
+        {/each}
+    </div>
 {/if}
 
 <div bind:this={bottom} />
