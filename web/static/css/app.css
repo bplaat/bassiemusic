@@ -87,6 +87,9 @@ img {
     text-overflow: ellipsis;
 }
 
+body {
+    scrollbar-width: thin;
+}
 ::-webkit-scrollbar {
     width: 8px;
 }
@@ -109,6 +112,9 @@ img {
 .card-image > img {
     background-color: #ccc;
 }
+.app {
+    scrollbar-color: rgba(0, 0, 0, 0.3) transparent;
+}
 ::-webkit-scrollbar-thumb {
     background-color: rgba(0, 0, 0, 0.3);
 }
@@ -116,6 +122,9 @@ img {
     .box > img,
     .card-image > img {
         background-color: #333;
+    }
+    .app {
+        scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
     }
     ::-webkit-scrollbar-thumb {
         background-color: rgba(255, 255, 255, 0.3);
@@ -127,8 +136,8 @@ img {
 .app.is-light .card-image > img {
     background-color: #ccc !important;
 }
-.app.is-light ::-webkit-scrollbar-thumb {
-    background-color: rgba(0, 0, 0, 0.3) !important;
+.app.is-light {
+    scrollbar-color: rgba(0, 0, 0, 0.3) transparent !important;
 }
 
 /* Dark theme */
@@ -136,6 +145,6 @@ img {
 .app.is-dark .card-image > img {
     background-color: #333 !important;
 }
-.app.is-dark ::-webkit-scrollbar-thumb {
-    background-color: rgba(255, 255, 255, 0.3) !important;
+.app.is-dark {
+    scrollbar-color: rgba(255, 255, 255, 0.3) transparent !important;
 }

@@ -36,9 +36,19 @@
     {/if}
     {#if authUser != undefined && authUser.theme == 'light'}
         <link rel="stylesheet" href="/css/bulma-light.min.css" />
+        <style>
+            ::-webkit-scrollbar-thumb {
+                background-color: rgba(0, 0, 0, 0.3) !important;
+            }
+        </style>
     {/if}
     {#if authUser != undefined && authUser.theme == 'dark'}
         <link rel="stylesheet" href="/css/bulma-dark.min.css" />
+        <style>
+            ::-webkit-scrollbar-thumb {
+                background-color: rgba(255, 255, 255, 0.3) !important;
+            }
+        </style>
     {/if}
     <link rel="stylesheet" href="/css/app.css" />
 </svelte:head>
@@ -72,23 +82,25 @@
         <slot />
     </div>
 
-    {#if lastTrack != undefined}
-        <MusicPlayer
-            bind:this={$musicPlayer}
-            {token}
-            queue={[lastTrack]}
-            track={lastTrack}
-            position={lastTrackPosition}
-            duration={lastTrack.duration}
-        />
-    {:else}
-        <MusicPlayer bind:this={$musicPlayer} {token} />
+    {#if authUser != undefined}
+        {#if lastTrack != undefined}
+            <MusicPlayer
+                bind:this={$musicPlayer}
+                {token}
+                queue={[lastTrack]}
+                track={lastTrack}
+                position={lastTrackPosition}
+                duration={lastTrack.duration}
+            />
+        {:else}
+            <MusicPlayer bind:this={$musicPlayer} {token} />
+        {/if}
     {/if}
 </div>
 
 <style>
     .app {
-        overflow-y: auto;
+        overflow-y: scroll;
         margin-top: 52px;
         height: calc(100% - 52px);
     }
