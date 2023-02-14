@@ -1,12 +1,13 @@
 <script>
     import { onMount, onDestroy } from 'svelte';
+    import { goto } from '$app/navigation';
     import GenreCard from '../../components/genre-card.svelte';
     import AlbumCard from '../../components/album-card.svelte';
     import ArtistCard from '../../components/artist-card.svelte';
     import TracksTable from '../../components/tracks-table.svelte';
 
     export let data;
-    let { token, genres: allGenres } = data;
+    let { token, genres: allGenres, query } = data;
 
     // Lazy load all genres
     async function fetchGenresPage(page) {
@@ -62,6 +63,11 @@
     // Perform search
     async function search() {
         if (searchTerm != '') {
+            // Set the search term in the url
+            const newUrl = new URL(window.location.href);
+            newUrl.searchParams.set('q', searchTerm);
+            goto(newUrl);
+
             // Load data from database
             const response = await fetch(
                 `${import.meta.env.VITE_API_URL}/search?${new URLSearchParams({
@@ -82,6 +88,13 @@
             tracks = data.tracks;
             genres = data.genres;
         } else {
+            // Remove query from url
+            const newUrl = new URL(window.location.href);
+            newUrl.searchParams.delete('q');
+            goto(newUrl);
+
+            // Reset all variables
+            query = undefined;
             genres = allGenres;
             hasResult = false;
             albums = [];
@@ -89,6 +102,14 @@
             tracks = [];
         }
     }
+
+    // Load in past query
+    onMount(() => {
+        if (query != undefined) {
+            searchTerm = query;
+            search();
+        }
+    });
 </script>
 
 <svelte:head>
@@ -151,7 +172,7 @@
             {/each}
         </div>
     {/if}
-{:else}
+{:else if query == undefined}
     <h2 class="title is-5">Genres</h2>
     <div class="columns is-multiline is-mobile">
         {#each allGenres as genre}
