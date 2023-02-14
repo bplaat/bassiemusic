@@ -134,9 +134,7 @@ func downloadAlbum(id int) {
 			}
 
 			if track.Duration >= video.Duration-consts.TRACK_DURATION_SLACK && track.Duration <= video.Duration+consts.TRACK_DURATION_SLACK {
-				if err := searchCommand.Process.Signal(syscall.SIGTERM); err != nil {
-					log.Fatalln(err)
-				}
+				searchCommand.Process.Signal(syscall.SIGTERM) //nolint
 
 				trackID := uuid.NewV4()
 				database.Exec("INSERT INTO `tracks` (`id`, `album_id`, `title`, `disk`, `position`, `duration`, `explicit`, `deezer_id`, `youtube_id`) VALUES (UUID_TO_BIN(?), UUID_TO_BIN(?), ?, ?, ?, ?, ?, ?, ?)",
