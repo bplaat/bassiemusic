@@ -64,6 +64,11 @@ func main() {
 			return
 		}
 
+		if os.Args[1] == "fix" {
+			commands.Fix()
+			return
+		}
+
 		if os.Args[1] == "clean" {
 			commands.Clean()
 			return
@@ -77,5 +82,6 @@ func main() {
 		"The commands are:\n" +
 		"\tserve\t\tStart the BassieMusic server and serve content\n" +
 		"\trestore\t\tRedownload the storage/ folder with your filled database\n" +
+		"\tfix\t\tCheck all albums with Deezer if they are complete when not download missing tracks\n" +
 		"\tclean\t\tClean up storage files that are not referenced in the database\n")
 }

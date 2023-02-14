@@ -8,7 +8,7 @@ import (
 
 	"github.com/bplaat/bassiemusic/database"
 	"github.com/bplaat/bassiemusic/models"
-	"github.com/bplaat/bassiemusic/tasks"
+	"github.com/bplaat/bassiemusic/structs"
 	"github.com/bplaat/bassiemusic/utils"
 )
 
@@ -24,7 +24,7 @@ func Restore() {
 		if _, err := os.Stat(fmt.Sprintf("storage/artists/small/%s.jpg", artist.ID)); !os.IsNotExist(err) {
 			continue
 		}
-		var deezerArtist tasks.DeezerArtist
+		var deezerArtist structs.DeezerArtist
 		if err := utils.FetchJson(fmt.Sprintf("https://api.deezer.com/artist/%d", artist.DeezerID), &deezerArtist); err != nil {
 			log.Fatalln(err)
 		}
@@ -40,7 +40,7 @@ func Restore() {
 		if _, err := os.Stat(fmt.Sprintf("storage/genres/small/%s.jpg", genre.ID)); !os.IsNotExist(err) {
 			continue
 		}
-		var deezerGenre tasks.DeezerGenre
+		var deezerGenre structs.DeezerGenre
 		if err := utils.FetchJson(fmt.Sprintf("https://api.deezer.com/genre/%d", genre.DeezerID), &deezerGenre); err != nil {
 			log.Fatalln(err)
 		}
@@ -62,7 +62,7 @@ func Restore() {
 		if _, err := os.Stat(fmt.Sprintf("storage/albums/small/%s.jpg", album.ID)); !os.IsNotExist(err) {
 			continue
 		}
-		var deezerAlbum tasks.DeezerAlbum
+		var deezerAlbum structs.DeezerAlbum
 		if err := utils.FetchJson(fmt.Sprintf("https://api.deezer.com/album/%d", album.DeezerID), &deezerAlbum); err != nil {
 			log.Fatalln(err)
 		}

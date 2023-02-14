@@ -10,6 +10,7 @@ import (
 	"github.com/bplaat/bassiemusic/consts"
 	"github.com/bplaat/bassiemusic/database"
 	"github.com/bplaat/bassiemusic/models"
+	"github.com/bplaat/bassiemusic/structs"
 	"github.com/bplaat/bassiemusic/utils"
 	uuid "github.com/satori/go.uuid"
 )
@@ -22,7 +23,7 @@ func createArtist(deezerID int, name string) string {
 	}
 
 	// Get Deezer artist info
-	var deezerArtist DeezerArtist
+	var deezerArtist structs.DeezerArtist
 	if err := utils.FetchJson(fmt.Sprintf("https://api.deezer.com/artist/%d", deezerID), &deezerArtist); err != nil {
 		log.Fatalln(err)
 	}
@@ -48,7 +49,7 @@ func createGenre(deezerID int, name string) string {
 	}
 
 	// Get Deezer genre info
-	var deezerGenre DeezerGenre
+	var deezerGenre structs.DeezerGenre
 	if err := utils.FetchJson(fmt.Sprintf("https://api.deezer.com/genre/%d", deezerID), &deezerGenre); err != nil {
 		log.Fatalln(err)
 	}
@@ -74,7 +75,7 @@ func createGenre(deezerID int, name string) string {
 
 func downloadAlbum(deezerID int) {
 	// Get Deezer album info
-	var deezerAlbum DeezerAlbum
+	var deezerAlbum structs.DeezerAlbum
 	if err := utils.FetchJson(fmt.Sprintf("https://api.deezer.com/album/%d", deezerID), &deezerAlbum); err != nil {
 		log.Fatalln(err)
 	}
@@ -127,7 +128,7 @@ func downloadAlbum(deezerID int) {
 	// Create tracks
 	for _, incompleteTrack := range deezerAlbum.Tracks.Data {
 		// Get Deezer track info
-		var deezerTrack DeezerTrack
+		var deezerTrack structs.DeezerTrack
 		if err := utils.FetchJson(fmt.Sprintf("https://api.deezer.com/track/%d", incompleteTrack.ID), &deezerTrack); err != nil {
 			log.Fatalln(err)
 		}
@@ -142,7 +143,7 @@ func downloadAlbum(deezerID int) {
 			log.Fatalln(err)
 		}
 		for {
-			var youtubeVideo YoutubeVideo
+			var youtubeVideo structs.YoutubeVideo
 			if err := json.NewDecoder(stdout).Decode(&youtubeVideo); err != nil {
 				break
 			}
@@ -204,7 +205,7 @@ func DownloadTask() {
 
 		// Do download task
 		if downloadTask.Type == "deezer_artist" {
-			var artistAlbums DeezerArtistAlbums
+			var artistAlbums structs.DeezerArtistAlbums
 			if err := utils.FetchJson(fmt.Sprintf("https://api.deezer.com/artist/%d/albums", downloadTask.DeezerID), &artistAlbums); err != nil {
 				log.Fatalln(err)
 			}

@@ -10,8 +10,8 @@ import (
 	"github.com/bplaat/bassiemusic/models"
 )
 
-func Clean() {
-	// Clean up all unused user avatars
+// Clean up all unused user avatars
+func cleanUserAvatars() {
 	if err := filepath.Walk("storage/avatars", func(path string, info os.FileInfo, err error) error {
 		parts := strings.Split(filepath.Base(path), ".")
 		if len(parts) == 2 {
@@ -27,8 +27,10 @@ func Clean() {
 	}); err != nil {
 		log.Fatalln(err)
 	}
+}
 
-	// Clean up all unused artists images
+// Clean up all unused artists images
+func cleanArtistImages() {
 	if err := filepath.Walk("storage/artists/small", func(path string, info os.FileInfo, err error) error {
 		parts := strings.Split(filepath.Base(path), ".")
 		if len(parts) == 2 {
@@ -50,8 +52,10 @@ func Clean() {
 	}); err != nil {
 		log.Fatalln(err)
 	}
+}
 
-	// Clean up all unused albums images
+// Clean up all unused albums images
+func cleanAlbumImages() {
 	if err := filepath.Walk("storage/albums/small", func(path string, info os.FileInfo, err error) error {
 		parts := strings.Split(filepath.Base(path), ".")
 		if len(parts) == 2 {
@@ -73,8 +77,10 @@ func Clean() {
 	}); err != nil {
 		log.Fatalln(err)
 	}
+}
 
-	// Clean up all unused genres images
+// Clean up all unused genres images
+func cleanGenreImages() {
 	if err := filepath.Walk("storage/genres/small", func(path string, info os.FileInfo, err error) error {
 		parts := strings.Split(filepath.Base(path), ".")
 		if len(parts) == 2 {
@@ -96,8 +102,10 @@ func Clean() {
 	}); err != nil {
 		log.Fatalln(err)
 	}
+}
 
-	// Clean up all unused tracks music
+// Clean up all unused tracks music
+func cleanTrackMusic() {
 	if err := filepath.Walk("storage/tracks", func(path string, info os.FileInfo, err error) error {
 		parts := strings.Split(filepath.Base(path), ".")
 		if len(parts) == 2 {
@@ -113,4 +121,12 @@ func Clean() {
 	}); err != nil {
 		log.Fatalln(err)
 	}
+}
+
+func Clean() {
+	cleanUserAvatars()
+	cleanArtistImages()
+	cleanAlbumImages()
+	cleanGenreImages()
+	cleanTrackMusic()
 }
