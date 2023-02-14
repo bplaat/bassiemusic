@@ -219,7 +219,10 @@
                             Expires at: {new Date(session.expires_at).toLocaleString()}
                         </p>
                         <div class="buttons">
-                            <button class="button is-danger" on:click={() => revokeSession(session)}
+                            <button
+                                class="button is-danger"
+                                on:click={() => revokeSession(session)}
+                                title="This will revoke this active session, you will be logged out of this browser or client"
                                 >Revoke session</button
                             >
                         </div>
