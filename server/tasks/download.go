@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"os/exec"
-	"syscall"
 	"time"
 
 	"github.com/bplaat/bassiemusic/consts"
@@ -15,50 +14,56 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
-func createArtist(id int, name string) string {
-	artists := database.Query("SELECT BIN_TO_UUID(`id`) FROM `artists` WHERE `name` = ?", name)
-	defer artists.Close()
-
-	if artists.Next() {
-		var artistID string
-		_ = artists.Scan(&artistID)
-		return artistID
+func createArtist(deezerID int, name string) string {
+	// Check if artist already exists
+	artist := models.ArtistModel(nil).Where("name", name).First()
+	if artist != nil {
+		return artist.ID
 	}
 
-	var artist DeezerArtist
-	if err := utils.FetchJson(fmt.Sprintf("https://api.deezer.com/artist/%d", id), &artist); err != nil {
+	// Get Deezer artist info
+	var deezerArtist DeezerArtist
+	if err := utils.FetchJson(fmt.Sprintf("https://api.deezer.com/artist/%d", deezerID), &deezerArtist); err != nil {
 		log.Fatalln(err)
 	}
 
+	// Create artist
 	artistID := uuid.NewV4()
-	database.Exec("INSERT INTO `artists` (`id`, `name`, `deezer_id`) VALUES (UUID_TO_BIN(?), ?, ?)", artistID.String(), name, id)
-	utils.FetchFile(artist.PictureMedium, fmt.Sprintf("storage/artists/small/%s.jpg", artistID.String()))
-	utils.FetchFile(artist.PictureBig, fmt.Sprintf("storage/artists/medium/%s.jpg", artistID.String()))
-	utils.FetchFile(artist.PictureXl, fmt.Sprintf("storage/artists/large/%s.jpg", artistID.String()))
+	models.ArtistModel(nil).Create(database.Map{
+		"id":        artistID.String(),
+		"name":      name,
+		"deezer_id": deezerID,
+	})
+	utils.FetchFile(deezerArtist.PictureMedium, fmt.Sprintf("storage/artists/small/%s.jpg", artistID.String()))
+	utils.FetchFile(deezerArtist.PictureBig, fmt.Sprintf("storage/artists/medium/%s.jpg", artistID.String()))
+	utils.FetchFile(deezerArtist.PictureXl, fmt.Sprintf("storage/artists/large/%s.jpg", artistID.String()))
 	return artistID.String()
 }
 
-func createGenre(id int, name string) string {
-	genres := database.Query("SELECT BIN_TO_UUID(`id`) FROM `genres` WHERE `name` = ?", name)
-	defer genres.Close()
-
-	if genres.Next() {
-		var genreID string
-		_ = genres.Scan(&genreID)
-		return genreID
+func createGenre(deezerID int, name string) string {
+	// Check if genre already exists
+	genre := models.GenreModel(nil).Where("name", name).First()
+	if genre != nil {
+		return genre.ID
 	}
 
-	var genre DeezerGenre
-	if err := utils.FetchJson(fmt.Sprintf("https://api.deezer.com/genre/%d", id), &genre); err != nil {
+	// Get Deezer genre info
+	var deezerGenre DeezerGenre
+	if err := utils.FetchJson(fmt.Sprintf("https://api.deezer.com/genre/%d", deezerID), &deezerGenre); err != nil {
 		log.Fatalln(err)
 	}
 
+	// Create genre
 	genreID := uuid.NewV4()
-	database.Exec("INSERT INTO `genres` (`id`, `name`, `deezer_id`) VALUES (UUID_TO_BIN(?), ?, ?)", genreID.String(), name, id)
-	if genre.PictureMedium != "" {
-		utils.FetchFile(genre.PictureMedium, fmt.Sprintf("storage/genres/small/%s.jpg", genreID.String()))
-		utils.FetchFile(genre.PictureBig, fmt.Sprintf("storage/genres/medium/%s.jpg", genreID.String()))
-		utils.FetchFile(genre.PictureXl, fmt.Sprintf("storage/genres/large/%s.jpg", genreID.String()))
+	models.GenreModel(nil).Create(database.Map{
+		"id":        genreID.String(),
+		"name":      name,
+		"deezer_id": deezerID,
+	})
+	if deezerGenre.PictureMedium != "" {
+		utils.FetchFile(deezerGenre.PictureMedium, fmt.Sprintf("storage/genres/small/%s.jpg", genreID.String()))
+		utils.FetchFile(deezerGenre.PictureBig, fmt.Sprintf("storage/genres/medium/%s.jpg", genreID.String()))
+		utils.FetchFile(deezerGenre.PictureXl, fmt.Sprintf("storage/genres/large/%s.jpg", genreID.String()))
 	} else {
 		utils.FetchFile("https://e-cdns-images.dzcdn.net/images/misc//250x250-000000-80-0-0.jpg", fmt.Sprintf("storage/genres/small/%s.jpg", genreID.String()))
 		utils.FetchFile("https://e-cdns-images.dzcdn.net/images/misc//500x500-000000-80-0-0.jpg", fmt.Sprintf("storage/genres/medium/%s.jpg", genreID.String()))
@@ -67,59 +72,68 @@ func createGenre(id int, name string) string {
 	return genreID.String()
 }
 
-func downloadAlbum(id int) {
-	var album DeezerAlbum
-	if err := utils.FetchJson(fmt.Sprintf("https://api.deezer.com/album/%d", id), &album); err != nil {
+func downloadAlbum(deezerID int) {
+	// Get Deezer album info
+	var deezerAlbum DeezerAlbum
+	if err := utils.FetchJson(fmt.Sprintf("https://api.deezer.com/album/%d", deezerID), &deezerAlbum); err != nil {
 		log.Fatalln(err)
 	}
 
 	// Check if album already exists
-	albums := database.Query("SELECT BIN_TO_UUID(`id`) FROM `albums` WHERE `title` = ?", album.Title)
-	defer albums.Close()
-	if albums.Next() {
+	if models.AlbumModel(nil).Where("title", deezerAlbum.Title).First() != nil {
 		return
 	}
 
-	// Create album row
+	// Create album
+	log.Printf("[DOWNLOAD] Start downloading album %s by %s\n", deezerAlbum.Title, deezerAlbum.Artist.Name)
 	albumType := models.AlbumTypeAlbum
-	if album.RecordType == "ep" {
+	if deezerAlbum.RecordType == "ep" {
 		albumType = models.AlbumTypeEP
 	}
-	if album.RecordType == "single" {
+	if deezerAlbum.RecordType == "single" {
 		albumType = models.AlbumTypeSingle
 	}
 	albumID := uuid.NewV4()
-	database.Exec("INSERT INTO `albums` (`id`, `type`, `title`, `released_at`, `explicit`, `deezer_id`) VALUES (UUID_TO_BIN(?), ?, ?, ?, ?, ?)",
-		albumID.String(), albumType, album.Title, album.ReleaseDate, album.ExplicitLyrics, album.ID)
-	fmt.Printf("Downloading %s by %s\n", album.Title, album.Artist.Name)
+	models.AlbumModel(nil).Create(database.Map{
+		"id":          albumID.String(),
+		"type":        albumType,
+		"title":       deezerAlbum.Title,
+		"released_at": deezerAlbum.ReleaseDate,
+		"explicit":    deezerAlbum.ExplicitLyrics,
+		"deezer_id":   deezerID,
+	})
+	utils.FetchFile(deezerAlbum.CoverMedium, fmt.Sprintf("storage/albums/small/%s.jpg", albumID.String()))
+	utils.FetchFile(deezerAlbum.CoverBig, fmt.Sprintf("storage/albums/medium/%s.jpg", albumID.String()))
+	utils.FetchFile(deezerAlbum.CoverXl, fmt.Sprintf("storage/albums/large/%s.jpg", albumID.String()))
 
 	// Create album genres
-	for _, genre := range album.Genres.Data {
+	for _, genre := range deezerAlbum.Genres.Data {
 		genreID := createGenre(genre.ID, genre.Name)
-		albumGenreID := uuid.NewV4()
-		database.Exec("INSERT INTO `album_genre` (`id`, `album_id`, `genre_id`) VALUES (UUID_TO_BIN(?), UUID_TO_BIN(?), UUID_TO_BIN(?))", albumGenreID.String(), albumID.String(), genreID)
+		models.AlbumGenreModel().Create(database.Map{
+			"album_id": albumID.String(),
+			"genre_id": genreID,
+		})
 	}
 
 	// Create album artists bindings
-	for _, artist := range album.Contributors {
+	for _, artist := range deezerAlbum.Contributors {
 		artistID := createArtist(artist.ID, artist.Name)
-		albumArtistID := uuid.NewV4()
-		database.Exec("INSERT INTO `album_artist` (`id`, `album_id`, `artist_id`) VALUES (UUID_TO_BIN(?), UUID_TO_BIN(?), UUID_TO_BIN(?))", albumArtistID.String(), albumID.String(), artistID)
+		models.AlbumArtistModel().Create(database.Map{
+			"album_id":  albumID.String(),
+			"artist_id": artistID,
+		})
 	}
 
-	utils.FetchFile(album.CoverMedium, fmt.Sprintf("storage/albums/small/%s.jpg", albumID.String()))
-	utils.FetchFile(album.CoverBig, fmt.Sprintf("storage/albums/medium/%s.jpg", albumID.String()))
-	utils.FetchFile(album.CoverXl, fmt.Sprintf("storage/albums/large/%s.jpg", albumID.String()))
-
-	// Create album tracks
-	for _, incompleteTrack := range album.Tracks.Data {
-		var track DeezerTrack
-		if err := utils.FetchJson(fmt.Sprintf("https://api.deezer.com/track/%d", incompleteTrack.ID), &track); err != nil {
+	// Create tracks
+	for _, incompleteTrack := range deezerAlbum.Tracks.Data {
+		// Get Deezer track info
+		var deezerTrack DeezerTrack
+		if err := utils.FetchJson(fmt.Sprintf("https://api.deezer.com/track/%d", incompleteTrack.ID), &deezerTrack); err != nil {
 			log.Fatalln(err)
 		}
 
 		// Search for youtube video
-		searchCommand := exec.Command("yt-dlp", "--dump-json", fmt.Sprintf("ytsearch25:%s - %s - %s", track.Contributors[0].Name, track.Album.Title, track.Title))
+		searchCommand := exec.Command("yt-dlp", "--dump-json", fmt.Sprintf("ytsearch25:%s - %s - %s", deezerTrack.Contributors[0].Name, deezerTrack.Album.Title, deezerTrack.Title))
 		stdout, err := searchCommand.StdoutPipe()
 		if err != nil {
 			log.Fatalln(err)
@@ -128,41 +142,59 @@ func downloadAlbum(id int) {
 			log.Fatalln(err)
 		}
 		for {
-			var video YoutubeVideo
-			if err := json.NewDecoder(stdout).Decode(&video); err != nil {
+			var youtubeVideo YoutubeVideo
+			if err := json.NewDecoder(stdout).Decode(&youtubeVideo); err != nil {
 				break
 			}
 
-			if track.Duration >= video.Duration-consts.TRACK_DURATION_SLACK && track.Duration <= video.Duration+consts.TRACK_DURATION_SLACK {
-				searchCommand.Process.Signal(syscall.SIGTERM) //nolint
-
-				trackID := uuid.NewV4()
-				database.Exec("INSERT INTO `tracks` (`id`, `album_id`, `title`, `disk`, `position`, `duration`, `explicit`, `deezer_id`, `youtube_id`) VALUES (UUID_TO_BIN(?), UUID_TO_BIN(?), ?, ?, ?, ?, ?, ?, ?)",
-					trackID.String(), albumID.String(), track.Title, track.DiskNumber, track.TrackPosition, video.Duration, track.ExplicitLyrics, track.ID, video.ID)
-
-				// Create track artists bindings
-				for _, artist := range track.Contributors {
-					artistID := createArtist(artist.ID, artist.Name)
-					trackArtistID := uuid.NewV4()
-					database.Exec("INSERT INTO `track_artist` (`id`, `track_id`, `artist_id`) VALUES (UUID_TO_BIN(?), UUID_TO_BIN(?), UUID_TO_BIN(?))", trackArtistID.String(), trackID.String(), artistID)
+			if deezerTrack.Duration >= youtubeVideo.Duration-consts.TRACK_DURATION_SLACK &&
+				deezerTrack.Duration <= youtubeVideo.Duration+consts.TRACK_DURATION_SLACK {
+				if err := searchCommand.Process.Kill(); err != nil {
+					log.Fatalln(err)
 				}
 
-				downloadCommand := exec.Command("yt-dlp", "-f", "bestaudio[ext=m4a]", fmt.Sprintf("https://www.youtube.com/watch?v=%s", video.ID),
+				// Create track
+				trackID := uuid.NewV4()
+				models.TrackModel(nil).Create(database.Map{
+					"id":         trackID.String(),
+					"album_id":   albumID.String(),
+					"title":      deezerTrack.Title,
+					"disk":       deezerTrack.DiskNumber,
+					"position":   deezerTrack.TrackPosition,
+					"duration":   youtubeVideo.Duration,
+					"explicit":   deezerTrack.ExplicitLyrics,
+					"deezer_id":  deezerTrack.ID,
+					"youtube_id": youtubeVideo.ID,
+				})
+
+				// Create track artists bindings
+				for _, artist := range deezerTrack.Contributors {
+					artistID := createArtist(artist.ID, artist.Name)
+					models.TrackArtistModel().Create(database.Map{
+						"track_id":  trackID.String(),
+						"artist_id": artistID,
+					})
+				}
+
+				// Download right youtube video
+				downloadCommand := exec.Command("yt-dlp", "-f", "bestaudio[ext=m4a]", fmt.Sprintf("https://www.youtube.com/watch?v=%s", youtubeVideo.ID),
 					"-o", fmt.Sprintf("storage/tracks/%s.m4a", trackID.String()))
 				if err := downloadCommand.Start(); err != nil {
 					log.Fatalln(err)
 				}
 
-				fmt.Printf("%d. %s\n", track.TrackPosition, track.Title)
+				log.Printf("[DOWNLOAD] %d. %s\n", deezerTrack.TrackPosition, deezerTrack.Title)
 				break
 			}
 		}
 	}
+	log.Printf("[DOWNLOAD] Downloading album done\n")
 }
 
 func DownloadTask() {
 	for {
-		time.Sleep(time.Second)
+		// Wait a little while
+		time.Sleep(5 * time.Second)
 
 		// Get first download task
 		downloadTask := models.DownloadTaskModel().First()

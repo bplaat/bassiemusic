@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/bplaat/bassiemusic/commands"
 	"github.com/bplaat/bassiemusic/database"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/joho/godotenv"
@@ -54,12 +55,12 @@ func main() {
 	// Check arguments for subcommand
 	if len(os.Args) > 1 {
 		if os.Args[1] == "serve" {
-			serve()
+			commands.Serve()
 			return
 		}
 
 		if os.Args[1] == "restore" {
-			restore()
+			commands.Restore()
 			return
 		}
 	}

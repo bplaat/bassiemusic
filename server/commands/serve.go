@@ -1,4 +1,4 @@
-package main
+package commands
 
 import (
 	"fmt"
@@ -19,7 +19,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/logger"
 )
 
-func serve() {
+func Serve() {
 	// Start download task
 	go tasks.DownloadTask()
 

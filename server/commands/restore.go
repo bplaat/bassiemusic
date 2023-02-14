@@ -1,4 +1,4 @@
-package main
+package commands
 
 import (
 	"fmt"
@@ -12,9 +12,11 @@ import (
 	"github.com/bplaat/bassiemusic/utils"
 )
 
-func restore() {
+func Restore() {
 	// Avatars can't be redownloaded they are local so clear avatars of all users
-	database.Exec("UPDATE `users` SET `avatar` = NULL")
+	models.UserModel().Update(database.Map{
+		"avatar": nil,
+	})
 
 	// Redownload all artist images
 	artists := models.ArtistModel(nil).Get()
@@ -29,7 +31,7 @@ func restore() {
 		utils.FetchFile(deezerArtist.PictureMedium, fmt.Sprintf("storage/artists/small/%s.jpg", artist.ID))
 		utils.FetchFile(deezerArtist.PictureBig, fmt.Sprintf("storage/artists/medium/%s.jpg", artist.ID))
 		utils.FetchFile(deezerArtist.PictureXl, fmt.Sprintf("storage/artists/large/%s.jpg", artist.ID))
-		fmt.Printf("Artist images %.2f%%\n", float32(index+1)/float32(len(artists))*100.0)
+		log.Printf("Artist images %.2f%%\n", float32(index+1)/float32(len(artists))*100.0)
 	}
 
 	// Redownload all genre images
@@ -51,7 +53,7 @@ func restore() {
 			utils.FetchFile("https://e-cdns-images.dzcdn.net/images/misc//500x500-000000-80-0-0.jpg", fmt.Sprintf("storage/genres/medium/%s.jpg", genre.ID))
 			utils.FetchFile("https://e-cdns-images.dzcdn.net/images/misc//1000x1000-000000-80-0-0.jpg", fmt.Sprintf("storage/genres/large/%s.jpg", genre.ID))
 		}
-		fmt.Printf("Genre images %.2f%%\n", float32(index+1)/float32(len(genres))*100.0)
+		log.Printf("Genre images %.2f%%\n", float32(index+1)/float32(len(genres))*100.0)
 	}
 
 	// Redownload all album covers
@@ -67,7 +69,7 @@ func restore() {
 		utils.FetchFile(deezerAlbum.CoverMedium, fmt.Sprintf("storage/albums/small/%s.jpg", album.ID))
 		utils.FetchFile(deezerAlbum.CoverBig, fmt.Sprintf("storage/albums/medium/%s.jpg", album.ID))
 		utils.FetchFile(deezerAlbum.CoverXl, fmt.Sprintf("storage/albums/large/%s.jpg", album.ID))
-		fmt.Printf("Album covers %.2f%%\n", float32(index+1)/float32(len(albums))*100.0)
+		log.Printf("Album covers %.2f%%\n", float32(index+1)/float32(len(albums))*100.0)
 	}
 
 	// Redownload all tracks
@@ -81,6 +83,6 @@ func restore() {
 		if err := downloadCommand.Run(); err != nil {
 			log.Fatalln(err)
 		}
-		fmt.Printf("Track music %.2f%%\n", float32(index+1)/float32(len(tracks))*100.0)
+		log.Printf("Track music %.2f%%\n", float32(index+1)/float32(len(tracks))*100.0)
 	}
 }

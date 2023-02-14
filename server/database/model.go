@@ -42,7 +42,9 @@ func (m *Model[T]) Init() *Model[T] {
 }
 
 func (m *Model[T]) Create(values Map) *T {
-	values[m.PrimaryKey] = uuid.NewV4()
+	if _, ok := values[m.PrimaryKey]; !ok {
+		values[m.PrimaryKey] = uuid.NewV4().String()
+	}
 
 	insertQuery := "INSERT INTO `" + m.TableName + "` ("
 	valuesStr := ""
@@ -77,8 +79,7 @@ func (m *Model[T]) Create(values Map) *T {
 
 func (m *Model[T]) query() *QueryBuilder[T] {
 	return &QueryBuilder[T]{
-		Model:      m,
-		OrderByStr: "`created_at`",
+		Model: m,
 	}
 }
 
@@ -132,6 +133,14 @@ func (m *Model[T]) Count() int64 {
 
 func (m *Model[T]) Get() []T {
 	return m.query().Get()
+}
+
+func (m *Model[T]) Update(values Map) {
+	m.query().Update(values)
+}
+
+func (m *Model[T]) Delete() {
+	m.query().Delete()
 }
 
 func (m *Model[T]) Paginate(page int, limit int) QueryBuilderPaginated[T] {
