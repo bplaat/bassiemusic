@@ -184,9 +184,8 @@
     {#if authUser != undefined}
         <div class="media mb-5">
             <div class="media-left">
-                <div class="box m-0 p-0" style="width: 48px; height: 48px;">
+                <div class="box has-image m-0 p-0" style="width: 48px; height: 48px;">
                     <img
-                        style="aspect-ratio: 1;"
                         src={authUser.avatar ? authUser.avatar : '/images/avatar-default.svg'}
                         alt="Avatar of user {authUser.username}"
                         loading="lazy"

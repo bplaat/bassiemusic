@@ -302,9 +302,9 @@
     <div class="music-player box m-0 p-0 py-2 has-background-white-bis">
         <div class="media px-4 py-2 is-hidden-desktop">
             <div class="media-left">
-                <div class="box m-0 p-0" style="width: 48px; height: 48px;">
+                <a href="/albums/{track.album.id}" class="box m-0 p-0" style="width: 48px; height: 48px;">
                     <img src={track.album.small_cover} alt="Cover of album {track.album}" loading="lazy" />
-                </div>
+                </a>
             </div>
             <div class="media-content">
                 <p class="ellipsis">
@@ -335,9 +335,9 @@
             </button>
         </div>
 
-        <div class="box m-0 mx-3 p-0 is-hidden-touch" style="width: 64px; height: 64px;">
+        <a href="/albums/{track.album.id}" class="box m-0 mx-3 p-0 is-hidden-touch" style="width: 64px; height: 64px;">
             <img src={track.album.small_cover} alt="Cover of album {track.album}" loading="lazy" />
-        </div>
+        </a>
 
         <div style="width: 10rem;" class="is-hidden-touch">
             <p class="ellipsis">
@@ -531,6 +531,7 @@
     /* Music player input range */
     .range {
         -webkit-appearance: none;
+        appearance: none;
         background-color: #ccc;
         background-image: linear-gradient(#2196f3, #2196f3);
         background-repeat: no-repeat;

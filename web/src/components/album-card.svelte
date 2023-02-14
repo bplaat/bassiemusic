@@ -3,8 +3,8 @@
 </script>
 
 <a class="card" href="/albums/{album.id}">
-    <div class="card-image has-image-tags">
-        <img style="aspect-ratio: 1;" src={album.medium_cover} alt="Cover of album {album.name}" loading="lazy" />
+    <div class="card-image has-image-tags" style="aspect-ratio: 1;">
+        <img src={album.medium_cover} alt="Cover of album {album.name}" loading="lazy" />
         <div class="image-tags">
             {#if album.type == 'album'}
                 <span class="tag">ALBUM</span>

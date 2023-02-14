@@ -28,6 +28,9 @@ a.card,
 img {
     display: block;
 }
+img:-moz-loading {
+    visibility: hidden;
+}
 
 .table td {
     vertical-align: middle;
@@ -87,6 +90,9 @@ img {
     text-overflow: ellipsis;
 }
 
+body {
+    scrollbar-width: thin;
+}
 ::-webkit-scrollbar {
     width: 8px;
 }
@@ -105,17 +111,23 @@ img {
 }
 
 /* System theme */
-.box > img,
-.card-image > img {
+.box.has-image,
+.card-image {
     background-color: #ccc;
+}
+.app {
+    scrollbar-color: rgba(0, 0, 0, 0.3) transparent;
 }
 ::-webkit-scrollbar-thumb {
     background-color: rgba(0, 0, 0, 0.3);
 }
 @media (prefers-color-scheme: dark) {
-    .box > img,
-    .card-image > img {
+    .box.has-image,
+    .card-image {
         background-color: #333;
+    }
+    .app {
+        scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
     }
     ::-webkit-scrollbar-thumb {
         background-color: rgba(255, 255, 255, 0.3);
@@ -123,19 +135,19 @@ img {
 }
 
 /* Light theme */
-.app.is-light .box > img,
-.app.is-light .card-image > img {
+.app.is-light .box.has-image,
+.app.is-light .card-image {
     background-color: #ccc !important;
 }
-.app.is-light ::-webkit-scrollbar-thumb {
-    background-color: rgba(0, 0, 0, 0.3) !important;
+.app.is-light {
+    scrollbar-color: rgba(0, 0, 0, 0.3) transparent !important;
 }
 
 /* Dark theme */
-.app.is-dark .box > img,
-.app.is-dark .card-image > img {
+.app.is-dark .box.has-image,
+.app.is-dark .card-image {
     background-color: #333 !important;
 }
-.app.is-dark ::-webkit-scrollbar-thumb {
-    background-color: rgba(255, 255, 255, 0.3) !important;
+.app.is-dark {
+    scrollbar-color: rgba(255, 255, 255, 0.3) transparent !important;
 }
