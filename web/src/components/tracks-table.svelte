@@ -63,7 +63,7 @@
                 </td>
                 {#if showAlbum}
                     <td>
-                        <div class="box m-0 p-0" style="width: 64px; height: 64px;">
+                        <div class="box has-image m-0 p-0" style="width: 64px; height: 64px;">
                             <img src={track.album.small_cover} alt="Cover of album {track.album}" loading="lazy" />
                         </div>
                     </td>

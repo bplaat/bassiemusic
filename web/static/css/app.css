@@ -28,6 +28,9 @@ a.card,
 img {
     display: block;
 }
+img:-moz-loading {
+    visibility: hidden;
+}
 
 .table td {
     vertical-align: middle;
@@ -108,8 +111,8 @@ body {
 }
 
 /* System theme */
-.box > img,
-.card-image > img {
+.box.has-image,
+.card-image {
     background-color: #ccc;
 }
 .app {
@@ -119,8 +122,8 @@ body {
     background-color: rgba(0, 0, 0, 0.3);
 }
 @media (prefers-color-scheme: dark) {
-    .box > img,
-    .card-image > img {
+    .box.has-image,
+    .card-image {
         background-color: #333;
     }
     .app {
@@ -132,8 +135,8 @@ body {
 }
 
 /* Light theme */
-.app.is-light .box > img,
-.app.is-light .card-image > img {
+.app.is-light .box.has-image,
+.app.is-light .card-image {
     background-color: #ccc !important;
 }
 .app.is-light {
@@ -141,8 +144,8 @@ body {
 }
 
 /* Dark theme */
-.app.is-dark .box > img,
-.app.is-dark .card-image > img {
+.app.is-dark .box.has-image,
+.app.is-dark .card-image {
     background-color: #333 !important;
 }
 .app.is-dark {
