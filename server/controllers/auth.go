@@ -30,8 +30,8 @@ type IPInfo struct {
 }
 
 func getIP(c *fiber.Ctx) string {
-	if len(c.IPs()) > 0 {
-		return c.IPs()[0]
+	if ip, ok := c.GetReqHeaders()["X-Forwarded-For"]; ok {
+		return ip
 	}
 	return c.IP()
 }
