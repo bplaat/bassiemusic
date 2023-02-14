@@ -16,7 +16,7 @@
                 <span class="tag">SINGLE</span>
             {/if}
             {#if album.explicit}
-                <span class="tag is-danger">E</span>
+                <span class="tag is-danger" title="Explicit lyrics">E</span>
             {/if}
         </div>
     </div>
