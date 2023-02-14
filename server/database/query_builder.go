@@ -164,7 +164,9 @@ func (qb *QueryBuilder[T]) Get() []T {
 	if qb.WhereStr != "" {
 		selectQuery += " WHERE " + qb.WhereStr
 	}
-	selectQuery += " ORDER BY " + qb.OrderByStr
+	if qb.OrderByStr != "" {
+		selectQuery += " ORDER BY " + qb.OrderByStr
+	}
 	if qb.LimitStr != "" {
 		selectQuery += " LIMIT " + qb.LimitStr
 	}

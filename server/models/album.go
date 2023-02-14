@@ -70,6 +70,32 @@ func AlbumModel(c *fiber.Ctx) *database.Model[Album] {
 	}).Init()
 }
 
+// Album artist
+type AlbumArtist struct {
+	ID       string `column:"id,uuid"`
+	AlbumID  string `column:"album_id,uuid"`
+	ArtistID string `column:"artist_id,uuid"`
+}
+
+func AlbumArtistModel() *database.Model[AlbumArtist] {
+	return (&database.Model[AlbumArtist]{
+		TableName: "album_artist",
+	}).Init()
+}
+
+// Album genre
+type AlbumGenre struct {
+	ID      string `column:"id,uuid"`
+	AlbumID string `column:"album_id,uuid"`
+	GenreID string `column:"genre_id,uuid"`
+}
+
+func AlbumGenreModel() *database.Model[AlbumGenre] {
+	return (&database.Model[AlbumGenre]{
+		TableName: "album_genre",
+	}).Init()
+}
+
 // Album Like
 type AlbumLike struct {
 	ID        string    `column:"id,uuid"`

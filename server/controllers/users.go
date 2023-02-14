@@ -254,7 +254,9 @@ func UsersAvatarDelete(c *fiber.Ctx) error {
 		}
 
 		// Clear avatar id for user
-		database.Exec("UPDATE `users` SET `avatar` = NULL WHERE `id` = UUID_TO_BIN(?)", user.ID)
+		models.UserModel().Where("id", user.ID).Update(database.Map{
+			"avatar": nil,
+		})
 	}
 	return c.JSON(fiber.Map{"success": true})
 }

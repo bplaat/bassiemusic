@@ -49,6 +49,19 @@ func TrackModel(c *fiber.Ctx) *database.Model[Track] {
 	}).Init()
 }
 
+// Track artist
+type TrackArtist struct {
+	ID       string `column:"id,uuid"`
+	TrackID  string `column:"track_id,uuid"`
+	ArtistID string `column:"artist_id,uuid"`
+}
+
+func TrackArtistModel() *database.Model[TrackArtist] {
+	return (&database.Model[TrackArtist]{
+		TableName: "track_artist",
+	}).Init()
+}
+
 // Track Like
 type TrackLike struct {
 	ID        string    `column:"id,uuid"`
