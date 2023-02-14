@@ -66,6 +66,17 @@ img:-moz-loading {
     right: 0.5rem;
 }
 
+.play-button-image {
+    position: absolute;
+    display: none;
+    bottom: 10px;
+    right: 10px;
+}  
+
+.card:hover .play-button-image {
+    display: block;
+}
+
 .icon {
     display: block;
     width: 24px;

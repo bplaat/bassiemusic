@@ -125,7 +125,7 @@
         <div class="columns is-multiline is-mobile">
             {#each filteredAlbums as album}
                 <div class="column is-half-mobile is-one-third-tablet is-one-quarter-desktop is-one-fifth-widescreen">
-                    <AlbumCard {album} />
+                    <AlbumCard {album} {token}/>
                 </div>
             {/each}
         </div>
