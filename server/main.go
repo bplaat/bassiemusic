@@ -63,6 +63,11 @@ func main() {
 			commands.Restore()
 			return
 		}
+
+		if os.Args[1] == "clean" {
+			commands.Clean()
+			return
+		}
 	}
 
 	// When no command is given print help text
@@ -71,5 +76,6 @@ func main() {
 		"\t./bassiemusic <command>\n\n" +
 		"The commands are:\n" +
 		"\tserve\t\tStart the BassieMusic server and serve content\n" +
-		"\trestore\t\tRedownload the storage/ folder with your filled database\n")
+		"\trestore\t\tRedownload the storage/ folder with your filled database\n" +
+		"\tclean\t\tClean up storage files that are not referenced in the database\n")
 }
