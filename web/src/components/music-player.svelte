@@ -543,24 +543,46 @@
     .range::-webkit-slider-runnable-track {
         -webkit-appearance: none;
         border: none;
-        background: transparent;
+        background-color: transparent;
     }
     .range::-moz-range-track {
         border: none;
-        background: transparent;
+        background-color: transparent;
     }
     .range::-webkit-slider-thumb {
         -webkit-appearance: none;
         height: 16px;
         width: 16px;
-        background: #fff;
+        background-color: #999;
         border-radius: 50%;
     }
     .range::-moz-range-thumb {
         width: 16px;
         height: 16px;
-        background: #fff;
+        background-color: #999;
         border-radius: 50%;
         border: 0;
+    }
+    @media (prefers-color-scheme: dark) {
+        .range::-webkit-slider-thumb {
+            background-color: #fff;
+        }
+        .range::-moz-range-thumb {
+            background-color: #fff;
+        }
+    }
+
+    :global(.app.is-light .range::-webkit-slider-thumb) {
+        background-color: #999 !important;
+    }
+    :global(.app.is-light .range::-moz-range-thumb) {
+        background-color: #999 !important;
+    }
+
+    :global(.app.is-dark .range::-webkit-slider-thumb) {
+        background-color: #fff !important;
+    }
+    :global(.app.is-dark .range::-moz-range-thumb) {
+        background-color: #fff !important;
     }
 </style>
