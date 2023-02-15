@@ -12,7 +12,7 @@ import (
 	"github.com/bplaat/bassiemusic/models"
 	"github.com/bplaat/bassiemusic/structs"
 	"github.com/bplaat/bassiemusic/utils"
-	uuid "github.com/satori/go.uuid"
+	"github.com/bplaat/bassiemusic/utils/uuid"
 )
 
 func createArtist(deezerID int, name string) string {
@@ -29,7 +29,7 @@ func createArtist(deezerID int, name string) string {
 	}
 
 	// Create artist
-	artistID := uuid.NewV4()
+	artistID := uuid.New()
 	models.ArtistModel(nil).Create(database.Map{
 		"id":        artistID.String(),
 		"name":      name,
@@ -55,7 +55,7 @@ func createGenre(deezerID int, name string) string {
 	}
 
 	// Create genre
-	genreID := uuid.NewV4()
+	genreID := uuid.New()
 	models.GenreModel(nil).Create(database.Map{
 		"id":        genreID.String(),
 		"name":      name,
@@ -94,7 +94,7 @@ func downloadAlbum(deezerID int) {
 	if deezerAlbum.RecordType == "single" {
 		albumType = models.AlbumTypeSingle
 	}
-	albumID := uuid.NewV4()
+	albumID := uuid.New()
 	models.AlbumModel(nil).Create(database.Map{
 		"id":          albumID.String(),
 		"type":        albumType,
@@ -155,7 +155,7 @@ func downloadAlbum(deezerID int) {
 				}
 
 				// Create track
-				trackID := uuid.NewV4()
+				trackID := uuid.New()
 				models.TrackModel(nil).Create(database.Map{
 					"id":         trackID.String(),
 					"album_id":   albumID.String(),
