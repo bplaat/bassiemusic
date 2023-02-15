@@ -7,8 +7,8 @@ import (
 
 	"github.com/bplaat/bassiemusic/commands"
 	"github.com/bplaat/bassiemusic/database"
+	"github.com/bplaat/bassiemusic/utils/dotenv"
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/joho/godotenv"
 )
 
 func createDirIfNotExists(path string) {
@@ -42,7 +42,7 @@ func main() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
 	// Load .env file
-	if err := godotenv.Load(".env"); err != nil {
+	if err := dotenv.Load(".env"); err != nil {
 		log.Fatalln(err)
 	}
 
@@ -63,6 +63,16 @@ func main() {
 			commands.Restore()
 			return
 		}
+
+		if os.Args[1] == "fix" {
+			commands.Fix()
+			return
+		}
+
+		if os.Args[1] == "clean" {
+			commands.Clean()
+			return
+		}
 	}
 
 	// When no command is given print help text
@@ -71,5 +81,7 @@ func main() {
 		"\t./bassiemusic <command>\n\n" +
 		"The commands are:\n" +
 		"\tserve\t\tStart the BassieMusic server and serve content\n" +
-		"\trestore\t\tRedownload the storage/ folder with your filled database\n")
+		"\trestore\t\tRedownload the storage/ folder with your filled database\n" +
+		"\tfix\t\tCheck all albums with Deezer if they are complete when not download missing tracks\n" +
+		"\tclean\t\tClean up storage files that are not referenced in the database\n")
 }

@@ -8,9 +8,9 @@ import (
 	"github.com/bplaat/bassiemusic/database"
 	"github.com/bplaat/bassiemusic/models"
 	"github.com/bplaat/bassiemusic/utils"
+	"github.com/bplaat/bassiemusic/utils/uuid"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
-	uuid "github.com/satori/go.uuid"
 )
 
 func UsersIndex(c *fiber.Ctx) error {
@@ -217,7 +217,7 @@ func UsersAvatar(c *fiber.Ctx) error {
 	}
 
 	// Save uploaded avatar file
-	avatarID := uuid.NewV4()
+	avatarID := uuid.New()
 	avatar, err := c.FormFile("avatar")
 	if err != nil {
 		return fiber.ErrBadRequest

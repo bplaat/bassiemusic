@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"strings"
 
-	uuid "github.com/satori/go.uuid"
+	"github.com/bplaat/bassiemusic/utils/uuid"
 )
 
 type Map map[string]any
@@ -43,7 +43,7 @@ func (m *Model[T]) Init() *Model[T] {
 
 func (m *Model[T]) Create(values Map) *T {
 	if _, ok := values[m.PrimaryKey]; !ok {
-		values[m.PrimaryKey] = uuid.NewV4().String()
+		values[m.PrimaryKey] = uuid.New().String()
 	}
 
 	insertQuery := "INSERT INTO `" + m.TableName + "` ("
