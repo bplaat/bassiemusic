@@ -20,7 +20,7 @@ STRINGTABLE LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
     ID_STRING_ABOUT_TITLE "About BassieMusic Windows App\x00"
     ID_STRING_ABOUT_TEXT_FORMAT "BassieMusic Windows App v%d.%d.%d.%d\n"
         "Made by PlaatSoft\n"
-        "Copyright \xA9 2021 - 2022 PlaatSoft\x00"
+        "Copyright \xA9 2022 - 2023 PlaatSoft\x00"
 }
 
 // Dutch Strings
@@ -32,7 +32,7 @@ STRINGTABLE LANGUAGE LANG_DUTCH, SUBLANG_DUTCH
     ID_STRING_ABOUT_TITLE "Over BassieMusic Windows App\x00"
     ID_STRING_ABOUT_TEXT_FORMAT "BassieMusic Windows App v%d.%d.%d.%d\n"
         "Gemaakt door PlaatSoft\n"
-        "Copyright \xA9 2021 - 2022 PlaatSoft\x00"
+        "Copyright \xA9 2022 - 2023 PlaatSoft\x00"
 }
 
 // Version Information
@@ -53,7 +53,7 @@ FILESUBTYPE VFT2_UNKNOWN
             VALUE "FileDescription", "BassieMusic"
             VALUE "FileVersion", "0.1.0.0"
             VALUE "InternalName", "BassieMusic"
-            VALUE "LegalCopyright", "Copyright \xA9 2021 - 2022 PlaatSoft"
+            VALUE "LegalCopyright", "Copyright \xA9 2022 - 2023 PlaatSoft"
             VALUE "OriginalFilename", "bassiemusic.exe"
             VALUE "ProductName", "BassieMusic"
             VALUE "ProductVersion", "0.1.0.0"
