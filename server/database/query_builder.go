@@ -144,6 +144,7 @@ func (qb *QueryBuilder[T]) Count() int64 {
 }
 
 func (qb *QueryBuilder[T]) Get() []T {
+	// Build select query string
 	selectQuery := "SELECT "
 	index := 0
 	for _, column := range qb.Model.Columns {
@@ -171,32 +172,35 @@ func (qb *QueryBuilder[T]) Get() []T {
 		selectQuery += " LIMIT " + qb.LimitStr
 	}
 
+	// Execute query and read models
 	query := Query(selectQuery, qb.WhereValues...)
-	defer query.Close()
 	models := []T{}
 	for query.Next() {
 		var model T
-		modelType := reflect.Indirect(reflect.ValueOf(&model))
+		modelValue := reflect.Indirect(reflect.ValueOf(&model))
 		ptrs := []any{}
 		for _, column := range qb.Model.Columns {
-			ptrs = append(ptrs, modelType.FieldByName(column.Name).Addr().Interface())
+			ptrs = append(ptrs, modelValue.FieldByName(column.Name).Addr().Interface())
 		}
 		_ = query.Scan(ptrs...)
+		models = append(models, model)
+	}
+	query.Close()
 
+	// Process models and run relationships
+	for i := 0; i < len(models); i++ {
 		if qb.Model.Process != nil {
-			qb.Model.Process(&model)
+			qb.Model.Process(&models[i])
 		}
 		for _, with := range qb.Withs {
-			qb.Model.Relationships[with](&model)
+			qb.Model.Relationships[with](&models[i])
 		}
-		models = append(models, model)
 	}
 	return models
 }
 
 func (qb *QueryBuilder[T]) Update(values Map) {
 	updateQuery := "UPDATE `" + qb.Model.TableName + "` SET "
-
 	index := 0
 	queryValues := []any{}
 	for column, value := range values {
@@ -216,7 +220,6 @@ func (qb *QueryBuilder[T]) Update(values Map) {
 		}
 		index++
 	}
-
 	if qb.WhereStr != "" {
 		updateQuery += " WHERE " + qb.WhereStr
 	}
