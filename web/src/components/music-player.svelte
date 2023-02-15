@@ -300,13 +300,13 @@
 
 {#if track != undefined}
     <div class="music-player box m-0 p-0 py-2 has-background-white-bis">
-        <div class="media px-4 py-2 is-hidden-desktop">
+        <div class="media px-4 py-2">
             <div class="media-left">
-                <a href="/albums/{track.album.id}" class="box m-0 p-0" style="width: 48px; height: 48px;">
+                <a href="/albums/{track.album.id}" class="music-player-album-cover box m-0 p-0">
                     <img src={track.album.small_cover} alt="Cover of album {track.album}" loading="lazy" />
                 </a>
             </div>
-            <div class="media-content">
+            <div class="media-content" style="width: 10rem; min-width: 0;">
                 <p class="ellipsis">
                     <a href="/albums/{track.album.id}" style="font-weight: 500;">{track.title}</a>
                 </p>
@@ -316,63 +316,30 @@
                     {/each}
                 </p>
             </div>
-
-            {#if track.liked}
-                <button class="button ml-3" on:click={likeTrack} title="Remove track like">
-                    <svg class="icon is-colored" viewBox="0 0 24 24">
-                        <path
-                            fill="#f14668"
-                            d="M12,21.35L10.55,20.03C5.4,15.36 2,12.27 2,8.5C2,5.41 4.42,3 7.5,3C9.24,3 10.91,3.81 12,5.08C13.09,3.81 14.76,3 16.5,3C19.58,3 22,5.41 22,8.5C22,12.27 18.6,15.36 13.45,20.03L12,21.35Z"
-                        />
-                    </svg>
-                </button>
-            {:else}
-                <button class="button ml-3" on:click={likeTrack} title="Like track">
-                    <svg class="icon" viewBox="0 0 24 24">
-                        <path
-                            d="M12.1,18.55L12,18.65L11.89,18.55C7.14,14.24 4,11.39 4,8.5C4,6.5 5.5,5 7.5,5C9.04,5 10.54,6 11.07,7.36H12.93C13.46,6 14.96,5 16.5,5C18.5,5 20,6.5 20,8.5C20,11.39 16.86,14.24 12.1,18.55M16.5,3C14.76,3 13.09,3.81 12,5.08C10.91,3.81 9.24,3 7.5,3C4.42,3 2,5.41 2,8.5C2,12.27 5.4,15.36 10.55,20.03L12,21.35L13.45,20.03C18.6,15.36 22,12.27 22,8.5C22,5.41 19.58,3 16.5,3Z"
-                        />
-                    </svg>
-                </button>
-            {/if}
+            <div class="media-right">
+                {#if track.liked}
+                    <button class="button ml-3" on:click={likeTrack} title="Remove track like">
+                        <svg class="icon is-colored" viewBox="0 0 24 24">
+                            <path
+                                fill="#f14668"
+                                d="M12,21.35L10.55,20.03C5.4,15.36 2,12.27 2,8.5C2,5.41 4.42,3 7.5,3C9.24,3 10.91,3.81 12,5.08C13.09,3.81 14.76,3 16.5,3C19.58,3 22,5.41 22,8.5C22,12.27 18.6,15.36 13.45,20.03L12,21.35Z"
+                            />
+                        </svg>
+                    </button>
+                {:else}
+                    <button class="button ml-3" on:click={likeTrack} title="Like track">
+                        <svg class="icon" viewBox="0 0 24 24">
+                            <path
+                                d="M12.1,18.55L12,18.65L11.89,18.55C7.14,14.24 4,11.39 4,8.5C4,6.5 5.5,5 7.5,5C9.04,5 10.54,6 11.07,7.36H12.93C13.46,6 14.96,5 16.5,5C18.5,5 20,6.5 20,8.5C20,11.39 16.86,14.24 12.1,18.55M16.5,3C14.76,3 13.09,3.81 12,5.08C10.91,3.81 9.24,3 7.5,3C4.42,3 2,5.41 2,8.5C2,12.27 5.4,15.36 10.55,20.03L12,21.35L13.45,20.03C18.6,15.36 22,12.27 22,8.5C22,5.41 19.58,3 16.5,3Z"
+                            />
+                        </svg>
+                    </button>
+                {/if}
+            </div>
         </div>
-
-        <a href="/albums/{track.album.id}" class="box m-0 mx-3 p-0 is-hidden-touch" style="width: 64px; height: 64px;">
-            <img src={track.album.small_cover} alt="Cover of album {track.album}" loading="lazy" />
-        </a>
-
-        <div style="width: 10rem;" class="is-hidden-touch">
-            <p class="ellipsis">
-                <a href="/albums/{track.album.id}" style="font-weight: 500;">{track.title}</a>
-            </p>
-            <p class="ellipsis">
-                {#each track.artists as artist}
-                    <a href="/artists/{artist.id}" class="mr-2">{artist.name}</a>
-                {/each}
-            </p>
-        </div>
-
-        {#if track.liked}
-            <button class="button is-hidden-touch ml-4" on:click={likeTrack} title="Remove track like">
-                <svg class="icon is-colored" viewBox="0 0 24 24">
-                    <path
-                        fill="#f14668"
-                        d="M12,21.35L10.55,20.03C5.4,15.36 2,12.27 2,8.5C2,5.41 4.42,3 7.5,3C9.24,3 10.91,3.81 12,5.08C13.09,3.81 14.76,3 16.5,3C19.58,3 22,5.41 22,8.5C22,12.27 18.6,15.36 13.45,20.03L12,21.35Z"
-                    />
-                </svg>
-            </button>
-        {:else}
-            <button class="button is-hidden-touch ml-4" on:click={likeTrack} title="Like track">
-                <svg class="icon" viewBox="0 0 24 24">
-                    <path
-                        d="M12.1,18.55L12,18.65L11.89,18.55C7.14,14.24 4,11.39 4,8.5C4,6.5 5.5,5 7.5,5C9.04,5 10.54,6 11.07,7.36H12.93C13.46,6 14.96,5 16.5,5C18.5,5 20,6.5 20,8.5C20,11.39 16.86,14.24 12.1,18.55M16.5,3C14.76,3 13.09,3.81 12,5.08C10.91,3.81 9.24,3 7.5,3C4.42,3 2,5.41 2,8.5C2,12.27 5.4,15.36 10.55,20.03L12,21.35L13.45,20.03C18.6,15.36 22,12.27 22,8.5C22,5.41 19.58,3 16.5,3Z"
-                    />
-                </svg>
-            </button>
-        {/if}
 
         <button
-            class="button is-hidden-touch ml-4"
+            class="button is-hidden-touch"
             class:is-link={isShuffling}
             on:click={() => setIsShuffling(!isShuffling)}
             title={isShuffling ? 'Stop shuffling play queue' : 'Start shuffling play queue'}
@@ -442,7 +409,12 @@
         <div class="music-player-volume px-4 is-hidden-touch">
             {#if $page.url.pathname == '/queue'}
                 <!-- svelte-ignore a11y-invalid-attribute -->
-                <a class="button mr-4 is-link" href="#" on:click|preventDefault={() => history.back()} title="Close play queue">
+                <a
+                    class="button mr-4 is-link"
+                    href="#"
+                    on:click|preventDefault={() => history.back()}
+                    title="Close play queue"
+                >
                     <svg class="icon" viewBox="0 0 24 24">
                         <path
                             d="M15,6H3V8H15V6M15,10H3V12H15V10M3,16H11V14H3V16M17,6V14.18C16.69,14.07 16.35,14 16,14A3,3 0 0,0 13,17A3,3 0 0,0 16,20A3,3 0 0,0 19,17V8H22V6H17Z"
@@ -508,6 +480,11 @@
         flex-direction: column;
     }
 
+    .music-player-album-cover {
+        width: 48px;
+        height: 48px;
+    }
+
     .music-player-controls,
     .music-player-volume {
         display: flex;
@@ -520,6 +497,11 @@
             align-items: center;
             height: 6rem;
             z-index: 300;
+        }
+
+        .music-player-album-cover {
+            width: 64px;
+            height: 64px;
         }
 
         .music-player-slider {

@@ -1,7 +1,11 @@
 package controllers
 
 import (
+	"fmt"
+	"net/url"
+
 	"github.com/bplaat/bassiemusic/models"
+	"github.com/bplaat/bassiemusic/structs"
 	"github.com/bplaat/bassiemusic/utils"
 	"github.com/gofiber/fiber/v2"
 )
@@ -28,5 +32,31 @@ func SearchIndex(c *fiber.Ctx) error {
 		"albums":  albums,
 		"artists": artists,
 		"genres":  genres,
+	})
+}
+
+func DeezerSearchIndex(c *fiber.Ctx) error {
+	// Search deezer artists
+	var deezerArtistSearch structs.DeezerArtistSearch
+	if err := utils.FetchJson(fmt.Sprintf("https://api.deezer.com/search/artist?q=%s", url.QueryEscape(c.Query("q"))), &deezerArtistSearch); err != nil {
+		return fiber.ErrBadGateway
+	}
+
+	// Search deezer albums and filter out what already exists
+	var deezerAlbumSearch structs.DeezerAlbumSearch
+	if err := utils.FetchJson(fmt.Sprintf("https://api.deezer.com/search/album?q=%s", url.QueryEscape(c.Query("q"))), &deezerAlbumSearch); err != nil {
+		return fiber.ErrBadGateway
+	}
+	deezerAlbums := []structs.DeezerAlbumSearchItem{}
+	for _, deezerAlbum := range deezerAlbumSearch.Data {
+		if models.AlbumModel(c).Where("title", deezerAlbum.Title).First() == nil {
+			deezerAlbums = append(deezerAlbums, deezerAlbum)
+		}
+	}
+
+	// Return response
+	return c.JSON(fiber.Map{
+		"artists": deezerArtistSearch.Data,
+		"albums":  deezerAlbums,
 	})
 }
