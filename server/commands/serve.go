@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"net/url"
 	"os"
 
 	"github.com/bplaat/bassiemusic/controllers"
@@ -60,32 +59,13 @@ func Serve() {
 
 	app.Post("/auth/login", controllers.AuthLogin)
 
-	// Deezer API proxies
-	app.Get("/deezer/artists", func(c *fiber.Ctx) error {
-		c.Response().Header.Add("Content-Type", "application/json")
-		data, err := utils.Fetch(fmt.Sprintf("https://api.deezer.com/search/artist?q=%s", url.QueryEscape(c.Query("q"))))
-		if err != nil {
-			return fiber.ErrBadGateway
-		}
-		_, err = c.Write(data)
-		return err
-	})
-	app.Get("/deezer/albums", func(c *fiber.Ctx) error {
-		c.Response().Header.Add("Content-Type", "application/json")
-		data, err := utils.Fetch(fmt.Sprintf("https://api.deezer.com/search/album?q=%s", url.QueryEscape(c.Query("q"))))
-		if err != nil {
-			return fiber.ErrBadGateway
-		}
-		_, err = c.Write(data)
-		return err
-	})
-
 	app.Use(middlewares.IsAuthed)
 
 	app.Get("/auth/validate", controllers.AuthValidate)
 	app.Get("/auth/logout", controllers.AuthLogout)
 
 	app.Get("/search", controllers.SearchIndex)
+	app.Get("/deezer_search", controllers.DeezerSearchIndex)
 
 	app.Get("/artists", controllers.ArtistsIndex)
 	app.Get("/artists/:artistID", controllers.ArtistsShow)
