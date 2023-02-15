@@ -119,7 +119,7 @@ func AuthValidate(c *fiber.Ctx) error {
 			"user":                authUser,
 			"session":             session,
 			"agent":               agent,
-			"last_track":          models.TrackModel(c).With("artists", "album").Find(lastTackPlay.TrackID),
+			"last_track":          models.TrackModel(c).With("like", "artists", "album").Find(lastTackPlay.TrackID),
 			"last_track_position": lastTackPlay.Position,
 		})
 	}

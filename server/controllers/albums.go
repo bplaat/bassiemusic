@@ -9,11 +9,11 @@ import (
 
 func AlbumsIndex(c *fiber.Ctx) error {
 	query, page, limit := utils.ParseIndexVars(c)
-	return c.JSON(models.AlbumModel(c).With("artists", "genres").WhereRaw("`title` LIKE ?", "%"+query+"%").OrderByRaw("LOWER(`title`)").Paginate(page, limit))
+	return c.JSON(models.AlbumModel(c).With("like", "artists", "genres").WhereRaw("`title` LIKE ?", "%"+query+"%").OrderByRaw("LOWER(`title`)").Paginate(page, limit))
 }
 
 func AlbumsShow(c *fiber.Ctx) error {
-	album := models.AlbumModel(c).With("artists", "genres", "tracks").Find(c.Params("albumID"))
+	album := models.AlbumModel(c).With("like", "artists", "genres", "tracks").Find(c.Params("albumID"))
 	if album == nil {
 		return fiber.ErrNotFound
 	}

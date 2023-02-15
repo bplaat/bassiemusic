@@ -17,7 +17,7 @@ type Artist struct {
 	SmallImage  string    `json:"small_image"`
 	MediumImage string    `json:"medium_image"`
 	LargeImage  string    `json:"large_image"`
-	Liked       bool      `json:"liked"`
+	Liked       *bool     `json:"liked,omitempty"`
 	CreatedAt   time.Time `column:"created_at,timestamp" json:"created_at"`
 	Albums      []Album   `json:"albums,omitempty"`
 	TopTracks   []Track   `json:"top_tracks,omitempty"`
@@ -30,13 +30,13 @@ func ArtistModel(c *fiber.Ctx) *database.Model[Artist] {
 			artist.SmallImage = fmt.Sprintf("%s/artists/small/%s.jpg", os.Getenv("STORAGE_URL"), artist.ID)
 			artist.MediumImage = fmt.Sprintf("%s/artists/medium/%s.jpg", os.Getenv("STORAGE_URL"), artist.ID)
 			artist.LargeImage = fmt.Sprintf("%s/artists/large/%s.jpg", os.Getenv("STORAGE_URL"), artist.ID)
-
-			if c != nil {
-				authUser := c.Locals("authUser").(*User)
-				artist.Liked = ArtistLikeModel().Where("artist_id", artist.ID).Where("user_id", authUser.ID).First() != nil
-			}
 		},
 		Relationships: map[string]database.QueryBuilderProcess[Artist]{
+			"like": func(artist *Artist) {
+				authUser := c.Locals("authUser").(*User)
+				liked := ArtistLikeModel().Where("artist_id", artist.ID).Where("user_id", authUser.ID).First() != nil
+				artist.Liked = &liked
+			},
 			"albums": func(artist *Artist) {
 				artist.Albums = AlbumModel(c).With("artists", "genres").WhereIn("album_artist", "album_id", "artist_id", artist.ID).OrderByDesc("released_at").Get()
 			},

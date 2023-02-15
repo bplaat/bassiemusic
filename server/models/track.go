@@ -22,7 +22,7 @@ type Track struct {
 	YoutubeID string    `column:"youtube_id,string" json:"-"`
 	Plays     int64     `column:"plays,bigint" json:"plays"`
 	Music     string    `json:"music"`
-	Liked     bool      `json:"liked"`
+	Liked     *bool     `json:"liked,omitempty"`
 	CreatedAt time.Time `column:"created_at,timestamp" json:"created_at"`
 	Album     *Album    `json:"album,omitempty"`
 	Artists   []Artist  `json:"artists,omitempty"`
@@ -33,13 +33,13 @@ func TrackModel(c *fiber.Ctx) *database.Model[Track] {
 		TableName: "tracks",
 		Process: func(track *Track) {
 			track.Music = fmt.Sprintf("%s/tracks/%s.m4a", os.Getenv("STORAGE_URL"), track.ID)
-
-			if c != nil {
-				authUser := c.Locals("authUser").(*User)
-				track.Liked = TrackLikeModel().Where("track_id", track.ID).Where("user_id", authUser.ID).First() != nil
-			}
 		},
 		Relationships: map[string]database.QueryBuilderProcess[Track]{
+			"like": func(track *Track) {
+				authUser := c.Locals("authUser").(*User)
+				liked := TrackLikeModel().Where("track_id", track.ID).Where("user_id", authUser.ID).First() != nil
+				track.Liked = &liked
+			},
 			"album": func(track *Track) {
 				track.Album = AlbumModel(c).With("genres", "artists").Find(track.AlbumID)
 			},

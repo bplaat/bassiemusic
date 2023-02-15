@@ -10,7 +10,7 @@ func SearchIndex(c *fiber.Ctx) error {
 	query, _, _ := utils.ParseIndexVars(c)
 
 	// Get tracks
-	tracks := models.TrackModel(c).With("artists", "album").WhereRaw("`title` LIKE ?", "%"+query+"%").OrderByRaw("`plays` DESC, `updated_at` DESC").Limit("5").Get()
+	tracks := models.TrackModel(c).With("like", "artists", "album").WhereRaw("`title` LIKE ?", "%"+query+"%").OrderByRaw("`plays` DESC, `updated_at` DESC").Limit("5").Get()
 
 	// Get albums
 	albums := models.AlbumModel(c).With("artists", "genres").WhereRaw("`title` LIKE ?", "%"+query+"%").OrderByRaw("LOWER(`title`)").Limit("10").Get()

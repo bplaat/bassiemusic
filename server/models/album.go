@@ -21,7 +21,7 @@ type Album struct {
 	SmallCover  string    `json:"small_cover"`
 	MediumCover string    `json:"medium_cover"`
 	LargeCover  string    `json:"large_cover"`
-	Liked       bool      `json:"liked"`
+	Liked       *bool     `json:"liked,omitempty"`
 	CreatedAt   time.Time `column:"created_at,timestamp" json:"created_at"`
 	Artists     []Artist  `json:"artists,omitempty"`
 	Genres      []Genre   `json:"genres,omitempty"`
@@ -47,17 +47,16 @@ func AlbumModel(c *fiber.Ctx) *database.Model[Album] {
 			if album.TypeInt == AlbumTypeSingle {
 				album.Type = "single"
 			}
-
 			album.SmallCover = fmt.Sprintf("%s/albums/small/%s.jpg", os.Getenv("STORAGE_URL"), album.ID)
 			album.MediumCover = fmt.Sprintf("%s/albums/medium/%s.jpg", os.Getenv("STORAGE_URL"), album.ID)
 			album.LargeCover = fmt.Sprintf("%s/albums/large/%s.jpg", os.Getenv("STORAGE_URL"), album.ID)
-
-			if c != nil {
-				authUser := c.Locals("authUser").(*User)
-				album.Liked = AlbumLikeModel().Where("album_id", album.ID).Where("user_id", authUser.ID).First() != nil
-			}
 		},
 		Relationships: map[string]database.QueryBuilderProcess[Album]{
+			"like": func(album *Album) {
+				authUser := c.Locals("authUser").(*User)
+				liked := AlbumLikeModel().Where("album_id", album.ID).Where("user_id", authUser.ID).First() != nil
+				album.Liked = &liked
+			},
 			"artists": func(album *Album) {
 				album.Artists = ArtistModel(c).WhereIn("album_artist", "artist_id", "album_id", album.ID).OrderByRaw("LOWER(`name`)").Get()
 			},
