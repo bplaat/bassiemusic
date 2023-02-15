@@ -22,7 +22,7 @@
     }
 
     onMount(() => {
-        localStorage.setItem('liked-object', 'artists');
+        localStorage.setItem('liked-tab', 'artists');
     });
 
     let bottom;

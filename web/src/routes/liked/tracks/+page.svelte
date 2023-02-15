@@ -22,7 +22,7 @@
     }
 
     onMount(() => {
-        localStorage.setItem('liked-object', 'tracks');
+        localStorage.setItem('liked-tab', 'tracks');
     });
 
     let bottom;

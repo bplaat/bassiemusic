@@ -13,6 +13,10 @@
         isOpen = false;
     }
 
+    function gotoLikedPage(){
+        goto('/liked/' + (localStorage.getItem('liked-tab') || 'tracks'))
+    }
+
     async function logout() {
         await fetch(`${import.meta.env.VITE_API_URL}/auth/logout`, {
             headers: {
@@ -21,11 +25,6 @@
         });
         document.cookie = `token=; expires=${new Date(0).toUTCString()}`;
         window.location = '/auth/login';
-    }
-
-    function gotoLikedPage(){
-        let lastObject = localStorage.getItem('liked-object') || 'tracks';
-        goto('/liked/' + lastObject)
     }
 </script>
 

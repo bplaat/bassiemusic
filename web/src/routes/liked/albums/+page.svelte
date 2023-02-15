@@ -22,7 +22,7 @@
     }
 
     onMount(() => {
-        localStorage.setItem('liked-object', 'albums');
+        localStorage.setItem('liked-tab', 'albums');
     });
 
     let bottom;
