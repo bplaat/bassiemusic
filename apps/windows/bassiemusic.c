@@ -529,7 +529,7 @@ LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     if (msg == WM_CLOSE) {
         wchar_t windowStatePath[MAX_PATH];
         SHGetFolderPath(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, windowStatePath);
-        wcscat(windowStatePath, L"\\bassiemusic\\window");
+        wcscat(windowStatePath, L"\\BassieMusic\\window");
         HANDLE windowStateFile =
             CreateFile(windowStatePath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
         WINDOWPLACEMENT windowState;
@@ -590,7 +590,7 @@ void _start(void) {
     // Restore old window state
     wchar_t windowStatePath[MAX_PATH];
     SHGetFolderPath(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, windowStatePath);
-    wcscat(windowStatePath, L"\\bassiemusic\\window");
+    wcscat(windowStatePath, L"\\BassieMusic\\window");
     HANDLE windowStateFile =
         CreateFile(windowStatePath, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (windowStateFile != INVALID_HANDLE_VALUE) {
@@ -614,7 +614,7 @@ void _start(void) {
         // Find app data path
         wchar_t appDataPath[MAX_PATH];
         SHGetFolderPath(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, appDataPath);
-        wcscat(appDataPath, L"\\bassiemusic");
+        wcscat(appDataPath, L"\\BassieMusic");
 
         // Init webview2 stuff
         SetEnvironmentVariable(L"WEBVIEW2_DEFAULT_BACKGROUND_COLOR", L"0a0a0a");
