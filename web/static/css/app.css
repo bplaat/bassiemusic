@@ -66,14 +66,13 @@ img:-moz-loading {
     right: 0.5rem;
 }
 
-.play-button-image {
+.image-play-button {
     position: absolute;
     display: none;
-    bottom: 10px;
-    right: 10px;
-}  
-
-.card:hover .play-button-image {
+    right: 0.5rem;
+    bottom: 0.5rem;
+}
+.has-image-play-button:hover .image-play-button {
     display: block;
 }
 
