@@ -116,7 +116,7 @@ func UsersEdit(c *fiber.Ctx) error {
 	}
 
 	// Check auth
-	authUser := models.AuthUser(c)
+	authUser := c.Locals("authUser").(*models.User)
 	if authUser.Role != "admin" && authUser.ID != user.ID {
 		return fiber.ErrUnauthorized
 	}
@@ -204,7 +204,7 @@ func UsersAvatar(c *fiber.Ctx) error {
 	}
 
 	// Check auth
-	authUser := models.AuthUser(c)
+	authUser := c.Locals("authUser").(*models.User)
 	if authUser.Role != "admin" && authUser.ID != user.ID {
 		return fiber.ErrUnauthorized
 	}
@@ -241,7 +241,7 @@ func UsersAvatarDelete(c *fiber.Ctx) error {
 	}
 
 	// Check auth
-	authUser := models.AuthUser(c)
+	authUser := c.Locals("authUser").(*models.User)
 	if authUser.Role != "admin" && authUser.ID != user.ID {
 		return fiber.ErrUnauthorized
 	}
@@ -271,7 +271,7 @@ func UsersLikedArtists(c *fiber.Ctx) error {
 	}
 
 	// Check auth
-	authUser := models.AuthUser(c)
+	authUser := c.Locals("authUser").(*models.User)
 	if authUser.Role != "admin" && authUser.ID != user.ID {
 		return fiber.ErrUnauthorized
 	}
@@ -293,7 +293,7 @@ func UsersLikedAlbums(c *fiber.Ctx) error {
 	}
 
 	// Check auth
-	authUser := models.AuthUser(c)
+	authUser := c.Locals("authUser").(*models.User)
 	if authUser.Role != "admin" && authUser.ID != user.ID {
 		return fiber.ErrUnauthorized
 	}
@@ -315,7 +315,7 @@ func UsersLikedTracks(c *fiber.Ctx) error {
 	}
 
 	// Check auth
-	authUser := models.AuthUser(c)
+	authUser := c.Locals("authUser").(*models.User)
 	if authUser.Role != "admin" && authUser.ID != user.ID {
 		return fiber.ErrUnauthorized
 	}
@@ -337,7 +337,7 @@ func UsersPlayedTracks(c *fiber.Ctx) error {
 	}
 
 	// Check auth
-	authUser := models.AuthUser(c)
+	authUser := c.Locals("authUser").(*models.User)
 	if authUser.Role != "admin" && authUser.ID != user.ID {
 		return fiber.ErrUnauthorized
 	}
@@ -359,7 +359,7 @@ func UsersSessions(c *fiber.Ctx) error {
 	}
 
 	// Check auth
-	authUser := models.AuthUser(c)
+	authUser := c.Locals("authUser").(*models.User)
 	if authUser.Role != "admin" && authUser.ID != user.ID {
 		return fiber.ErrUnauthorized
 	}

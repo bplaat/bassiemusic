@@ -105,24 +105,22 @@ func AuthLogin(c *fiber.Ctx) error {
 }
 
 func AuthValidate(c *fiber.Ctx) error {
-	authUser := models.AuthUser(c)
+	authUser := c.Locals("authUser").(*models.User)
 
 	// Get session agent
-	session := models.AuthSession(c)
+	session := c.Locals("session").(*models.Session)
 	agent := utils.Agent{OS: *session.ClientOS, Name: *session.ClientName, Version: *session.ClientVersion}
 
-	// Get last track play
-	lastTackplay := models.TrackPlayModel().Where("user_id", authUser.ID).OrderByDesc("created_at").First()
-
-	// When we have a last played track get it
-	if lastTackplay != nil {
+	// Get last played track and return it
+	lastTackPlay := models.TrackPlayModel().Where("user_id", authUser.ID).OrderByDesc("created_at").First()
+	if lastTackPlay != nil {
 		return c.JSON(fiber.Map{
 			"success":             true,
 			"user":                authUser,
 			"session":             session,
 			"agent":               agent,
-			"last_track":          models.TrackModel(c).With("artists", "album").Find(lastTackplay.TrackID),
-			"last_track_position": lastTackplay.Position,
+			"last_track":          models.TrackModel(c).With("artists", "album").Find(lastTackPlay.TrackID),
+			"last_track_position": lastTackPlay.Position,
 		})
 	}
 

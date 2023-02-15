@@ -32,7 +32,8 @@ func ArtistModel(c *fiber.Ctx) *database.Model[Artist] {
 			artist.LargeImage = fmt.Sprintf("%s/artists/large/%s.jpg", os.Getenv("STORAGE_URL"), artist.ID)
 
 			if c != nil {
-				artist.Liked = ArtistLikeModel().Where("artist_id", artist.ID).Where("user_id", AuthUser(c).ID).First() != nil
+				authUser := c.Locals("authUser").(*User)
+				artist.Liked = ArtistLikeModel().Where("artist_id", artist.ID).Where("user_id", authUser.ID).First() != nil
 			}
 		},
 		Relationships: map[string]database.QueryBuilderProcess[Artist]{

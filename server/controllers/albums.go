@@ -21,7 +21,7 @@ func AlbumsShow(c *fiber.Ctx) error {
 }
 
 func AlbumsLike(c *fiber.Ctx) error {
-	authUser := models.AuthUser(c)
+	authUser := c.Locals("authUser").(*models.User)
 
 	// Check if album exists
 	album := models.AlbumModel(c).Find(c.Params("albumID"))
@@ -45,7 +45,7 @@ func AlbumsLike(c *fiber.Ctx) error {
 }
 
 func AlbumsLikeDelete(c *fiber.Ctx) error {
-	authUser := models.AuthUser(c)
+	authUser := c.Locals("authUser").(*models.User)
 
 	// Check if album exists
 	album := models.AlbumModel(c).Find(c.Params("albumID"))

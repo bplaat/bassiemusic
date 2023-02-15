@@ -15,16 +15,18 @@ func IsAuthed(c *fiber.Ctx) error {
 	}
 
 	// Get active session by token
-	session := models.SessionModel().Where("token", token).WhereRaw("`expires_at` > ?", time.Now()).First()
+	session := models.SessionModel().With("user").Where("token", token).WhereRaw("`expires_at` > ?", time.Now()).First()
 	if session == nil {
 		return fiber.ErrUnauthorized
 	}
+	c.Locals("session", session)
+	c.Locals("authUser", session.User)
 	return c.Next()
 }
 
 func IsAdmin(c *fiber.Ctx) error {
-	user := models.AuthUser(c)
-	if user.Role != "admin" {
+	authUser := c.Locals("authUser").(*models.User)
+	if authUser.Role != "admin" {
 		return fiber.ErrUnauthorized
 	}
 	return c.Next()

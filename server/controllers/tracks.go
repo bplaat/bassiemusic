@@ -23,7 +23,7 @@ func TracksShow(c *fiber.Ctx) error {
 }
 
 func TracksLike(c *fiber.Ctx) error {
-	authUser := models.AuthUser(c)
+	authUser := c.Locals("authUser").(*models.User)
 
 	// Check if track exists
 	track := models.TrackModel(c).Find(c.Params("trackID"))
@@ -47,7 +47,7 @@ func TracksLike(c *fiber.Ctx) error {
 }
 
 func TracksLikeDelete(c *fiber.Ctx) error {
-	authUser := models.AuthUser(c)
+	authUser := c.Locals("authUser").(*models.User)
 
 	// Check if track exists
 	track := models.TrackModel(c).Find(c.Params("trackID"))
@@ -67,10 +67,15 @@ func TracksLikeDelete(c *fiber.Ctx) error {
 }
 
 func TracksPlay(c *fiber.Ctx) error {
+	authUser := c.Locals("authUser").(*models.User)
+
+	// Get position query variable
 	var position float32
 	if positionFloat, err := strconv.ParseFloat(c.Query("position", "0"), 32); err == nil {
 		position = float32(positionFloat)
 	}
-	models.HandleTrackPlay(models.AuthUser(c), c.Params("trackID"), position)
+
+	// Handle track play
+	models.HandleTrackPlay(authUser, c.Params("trackID"), position)
 	return c.JSON(fiber.Map{"success": true})
 }

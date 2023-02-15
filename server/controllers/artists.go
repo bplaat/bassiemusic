@@ -21,7 +21,7 @@ func ArtistsShow(c *fiber.Ctx) error {
 }
 
 func ArtistsLike(c *fiber.Ctx) error {
-	authUser := models.AuthUser(c)
+	authUser := c.Locals("authUser").(*models.User)
 
 	// Check if artist exists
 	artist := models.ArtistModel(c).Find(c.Params("artistID"))
@@ -45,7 +45,7 @@ func ArtistsLike(c *fiber.Ctx) error {
 }
 
 func ArtistsLikeDelete(c *fiber.Ctx) error {
-	authUser := models.AuthUser(c)
+	authUser := c.Locals("authUser").(*models.User)
 
 	// Check if artist exists
 	artist := models.ArtistModel(c).Find(c.Params("artistID"))

@@ -53,7 +53,8 @@ func AlbumModel(c *fiber.Ctx) *database.Model[Album] {
 			album.LargeCover = fmt.Sprintf("%s/albums/large/%s.jpg", os.Getenv("STORAGE_URL"), album.ID)
 
 			if c != nil {
-				album.Liked = AlbumLikeModel().Where("album_id", album.ID).Where("user_id", AuthUser(c).ID).First() != nil
+				authUser := c.Locals("authUser").(*User)
+				album.Liked = AlbumLikeModel().Where("album_id", album.ID).Where("user_id", authUser.ID).First() != nil
 			}
 		},
 		Relationships: map[string]database.QueryBuilderProcess[Album]{

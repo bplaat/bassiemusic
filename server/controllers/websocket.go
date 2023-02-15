@@ -70,7 +70,7 @@ func Websocket(c *fiber.Ctx) error {
 			}
 
 			if message.Type == "track_play" {
-				models.HandleTrackPlay(*authUser, message.TrackID, message.Position)
+				models.HandleTrackPlay(authUser, message.TrackID, message.Position)
 				continue
 			}
 		}

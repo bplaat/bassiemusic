@@ -35,7 +35,8 @@ func TrackModel(c *fiber.Ctx) *database.Model[Track] {
 			track.Music = fmt.Sprintf("%s/tracks/%s.m4a", os.Getenv("STORAGE_URL"), track.ID)
 
 			if c != nil {
-				track.Liked = TrackLikeModel().Where("track_id", track.ID).Where("user_id", AuthUser(c).ID).First() != nil
+				authUser := c.Locals("authUser").(*User)
+				track.Liked = TrackLikeModel().Where("track_id", track.ID).Where("user_id", authUser.ID).First() != nil
 			}
 		},
 		Relationships: map[string]database.QueryBuilderProcess[Track]{
@@ -91,7 +92,7 @@ func TrackPlayModel() *database.Model[TrackPlay] {
 	}).Init()
 }
 
-func HandleTrackPlay(authUser User, trackID string, position float32) bool {
+func HandleTrackPlay(authUser *User, trackID string, position float32) bool {
 	// Check if track exists
 	track := TrackModel(nil).Find(trackID)
 	if track == nil {
