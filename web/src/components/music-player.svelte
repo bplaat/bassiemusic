@@ -302,7 +302,7 @@
     <div class="music-player box m-0 p-0 py-2 has-background-white-bis">
         <div class="media px-4 py-2">
             <div class="media-left">
-                <a href="/albums/{track.album.id}" class="box m-0 p-0" style="width: 48px; height: 48px;">
+                <a href="/albums/{track.album.id}" class="music-player-album-cover box m-0 p-0">
                     <img src={track.album.small_cover} alt="Cover of album {track.album}" loading="lazy" />
                 </a>
             </div>
@@ -480,6 +480,11 @@
         flex-direction: column;
     }
 
+    .music-player-album-cover {
+        width: 48px;
+        height: 48px;
+    }
+
     .music-player-controls,
     .music-player-volume {
         display: flex;
@@ -492,6 +497,11 @@
             align-items: center;
             height: 6rem;
             z-index: 300;
+        }
+
+        .music-player-album-cover {
+            width: 64px;
+            height: 64px;
         }
 
         .music-player-slider {

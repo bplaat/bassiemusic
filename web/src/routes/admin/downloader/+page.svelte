@@ -32,7 +32,7 @@
     }
 
     async function downloadAlbum(album) {
-        albums = albums.filter(otherAlbum => otherAlbum.id != album.id);
+        albums = albums.filter((otherAlbum) => otherAlbum.id != album.id);
         await fetch(
             `${import.meta.env.VITE_API_URL}/download/album?${new URLSearchParams({
                 deezer_id: album.id,
@@ -46,7 +46,7 @@
     }
 
     async function downloadArtist(artist) {
-        artists = artists.filter(otherArtist => otherArtist.id != artist.id);
+        artists = artists.filter((otherArtist) => otherArtist.id != artist.id);
         await fetch(
             `${import.meta.env.VITE_API_URL}/download/artist?${new URLSearchParams({
                 deezer_id: artist.id,
@@ -82,6 +82,7 @@
     {#if results}
         <div class="columns mt-5">
             <div class="column is-half">
+                <h2 class="title is-4">Albums</h2>
                 {#each albums as album}
                     <div class="media">
                         <div class="media-left">
@@ -94,7 +95,11 @@
                             <p class="ellipsis">{album.artist.name}</p>
                         </div>
                         <div class="media-right">
-                            <button class="button is-link" on:click={() => downloadAlbum(album)} title="Add album to BassieMusic">
+                            <button
+                                class="button is-link"
+                                on:click={() => downloadAlbum(album)}
+                                title="Add album to BassieMusic"
+                            >
                                 <svg class="icon" viewBox="0 0 24 24">
                                     <path d="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z" />
                                 </svg>
@@ -108,6 +113,7 @@
             </div>
 
             <div class="column is-half">
+                <h2 class="title is-4">Artists</h2>
                 {#each artists as artist}
                     <div class="media">
                         <div class="media-left">
@@ -118,7 +124,11 @@
                         <div class="media-content">
                             <p class="ellipsis" style="font-weight: 500;">{artist.name}</p>
                         </div>
-                        <button class="button is-link" on:click={() => downloadArtist(artist)} title="Add artist to BassieMusic">
+                        <button
+                            class="button is-link"
+                            on:click={() => downloadArtist(artist)}
+                            title="Add artist to BassieMusic"
+                        >
                             <svg class="icon" viewBox="0 0 24 24">
                                 <path d="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z" />
                             </svg>
