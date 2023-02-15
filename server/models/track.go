@@ -36,9 +36,11 @@ func TrackModel(c *fiber.Ctx) *database.Model[Track] {
 		},
 		Relationships: map[string]database.QueryBuilderProcess[Track]{
 			"like": func(track *Track) {
-				authUser := c.Locals("authUser").(*User)
-				liked := TrackLikeModel().Where("track_id", track.ID).Where("user_id", authUser.ID).First() != nil
-				track.Liked = &liked
+				if c != nil {
+					authUser := c.Locals("authUser").(*User)
+					liked := TrackLikeModel().Where("track_id", track.ID).Where("user_id", authUser.ID).First() != nil
+					track.Liked = &liked
+				}
 			},
 			"album": func(track *Track) {
 				track.Album = AlbumModel(c).With("genres", "artists").Find(track.AlbumID)
