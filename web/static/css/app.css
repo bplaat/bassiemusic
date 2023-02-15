@@ -66,6 +66,16 @@ img:-moz-loading {
     right: 0.5rem;
 }
 
+.image-play-button {
+    position: absolute;
+    display: none;
+    right: 0.5rem;
+    bottom: 0.5rem;
+}
+.has-image-play-button:hover .image-play-button {
+    display: block;
+}
+
 .icon {
     display: block;
     width: 24px;
