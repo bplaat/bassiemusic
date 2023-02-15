@@ -7,13 +7,26 @@ import (
 
 	"github.com/bplaat/bassiemusic/models"
 	"github.com/bplaat/bassiemusic/structs"
+	"github.com/bplaat/bassiemusic/tasks"
 	"github.com/bplaat/bassiemusic/utils"
 )
 
 // Try to redownload missing album tracks
-func fixAlbum(album models.Album) {
-	log.Printf("Fix album %s by %s\n", album.Title, album.Artists[0].Name)
-	// TODO
+func downloadAlbumMissingTracks(album *models.Album, deezerAlbum *structs.DeezerAlbum) {
+	log.Printf("Fixing album %s by %s\n", album.Title, album.Artists[0].Name)
+	for _, incompleteTrack := range deezerAlbum.Tracks.Data {
+		// Get Deezer track info
+		var deezerTrack structs.DeezerTrack
+		if err := utils.FetchJson(fmt.Sprintf("https://api.deezer.com/track/%d", incompleteTrack.ID), &deezerTrack); err != nil {
+			log.Fatalln(err)
+		}
+
+		// When track is missing redownload it
+		track := models.TrackModel(nil).Where("album_id", album.ID).Where("disk", deezerTrack.DiskNumber).Where("position", deezerTrack.TrackPosition).First()
+		if track == nil {
+			tasks.DownloadTrack(album.ID, deezerTrack.ID)
+		}
+	}
 }
 
 func Fix() {
@@ -30,7 +43,7 @@ func Fix() {
 
 			// Check if track counts are different
 			if len(album.Tracks) != deezerAlbum.NbTracks {
-				fixAlbum(album)
+				downloadAlbumMissingTracks(&album, &deezerAlbum)
 			}
 		}
 	}
