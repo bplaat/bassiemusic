@@ -3,4 +3,4 @@
 "menu_quit" = "Quit BassieMusic";
 "webview_url" = "https://bassiemusic.plaatsoft.nl/";
 "about_title" = "About BassieMusic macOS App";
-"about_text" = "Versie: %@\nMade by PlaatSoft\nCopyright © 2022 - 2023 PlaatSoft";
+"about_text" = "Version: %@\nMade by PlaatSoft\nCopyright © 2022 - 2023 PlaatSoft";
