@@ -7,8 +7,8 @@ import (
 
 	"github.com/bplaat/bassiemusic/commands"
 	"github.com/bplaat/bassiemusic/database"
+	"github.com/bplaat/bassiemusic/utils/dotenv"
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/joho/godotenv"
 )
 
 func createDirIfNotExists(path string) {
@@ -42,7 +42,7 @@ func main() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
 	// Load .env file
-	if err := godotenv.Load(".env"); err != nil {
+	if err := dotenv.Load(".env"); err != nil {
 		log.Fatalln(err)
 	}
 
