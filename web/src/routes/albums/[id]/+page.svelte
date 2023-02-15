@@ -120,7 +120,7 @@
 
 <h3 class="title is-4">Tracks</h3>
 {#if album.tracks.length > 0}
-    <TracksTable bind:this={tracksTable} {token} tracks={album.tracks} showAlbum={false} />
+    <TracksTable bind:this={tracksTable} {token} tracks={album.tracks} isAlbum={true} />
 {:else}
     <p><i>This album doens't have any tracks</i></p>
 {/if}
