@@ -64,7 +64,7 @@ func AlbumModel(c *fiber.Ctx) *database.Model[Album] {
 				album.Genres = GenreModel(c).WhereIn("album_genre", "genre_id", "album_id", album.ID).OrderByRaw("LOWER(`name`)").Get()
 			},
 			"tracks": func(album *Album) {
-				album.Tracks = TrackModel(c).With("artists").Where("album_id", album.ID).OrderByRaw("`disk`, `position`").Get()
+				album.Tracks = TrackModel(c).With("like", "artists").Where("album_id", album.ID).OrderByRaw("`disk`, `position`").Get()
 			},
 		},
 	}).Init()

@@ -41,7 +41,7 @@ func ArtistModel(c *fiber.Ctx) *database.Model[Artist] {
 				artist.Albums = AlbumModel(c).With("artists", "genres").WhereIn("album_artist", "album_id", "artist_id", artist.ID).OrderByDesc("released_at").Get()
 			},
 			"top_tracks": func(artist *Artist) {
-				artist.TopTracks = TrackModel(c).With("artists", "album").WhereIn("track_artist", "track_id", "artist_id", artist.ID).OrderByDesc("plays").Limit("5").Get()
+				artist.TopTracks = TrackModel(c).With("like", "artists", "album").WhereIn("track_artist", "track_id", "artist_id", artist.ID).OrderByDesc("plays").Limit("5").Get()
 			},
 		},
 	}).Init()
