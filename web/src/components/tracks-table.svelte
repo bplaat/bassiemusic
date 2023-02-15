@@ -4,8 +4,10 @@
 
     export let token;
     export let tracks;
-    export let showAlbum = true;
+    export let isAlbum = false;
     export let isMusicQueue = false;
+
+    $: isMultiDisk = tracks.find((track) => track.disk != 1) != null;
 
     function playTrack(track) {
         $musicPlayer.playTracks(tracks.slice(), track);
@@ -28,7 +30,14 @@
 
 <table class="table" style="width: 100%; table-layout: fixed;">
     <thead>
-        {#if showAlbum}
+        {#if isAlbum}
+            <th style="width: 10%;"><div class="track-index">#</div></th>
+            <th style="width: 50%;">Title</th>
+            <th style="width: 20%;">Duration</th>
+            <th class="is-hidden-mobile">Plays</th>
+            <th style="width: calc(40px + .75em);" />
+            <th style="width: calc(40px + .75em);" class:is-hidden-mobile={!isMusicQueue} />
+        {:else}
             <th style="width: 10%;"><div class="track-index">#</div></th>
             <th style="width: calc(64px + 1.5em);">Title</th>
             <th class="track-title" />
@@ -37,31 +46,44 @@
             <th style="width: 15%;" class="is-hidden-mobile">Plays</th>
             <th style="width: calc(40px + .75em);" />
             <th style="width: calc(40px + .75em);" class:is-hidden-mobile={!isMusicQueue} />
-        {:else}
-            <th style="width: 10%;"><div class="track-index">#</div></th>
-            <th style="width: 50%;">Title</th>
-            <th style="width: 20%;">Duration</th>
-            <th class="is-hidden-mobile">Plays</th>
-            <th style="width: calc(40px + .75em);" />
-            <th style="width: calc(40px + .75em);" class:is-hidden-mobile={!isMusicQueue} />
         {/if}
     </thead>
     <tbody>
         {#each tracks as track, index}
+            {#if isAlbum && isMultiDisk && (index == 0 || track.disk != tracks[index - 1].disk)}
+                <tr>
+                    <td>
+                        <svg class="icon is-colored" viewBox="0 0 24 24">
+                            <path
+                                fill="#777"
+                                d="M12,14C10.89,14 10,13.1 10,12C10,10.89 10.89,10 12,10C13.11,10 14,10.89 14,12A2,2 0 0,1 12,14M12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4Z"
+                            />
+                        </svg>
+                    </td>
+                    <td style="height: 64px; font-weight: 500; color: #777;">
+                        Disk {track.disk}
+                    </td>
+                    <td />
+                    <td class="is-hidden-mobile" />
+                    <td />
+                    <td class:is-hidden-mobile={!isMusicQueue} />
+                </tr>
+            {/if}
+
             <tr
                 class="track-container"
                 on:dblclick|preventDefault={() => playTrack(track)}
                 class:has-background-light={$musicState.track != undefined && $musicState.track.id == track.id}
             >
                 <td>
-                    <div class="track-index">{index + 1}</div>
+                    <div class="track-index">{isAlbum ? track.position : index + 1}</div>
                     <button class="button is-small track-play" on:click={() => playTrack(track)} title="Play track">
                         <svg class="icon" viewBox="0 0 24 24">
                             <path d="M8,5.14V19.14L19,12.14L8,5.14Z" />
                         </svg>
                     </button>
                 </td>
-                {#if showAlbum}
+                {#if !isAlbum}
                     <td>
                         <div class="box has-image m-0 p-0" style="width: 64px; height: 64px;">
                             <img src={track.album.small_cover} alt="Cover of album {track.album}" loading="lazy" />
@@ -70,7 +92,12 @@
                 {/if}
                 <td>
                     <p class="ellipsis mb-1" style="font-weight: 500;">
-                        <a href="/albums/{track.album.id}">{track.title}</a>
+                        {#if isAlbum}
+                            <!-- svelte-ignore a11y-invalid-attribute -->
+                            <a href="#" on:click|preventDefault={playTrack(track)}>{track.title}</a>
+                        {:else}
+                            <a href="/albums/{track.album.id}">{track.title}</a>
+                        {/if}
                     </p>
                     <p class="ellipsis">
                         {#if track.explicit}
@@ -81,7 +108,7 @@
                         {/each}
                     </p>
                 </td>
-                {#if showAlbum}
+                {#if !isAlbum}
                     <td class="ellipsis is-hidden-mobile"><a href="/albums/{track.album.id}">{track.album.title}</a></td
                     >
                 {/if}
