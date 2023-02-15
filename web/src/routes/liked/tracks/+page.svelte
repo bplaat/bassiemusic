@@ -21,6 +21,10 @@
         tracks = tracks;
     }
 
+    onMount(() => {
+        localStorage.setItem('liked-object', 'tracks');
+    });
+
     let bottom;
     if (tracks.length != data.total) {
         let observer;
