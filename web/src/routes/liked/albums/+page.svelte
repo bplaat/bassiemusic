@@ -21,6 +21,10 @@
         albums = albums;
     }
 
+    onMount(() => {
+        localStorage.setItem('liked-tab', 'albums');
+    });
+
     let bottom;
     if (albums.length != data.total) {
         let observer;

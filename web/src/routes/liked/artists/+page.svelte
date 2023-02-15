@@ -21,6 +21,10 @@
         artists = artists;
     }
 
+    onMount(() => {
+        localStorage.setItem('liked-tab', 'artists');
+    });
+
     let bottom;
     if (artists.length != data.total) {
         let observer;
