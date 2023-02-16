@@ -2,5 +2,10 @@
 "menu_about" = "About BassieMusic";
 "menu_quit" = "Quit BassieMusic";
 "webview_url" = "https://bassiemusic.plaatsoft.nl/";
-"about_title" = "About BassieMusic macOS App";
-"about_text" = "Version: %@\nMade by PlaatSoft\nCopyright © 2022 - 2023 PlaatSoft";
+
+"about_alert_title" = "About BassieMusic macOS App";
+"about_alert_text" = "Version: %@\nMade by PlaatSoft\nCopyright © 2022 - 2023 PlaatSoft";
+
+"update_alert_title" = "New update is available";
+"update_alert_text" = "You are using an outdated version of the BassieMusic macOS App.\nPlease download and install the latest version.";
+"update_alert_button" = "Download latest version";
