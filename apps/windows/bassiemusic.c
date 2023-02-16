@@ -1,10 +1,7 @@
 // window decoration styling
-// window caption area
 // window maximized state icon change
-// alt+f4
-// right click caption menu
+// alt f4
 // center about window in main window
-// update alert
 
 #define UNICODE
 #include <dwmapi.h>
@@ -25,6 +22,7 @@ wchar_t *window_class_name = L"bassiemusic";
 HINSTANCE instance;
 HWND window_hwnd;
 UINT window_dpi;
+BOOL window_titlebar_drag = FALSE;
 ICoreWebView2CompositionController *composition_controller = NULL;
 ICoreWebView2Controller *controller = NULL;
 ICoreWebView2 *webview2 = NULL;
@@ -188,7 +186,7 @@ void ResizeBrowser(HWND hwnd) {
     ICoreWebView2Controller_put_Bounds(controller, window_rect);
 }
 
-void WindowClose() {
+void WindowClose(void) {
     wchar_t windowStatePath[MAX_PATH];
     SHGetFolderPath(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, windowStatePath);
     wcscat(windowStatePath, L"\\BassieMusic\\window");
@@ -198,6 +196,14 @@ void WindowClose() {
     WriteFile(windowStateFile, &windowState, sizeof(WINDOWPLACEMENT), NULL, NULL);
     CloseHandle(windowStateFile);
     DestroyWindow(window_hwnd);
+}
+
+BOOL HandleKeyDown(UINT key) {
+    if (GetKeyState(VK_MENU) & 0x8000 && key == VK_F4) {
+        WindowClose();
+        return TRUE;
+    }
+    return FALSE;
 }
 
 // Default IUnknown method wrappers
@@ -212,6 +218,7 @@ ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandlerVtbl EnvironmentComple
 ICoreWebView2CreateCoreWebView2CompositionControllerCompletedHandlerVtbl ControllerCompletedHandlerVtbl;
 ICoreWebView2WebMessageReceivedEventHandlerVtbl WebMessageReceivedEventHandlerVtbl;
 ICoreWebView2NewWindowRequestedEventHandlerVtbl NewWindowRequestedHandlerVtbl;
+ICoreWebView2AcceleratorKeyPressedEventHandlerVtbl AcceleratorKeyPressedHandlerVtbl;
 
 // ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler
 HRESULT STDMETHODCALLTYPE EnvironmentCompletedHandler_Invoke(ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler *This, HRESULT result,
@@ -284,6 +291,10 @@ HRESULT STDMETHODCALLTYPE ControllerCompletedHandler_Invoke(ICoreWebView2CreateC
     newWindowRequestedHandler->lpVtbl = &NewWindowRequestedHandlerVtbl;
     ICoreWebView2_add_NewWindowRequested(webview2, newWindowRequestedHandler, NULL);
 
+    ICoreWebView2AcceleratorKeyPressedEventHandler *newAcceleratorKeyPressedHandler = malloc(sizeof(ICoreWebView2AcceleratorKeyPressedEventHandler));
+    newAcceleratorKeyPressedHandler->lpVtbl = &AcceleratorKeyPressedHandlerVtbl;
+    ICoreWebView2Controller_add_AcceleratorKeyPressed(controller, newAcceleratorKeyPressedHandler, NULL);
+
     ICoreWebView2Controller_put_IsVisible(controller, TRUE);
     ResizeBrowser(window_hwnd);
     ICoreWebView2_Navigate(webview2, GetString(ID_STRING_WEBVIEW_URL));
@@ -340,6 +351,24 @@ ICoreWebView2NewWindowRequestedEventHandlerVtbl NewWindowRequestedHandlerVtbl = 
     (HRESULT(STDMETHODCALLTYPE *)(ICoreWebView2NewWindowRequestedEventHandler * This, REFIID riid, void **ppvObject)) Unknown_QueryInterface,
     (ULONG(STDMETHODCALLTYPE *)(ICoreWebView2NewWindowRequestedEventHandler * This)) Unknown_AddRef,
     (ULONG(STDMETHODCALLTYPE *)(ICoreWebView2NewWindowRequestedEventHandler * This)) Unknown_Release, NewWindowRequestedHandler_Invoke};
+
+// ICoreWebView2AcceleratorKeyPressedEventHandler
+HRESULT STDMETHODCALLTYPE AcceleratorKeyPressedHandler_Invoke(ICoreWebView2AcceleratorKeyPressedEventHandler *This, ICoreWebView2Controller *sender,
+                                                              ICoreWebView2AcceleratorKeyPressedEventArgs *args) {
+    COREWEBVIEW2_KEY_EVENT_KIND state;
+    ICoreWebView2AcceleratorKeyPressedEventArgs_get_KeyEventKind(args, &state);
+    UINT key;
+    ICoreWebView2AcceleratorKeyPressedEventArgs_get_VirtualKey(args, &key);
+    if (state == COREWEBVIEW2_KEY_EVENT_KIND_KEY_DOWN && HandleKeyDown(key)) {
+        ICoreWebView2AcceleratorKeyPressedEventArgs_put_Handled(args, TRUE);
+    }
+    return S_OK;
+}
+
+ICoreWebView2AcceleratorKeyPressedEventHandlerVtbl AcceleratorKeyPressedHandlerVtbl = {
+    (HRESULT(STDMETHODCALLTYPE *)(ICoreWebView2AcceleratorKeyPressedEventHandler * This, REFIID riid, void **ppvObject)) Unknown_QueryInterface,
+    (ULONG(STDMETHODCALLTYPE *)(ICoreWebView2AcceleratorKeyPressedEventHandler * This)) Unknown_AddRef,
+    (ULONG(STDMETHODCALLTYPE *)(ICoreWebView2AcceleratorKeyPressedEventHandler * This)) Unknown_Release, AcceleratorKeyPressedHandler_Invoke};
 
 // About window code
 LRESULT WINAPI AboutWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -517,11 +546,14 @@ LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     }
 
     // Menu commands
-    if (msg == WM_SYSCOMMAND) {
+    if (msg == WM_SYSCOMMAND || msg == WM_COMMAND) {
         UINT id = LOWORD(wParam);
         if (id == ID_MENU_ABOUT) {
             OpenAboutWindow();
             return 0;
+        }
+        if (msg == WM_COMMAND && id >= 0xF000) {
+            return DefWindowProc(hwnd, WM_SYSCOMMAND, wParam, lParam);
         }
     }
 
@@ -599,11 +631,6 @@ LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
 
         if (x >= window_rect.left && y >= window_rect.top && x < window_rect.right && y < window_rect.bottom) {
-            x -= window_rect.left;
-            y -= window_rect.top;
-            if (y < 52 && x < 400) {
-                return HTCAPTION;
-            }
             return HTCLIENT;
         }
 
@@ -614,6 +641,75 @@ LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     if (msg == WM_SIZE) {
         ResizeBrowser(hwnd);
         return 0;
+    }
+
+    // Set window min size
+    if (msg == WM_GETMINMAXINFO) {
+        RECT window_rect = {0, 0, MulDiv(480, window_dpi, 96), MulDiv(480, window_dpi, 96)};
+        AdjustWindowRectExForDpi(&window_rect, WINDOW_STYLE, FALSE, 0, window_dpi);
+        MINMAXINFO *minMaxInfo = (MINMAXINFO *)lParam;
+        minMaxInfo->ptMinTrackSize.x = window_rect.right - window_rect.left;
+        minMaxInfo->ptMinTrackSize.y = window_rect.bottom - window_rect.top;
+        return 0;
+    }
+
+    // Handle keydown messages
+    if (msg == WM_KEYDOWN) {
+        HandleKeyDown(wParam);
+        return 0;
+    }
+
+    // Window titlebar drag
+    if (msg == WM_LBUTTONDOWN) {
+        int x = GET_X_LPARAM(lParam);
+        int y = GET_Y_LPARAM(lParam);
+        RECT client_rect;
+        GetClientRect(hwnd, &client_rect);
+
+        // Mobile
+        if (client_rect.right < MulDiv(1024, window_dpi, 96)) {
+            if (y < MulDiv(52, window_dpi, 96) && x > MulDiv(52, window_dpi, 96) && x < client_rect.right - MulDiv(3 * 48, window_dpi, 96)) {
+                window_titlebar_drag = TRUE;
+            }
+        }
+        // Desktop
+        else {
+            if (y < MulDiv(30, window_dpi, 96) && x < client_rect.right - MulDiv(3 * 48, window_dpi, 96)) {
+                window_titlebar_drag = TRUE;
+            }
+        }
+    }
+    if (msg == WM_MOUSEMOVE) {
+        if (window_titlebar_drag) {
+            ReleaseCapture();
+            SendMessage(hwnd, WM_NCLBUTTONDOWN, HTCAPTION, 0);
+        }
+    }
+    if (msg == WM_LBUTTONUP) {
+        window_titlebar_drag = FALSE;
+    }
+
+    // Window titlebar popup system menu
+    if (msg == WM_RBUTTONUP) {
+        POINT point;
+        POINTSTOPOINT(point, lParam);
+        RECT client_rect;
+        GetClientRect(hwnd, &client_rect);
+
+        // Mobile
+        if (client_rect.right < MulDiv(1024, window_dpi, 96)) {
+            if (point.y < MulDiv(52, window_dpi, 96) && point.x > MulDiv(52, window_dpi, 96)) {
+                ClientToScreen(hwnd, &point);
+                TrackPopupMenu(GetSystemMenu(hwnd, FALSE), TPM_TOPALIGN | TPM_LEFTALIGN, point.x, point.y, 0, hwnd, NULL);
+            }
+        }
+        // Desktop
+        else {
+            if (point.y < MulDiv(30, window_dpi, 96) && point.x < client_rect.right - MulDiv(3 * 48, window_dpi, 96)) {
+                ClientToScreen(hwnd, &point);
+                TrackPopupMenu(GetSystemMenu(hwnd, FALSE), TPM_TOPALIGN | TPM_LEFTALIGN, point.x, point.y, 0, hwnd, NULL);
+            }
+        }
     }
 
     // Send mouse events to webview2
@@ -636,25 +732,8 @@ LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 mouseData = GET_XBUTTON_WPARAM(wParam);
             }
 
-            // TODO
-            if (msg == WM_RBUTTONUP) {
-                HMENU sysMenu = GetSystemMenu(hwnd, FALSE);
-                ClientToScreen(hwnd, &point);
-                TrackPopupMenu(sysMenu, TPM_LEFTALIGN, point.x, point.y, 0, hwnd, NULL);
-            }
-
             ICoreWebView2CompositionController_SendMouseInput(composition_controller, msg, GET_KEYSTATE_WPARAM(wParam), mouseData, point);
         }
-        return 0;
-    }
-
-    // Set window min size
-    if (msg == WM_GETMINMAXINFO) {
-        RECT window_rect = {0, 0, MulDiv(480, window_dpi, 96), MulDiv(480, window_dpi, 96)};
-        AdjustWindowRectExForDpi(&window_rect, WINDOW_STYLE, FALSE, 0, window_dpi);
-        MINMAXINFO *minMaxInfo = (MINMAXINFO *)lParam;
-        minMaxInfo->ptMinTrackSize.x = window_rect.right - window_rect.left;
-        minMaxInfo->ptMinTrackSize.y = window_rect.bottom - window_rect.top;
         return 0;
     }
 

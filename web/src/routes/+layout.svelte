@@ -68,10 +68,10 @@
 >
 
     {#if agent.os == 'Windows' && agent.name == 'BassieMusic App'}
-        <div style="position: fixed; top: 0; right: 0;">
-            <button on:click={() => window.chrome.webview.postMessage('minimize')}>_</button>
-            <button on:click={() => window.chrome.webview.postMessage('maximize')}>M</button>
-            <button on:click={() => window.chrome.webview.postMessage('close')}>X</button>
+        <div style="position: fixed; top: 0; right: 0; display: flex; z-index: 400;">
+            <button style="width: 48px; height: 30px;" on:click={() => window.chrome.webview.postMessage('minimize')}>_</button>
+            <button style="width: 48px; height: 30px;" on:click={() => window.chrome.webview.postMessage('maximize')}>M</button>
+            <button style="width: 48px; height: 30px;" on:click={() => window.chrome.webview.postMessage('close')}>X</button>
         </div>
     {/if}
 
