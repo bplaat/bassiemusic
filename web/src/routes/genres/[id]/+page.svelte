@@ -1,13 +1,14 @@
 <script>
     import { page } from '$app/stores';
-    import { browser } from '$app/environment';
+    import { onMount, onDestroy } from 'svelte';
     import AlbumCard from '../../../components/album-card.svelte';
 
     export let data;
     let { token, authUser, genre } = data;
 
-    if (browser) {
-        page.subscribe(async (page) => {
+    let unsubscribe;
+    onMount(() => {
+        unsubscribe = page.subscribe(async (page) => {
             if (page.url.pathname.startsWith('/genres/') && page.url.pathname != `/genres/${genre.id}`) {
                 const response = await fetch(`${import.meta.env.VITE_API_URL}/genres/${page.params.id}`, {
                     headers: {
@@ -17,7 +18,10 @@
                 genre = await response.json();
             }
         });
-    }
+    });
+    onDestroy(() => {
+        unsubscribe();
+    });
 </script>
 
 <svelte:head>

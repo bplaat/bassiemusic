@@ -1,14 +1,15 @@
 <script>
     import { page } from '$app/stores';
-    import { browser } from '$app/environment';
+    import { onMount, onDestroy } from 'svelte';
     import TracksTable from '../../../components/tracks-table.svelte';
     import AlbumCard from '../../../components/album-card.svelte';
 
     export let data;
     let { token, authUser, artist } = data;
 
-    if (browser) {
-        page.subscribe(async (page) => {
+    let unsubscribe;
+    onMount(() => {
+        unsubscribe = page.subscribe(async (page) => {
             if (page.url.pathname.startsWith('/artists/') && page.url.pathname != `/artists/${artist.id}`) {
                 const response = await fetch(`${import.meta.env.VITE_API_URL}/artists/${page.params.id}`, {
                     headers: {
@@ -18,7 +19,10 @@
                 artist = await response.json();
             }
         });
-    }
+    });
+    onDestroy(() => {
+        unsubscribe();
+    });
 
     let topTracksTable;
 
