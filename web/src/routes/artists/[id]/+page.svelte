@@ -5,7 +5,7 @@
     import AlbumCard from '../../../components/album-card.svelte';
 
     export let data;
-    let { token, artist } = data;
+    let { token, authUser, artist } = data;
 
     if (browser) {
         page.subscribe(async (page) => {
@@ -93,7 +93,7 @@
 
 <h2 class="title mt-5">Top Tracks</h2>
 {#if artist.top_tracks != undefined}
-    <TracksTable bind:this={topTracksTable} {token} tracks={artist.top_tracks} />
+    <TracksTable bind:this={topTracksTable} {token} {authUser} tracks={artist.top_tracks} />
 {:else}
     <p><i>This artist doens't have any top tracks</i></p>
 {/if}
@@ -125,7 +125,7 @@
         <div class="columns is-multiline is-mobile">
             {#each filteredAlbums as album}
                 <div class="column is-half-mobile is-one-third-tablet is-one-quarter-desktop is-one-fifth-widescreen">
-                    <AlbumCard {album} {token} />
+                    <AlbumCard {album} {token} {authUser} />
                 </div>
             {/each}
         </div>

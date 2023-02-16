@@ -55,7 +55,7 @@
 <h1 class="title">Play History</h1>
 
 {#if tracks.length > 0}
-    <TracksTable {token} {tracks} />
+    <TracksTable {token} {authUser} {tracks} />
 {:else}
     <p><i>You have not listened to any tracks</i></p>
 {/if}

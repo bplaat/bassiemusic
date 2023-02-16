@@ -15,6 +15,7 @@
                 username: authUser.username,
                 email: authUser.email,
                 password: newPassword,
+                allow_explicit: authUser.allow_explicit,
                 theme: authUser.theme,
             }),
         });
@@ -140,15 +141,29 @@
                 </div>
             </div>
 
-            <div class="field">
-                <label class="label" for="theme">Theme</label>
-                <div class="control">
-                    <div class="select is-fullwidth">
-                        <select id="theme" bind:value={authUser.theme} required>
-                            <option value="system">System</option>
-                            <option value="light">Light</option>
-                            <option value="dark">Dark</option>
-                        </select>
+            <div class="columns">
+                <div class="column">
+                    <div class="field">
+                        <label class="label" for="theme">Theme</label>
+                        <div class="control">
+                            <div class="select is-fullwidth">
+                                <select id="theme" bind:value={authUser.theme} required>
+                                    <option value="system">System</option>
+                                    <option value="light">Light</option>
+                                    <option value="dark">Dark</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="column">
+                    <div class="field">
+                        <label class="label" for="allow_explicit">Allow explicit content</label>
+                        <label class="checkbox" for="allow_explicit">
+                            <input type="checkbox" id="allow_explicit" bind:checked={authUser.allow_explicit} />
+                            Allow playback of explicit content
+                        </label>
                     </div>
                 </div>
             </div>

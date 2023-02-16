@@ -4,7 +4,7 @@
     import AlbumCard from '../../../components/album-card.svelte';
 
     export let data;
-    let { token, genre } = data;
+    let { token, authUser, genre } = data;
 
     if (browser) {
         page.subscribe(async (page) => {
@@ -49,7 +49,7 @@
     <div class="columns is-multiline is-mobile">
         {#each genre.albums as album}
             <div class="column is-half-mobile is-one-third-tablet is-one-quarter-desktop is-one-fifth-widescreen">
-                <AlbumCard {album} {token} />
+                <AlbumCard {album} {token} {authUser} />
             </div>
         {/each}
     </div>

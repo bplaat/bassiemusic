@@ -1,6 +1,7 @@
 <script>
     import { musicPlayer } from '../stores.js';
 
+    export let authUser;
     export let album;
     export let token;
 
@@ -19,7 +20,11 @@
     }
 </script>
 
-<a class="card has-image-play-button" href="/albums/{album.id}">
+<a
+    class="card has-image-play-button"
+    class:disabled={!authUser.allow_explicit && album.explicit}
+    href="/albums/{album.id}"
+>
     <div class="card-image has-image-tags" style="aspect-ratio: 1;">
         <img src={album.medium_cover} alt="Cover of album {album.name}" loading="lazy" />
         <div class="image-tags">

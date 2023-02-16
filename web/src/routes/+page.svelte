@@ -34,7 +34,7 @@
         <div class="columns is-multiline is-mobile">
             {#each lastPlayedAlbums as album}
                 <div class="column is-half-mobile is-one-third-tablet is-one-quarter-desktop is-one-fifth-widescreen">
-                    <AlbumCard {album} {token} />
+                    <AlbumCard {album} {token} {authUser} />
                 </div>
             {/each}
         </div>
@@ -49,7 +49,7 @@
         </div>
 
         <h2 class="title is-4 mt-5">Last played tracks</h2>
-        <TracksTable {token} tracks={lastPlayedTracks.slice(0, 5)} />
+        <TracksTable {token} {authUser} tracks={lastPlayedTracks.slice(0, 5)} />
     {:else}
         <p>You haven't listened to any tracks yet, use the sidebar to find something you like</p>
     {/if}

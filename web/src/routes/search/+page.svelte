@@ -7,7 +7,7 @@
     import TracksTable from '../../components/tracks-table.svelte';
 
     export let data;
-    let { token, genres: allGenres, query } = data;
+    let { token, authUser, genres: allGenres, query } = data;
 
     // Lazy load all genres
     async function fetchGenresPage(page) {
@@ -137,7 +137,7 @@
 {#if hasResult}
     {#if tracks.length > 0}
         <h2 class="title is-5">Tracks</h2>
-        <TracksTable {token} {tracks} />
+        <TracksTable {token} {authUser} {tracks} />
     {/if}
 
     {#if artists.length > 0}
@@ -156,7 +156,7 @@
         <div class="columns is-multiline mb-5">
             {#each albums as album}
                 <div class="column is-half-mobile is-one-third-tablet is-one-quarter-desktop is-one-fifth-widescreen">
-                    <AlbumCard {album} {token} />
+                    <AlbumCard {album} {token} {authUser} />
                 </div>
             {/each}
         </div>

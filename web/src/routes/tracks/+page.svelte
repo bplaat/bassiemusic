@@ -3,7 +3,7 @@
     import TracksTable from '../../components/tracks-table.svelte';
 
     export let data;
-    let { token, tracks } = data;
+    let { token, authUser, tracks } = data;
 
     async function fetchPage(page) {
         const response = await fetch(
@@ -54,7 +54,7 @@
 
 <h2 class="title">Tracks</h2>
 {#if tracks.length > 0}
-    <TracksTable {token} {tracks} />
+    <TracksTable {token} {authUser} {tracks} />
 {:else}
     <p><i>You don't have added any tracks</i></p>
 {/if}

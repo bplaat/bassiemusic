@@ -5,6 +5,7 @@
     import { onMount } from 'svelte';
 
     export let token;
+    export let authUser;
     export let tracks;
     export let isAlbum = false;
     export let isMusicQueue = false;
@@ -21,11 +22,25 @@
     }
 
     function playTrack(track) {
-        $musicPlayer.playTracks(tracks.slice(), track);
+        if (authUser.allow_explicit) {
+            $musicPlayer.playTracks(tracks.slice(), track);
+        } else {
+            $musicPlayer.playTracks(
+                tracks.filter((otherTrack) => !otherTrack.explicit),
+                track
+            );
+        }
     }
 
     export function playFirstTrack() {
-        playTrack(tracks[0]);
+        if (authUser.allow_explicit) {
+            playTrack(tracks[0]);
+        } else {
+            const firstTrack = tracks.find((otherTrack) => !otherTrack.explicit);
+            if (firstTrack != null) {
+                playTrack(firstTrack);
+            }
+        }
     }
 
     function likeTrack(track) {
@@ -84,6 +99,7 @@
             <tr
                 id={isAlbum ? `${track.disk}-${track.position}` : undefined}
                 class="track-container"
+                class:disabled={!authUser.allow_explicit && track.explicit}
                 on:dblclick|preventDefault={() => playTrack(track)}
                 class:has-background-light={$musicState.track != undefined && $musicState.track.id == track.id}
             >
