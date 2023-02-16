@@ -1,5 +1,5 @@
 <script>
-    import {formatBytes} from '../../../filters.js';
+    import { formatBytes } from '../../../filters.js';
 
     export let data;
     const { token, storage } = data;

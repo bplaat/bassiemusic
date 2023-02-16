@@ -1,6 +1,9 @@
 <script>
     import { AUTH_TOKEN_EXPIRES_TIMEOUT } from '../../../consts.js';
 
+    export let data;
+    const { continueUrl } = data;
+
     let logon = '';
     let password = '';
     let errors = {};
@@ -18,7 +21,11 @@
             document.cookie = `token=${token}; path=/; samesite=strict; expires=${new Date(
                 Date.now() + AUTH_TOKEN_EXPIRES_TIMEOUT
             ).toUTCString()}`;
-            window.location = '/';
+            if (continueUrl != undefined) {
+                window.location = continueUrl;
+            } else {
+                window.location = '/';
+            }
         } else {
             errors = {
                 logon: 'Wrong username, email address or password',

@@ -16,7 +16,8 @@
         return Object.values(uniques);
     }
 
-    $: lastPlayedAlbums = authUser != undefined ? uniques(lastPlayedTracks.map((track) => track.album)).slice(0, 5) : [];
+    $: lastPlayedAlbums =
+        authUser != undefined ? uniques(lastPlayedTracks.map((track) => track.album)).slice(0, 5) : [];
     $: lastPlayedArtists =
         authUser != undefined ? uniques(lastPlayedTracks.map((track) => track.artists).flat()).slice(0, 5) : [];
 </script>
@@ -33,7 +34,7 @@
         <div class="columns is-multiline is-mobile">
             {#each lastPlayedAlbums as album}
                 <div class="column is-half-mobile is-one-third-tablet is-one-quarter-desktop is-one-fifth-widescreen">
-                    <AlbumCard {album} {token}/>
+                    <AlbumCard {album} {token} />
                 </div>
             {/each}
         </div>
@@ -42,7 +43,7 @@
         <div class="columns is-multiline is-mobile">
             {#each lastPlayedArtists as artist}
                 <div class="column is-half-mobile is-one-third-tablet is-one-quarter-desktop is-one-fifth-widescreen">
-                    <ArtistCard {artist} {token}/>
+                    <ArtistCard {artist} {token} />
                 </div>
             {/each}
         </div>

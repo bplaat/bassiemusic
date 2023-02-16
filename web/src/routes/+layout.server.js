@@ -1,6 +1,6 @@
 import { redirect } from '@sveltejs/kit';
 
-export async function load({ request, cookies, fetch }) {
+export async function load({ url, fetch, cookies, request }) {
     // When a token exist validate token
     if (cookies.get('token') != null) {
         const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/validate`, {
@@ -12,7 +12,12 @@ export async function load({ request, cookies, fetch }) {
             cookies.delete('token', {
                 path: '/',
             });
-            throw redirect(307, '/auth/login');
+            throw redirect(
+                307,
+                `/auth/login?${new URLSearchParams({
+                    continue: url.href,
+                })}`
+            );
         }
         const {
             user: authUser,

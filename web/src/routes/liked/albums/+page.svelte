@@ -70,7 +70,7 @@
     <div class="columns is-multiline is-mobile">
         {#each albums as album}
             <div class="column is-half-mobile is-one-third-tablet is-one-quarter-desktop is-one-fifth-widescreen">
-                <AlbumCard {album} {token}/>
+                <AlbumCard {album} {token} />
             </div>
         {/each}
     </div>

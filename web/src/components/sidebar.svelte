@@ -13,8 +13,8 @@
         isOpen = false;
     }
 
-    function gotoLikedPage(){
-        goto('/liked/' + (localStorage.getItem('liked-tab') || 'tracks'))
+    function gotoLikedPage() {
+        goto('/liked/' + (localStorage.getItem('liked-tab') || 'tracks'));
     }
 
     async function logout() {
