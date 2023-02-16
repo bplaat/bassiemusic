@@ -9,8 +9,10 @@
 
     // Sidebar
     let app, sidebar;
-    afterNavigate(() => {
-        app.scrollTop = 0;
+    afterNavigate(({to}) => {
+        if (to.url == undefined || to.url.hash == '') {
+            app.scrollTop = 0;
+        }
         sidebar.close();
     });
 

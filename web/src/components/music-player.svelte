@@ -308,7 +308,7 @@
             </div>
             <div class="media-content" style="width: 10rem; min-width: 0;">
                 <p class="ellipsis">
-                    <a href="/albums/{track.album.id}" style="font-weight: 500;">{track.title}</a>
+                    <a href="/albums/{track.album.id}#{track.disk}-{track.position}" style="font-weight: 500;">{track.title}</a>
                 </p>
                 <p class="ellipsis">
                     {#each track.artists as artist}
