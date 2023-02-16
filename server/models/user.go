@@ -8,17 +8,18 @@ import (
 )
 
 type User struct {
-	ID        string    `column:"id,uuid" json:"id"`
-	Username  string    `column:"username,string" json:"username"`
-	Email     string    `column:"email,string" json:"email"`
-	Password  string    `column:"password,string" json:"-"`
-	AvatarID  *string   `column:"avatar,uuid" json:"-"`
-	Avatar    string    `json:"avatar,omitempty"`
-	RoleInt   UserRole  `column:"role,int" json:"-"`
-	Role      string    `json:"role"`
-	ThemeInt  UserTheme `column:"theme,int" json:"-"`
-	Theme     string    `json:"theme"`
-	CreatedAt string    `column:"created_at,timestamp" json:"created_at"`
+	ID            string    `column:"id,uuid" json:"id"`
+	Username      string    `column:"username,string" json:"username"`
+	Email         string    `column:"email,string" json:"email"`
+	Password      string    `column:"password,string" json:"-"`
+	AvatarID      *string   `column:"avatar,uuid" json:"-"`
+	Avatar        string    `json:"avatar,omitempty"`
+	AllowExplicit bool      `column:"allow_explicit,bool" json:"allow_explicit"`
+	RoleInt       UserRole  `column:"role,int" json:"-"`
+	Role          string    `json:"role"`
+	ThemeInt      UserTheme `column:"theme,int" json:"-"`
+	Theme         string    `json:"theme"`
+	CreatedAt     string    `column:"created_at,timestamp" json:"created_at"`
 }
 
 type UserRole int

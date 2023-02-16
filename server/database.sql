@@ -5,6 +5,7 @@ CREATE TABLE `users` (
     `email` VARCHAR(255) NOT NULL,
     `password` VARCHAR(255) NOT NULL,
     `avatar` BINARY(16) NULL,
+    `allow_explicit` TINYINT(1) UNSIGNED NOT NULL DEFAULT 1,
     `role` TINYINT UNSIGNED NOT NULL,
     `theme` TINYINT UNSIGNED NOT NULL,
     `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,

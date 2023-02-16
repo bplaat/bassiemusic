@@ -12,6 +12,11 @@ body {
     height: 100%;
 }
 
+.disabled {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
 a {
     color: currentColor;
 }

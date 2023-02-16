@@ -101,11 +101,12 @@ func UsersShow(c *fiber.Ctx) error {
 }
 
 type UsersEditParams struct {
-	Username string `form:"username" validate:"required,min=2"`
-	Email    string `form:"email" validate:"required,email"`
-	Password string `form:"password" validate:"omitempty,min=6"`
-	Role     string `form:"role" validate:"omitempty,required"`
-	Theme    string `form:"theme" validate:"required"`
+	Username      string `form:"username" validate:"required,min=2"`
+	Email         string `form:"email" validate:"required,email"`
+	Password      string `form:"password" validate:"omitempty,min=6"`
+	AllowExplicit string `form:"allow_explicit" validate:"omitempty,required"`
+	Role          string `form:"role" validate:"omitempty,required"`
+	Theme         string `form:"theme" validate:"required"`
 }
 
 func UsersEdit(c *fiber.Ctx) error {
@@ -147,6 +148,12 @@ func UsersEdit(c *fiber.Ctx) error {
 		return fiber.ErrBadRequest
 	}
 
+	// Validate allow_explicit is correct
+	if params.AllowExplicit != "" && params.AllowExplicit != "true" && params.AllowExplicit != "false" {
+		log.Println("allow_explicit not valid")
+		return fiber.ErrBadRequest
+	}
+
 	// Validate role is correct
 	if params.Role != "" && params.Role != "normal" && params.Role != "admin" {
 		log.Println("role not valid")
@@ -160,6 +167,14 @@ func UsersEdit(c *fiber.Ctx) error {
 	}
 
 	// Update user
+	var userAllowExplicit bool
+	if params.AllowExplicit == "true" {
+		userAllowExplicit = true
+	}
+	if params.AllowExplicit == "false" {
+		userAllowExplicit = false
+	}
+
 	var userRole models.UserRole
 	if params.Role == "normal" {
 		userRole = models.UserRoleNormal
@@ -180,14 +195,15 @@ func UsersEdit(c *fiber.Ctx) error {
 	}
 
 	updates := database.Map{
-		"username": params.Username,
-		"email":    params.Email,
-		"theme":    userTheme,
+		"username":       params.Username,
+		"email":          params.Email,
+		"allow_explicit": userAllowExplicit,
+		"theme":          userTheme,
 	}
 	if params.Password != "" {
 		updates["password"] = utils.HashPassword(params.Password)
 	}
-	if params.Role != "" {
+	if authUser.Role == "admin" && params.Role != "" {
 		updates["role"] = userRole
 	}
 	models.UserModel().Where("id", user.ID).Update(updates)
