@@ -66,6 +66,15 @@
     class:is-playing={lastTrack != undefined}
     class:is-resizing={resizing}
 >
+
+    {#if agent.os == 'Windows' && agent.name == 'BassieMusic App'}
+        <div style="position: fixed; top: 0; right: 0;">
+            <button on:click={() => window.chrome.webview.postMessage('minimize')}>_</button>
+            <button on:click={() => window.chrome.webview.postMessage('maximize')}>M</button>
+            <button on:click={() => window.chrome.webview.postMessage('close')}>X</button>
+        </div>
+    {/if}
+
     <nav class="navbar has-background-white-bis is-fixed-top is-hidden-desktop">
         <div class="navbar-brand">
             <!-- svelte-ignore a11y-invalid-attribute -->
