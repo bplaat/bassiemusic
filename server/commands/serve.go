@@ -98,6 +98,17 @@ func Serve() {
 
 	app.Use(middlewares.IsAdmin)
 
+	app.Get("/storage_size", func(c *fiber.Ctx) error {
+		storageSize, err := utils.DirSize("storage/")
+		if err != nil {
+			log.Fatalln(err)
+		}
+		return c.JSON(fiber.Map{
+			"used": storageSize,
+			"max":  utils.ParseBytes(os.Getenv("STORAGE_MAX_SIZE")),
+		})
+	})
+
 	app.Get("/download/artist", controllers.DownloadArtist)
 	app.Get("/download/album", controllers.DownloadAlbum)
 

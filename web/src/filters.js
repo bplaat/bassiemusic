@@ -8,3 +8,11 @@ export function formatDuration(totalSeconds) {
     }
     return minutes + ':' + (seconds < 10 ? '0' + seconds : seconds);
 }
+
+export function formatBytes(bytes) {
+    if (bytes > 1e12) return `${(bytes / 1e12).toFixed(2)} TB`;
+    if (bytes > 1e9) return `${(bytes / 1e9).toFixed(2)} GB`;
+    if (bytes > 1e6) return `${(bytes / 1e6).toFixed(2)} MB`;
+    if (bytes > 1e3) return `${Math.ceil(bytes / 1e3)} KB`;
+    return `${bytes} B`;
+}

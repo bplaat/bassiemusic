@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"log"
 	"strconv"
 	"strings"
 
@@ -37,4 +38,43 @@ func ParseIndexVars(c *fiber.Ctx) (string, int, int) {
 	}
 
 	return query, page, limit
+}
+
+func ParseBytes(bytes string) int64 {
+	if strings.HasSuffix(bytes, "KB") {
+		value, err := strconv.ParseInt(bytes[:len(bytes)-2], 10, 64)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		return value * 1000
+	}
+	if strings.HasSuffix(bytes, "MB") {
+		value, err := strconv.ParseInt(bytes[:len(bytes)-2], 10, 64)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		return value * 1000000
+
+	}
+	if strings.HasSuffix(bytes, "GB") {
+		value, err := strconv.ParseInt(bytes[:len(bytes)-2], 10, 64)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		return value * 1000000000
+
+	}
+	if strings.HasSuffix(bytes, "TB") {
+		value, err := strconv.ParseInt(bytes[:len(bytes)-2], 10, 64)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		return value * 1000000000000
+	}
+	// Bytes
+	value, err := strconv.ParseInt(bytes, 10, 64)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	return value
 }

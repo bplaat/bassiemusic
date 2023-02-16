@@ -1,6 +1,8 @@
 <script>
+    import {formatBytes} from '../../../filters.js';
+
     export let data;
-    let { token } = data;
+    const { token, storage } = data;
 
     let query = '';
     let results = false;
@@ -66,6 +68,17 @@
 </svelte:head>
 
 <h1 class="title">Admin Downloader</h1>
+
+<div class="box">
+    <h2 class="title is-4">Storage folder size</h2>
+    <progress class="progress is-link" value={storage.used} max={storage.max}>
+        {((storage.used / storage.max) * 100).toFixed(2)}%
+    </progress>
+    <p>
+        <span class="mr-3">Used: {formatBytes(storage.used)}</span>
+        <span>Max: {formatBytes(storage.max)}</span>
+    </p>
+</div>
 
 <div class="box">
     <h2 class="title is-4">Search and download albums and artists</h2>
