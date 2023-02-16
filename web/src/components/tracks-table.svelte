@@ -1,6 +1,8 @@
 <script>
+    import { page } from '$app/stores';
     import { musicPlayer, musicState } from '../stores.js';
     import { formatDuration } from '../filters.js';
+    import { onMount } from 'svelte';
 
     export let token;
     export let tracks;
@@ -8,6 +10,15 @@
     export let isMusicQueue = false;
 
     $: isMultiDisk = tracks.find((track) => track.disk != 1) != null;
+
+    if (isAlbum) {
+        onMount(() => {
+            const trackRow = document.getElementById($page.url.hash.substring(1));
+            if (trackRow != null) {
+                document.querySelector('.app').scrollTop = trackRow.offsetTop;
+            }
+        });
+    }
 
     function playTrack(track) {
         $musicPlayer.playTracks(tracks.slice(), track);
@@ -71,6 +82,7 @@
             {/if}
 
             <tr
+                id={isAlbum ? `${track.disk}-${track.position}` : undefined}
                 class="track-container"
                 on:dblclick|preventDefault={() => playTrack(track)}
                 class:has-background-light={$musicState.track != undefined && $musicState.track.id == track.id}
@@ -96,7 +108,7 @@
                             <!-- svelte-ignore a11y-invalid-attribute -->
                             <a href="#" on:click|preventDefault={playTrack(track)}>{track.title}</a>
                         {:else}
-                            <a href="/albums/{track.album.id}">{track.title}</a>
+                            <a href="/albums/{track.album.id}#{track.disk}-{track.position}">{track.title}</a>
                         {/if}
                     </p>
                     <p class="ellipsis">
