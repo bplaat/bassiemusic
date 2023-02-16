@@ -7,5 +7,5 @@
 "about_alert_text" = "Versie: %@\nGemaakt door PlaatSoft\nCopyright © 2022 - 2023 PlaatSoft";
 
 "update_alert_title" = "Nieuwe update is beschikbaar";
-"update_alert_text" = "Je gebruikt een verouderde versie van de BassieMusic macOS App.\nDownload en installeer de nieuwste versie.";
+"update_alert_text" = "Je gebruikt een verouderde versie van de BassieMusic macOS App. Download en installeer de nieuwste versie.";
 "update_alert_button" = "Download laatste versie";

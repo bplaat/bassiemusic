@@ -49,6 +49,20 @@ func Serve() {
 		}))
 	}
 
+	// Apps
+	app.Get("/apps/macos/version", func(c *fiber.Ctx) error {
+		return c.SendString("0.1.0")
+	})
+	app.Get("/apps/macos/download", func(c *fiber.Ctx) error {
+		return c.Redirect("https://github.com/bplaat/bassiemusic/releases")
+	})
+	app.Get("/apps/windows/version", func(c *fiber.Ctx) error {
+		return c.SendString("0.1.0.0")
+	})
+	app.Get("/apps/windows/download", func(c *fiber.Ctx) error {
+		return c.Redirect("https://github.com/bplaat/bassiemusic/releases")
+	})
+
 	// Websocket
 	app.Get("/ws", controllers.Websocket)
 

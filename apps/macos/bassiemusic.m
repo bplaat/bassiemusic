@@ -6,6 +6,12 @@
 @interface WindowDragger : NSView
 @end
 
+NSApplication *application;
+NSWindow *window;
+WKWebView *webview;
+NSString *appVersion;
+WindowDragger *dragger;
+
 @implementation WindowDragger
 - (void)mouseUp:(NSEvent *)event {
     if ([event clickCount] == 2) {
@@ -21,12 +27,6 @@
     [window performWindowDragWithEvent:event];
 }
 @end
-
-NSApplication *application;
-NSWindow *window;
-WKWebView *webview;
-NSString *appVersion;
-WindowDragger *dragger;
 
 @interface WindowDelegate : NSObject <NSWindowDelegate>
 @end
@@ -63,7 +63,7 @@ WindowDragger *dragger;
 void checkForUpdates(void) {
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^(void) {
         NSURL *url = [NSURL URLWithString:@"https://bassiemusic-api.plaatsoft.nl/apps/macos/version"];
-        NSString *latestVersion = [NSString stringWithContentsOfURL:url];
+        NSString *latestVersion = [NSString stringWithContentsOfURL:url encoding:NSUTF8StringEncoding error:NULL];
         dispatch_async(dispatch_get_main_queue(), ^(void) {
             if (![appVersion isEqualToString:latestVersion]) {
                 NSAlert *alert = [[NSAlert alloc] init];
@@ -125,7 +125,7 @@ void checkForUpdates(void) {
     [window.contentView addSubview:webview];
     [webview setValue:@NO forKey:@"drawsBackground"];
     webview.customUserAgent = [[NSString alloc] initWithFormat:@"BassieMusic macOS App v%@", appVersion];
-    webview.uiDelegate = [[WebkitUIDelegate alloc] init];
+    webview.UIDelegate = [[WebkitUIDelegate alloc] init];
     [webview loadRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:LocalizedString(@"webview_url")]]];
 
     // Create window dragger
@@ -142,8 +142,6 @@ void checkForUpdates(void) {
 - (BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication *)sender {
     return YES;
 }
-
-// - (void)applicationWillTerminate:(NSNotification *)aNotification {}
 
 - (void)openAboutAlert:(NSNotification *)aNotification {
     NSAlert *alert = [[NSAlert alloc] init];
