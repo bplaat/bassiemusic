@@ -7,8 +7,12 @@ class HomeLikedTab extends StatefulWidget {
   State<HomeLikedTab> createState() => _HomeLikedTabState();
 }
 
-class _HomeLikedTabState extends State<HomeLikedTab> with SingleTickerProviderStateMixin {
+class _HomeLikedTabState extends State<HomeLikedTab>
+    with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin<HomeLikedTab> {
   late TabController _tabController;
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
@@ -21,7 +25,6 @@ class _HomeLikedTabState extends State<HomeLikedTab> with SingleTickerProviderSt
     _tabController.dispose();
     super.dispose();
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -41,6 +44,11 @@ class _HomeLikedTabState extends State<HomeLikedTab> with SingleTickerProviderSt
               text: "Tracks",
             ),
           ],
-        )), body: Center(child: Text('Liked')));
+        )),
+        body: TabBarView(controller: _tabController, children: [
+          Center(child: Text('Liked Artists')),
+          Center(child: Text('Liked Albums')),
+          Center(child: Text('Liked Tracks'))
+        ]));
   }
 }

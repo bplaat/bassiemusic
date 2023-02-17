@@ -1,4 +1,4 @@
-class Artist {
+class Genre {
   final String id;
   final String name;
   final String smallImageUrl;
@@ -7,7 +7,7 @@ class Artist {
   final bool? liked;
   final DateTime createdAt;
 
-  Artist({
+  Genre({
     required this.id,
     required this.name,
     required this.smallImageUrl,
@@ -17,8 +17,8 @@ class Artist {
     required this.createdAt,
   });
 
-  factory Artist.fromJson(Map<String, dynamic> json) {
-    return Artist(
+  factory Genre.fromJson(Map<String, dynamic> json) {
+    return Genre(
         id: json['id'],
         name: json['name'],
         smallImageUrl: json['small_image'],
