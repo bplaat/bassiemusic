@@ -210,7 +210,7 @@
 
     <div class="columns is-multiline">
         {#each sessions as session}
-            {#if new Date(session.expires_at).getTime() >= Date.now()}
+            {#if new Date(session.expires_at).getTime() > Date.now()}
                 <div class="column is-half">
                     <div class="box content">
                         <h3 class="title is-4">
