@@ -1,0 +1,238 @@
+openapi: 3.0.0
+info:
+  version: 0.1.0
+  title: BassieMusic API
+  description: An online music streaming platform with music download capabilities
+
+servers:
+  - url: 'https://bassiemusic-api.plaatsoft.nl'
+  - url: 'http://localhost:8080'
+
+components:
+  securitySchemes:
+    TokenAuth:
+      type: http
+      scheme: bearer
+
+  parameters:
+    ArtistID:
+      name: id
+      in: path
+      description: Artist ID
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    AlbumID:
+      name: id
+      in: path
+      description: Album ID
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    GenreID:
+      name: id
+      in: path
+      description: Genre ID
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    TrackID:
+      name: id
+      in: path
+      description: Track ID
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    UserID:
+      name: id
+      in: path
+      description: User ID
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    SessionID:
+      name: id
+      in: path
+      description: Session ID
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+paths:
+  # Utils
+  /:
+    get:
+      tags: [Utils]
+      description: Get some information about this REST API
+      responses:
+        '200':
+          description: Name and version of this REST API
+  /ws:
+    get:
+      tags: [Utils]
+      description: Use a HTTP upgrade to connect to the websocket server
+      responses:
+        '101':
+          description: Switch to the websocket protocol
+  /agent:
+    get:
+      tags: [Utils]
+      description: Get information about your used user agent
+      responses:
+        '200':
+          description: Information about your user agent
+
+  # Apps
+  /apps/macos/version:
+    get:
+      tags: [Apps]
+      description: Get latest BassieMusic macOS app version
+      responses:
+        '200':
+          description: Latest BassieMusic macOS app version
+  /apps/macos/download:
+    get:
+      tags: [Apps]
+      description: Redirect to the latest BassieMusic macOS app download file
+      responses:
+        '301':
+          description:  Redirect to the latest BassieMusic macOS app download file
+
+  /apps/windows/version:
+    get:
+      tags: [Apps]
+      description: Get latest BassieMusic Windows app version
+      responses:
+        '200':
+          description: Latest BassieMusic Windows app version
+  /apps/windows/download:
+    get:
+      tags: [Apps]
+      description: Redirect to the latest BassieMusic Windows app download file
+      responses:
+        '301':
+          description:  Redirect to the latest BassieMusic Windows app download file
+
+  # Auth
+  /auth/login:
+    post:
+      tags: [Auth]
+      description: Login with user credentials
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                logon:
+                  type: string
+                password:
+                  type: string
+              required:
+                - logon
+                - password
+      responses:
+        '200':
+          description: Successfull response
+        '400':
+          description: Bad Request
+  /auth/validate:
+    get:
+      tags: [Auth]
+      description: Validate your auth token
+      security:
+        - TokenAuth: []
+      responses:
+        '200':
+          description: Successfull response
+        '401':
+          description: Authorization error
+  /auth/logout:
+    get:
+      tags: [Auth]
+      description: Logout your auth token
+      security:
+        - TokenAuth: []
+      responses:
+        '200':
+          description: Successfull response
+        '401':
+          description: Authorization error
+
+  # Search
+  # TODO
+
+  # Artists
+  # TODO
+
+  # Albums
+  # TODO
+
+  # Genres
+  # TODO
+
+  # Tracks
+  # TODO
+
+  # Users
+  # TODO
+
+  # Sessions
+  /sessions:
+    get:
+      tags: [Sessions]
+      description: Get a list of all sessions
+      security:
+        - TokenAuth: []
+      responses:
+        '200':
+          description: Successfull response
+        '400':
+          description: Bad Request
+        '401':
+          description: Authorization error
+  /sessions/{id}:
+    get:
+      tags: [Sessions]
+      description: Get a session
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SessionID'
+      responses:
+        '200':
+          description: Successfull response
+        '401':
+          description: Authorization error
+        '404':
+          description: Session not found
+  /sessions/{id}/revoke:
+    get:
+      tags: [Sessions]
+      description: Revoke a session
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SessionID'
+      responses:
+        '200':
+          description: Successfull response
+        '401':
+          description: Authorization error
+        '404':
+          description: Session not found
+
+  # Download
+  # TODO
