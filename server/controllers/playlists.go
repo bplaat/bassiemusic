@@ -16,7 +16,7 @@ func PlaylistsIndex(c *fiber.Ctx) error {
 	if authUser.Role == "admin" {
 		return c.JSON(models.PlaylistModel(c).With("like", "user").WhereRaw("`name` LIKE ?", "%"+query+"%").OrderByRaw("LOWER(`name`)").Paginate(page, limit))
 	} else {
-		return c.JSON(models.PlaylistModel(c).With("like", "user").Where("public", false).WhereRaw("`name` LIKE ?", "%"+query+"%").OrderByRaw("LOWER(`name`)").Paginate(page, limit))
+		return c.JSON(models.PlaylistModel(c).With("like", "user").Where("public", true).WhereRaw("`name` LIKE ?", "%"+query+"%").OrderByRaw("LOWER(`name`)").Paginate(page, limit))
 	}
 }
 
