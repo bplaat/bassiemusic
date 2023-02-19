@@ -117,7 +117,7 @@ func AuthValidate(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{
 			"success":             true,
 			"user":                authUser,
-			"session":             session,
+			"session_id":          session.ID,
 			"agent":               agent,
 			"last_track":          models.TrackModel(c).With("like", "artists", "album").Find(lastTackPlay.TrackID),
 			"last_track_position": lastTackPlay.Position,
@@ -126,10 +126,10 @@ func AuthValidate(c *fiber.Ctx) error {
 
 	// Return response
 	return c.JSON(fiber.Map{
-		"success": true,
-		"user":    authUser,
-		"session": session,
-		"agent":   agent,
+		"success":     true,
+		"user":        authUser,
+		"session_id	": session.ID,
+		"agent":       agent,
 	})
 }
 
