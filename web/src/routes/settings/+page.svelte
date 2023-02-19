@@ -64,10 +64,22 @@
         }
     }
 
+    // Delete user
+    async function deleteUser() {
+        await fetch(`${import.meta.env.VITE_API_URL}/users/${authUser.id}/delete`, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+
+        document.cookie = `token=; expires=${new Date(0).toUTCString()}`;
+        window.location = '/auth/login';
+    }
+
     // Sessions management
     async function fetchSessionsPage(page) {
         const response = await fetch(
-            `${import.meta.env.VITE_API_URL}/sessions?${new URLSearchParams({
+            `${import.meta.env.VITE_API_URL}/users/${authUser.id}/sessions?${new URLSearchParams({
                 page,
             })}`,
             {
@@ -176,8 +188,8 @@
         </form>
     </div>
 
-    <!-- Change avatar -->
     <div class="column">
+        <!-- Change avatar -->
         <form on:submit|preventDefault={changeAvatar} class="box">
             <h3 class="title is-4">Change avatar</h3>
 
@@ -201,6 +213,17 @@
                 </div>
             </div>
         </form>
+
+        <!-- Change avatar -->
+        <div class="box">
+            <h3 class="title is-4">Delete account</h3>
+
+            <div class="buttons">
+                <button class="button is-danger" on:click|preventDefault={deleteUser}
+                    >Delete account (this can't be undone)</button
+                >
+            </div>
+        </div>
     </div>
 </div>
 

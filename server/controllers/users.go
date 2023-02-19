@@ -392,6 +392,12 @@ func UsersDelete(c *fiber.Ctx) error {
 		return fiber.ErrNotFound
 	}
 
+	// Check auth
+	authUser := c.Locals("authUser").(*models.User)
+	if authUser.Role != "admin" && authUser.ID != user.ID {
+		return fiber.ErrUnauthorized
+	}
+
 	// Delete user
 	models.UserModel().Where("id", user.ID).Delete()
 	return c.JSON(fiber.Map{"success": true})
