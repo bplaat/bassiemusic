@@ -100,6 +100,156 @@ func UsersShow(c *fiber.Ctx) error {
 	return c.JSON(user)
 }
 
+func UsersLikedArtists(c *fiber.Ctx) error {
+	query, page, limit := utils.ParseIndexVars(c)
+
+	// Check if user exists
+	user := models.UserModel().Find(c.Params("userID"))
+	if user == nil {
+		return fiber.ErrNotFound
+	}
+
+	// Check auth
+	authUser := c.Locals("authUser").(*models.User)
+	if authUser.Role != "admin" && authUser.ID != user.ID {
+		return fiber.ErrUnauthorized
+	}
+
+	// Get liked artists
+	likedArtists := models.ArtistModel(c).Join("INNER JOIN `artist_likes` ON `artists`.`id` = `artist_likes`.`artist_id`").
+		WhereRaw("`artist_likes`.`user_id` = UUID_TO_BIN(?)", authUser.ID).WhereRaw("`artists`.`name` LIKE ?", "%"+query+"%").
+		OrderByRaw("`artist_likes`.`created_at` DESC").Paginate(page, limit)
+	return c.JSON(likedArtists)
+}
+
+func UsersLikedAlbums(c *fiber.Ctx) error {
+	query, page, limit := utils.ParseIndexVars(c)
+
+	// Check if user exists
+	user := models.UserModel().Find(c.Params("userID"))
+	if user == nil {
+		return fiber.ErrNotFound
+	}
+
+	// Check auth
+	authUser := c.Locals("authUser").(*models.User)
+	if authUser.Role != "admin" && authUser.ID != user.ID {
+		return fiber.ErrUnauthorized
+	}
+
+	// Get liked albums
+	likedAlbums := models.AlbumModel(c).Join("INNER JOIN `album_likes` ON `albums`.`id` = `album_likes`.`album_id`").
+		With("artists", "genres").WhereRaw("`album_likes`.`user_id` = UUID_TO_BIN(?)", authUser.ID).
+		WhereRaw("`albums`.`title` LIKE ?", "%"+query+"%").OrderByRaw("`album_likes`.`created_at` DESC").Paginate(page, limit)
+	return c.JSON(likedAlbums)
+}
+
+func UsersLikedTracks(c *fiber.Ctx) error {
+	query, page, limit := utils.ParseIndexVars(c)
+
+	// Check if user exists
+	user := models.UserModel().Find(c.Params("userID"))
+	if user == nil {
+		return fiber.ErrNotFound
+	}
+
+	// Check auth
+	authUser := c.Locals("authUser").(*models.User)
+	if authUser.Role != "admin" && authUser.ID != user.ID {
+		return fiber.ErrUnauthorized
+	}
+
+	// Get liked tracks
+	likedTracks := models.TrackModel(c).Join("INNER JOIN `track_likes` ON `tracks`.`id` = `track_likes`.`track_id`").
+		With("like", "artists", "album").WhereRaw("`track_likes`.`user_id` = UUID_TO_BIN(?)", authUser.ID).
+		WhereRaw("`tracks`.`title` LIKE ?", "%"+query+"%").OrderByRaw("`track_likes`.`created_at` DESC").Paginate(page, limit)
+	return c.JSON(likedTracks)
+}
+
+func UsersLikedPlaylists(c *fiber.Ctx) error {
+	query, page, limit := utils.ParseIndexVars(c)
+
+	// Check if user exists
+	user := models.UserModel().Find(c.Params("userID"))
+	if user == nil {
+		return fiber.ErrNotFound
+	}
+
+	// Check auth
+	authUser := c.Locals("authUser").(*models.User)
+	if authUser.Role != "admin" && authUser.ID != user.ID {
+		return fiber.ErrUnauthorized
+	}
+
+	// Get liked playlists
+	likedPlaylists := models.PlaylistModel(c).Join("INNER JOIN `playlist_likes` ON `playlists`.`id` = `playlist_likes`.`playlist_id`").
+		With("like").WhereRaw("`playlist_likes`.`user_id` = UUID_TO_BIN(?)", authUser.ID).
+		WhereRaw("`playlists`.`name` LIKE ?", "%"+query+"%").OrderByRaw("`playlist_likes`.`created_at` DESC").Paginate(page, limit)
+	return c.JSON(likedPlaylists)
+}
+
+func UsersPlayedTracks(c *fiber.Ctx) error {
+	query, page, limit := utils.ParseIndexVars(c)
+
+	// Check if user exists
+	user := models.UserModel().Find(c.Params("userID"))
+	if user == nil {
+		return fiber.ErrNotFound
+	}
+
+	// Check auth
+	authUser := c.Locals("authUser").(*models.User)
+	if authUser.Role != "admin" && authUser.ID != user.ID {
+		return fiber.ErrUnauthorized
+	}
+
+	// Get played tracks
+	playedTracks := models.TrackModel(c).Join("INNER JOIN `track_plays` ON `tracks`.`id` = `track_plays`.`track_id`").
+		With("like", "artists", "album").WhereRaw("`track_plays`.`user_id` = UUID_TO_BIN(?)", authUser.ID).
+		WhereRaw("`tracks`.`title` LIKE ?", "%"+query+"%").OrderByRaw("`track_plays`.`updated_at` DESC").Paginate(page, limit)
+	return c.JSON(playedTracks)
+}
+
+func UsersSessions(c *fiber.Ctx) error {
+	_, page, limit := utils.ParseIndexVars(c)
+
+	// Check if user exists
+	user := models.UserModel().Find(c.Params("userID"))
+	if user == nil {
+		return fiber.ErrNotFound
+	}
+
+	// Check auth
+	authUser := c.Locals("authUser").(*models.User)
+	if authUser.Role != "admin" && authUser.ID != user.ID {
+		return fiber.ErrUnauthorized
+	}
+
+	// Get user sessions
+	userSessions := models.SessionModel().Where("user_id", user.ID).OrderByDesc("created_at").Paginate(page, limit)
+	return c.JSON(userSessions)
+}
+
+func UsersPlaylists(c *fiber.Ctx) error {
+	_, page, limit := utils.ParseIndexVars(c)
+
+	// Check if user exists
+	user := models.UserModel().Find(c.Params("userID"))
+	if user == nil {
+		return fiber.ErrNotFound
+	}
+
+	// Check auth
+	authUser := c.Locals("authUser").(*models.User)
+	if authUser.Role != "admin" && authUser.ID != user.ID {
+		return fiber.ErrUnauthorized
+	}
+
+	// Get user playlists
+	userPlaylists := models.PlaylistModel(c).With("like").Where("user_id", user.ID).OrderByRaw("LOWER(`name`)").Paginate(page, limit)
+	return c.JSON(userPlaylists)
+}
+
 type UsersEditParams struct {
 	Username      string `form:"username" validate:"required,min=2"`
 	Email         string `form:"email" validate:"required,email"`
@@ -167,14 +317,6 @@ func UsersEdit(c *fiber.Ctx) error {
 	}
 
 	// Update user
-	var userAllowExplicit bool
-	if params.AllowExplicit == "true" {
-		userAllowExplicit = true
-	}
-	if params.AllowExplicit == "false" {
-		userAllowExplicit = false
-	}
-
 	var userRole models.UserRole
 	if params.Role == "normal" {
 		userRole = models.UserRoleNormal
@@ -197,7 +339,7 @@ func UsersEdit(c *fiber.Ctx) error {
 	updates := database.Map{
 		"username":       params.Username,
 		"email":          params.Email,
-		"allow_explicit": userAllowExplicit,
+		"allow_explicit": params.AllowExplicit == "true",
 		"theme":          userTheme,
 	}
 	if params.Password != "" {
@@ -275,114 +417,6 @@ func UsersAvatarDelete(c *fiber.Ctx) error {
 		})
 	}
 	return c.JSON(fiber.Map{"success": true})
-}
-
-func UsersLikedArtists(c *fiber.Ctx) error {
-	query, page, limit := utils.ParseIndexVars(c)
-
-	// Check if user exists
-	user := models.UserModel().Find(c.Params("userID"))
-	if user == nil {
-		return fiber.ErrNotFound
-	}
-
-	// Check auth
-	authUser := c.Locals("authUser").(*models.User)
-	if authUser.Role != "admin" && authUser.ID != user.ID {
-		return fiber.ErrUnauthorized
-	}
-
-	// Get liked artists
-	likedArtists := models.ArtistModel(c).Join("INNER JOIN `artist_likes` ON `artists`.`id` = `artist_likes`.`artist_id`").
-		WhereRaw("`artist_likes`.`user_id` = UUID_TO_BIN(?)", authUser.ID).WhereRaw("`artists`.`name` LIKE ?", "%"+query+"%").
-		OrderByRaw("`artist_likes`.`created_at` DESC").Paginate(page, limit)
-	return c.JSON(likedArtists)
-}
-
-func UsersLikedAlbums(c *fiber.Ctx) error {
-	query, page, limit := utils.ParseIndexVars(c)
-
-	// Check if user exists
-	user := models.UserModel().Find(c.Params("userID"))
-	if user == nil {
-		return fiber.ErrNotFound
-	}
-
-	// Check auth
-	authUser := c.Locals("authUser").(*models.User)
-	if authUser.Role != "admin" && authUser.ID != user.ID {
-		return fiber.ErrUnauthorized
-	}
-
-	// Get liked albums
-	likedAlbums := models.AlbumModel(c).Join("INNER JOIN `album_likes` ON `albums`.`id` = `album_likes`.`album_id`").
-		With("artists", "genres").WhereRaw("`album_likes`.`user_id` = UUID_TO_BIN(?)", authUser.ID).
-		WhereRaw("`albums`.`title` LIKE ?", "%"+query+"%").OrderByRaw("`album_likes`.`created_at` DESC").Paginate(page, limit)
-	return c.JSON(likedAlbums)
-}
-
-func UsersLikedTracks(c *fiber.Ctx) error {
-	query, page, limit := utils.ParseIndexVars(c)
-
-	// Check if user exists
-	user := models.UserModel().Find(c.Params("userID"))
-	if user == nil {
-		return fiber.ErrNotFound
-	}
-
-	// Check auth
-	authUser := c.Locals("authUser").(*models.User)
-	if authUser.Role != "admin" && authUser.ID != user.ID {
-		return fiber.ErrUnauthorized
-	}
-
-	// Get liked tracks
-	likedTracks := models.TrackModel(c).Join("INNER JOIN `track_likes` ON `tracks`.`id` = `track_likes`.`track_id`").
-		With("like", "artists", "album").WhereRaw("`track_likes`.`user_id` = UUID_TO_BIN(?)", authUser.ID).
-		WhereRaw("`tracks`.`title` LIKE ?", "%"+query+"%").OrderByRaw("`track_likes`.`created_at` DESC").Paginate(page, limit)
-	return c.JSON(likedTracks)
-}
-
-func UsersPlayedTracks(c *fiber.Ctx) error {
-	query, page, limit := utils.ParseIndexVars(c)
-
-	// Check if user exists
-	user := models.UserModel().Find(c.Params("userID"))
-	if user == nil {
-		return fiber.ErrNotFound
-	}
-
-	// Check auth
-	authUser := c.Locals("authUser").(*models.User)
-	if authUser.Role != "admin" && authUser.ID != user.ID {
-		return fiber.ErrUnauthorized
-	}
-
-	// Get played tracks
-	playedTracks := models.TrackModel(c).Join("INNER JOIN `track_plays` ON `tracks`.`id` = `track_plays`.`track_id`").
-		With("like", "artists", "album").WhereRaw("`track_plays`.`user_id` = UUID_TO_BIN(?)", authUser.ID).
-		WhereRaw("`tracks`.`title` LIKE ?", "%"+query+"%").OrderByRaw("`track_plays`.`updated_at` DESC").Paginate(page, limit)
-	return c.JSON(playedTracks)
-}
-
-func UsersSessions(c *fiber.Ctx) error {
-	_, page, limit := utils.ParseIndexVars(c)
-
-	// Check if user exists
-	user := models.UserModel().Find(c.Params("userID"))
-	if user == nil {
-		return fiber.ErrNotFound
-	}
-
-	// Check auth
-	authUser := c.Locals("authUser").(*models.User)
-	if authUser.Role != "admin" && authUser.ID != user.ID {
-		return fiber.ErrUnauthorized
-	}
-
-	// Get user sessions
-	userSessions := models.SessionModel().Where("user_id", user.ID).OrderByDesc("created_at").Paginate(page, limit)
-	return c.JSON(userSessions)
 }
 
 func UsersDelete(c *fiber.Ctx) error {

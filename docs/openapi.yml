@@ -51,6 +51,15 @@ components:
         type: string
         format: uuid
 
+    PlaylistID:
+      name: id
+      in: path
+      description: Playlist ID
+      required: true
+      schema:
+        type: string
+        format: uuid
+
     UserID:
       name: id
       in: path
@@ -441,6 +450,135 @@ paths:
         "404":
           description: Track not found
 
+  # Playlists
+  /playlists:
+    get:
+      tags: [Playlists]
+      description: Get a list of playlists
+      security:
+        - TokenAuth: []
+      responses:
+        "200":
+          description: Successfull response
+        "401":
+          description: Authorization error
+    post:
+      tags: [Playlists]
+      description: Create a new playlist
+      security:
+        - TokenAuth: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                public:
+                  type: boolean
+              required:
+                - name
+                - public
+      responses:
+        "200":
+          description: Successfull response
+        "400":
+          description: Bad Request
+        "401":
+          description: Authorization error
+  /playlists/{id}:
+    get:
+      tags: [Playlists]
+      description: Get an playlist
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/PlaylistID"
+      responses:
+        "200":
+          description: Successfull response
+        "401":
+          description: Authorization error
+        "404":
+          description: Playlist not found
+    post:
+      tags: [Playlists]
+      description: Update an existing playlist
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/PlaylistID"
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                public:
+                  type: boolean
+              required:
+                - name
+                - public
+      responses:
+        "200":
+          description: Successfull response
+        "400":
+          description: Bad Request
+        "401":
+          description: Authorization error
+        "404":
+          description: Playlist not found
+  /playlists/{id}/like:
+    get:
+      tags: [Playlists]
+      description: Like an playlist
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/PlaylistID"
+      responses:
+        "200":
+          description: Successfull response
+        "401":
+          description: Authorization error
+        "404":
+          description: Playlist not found
+  /playlists/{id}/like/delete:
+    get:
+      tags: [Playlists]
+      description: Delete a liked to an playlist
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/PlaylistID"
+      responses:
+        "200":
+          description: Successfull response
+        "401":
+          description: Authorization error
+        "404":
+          description: Playlist not found
+  /playlists/{id}/delete:
+    get:
+      tags: [Playlists]
+      description: Delete playlist
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/PlaylistID"
+      responses:
+        "200":
+          description: Successfull response
+        "401":
+          description: Authorization error
+        "404":
+          description: Playlist not found
+
   # Users
   /users:
     get:
@@ -510,7 +648,7 @@ paths:
           description: User not found
     post:
       tags: [Users]
-      description: Update a existing user
+      description: Update an existing user
       security:
         - TokenAuth: []
       parameters:
@@ -589,6 +727,21 @@ paths:
           description: Authorization error
         "404":
           description: User not found
+  /users/{id}/liked_playlists:
+    get:
+      tags: [Users]
+      description: Get a list of liked playlists of user
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/UserID"
+      responses:
+        "200":
+          description: Successfull response
+        "401":
+          description: Authorization error
+        "404":
+          description: User not found
   /users/{id}/played_tracks:
     get:
       tags: [Users]
@@ -608,6 +761,21 @@ paths:
     get:
       tags: [Users]
       description: Get a list of sessions of user
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/UserID"
+      responses:
+        "200":
+          description: Successfull response
+        "401":
+          description: Authorization error
+        "404":
+          description: User not found
+  /users/{id}/playlists:
+    get:
+      tags: [Users]
+      description: Get a list of playlists of user
       security:
         - TokenAuth: []
       parameters:

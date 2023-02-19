@@ -189,6 +189,17 @@ CREATE TABLE `playlist_track` (
     FOREIGN KEY (`track_id`) REFERENCES `tracks`(`id`) ON DELETE CASCADE
 );
 
+CREATE TABLE `playlist_likes` (
+    `id` BINARY(16) NOT NULL,
+    `playlist_id` BINARY(16) NOT NULL,
+    `user_id` BINARY(16) NOT NULL,
+    `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    FOREIGN KEY (`playlist_id`) REFERENCES `playlists`(`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
+);
+
 -- Download tasks
 CREATE TABLE `download_tasks` (
     `id` BINARY(16) NOT NULL,
