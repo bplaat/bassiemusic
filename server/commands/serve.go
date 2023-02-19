@@ -105,6 +105,8 @@ func Serve() {
 	app.Post("/playlists", controllers.PlaylistsCreate)
 	app.Get("/playlists/:playlistID", controllers.PlaylistsShow)
 	app.Post("/playlists/:playlistID", controllers.PlaylistsEdit)
+	app.Post("/playlists/:playlistID/insert_track", controllers.PlaylistsInsertTrack)
+	app.Post("/playlists/:playlistID/remove_track", controllers.PlaylistsRemoveTrack)
 	app.Get("/playlists/:playlistID/like", controllers.PlaylistsLike)
 	app.Get("/playlists/:playlistID/like/delete", controllers.PlaylistsLikeDelete)
 	app.Get("/playlists/:playlistID/delete", controllers.PlaylistsDelete)

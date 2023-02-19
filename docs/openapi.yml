@@ -533,6 +533,66 @@ paths:
           description: Authorization error
         "404":
           description: Playlist not found
+  /playlists/{id}/insert_track:
+    post:
+      tags: [Playlists]
+      description: Insert track into playlist
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/PlaylistID"
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                track_id:
+                  type: string
+                  format: uuid
+                position:
+                  type: integer
+              required:
+                - track_id
+                - position
+      responses:
+        "200":
+          description: Successfull response
+        "400":
+          description: Bad Request
+        "401":
+          description: Authorization error
+        "404":
+          description: Playlist not found
+  /playlists/{id}/remove_track:
+    post:
+      tags: [Playlists]
+      description: Remove track from playlist
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/PlaylistID"
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                position:
+                  type: integer
+              required:
+                - position
+      responses:
+        "200":
+          description: Successfull response
+        "400":
+          description: Bad Request
+        "401":
+          description: Authorization error
+        "404":
+          description: Playlist not found
   /playlists/{id}/like:
     get:
       tags: [Playlists]

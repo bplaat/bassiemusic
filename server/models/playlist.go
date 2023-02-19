@@ -19,6 +19,7 @@ type Playlist struct {
 	Public    bool      `column:"public,bool" json:"public"`
 	Liked     *bool     `json:"liked,omitempty"`
 	CreatedAt time.Time `column:"created_at,timestamp" json:"created_at"`
+	User      *User     `json:"user,omitempty"`
 	Tracks    []Track   `json:"tracks,omitempty"`
 }
 
@@ -37,6 +38,9 @@ func PlaylistModel(c *fiber.Ctx) *database.Model[Playlist] {
 					liked := PlaylistLikeModel().Where("playlist_id", playlist.ID).Where("user_id", authUser.ID).First() != nil
 					playlist.Liked = &liked
 				}
+			},
+			"user": func(playlist *Playlist) {
+				playlist.User = UserModel().Find(playlist.UserID)
 			},
 			"tracks": func(playlist *Playlist) {
 				playlist.Tracks = TrackModel(c).Join("INNER JOIN `playlist_track` ON `tracks`.`id` = `playlist_track`.`track_id`").
