@@ -110,6 +110,7 @@ func Serve() {
 	app.Post("/users/:userID", controllers.UsersEdit)
 	app.Post("/users/:userID/avatar", controllers.UsersAvatar)
 	app.Get("/users/:userID/avatar/delete", controllers.UsersAvatarDelete)
+	app.Get("/users/:userID/delete", controllers.UsersDelete)
 
 	app.Use(middlewares.IsAdmin)
 
@@ -129,7 +130,6 @@ func Serve() {
 
 	app.Get("/users", controllers.UsersIndex)
 	app.Post("/users", controllers.UsersCreate)
-	app.Get("/users/:userID/delete", controllers.UsersDelete)
 
 	app.Get("/sessions", controllers.SessionsIndex)
 	app.Get("/sessions/:sessionID", controllers.SessionsShow)
