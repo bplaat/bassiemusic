@@ -1,6 +1,6 @@
 <script>
     export let data;
-    let { token, authUser, currentSession, sessions } = data;
+    let { token, authUser, currentSessionId, sessions } = data;
 
     // Change details
     let newPassword = '';
@@ -93,7 +93,7 @@
                 Authorization: `Bearer ${token}`,
             },
         });
-        if (currentSession.id == session.id) {
+        if (currentSessionId == session.id) {
             document.cookie = `token=; expires=${new Date(0).toUTCString()}`;
             window.location = '/auth/login';
         } else {
@@ -215,7 +215,7 @@
                     <div class="box content">
                         <h3 class="title is-4">
                             {session.client_name} on {session.client_os}
-                            {#if currentSession.id == session.id}
+                            {#if currentSessionId == session.id}
                                 <span class="tag is-link is-pulled-right">CURRENT</span>
                             {/if}
                         </h3>

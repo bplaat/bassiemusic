@@ -6,6 +6,7 @@
     export let data;
     let { token, authUser, genre } = data;
 
+    // Reresh genre on page change to same page
     let unsubscribe;
     onMount(() => {
         unsubscribe = page.subscribe(async (page) => {
@@ -20,8 +21,53 @@
         });
     });
     onDestroy(() => {
-        unsubscribe();
+        if (unsubscribe) {
+            unsubscribe();
+        }
     });
+
+    // Genre albums
+    async function fetchPage(page) {
+        const response = await fetch(
+            `${import.meta.env.VITE_API_URL}/genres/${genre.id}/albums?${new URLSearchParams({
+                page,
+            })}`,
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            }
+        );
+        const { data: newAlbums } = await response.json();
+        genre.albums.push(...newAlbums);
+        genre = genre;
+    }
+
+    let bottom;
+    if (genre.albums.length != data.albumsTotal) {
+        let observer;
+        onMount(() => {
+            let page = 2;
+            observer = new IntersectionObserver(
+                (entries, observer) => {
+                    for (const entry of entries) {
+                        if (genre.albums.length >= data.albumsTotal) {
+                            observer.unobserve(entry.target);
+                        } else {
+                            fetchPage(page++);
+                        }
+                    }
+                },
+                {
+                    root: document.body,
+                }
+            );
+            observer.observe(bottom);
+        });
+        onDestroy(() => {
+            if (observer) observer.unobserve(bottom);
+        });
+    }
 </script>
 
 <svelte:head>
@@ -60,3 +106,5 @@
 {:else}
     <p><i>This genre has no albums</i></p>
 {/if}
+
+<div bind:this={bottom} />
