@@ -137,7 +137,7 @@
 {#if hasResult}
     {#if tracks.length > 0}
         <h2 class="title is-5">Tracks</h2>
-        <TracksTable {token} {authUser} {tracks} />
+        <TracksTable {token} {authUser} tracks={tracks.slice(5)} />
     {/if}
 
     {#if artists.length > 0}
