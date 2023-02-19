@@ -1,0 +1,757 @@
+openapi: 3.0.0
+info:
+  version: 0.1.0
+  title: BassieMusic API
+  description: An online music streaming platform with music download capabilities
+
+servers:
+  - url: "https://bassiemusic-api.plaatsoft.nl"
+  - url: "http://localhost:8080"
+
+components:
+  securitySchemes:
+    TokenAuth:
+      type: http
+      scheme: bearer
+
+  parameters:
+    ArtistID:
+      name: id
+      in: path
+      description: Artist ID
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    AlbumID:
+      name: id
+      in: path
+      description: Album ID
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    GenreID:
+      name: id
+      in: path
+      description: Genre ID
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    TrackID:
+      name: id
+      in: path
+      description: Track ID
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    UserID:
+      name: id
+      in: path
+      description: User ID
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    SessionID:
+      name: id
+      in: path
+      description: Session ID
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+paths:
+  # BassieMusic
+  /:
+    get:
+      tags: [BassieMusic]
+      description: Get some information about this REST API
+      responses:
+        "200":
+          description: Name and version of this REST API
+  /ws:
+    get:
+      tags: [BassieMusic]
+      description: Use a HTTP upgrade to connect to the websocket server
+      responses:
+        "101":
+          description: Switch to the websocket protocol
+  /agent:
+    get:
+      tags: [BassieMusic]
+      description: Get information about your used user agent
+      responses:
+        "200":
+          description: Information about your user agent
+
+  # Apps
+  /apps/macos/version:
+    get:
+      tags: [Apps]
+      description: Get latest BassieMusic macOS app version
+      responses:
+        "200":
+          description: Latest BassieMusic macOS app version
+  /apps/macos/download:
+    get:
+      tags: [Apps]
+      description: Redirect to the latest BassieMusic macOS app download file
+      responses:
+        "301":
+          description: Redirect to the latest BassieMusic macOS app download file
+
+  /apps/windows/version:
+    get:
+      tags: [Apps]
+      description: Get latest BassieMusic Windows app version
+      responses:
+        "200":
+          description: Latest BassieMusic Windows app version
+  /apps/windows/download:
+    get:
+      tags: [Apps]
+      description: Redirect to the latest BassieMusic Windows app download file
+      responses:
+        "301":
+          description: Redirect to the latest BassieMusic Windows app download file
+
+  # Auth
+  /auth/login:
+    post:
+      tags: [Auth]
+      description: Login with user credentials
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                logon:
+                  type: string
+                password:
+                  type: string
+              required:
+                - logon
+                - password
+      responses:
+        "200":
+          description: Successfull response
+        "400":
+          description: Bad Request
+  /auth/validate:
+    get:
+      tags: [Auth]
+      description: Validate your auth token
+      security:
+        - TokenAuth: []
+      responses:
+        "200":
+          description: Successfull response
+        "401":
+          description: Authorization error
+  /auth/logout:
+    get:
+      tags: [Auth]
+      description: Logout your auth token
+      security:
+        - TokenAuth: []
+      responses:
+        "200":
+          description: Successfull response
+        "401":
+          description: Authorization error
+
+  # Search
+  /search:
+    get:
+      tags: [Search]
+      description: Search all items with query
+      security:
+        - TokenAuth: []
+      parameters:
+        - name: q
+          in: query
+          description: Query to search by
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successfull response
+        "401":
+          description: Authorization error
+  /deezer_search:
+    get:
+      tags: [Search]
+      description: Search Deezer API items that wont exists with query
+      security:
+        - TokenAuth: []
+      parameters:
+        - name: q
+          in: query
+          description: Query to search by
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successfull response
+        "401":
+          description: Authorization error
+
+  # Artists
+  /artists:
+    get:
+      tags: [Artists]
+      description: Get a list of artists
+      security:
+        - TokenAuth: []
+      responses:
+        "200":
+          description: Successfull response
+        "401":
+          description: Authorization error
+  /artists/{id}:
+    get:
+      tags: [Artists]
+      description: Get an artist
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ArtistID"
+      responses:
+        "200":
+          description: Successfull response
+        "401":
+          description: Authorization error
+        "404":
+          description: Artist not found
+  /artists/{id}/like:
+    get:
+      tags: [Artists]
+      description: Like an artist
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ArtistID"
+      responses:
+        "200":
+          description: Successfull response
+        "401":
+          description: Authorization error
+        "404":
+          description: Artist not found
+  /artists/{id}/like/delete:
+    get:
+      tags: [Artists]
+      description: Delete a liked to an artist
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ArtistID"
+      responses:
+        "200":
+          description: Successfull response
+        "401":
+          description: Authorization error
+        "404":
+          description: Artist not found
+
+  # Albums
+  /albums:
+    get:
+      tags: [Albums]
+      description: Get a list of albums
+      security:
+        - TokenAuth: []
+      responses:
+        "200":
+          description: Successfull response
+        "401":
+          description: Authorization error
+  /albums/{id}:
+    get:
+      tags: [Albums]
+      description: Get an album
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/AlbumID"
+      responses:
+        "200":
+          description: Successfull response
+        "401":
+          description: Authorization error
+        "404":
+          description: Album not found
+  /albums/{id}/like:
+    get:
+      tags: [Albums]
+      description: Like an album
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/AlbumID"
+      responses:
+        "200":
+          description: Successfull response
+        "401":
+          description: Authorization error
+        "404":
+          description: Album not found
+  /albums/{id}/like/delete:
+    get:
+      tags: [Albums]
+      description: Delete a liked to an album
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/AlbumID"
+      responses:
+        "200":
+          description: Successfull response
+        "401":
+          description: Authorization error
+        "404":
+          description: Album not found
+
+  # Genres
+  /genres:
+    get:
+      tags: [Genres]
+      description: Get a list of genres
+      security:
+        - TokenAuth: []
+      responses:
+        "200":
+          description: Successfull response
+        "401":
+          description: Authorization error
+  /genres/{id}:
+    get:
+      tags: [Genres]
+      description: Get a genre
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/GenreID"
+      responses:
+        "200":
+          description: Successfull response
+        "401":
+          description: Authorization error
+        "404":
+          description: Genre not found
+  /genres/{id}/albums:
+    get:
+      tags: [Genres]
+      description: Get a list of albums that have genre
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/GenreID"
+      responses:
+        "200":
+          description: Successfull response
+        "401":
+          description: Authorization error
+        "404":
+          description: Genre not found
+
+  # Tracks
+  /tracks:
+    get:
+      tags: [Tracks]
+      description: Get a list of tracks
+      security:
+        - TokenAuth: []
+      responses:
+        "200":
+          description: Successfull response
+        "401":
+          description: Authorization error
+  /tracks/{id}:
+    get:
+      tags: [Tracks]
+      description: Get a track
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/TrackID"
+      responses:
+        "200":
+          description: Successfull response
+        "401":
+          description: Authorization error
+        "404":
+          description: Track not found
+  /tracks/{id}/like:
+    get:
+      tags: [Tracks]
+      description: Like a track
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/TrackID"
+      responses:
+        "200":
+          description: Successfull response
+        "401":
+          description: Authorization error
+        "404":
+          description: Track not found
+  /tracks/{id}/like/delete:
+    get:
+      tags: [Tracks]
+      description: Delete a liked to a track
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/TrackID"
+      responses:
+        "200":
+          description: Successfull response
+        "401":
+          description: Authorization error
+        "404":
+          description: Track not found
+  /tracks/{id}/play:
+    get:
+      tags: [Tracks]
+      description: Play a track
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/TrackID"
+      responses:
+        "200":
+          description: Successfull response
+        "401":
+          description: Authorization error
+        "404":
+          description: Track not found
+
+  # Users
+  /users:
+    get:
+      tags: [Users]
+      description: Get a list of users
+      security:
+        - TokenAuth: []
+      responses:
+        "200":
+          description: Successfull response
+        "400":
+          description: Bad Request
+        "401":
+          description: Authorization error
+    post:
+      tags: [Users]
+      description: Create a new user
+      security:
+        - TokenAuth: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                role:
+                  type: string
+                  enum: [normal, admin]
+                theme:
+                  type: string
+                  enum: [system, light, dark]
+              required:
+                - username
+                - email
+                - password
+                - role
+                - theme
+      responses:
+        "200":
+          description: Successfull response
+        "400":
+          description: Bad Request
+        "401":
+          description: Authorization error
+  /users/{id}:
+    get:
+      tags: [Users]
+      description: Get an user
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/UserID"
+      responses:
+        "200":
+          description: Successfull response
+        "401":
+          description: Authorization error
+        "404":
+          description: User not found
+    post:
+      tags: [Users]
+      description: Update a existing user
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/UserID"
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                role:
+                  type: string
+                  enum: [normal, admin]
+                theme:
+                  type: string
+                  enum: [system, light, dark]
+      responses:
+        "200":
+          description: Successfull response
+        "400":
+          description: Bad Request
+        "401":
+          description: Authorization error
+        "404":
+          description: User not found
+  /users/{id}/liked_artists:
+    get:
+      tags: [Users]
+      description: Get a list of liked artists of user
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/UserID"
+      responses:
+        "200":
+          description: Successfull response
+        "401":
+          description: Authorization error
+        "404":
+          description: User not found
+  /users/{id}/liked_albums:
+    get:
+      tags: [Users]
+      description: Get a list of liked albums of user
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/UserID"
+      responses:
+        "200":
+          description: Successfull response
+        "401":
+          description: Authorization error
+        "404":
+          description: User not found
+  /users/{id}/liked_tracks:
+    get:
+      tags: [Users]
+      description: Get a list of liked tracks of user
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/UserID"
+      responses:
+        "200":
+          description: Successfull response
+        "401":
+          description: Authorization error
+        "404":
+          description: User not found
+  /users/{id}/played_tracks:
+    get:
+      tags: [Users]
+      description: Get a list of played tracks history of user
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/UserID"
+      responses:
+        "200":
+          description: Successfull response
+        "401":
+          description: Authorization error
+        "404":
+          description: User not found
+  /users/{id}/sessions:
+    get:
+      tags: [Users]
+      description: Get a list of sessions of user
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/UserID"
+      responses:
+        "200":
+          description: Successfull response
+        "401":
+          description: Authorization error
+        "404":
+          description: User not found
+  /users/{id}/avatar:
+    post:
+      tags: [Users]
+      description: Upload new user avatar
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/UserID"
+      responses:
+        "200":
+          description: Successfull response
+        "401":
+          description: Authorization error
+        "404":
+          description: User not found
+  /users/{id}/avatar/delete:
+    get:
+      tags: [Users]
+      description: Delete user avatar
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/UserID"
+      responses:
+        "200":
+          description: Successfull response
+        "401":
+          description: Authorization error
+        "404":
+          description: User not found
+  /users/{id}/delete:
+    get:
+      tags: [Users]
+      description: Delete user
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/UserID"
+      responses:
+        "200":
+          description: Successfull response
+        "401":
+          description: Authorization error
+        "404":
+          description: User not found
+
+  # Sessions
+  /sessions:
+    get:
+      tags: [Sessions]
+      description: Get a list of all sessions
+      security:
+        - TokenAuth: []
+      responses:
+        "200":
+          description: Successfull response
+        "400":
+          description: Bad Request
+        "401":
+          description: Authorization error
+  /sessions/{id}:
+    get:
+      tags: [Sessions]
+      description: Get a session
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/SessionID"
+      responses:
+        "200":
+          description: Successfull response
+        "401":
+          description: Authorization error
+        "404":
+          description: Session not found
+  /sessions/{id}/revoke:
+    get:
+      tags: [Sessions]
+      description: Revoke a session
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/SessionID"
+      responses:
+        "200":
+          description: Successfull response
+        "401":
+          description: Authorization error
+        "404":
+          description: Session not found
+
+  # Download
+  /download/artist:
+    get:
+      tags: [Downloader]
+      description: Add a queue item to download an Deezer artist
+      security:
+        - TokenAuth: []
+      parameters:
+        - name: deezer_id
+          in: query
+          description: Deezer Artist ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: singles
+          in: query
+          description: Download also singles
+          required: true
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: Successfull response
+        "401":
+          description: Authorization error
+  /download/album:
+    get:
+      tags: [Downloader]
+      description: Add a queue item to download an Deezer album
+      security:
+        - TokenAuth: []
+      parameters:
+        - name: deezer_id
+          in: query
+          description: Deezer Album ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Successfull response
+        "401":
+          description: Authorization error
