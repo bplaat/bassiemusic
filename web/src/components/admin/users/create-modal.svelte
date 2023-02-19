@@ -8,7 +8,7 @@
         email: '',
         password: '',
         role: 'normal',
-        theme: 'system',
+        theme: 'dark',
     };
 
     let isOpen = false;

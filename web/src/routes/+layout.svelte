@@ -9,7 +9,7 @@
 
     // Sidebar
     let app, sidebar;
-    afterNavigate(({to}) => {
+    afterNavigate(({ to }) => {
         if (to.url == undefined || to.url.hash == '') {
             app.scrollTop = 0;
         }
@@ -32,25 +32,37 @@
 <svelte:window on:contextmenu|preventDefault={() => {}} on:resize={windowResize} />
 
 <svelte:head>
-    {#if authUser == undefined || (authUser != undefined && authUser.theme == 'system')}
-        <link rel="stylesheet" href="/css/bulma-light.min.css" media="(prefers-color-scheme: light)" />
-        <link rel="stylesheet" href="/css/bulma-dark.min.css" media="(prefers-color-scheme: dark)" />
-    {/if}
-    {#if authUser != undefined && authUser.theme == 'light'}
-        <link rel="stylesheet" href="/css/bulma-light.min.css" />
-        <style>
-            ::-webkit-scrollbar-thumb {
-                background-color: rgba(0, 0, 0, 0.3) !important;
-            }
-        </style>
-    {/if}
-    {#if authUser != undefined && authUser.theme == 'dark'}
+    {#if authUser != undefined}
+        {#if authUser.theme == 'system'}
+            <link rel="stylesheet" href="/css/bulma-light.min.css" media="(prefers-color-scheme: light)" />
+            <link rel="stylesheet" href="/css/bulma-dark.min.css" media="(prefers-color-scheme: dark)" />
+        {/if}
+        {#if authUser != undefined && authUser.theme == 'light'}
+            <link rel="stylesheet" href="/css/bulma-light.min.css" />
+            <style>
+                ::-webkit-scrollbar-thumb {
+                    background-color: rgba(0, 0, 0, 0.3) !important;
+                }
+            </style>
+        {/if}
+        {#if authUser != undefined && authUser.theme == 'dark'}
+            <link rel="stylesheet" href="/css/bulma-dark.min.css" />
+            <style>
+                ::-webkit-scrollbar-thumb {
+                    background-color: rgba(255, 255, 255, 0.3) !important;
+                }
+            </style>
+        {/if}
+    {:else if agent.name == 'BassieMusic App'}
         <link rel="stylesheet" href="/css/bulma-dark.min.css" />
         <style>
             ::-webkit-scrollbar-thumb {
                 background-color: rgba(255, 255, 255, 0.3) !important;
             }
         </style>
+    {:else}
+        <link rel="stylesheet" href="/css/bulma-light.min.css" media="(prefers-color-scheme: light)" />
+        <link rel="stylesheet" href="/css/bulma-dark.min.css" media="(prefers-color-scheme: dark)" />
     {/if}
     <link rel="stylesheet" href="/css/app.css" />
 </svelte:head>
