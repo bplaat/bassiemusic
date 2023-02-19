@@ -28,7 +28,9 @@
         });
     });
     onDestroy(() => {
-        unsubscribe();
+        if (unsubscribe) {
+            unsubscribe();
+        }
     });
 
     let tracksTable;

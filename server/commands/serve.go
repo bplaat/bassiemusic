@@ -93,6 +93,7 @@ func Serve() {
 
 	app.Get("/genres", controllers.GenresIndex)
 	app.Get("/genres/:genreID", controllers.GenresShow)
+	app.Get("/genres/:genreID/albums", controllers.GenresAlbums)
 
 	app.Get("/tracks", controllers.TracksIndex)
 	app.Get("/tracks/:trackID", controllers.TracksShow)

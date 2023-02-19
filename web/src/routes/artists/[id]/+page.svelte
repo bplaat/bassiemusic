@@ -21,7 +21,9 @@
         });
     });
     onDestroy(() => {
-        unsubscribe();
+        if (unsubscribe) {
+            unsubscribe();
+        }
     });
 
     let topTracksTable;

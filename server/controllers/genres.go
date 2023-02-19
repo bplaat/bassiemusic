@@ -12,9 +12,20 @@ func GenresIndex(c *fiber.Ctx) error {
 }
 
 func GenresShow(c *fiber.Ctx) error {
-	genre := models.GenreModel(c).With("albums").Find(c.Params("genreID"))
+	genre := models.GenreModel(c).Find(c.Params("genreID"))
 	if genre == nil {
 		return fiber.ErrNotFound
 	}
 	return c.JSON(genre)
+}
+
+func GenresAlbums(c *fiber.Ctx) error {
+	genre := models.GenreModel(c).Find(c.Params("genreID"))
+	if genre == nil {
+		return fiber.ErrNotFound
+	}
+
+	query, page, limit := utils.ParseIndexVars(c)
+	return c.JSON(models.AlbumModel(c).With("artists", "genres").WhereIn("album_genre", "album_id", "genre_id", genre.ID).
+		WhereRaw("`title` LIKE ?", "%"+query+"%").OrderByDesc("released_at").Paginate(page, limit))
 }
