@@ -2,7 +2,7 @@
     import { page } from '$app/stores';
     import { onMount, onDestroy } from 'svelte';
     import TracksTable from '../../../components/tracks-table.svelte';
-    import AlbumCard from '../../../components/album-card.svelte';
+    import AlbumCard from '../../../components/cards/album-card.svelte';
 
     export let data;
     let { token, authUser, artist } = data;

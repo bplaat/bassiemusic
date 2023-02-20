@@ -1,5 +1,5 @@
 <script>
-    import { musicPlayer } from '../stores.js';
+    import { musicPlayer } from '../../stores.js';
 
     export let authUser;
     export let album;

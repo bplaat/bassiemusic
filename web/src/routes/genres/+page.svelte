@@ -1,6 +1,6 @@
 <script>
     import { onDestroy, onMount } from 'svelte';
-    import GenreCard from '../../components/genre-card.svelte';
+    import GenreCard from '../../components/cards/genre-card.svelte';
 
     export let data;
     let { token, genres } = data;

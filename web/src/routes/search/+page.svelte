@@ -1,9 +1,9 @@
 <script>
     import { onMount, onDestroy } from 'svelte';
     import { goto } from '$app/navigation';
-    import GenreCard from '../../components/genre-card.svelte';
-    import AlbumCard from '../../components/album-card.svelte';
-    import ArtistCard from '../../components/artist-card.svelte';
+    import GenreCard from '../../components/cards/genre-card.svelte';
+    import AlbumCard from '../../components/cards/album-card.svelte';
+    import ArtistCard from '../../components/cards/artist-card.svelte';
     import TracksTable from '../../components/tracks-table.svelte';
 
     export let data;
