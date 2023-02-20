@@ -14,9 +14,12 @@
 
     if (isAlbum) {
         onMount(() => {
-            const trackRow = document.getElementById($page.url.hash.substring(1));
-            if (trackRow != null) {
-                document.querySelector('.app').scrollTop = trackRow.offsetTop;
+            const trackPosition = $page.url.hash.substring(1);
+            if (trackPosition) {
+                const trackRow = document.getElementById(trackPosition);
+                if (trackRow != null) {
+                    document.querySelector('.app').scrollTop = trackRow.offsetTop;
+                }
             }
         });
     }

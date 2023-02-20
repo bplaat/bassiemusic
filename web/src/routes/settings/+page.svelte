@@ -17,8 +17,9 @@
                 username: authUser.username,
                 email: authUser.email,
                 password: newPassword,
-                allow_explicit: authUser.allow_explicit,
+                language: authUser.language,
                 theme: authUser.theme,
+                allow_explicit: authUser.allow_explicit,
             }),
         });
         if (response.status == 200) {
@@ -163,6 +164,20 @@
             <div class="columns">
                 <div class="column">
                     <div class="field">
+                        <label class="label" for="language">Language</label>
+                        <div class="control">
+                            <div class="select is-fullwidth">
+                                <select id="language" bind:value={authUser.language} required>
+                                    <option value="en">English</option>
+                                    <option value="nl">Nederlands</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="column">
+                    <div class="field">
                         <label class="label" for="theme">Theme</label>
                         <div class="control">
                             <div class="select is-fullwidth">
@@ -175,16 +190,14 @@
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <div class="column">
-                    <div class="field">
-                        <label class="label" for="allow_explicit">Allow explicit content</label>
-                        <label class="checkbox" for="allow_explicit">
-                            <input type="checkbox" id="allow_explicit" bind:checked={authUser.allow_explicit} />
-                            Allow playback of explicit content
-                        </label>
-                    </div>
-                </div>
+            <div class="field">
+                <label class="label" for="allow_explicit">Allow explicit content</label>
+                <label class="checkbox" for="allow_explicit">
+                    <input type="checkbox" id="allow_explicit" bind:checked={authUser.allow_explicit} />
+                    Allow playback of explicit content
+                </label>
             </div>
 
             <div class="field">
@@ -258,10 +271,10 @@
                             {/if}
                         </p>
                         <p>
-                            Logged in at: {new Date(session.created_at).toLocaleString()}
+                            Logged in at: {new Date(session.created_at).toLocaleString(authUser.lang)}
                         </p>
                         <p>
-                            Expires at: {new Date(session.expires_at).toLocaleString()}
+                            Expires at: {new Date(session.expires_at).toLocaleString(authUser.lang)}
                         </p>
                         <div class="buttons">
                             <button

@@ -31,7 +31,6 @@
                 email: user.email,
                 password: user.password,
                 role: user.role,
-                theme: user.theme,
             }),
         });
         if (response.status == 200) {
@@ -78,33 +77,14 @@
                 </div>
             </div>
 
-            <div class="columns">
-                <div class="column">
-                    <div class="field">
-                        <label class="label" for="create-role">Role</label>
-                        <div class="control">
-                            <div class="select is-fullwidth">
-                                <select id="create-role" bind:value={user.role} required>
-                                    <option value="normal">Normal</option>
-                                    <option value="admin">Admin</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="column">
-                    <div class="field">
-                        <label class="label" for="create-theme">Theme</label>
-                        <div class="control">
-                            <div class="select is-fullwidth">
-                                <select id="create-theme" bind:value={user.theme} required>
-                                    <option value="system">System</option>
-                                    <option value="light">Light</option>
-                                    <option value="dark">Dark</option>
-                                </select>
-                            </div>
-                        </div>
+            <div class="field">
+                <label class="label" for="create-role">Role</label>
+                <div class="control">
+                    <div class="select is-fullwidth">
+                        <select id="create-role" bind:value={user.role} required>
+                            <option value="normal">Normal</option>
+                            <option value="admin">Admin</option>
+                        </select>
                     </div>
                 </div>
             </div>

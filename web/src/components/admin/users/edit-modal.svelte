@@ -25,6 +25,7 @@
                 email: user.email,
                 password: newPassword,
                 role: user.role,
+                language: user.language,
                 theme: user.theme,
             }),
         });
@@ -81,6 +82,20 @@
                                 <select id="edit-role" bind:value={user.role} required>
                                     <option value="normal">Normal</option>
                                     <option value="admin">Admin</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="column">
+                    <div class="field">
+                        <label class="label" for="edit-language">Language</label>
+                        <div class="control">
+                            <div class="select is-fullwidth">
+                                <select id="edit-language" bind:value={user.language} required>
+                                    <option value="en">English</option>
+                                    <option value="nl">Nederlands</option>
                                 </select>
                             </div>
                         </div>
