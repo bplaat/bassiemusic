@@ -1,4 +1,6 @@
 <script>
+    import { onMount } from 'svelte';
+
     export let data;
     let { token, authUser, currentSessionId, sessions } = data;
 
@@ -97,9 +99,11 @@
             fetchSessionsPage(page + 1);
         }
     }
-    if (sessions.length != data.sessionsTotal) {
-        fetchSessionsPage(2);
-    }
+    onMount(() => {
+        if (sessions.length != data.sessionsTotal) {
+            fetchSessionsPage(2);
+        }
+    });
 
     async function revokeSession(session) {
         fetch(`${import.meta.env.VITE_API_URL}/sessions/${session.id}/revoke`, {

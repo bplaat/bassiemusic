@@ -34,7 +34,6 @@
     }
 
     async function downloadAlbum(album) {
-        albums = albums.filter((otherAlbum) => otherAlbum.id != album.id);
         await fetch(
             `${import.meta.env.VITE_API_URL}/download/album?${new URLSearchParams({
                 deezer_id: album.id,
@@ -46,10 +45,10 @@
                 },
             }
         );
+        albums = albums.filter((otherAlbum) => otherAlbum.id != album.id);
     }
 
     async function downloadArtist(artist) {
-        artists = artists.filter((otherArtist) => otherArtist.id != artist.id);
         await fetch(
             `${import.meta.env.VITE_API_URL}/download/artist?${new URLSearchParams({
                 deezer_id: artist.id,
@@ -62,6 +61,7 @@
                 },
             }
         );
+        artists = artists.filter((otherArtist) => otherArtist.id != artist.id);
     }
 </script>
 

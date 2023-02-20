@@ -2,6 +2,7 @@
     import CreateModal from '../../../components/admin/users/create-modal.svelte';
     import EditModal from '../../../components/admin/users/edit-modal.svelte';
     import DeleteModal from '../../../components/admin/users/delete-modal.svelte';
+    import { onMount } from 'svelte';
 
     export let data;
     let { token, users } = data;
@@ -24,9 +25,11 @@
             fetchPage(page + 1);
         }
     }
-    if (users.length != data.total) {
-        fetchPage(2);
-    }
+    onMount(() => {
+        if (users.length != data.total) {
+            fetchPage(2);
+        }
+    });
 
     function updateUsers() {
         users = [];

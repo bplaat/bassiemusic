@@ -55,6 +55,7 @@
     // Search results
     let searchTerm = '';
     let hasResult = false;
+    let isEmpty = false;
     let genres = [];
     let albums = [];
     let artists = [];
@@ -83,6 +84,11 @@
             // Show response
             const data = await response.json();
             hasResult = true;
+            isEmpty =
+                data.artists.length == 0 &&
+                data.albums.length == 0 &&
+                data.tracks.length == 0 &&
+                data.genres.length == 0;
             artists = data.artists;
             albums = data.albums;
             tracks = data.tracks;
@@ -135,42 +141,52 @@
 </form>
 
 {#if hasResult}
-    {#if tracks.length > 0}
-        <h2 class="title is-5">Tracks</h2>
-        <TracksTable {token} {authUser} tracks={tracks.slice(5)} />
-    {/if}
+    {#if isEmpty}
+        <p><i>Can't find anything with your search query</i></p>
+    {:else}
+        {#if tracks.length > 0}
+            <h2 class="title is-5">Tracks</h2>
+            <TracksTable {token} {authUser} tracks={tracks.slice(5)} />
+        {/if}
 
-    {#if artists.length > 0}
-        <h2 class="title is-5 mt-5">Artists</h2>
-        <div class="columns is-multiline mb-5">
-            {#each artists as artist}
-                <div class="column is-half-mobile is-one-third-tablet is-one-quarter-desktop is-one-fifth-widescreen">
-                    <ArtistCard {artist} {token} />
-                </div>
-            {/each}
-        </div>
-    {/if}
+        {#if artists.length > 0}
+            <h2 class="title is-5 mt-5">Artists</h2>
+            <div class="columns is-multiline mb-5">
+                {#each artists as artist}
+                    <div
+                        class="column is-half-mobile is-one-third-tablet is-one-quarter-desktop is-one-fifth-widescreen"
+                    >
+                        <ArtistCard {artist} {token} />
+                    </div>
+                {/each}
+            </div>
+        {/if}
 
-    {#if albums.length > 0}
-        <h2 class="title is-5">Albums</h2>
-        <div class="columns is-multiline mb-5">
-            {#each albums as album}
-                <div class="column is-half-mobile is-one-third-tablet is-one-quarter-desktop is-one-fifth-widescreen">
-                    <AlbumCard {album} {token} {authUser} />
-                </div>
-            {/each}
-        </div>
-    {/if}
+        {#if albums.length > 0}
+            <h2 class="title is-5">Albums</h2>
+            <div class="columns is-multiline mb-5">
+                {#each albums as album}
+                    <div
+                        class="column is-half-mobile is-one-third-tablet is-one-quarter-desktop is-one-fifth-widescreen"
+                    >
+                        <AlbumCard {album} {token} {authUser} />
+                    </div>
+                {/each}
+            </div>
+        {/if}
 
-    {#if genres.length > 0}
-        <h2 class="title is-5">Genres</h2>
-        <div class="columns is-multiline is-mobile">
-            {#each genres as genre}
-                <div class="column is-half-mobile is-one-third-tablet is-one-quarter-desktop is-one-fifth-widescreen">
-                    <GenreCard {genre} />
-                </div>
-            {/each}
-        </div>
+        {#if genres.length > 0}
+            <h2 class="title is-5">Genres</h2>
+            <div class="columns is-multiline is-mobile">
+                {#each genres as genre}
+                    <div
+                        class="column is-half-mobile is-one-third-tablet is-one-quarter-desktop is-one-fifth-widescreen"
+                    >
+                        <GenreCard {genre} />
+                    </div>
+                {/each}
+            </div>
+        {/if}
     {/if}
 {:else if query == undefined}
     <h2 class="title is-5">Genres</h2>
