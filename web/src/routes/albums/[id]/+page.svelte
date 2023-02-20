@@ -36,7 +36,8 @@
     let tracksTable;
 
     function likeAlbum() {
-        fetch(`${import.meta.env.VITE_API_URL}/albums/${album.id}/like${album.liked ? '/delete' : ''}`, {
+        fetch(`${import.meta.env.VITE_API_URL}/albums/${album.id}/like`, {
+            method: album.liked ? 'DELETE' : 'PUT',
             headers: {
                 Authorization: `Bearer ${token}`,
             },

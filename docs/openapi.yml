@@ -169,7 +169,7 @@ paths:
         "401":
           description: Authorization error
   /auth/logout:
-    get:
+    put:
       tags: [Auth]
       description: Logout your auth token
       security:
@@ -246,7 +246,7 @@ paths:
         "404":
           description: Artist not found
   /artists/{id}/like:
-    get:
+    put:
       tags: [Artists]
       description: Like an artist
       security:
@@ -260,8 +260,7 @@ paths:
           description: Authorization error
         "404":
           description: Artist not found
-  /artists/{id}/like/delete:
-    get:
+    delete:
       tags: [Artists]
       description: Delete a liked to an artist
       security:
@@ -304,7 +303,7 @@ paths:
         "404":
           description: Album not found
   /albums/{id}/like:
-    get:
+    put:
       tags: [Albums]
       description: Like an album
       security:
@@ -318,8 +317,7 @@ paths:
           description: Authorization error
         "404":
           description: Album not found
-  /albums/{id}/like/delete:
-    get:
+    delete:
       tags: [Albums]
       description: Delete a liked to an album
       security:
@@ -405,7 +403,7 @@ paths:
         "404":
           description: Track not found
   /tracks/{id}/like:
-    get:
+    put:
       tags: [Tracks]
       description: Like a track
       security:
@@ -419,8 +417,7 @@ paths:
           description: Authorization error
         "404":
           description: Track not found
-  /tracks/{id}/like/delete:
-    get:
+    delete:
       tags: [Tracks]
       description: Delete a liked to a track
       security:
@@ -435,7 +432,7 @@ paths:
         "404":
           description: Track not found
   /tracks/{id}/play:
-    get:
+    put:
       tags: [Tracks]
       description: Play a track
       security:
@@ -503,7 +500,7 @@ paths:
           description: Authorization error
         "404":
           description: Playlist not found
-    post:
+    put:
       tags: [Playlists]
       description: Update an existing playlist
       security:
@@ -533,8 +530,22 @@ paths:
           description: Authorization error
         "404":
           description: Playlist not found
+    delete:
+      tags: [Playlists]
+      description: Delete playlist
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/PlaylistID"
+      responses:
+        "200":
+          description: Successfull response
+        "401":
+          description: Authorization error
+        "404":
+          description: Playlist not found
   /playlists/{id}/insert_track:
-    post:
+    put:
       tags: [Playlists]
       description: Insert track into playlist
       security:
@@ -566,24 +577,19 @@ paths:
         "404":
           description: Playlist not found
   /playlists/{id}/remove_track:
-    post:
+    delete:
       tags: [Playlists]
       description: Remove track from playlist
       security:
         - TokenAuth: []
       parameters:
         - $ref: "#/components/parameters/PlaylistID"
-      requestBody:
-        required: true
-        content:
-          application/x-www-form-urlencoded:
-            schema:
-              type: object
-              properties:
-                position:
-                  type: integer
-              required:
-                - position
+        - name: position
+          in: query
+          description: Track position in playlist
+          required: true
+          schema:
+            type: integer
       responses:
         "200":
           description: Successfull response
@@ -594,7 +600,7 @@ paths:
         "404":
           description: Playlist not found
   /playlists/{id}/like:
-    get:
+    put:
       tags: [Playlists]
       description: Like an playlist
       security:
@@ -608,25 +614,9 @@ paths:
           description: Authorization error
         "404":
           description: Playlist not found
-  /playlists/{id}/like/delete:
-    get:
+    delete:
       tags: [Playlists]
       description: Delete a liked to an playlist
-      security:
-        - TokenAuth: []
-      parameters:
-        - $ref: "#/components/parameters/PlaylistID"
-      responses:
-        "200":
-          description: Successfull response
-        "401":
-          description: Authorization error
-        "404":
-          description: Playlist not found
-  /playlists/{id}/delete:
-    get:
-      tags: [Playlists]
-      description: Delete playlist
       security:
         - TokenAuth: []
       parameters:
@@ -706,7 +696,7 @@ paths:
           description: Authorization error
         "404":
           description: User not found
-    post:
+    put:
       tags: [Users]
       description: Update an existing user
       security:
@@ -738,6 +728,49 @@ paths:
           description: Successfull response
         "400":
           description: Bad Request
+        "401":
+          description: Authorization error
+        "404":
+          description: User not found
+    delete:
+      tags: [Users]
+      description: Delete user
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/UserID"
+      responses:
+        "200":
+          description: Successfull response
+        "401":
+          description: Authorization error
+        "404":
+          description: User not found
+  /users/{id}/avatar:
+    post:
+      tags: [Users]
+      description: Upload new user avatar
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/UserID"
+      responses:
+        "200":
+          description: Successfull response
+        "401":
+          description: Authorization error
+        "404":
+          description: User not found
+    delete:
+      tags: [Users]
+      description: Delete user avatar
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/UserID"
+      responses:
+        "200":
+          description: Successfull response
         "401":
           description: Authorization error
         "404":
@@ -847,51 +880,6 @@ paths:
           description: Authorization error
         "404":
           description: User not found
-  /users/{id}/avatar:
-    post:
-      tags: [Users]
-      description: Upload new user avatar
-      security:
-        - TokenAuth: []
-      parameters:
-        - $ref: "#/components/parameters/UserID"
-      responses:
-        "200":
-          description: Successfull response
-        "401":
-          description: Authorization error
-        "404":
-          description: User not found
-  /users/{id}/avatar/delete:
-    get:
-      tags: [Users]
-      description: Delete user avatar
-      security:
-        - TokenAuth: []
-      parameters:
-        - $ref: "#/components/parameters/UserID"
-      responses:
-        "200":
-          description: Successfull response
-        "401":
-          description: Authorization error
-        "404":
-          description: User not found
-  /users/{id}/delete:
-    get:
-      tags: [Users]
-      description: Delete user
-      security:
-        - TokenAuth: []
-      parameters:
-        - $ref: "#/components/parameters/UserID"
-      responses:
-        "200":
-          description: Successfull response
-        "401":
-          description: Authorization error
-        "404":
-          description: User not found
 
   # Sessions
   /sessions:
@@ -923,7 +911,7 @@ paths:
         "404":
           description: Session not found
   /sessions/{id}/revoke:
-    get:
+    put:
       tags: [Sessions]
       description: Revoke a session
       security:
@@ -940,7 +928,7 @@ paths:
 
   # Download
   /download/artist:
-    get:
+    post:
       tags: [Downloader]
       description: Add a queue item to download an Deezer artist
       security:
@@ -965,7 +953,7 @@ paths:
         "401":
           description: Authorization error
   /download/album:
-    get:
+    post:
       tags: [Downloader]
       description: Add a queue item to download an Deezer album
       security:

@@ -100,6 +100,193 @@ func UsersShow(c *fiber.Ctx) error {
 	return c.JSON(user)
 }
 
+type UsersEditParams struct {
+	Username      string `form:"username" validate:"required,min=2"`
+	Email         string `form:"email" validate:"required,email"`
+	Password      string `form:"password" validate:"omitempty,min=6"`
+	AllowExplicit string `form:"allow_explicit" validate:"omitempty,required"`
+	Role          string `form:"role" validate:"omitempty,required"`
+	Theme         string `form:"theme" validate:"required"`
+}
+
+func UsersEdit(c *fiber.Ctx) error {
+	// Check if user exists
+	user := models.UserModel().Find(c.Params("userID"))
+	if user == nil {
+		return fiber.ErrNotFound
+	}
+
+	// Check auth
+	authUser := c.Locals("authUser").(*models.User)
+	if authUser.Role != "admin" && authUser.ID != user.ID {
+		return fiber.ErrUnauthorized
+	}
+
+	// Parse body
+	var params UsersEditParams
+	if err := c.BodyParser(&params); err != nil {
+		log.Println(err)
+		return fiber.ErrBadRequest
+	}
+
+	// Validate values
+	validate := validator.New()
+	if err := validate.Struct(params); err != nil {
+		log.Println(err)
+		return fiber.ErrBadRequest
+	}
+
+	// Validate username is unique when diffrent
+	if user.Username != params.Username && models.UserModel().Where("username", params.Username).First() != nil {
+		log.Println("username not unique")
+		return fiber.ErrBadRequest
+	}
+
+	// Validate email is unique
+	if user.Email != params.Email && models.UserModel().Where("email", params.Email).First() != nil {
+		log.Println("email not unique")
+		return fiber.ErrBadRequest
+	}
+
+	// Validate allow_explicit is correct
+	if params.AllowExplicit != "" && params.AllowExplicit != "true" && params.AllowExplicit != "false" {
+		log.Println("allow_explicit not valid")
+		return fiber.ErrBadRequest
+	}
+
+	// Validate role is correct
+	if params.Role != "" && params.Role != "normal" && params.Role != "admin" {
+		log.Println("role not valid")
+		return fiber.ErrBadRequest
+	}
+
+	// Validate theme is correct
+	if params.Theme != "system" && params.Theme != "light" && params.Theme != "dark" {
+		log.Println("theme not valid")
+		return fiber.ErrBadRequest
+	}
+
+	// Update user
+	var userRole models.UserRole
+	if params.Role == "normal" {
+		userRole = models.UserRoleNormal
+	}
+	if params.Role == "admin" {
+		userRole = models.UserRoleAdmin
+	}
+
+	var userTheme models.UserTheme
+	if params.Theme == "system" {
+		userTheme = models.UserThemeSystem
+	}
+	if params.Theme == "light" {
+		userTheme = models.UserThemeLight
+	}
+	if params.Theme == "dark" {
+		userTheme = models.UserThemeDark
+	}
+
+	updates := database.Map{
+		"username":       params.Username,
+		"email":          params.Email,
+		"allow_explicit": params.AllowExplicit == "true",
+		"theme":          userTheme,
+	}
+	if params.Password != "" {
+		updates["password"] = utils.HashPassword(params.Password)
+	}
+	if authUser.Role == "admin" && params.Role != "" {
+		updates["role"] = userRole
+	}
+	models.UserModel().Where("id", user.ID).Update(updates)
+
+	// Get updated user
+	return c.JSON(models.UserModel().Find(user.ID))
+}
+
+func UsersDelete(c *fiber.Ctx) error {
+	// Check if user exists
+	user := models.UserModel().Find(c.Params("userID"))
+	if user == nil {
+		return fiber.ErrNotFound
+	}
+
+	// Check auth
+	authUser := c.Locals("authUser").(*models.User)
+	if authUser.Role != "admin" && authUser.ID != user.ID {
+		return fiber.ErrUnauthorized
+	}
+
+	// Delete user
+	models.UserModel().Where("id", user.ID).Delete()
+	return c.JSON(fiber.Map{"success": true})
+}
+
+func UsersAvatar(c *fiber.Ctx) error {
+	// Check if user exists
+	user := models.UserModel().Find(c.Params("userID"))
+	if user == nil {
+		return fiber.ErrNotFound
+	}
+
+	// Check auth
+	authUser := c.Locals("authUser").(*models.User)
+	if authUser.Role != "admin" && authUser.ID != user.ID {
+		return fiber.ErrUnauthorized
+	}
+
+	// Remove old avatar file
+	if user.AvatarID != nil && *user.AvatarID != "" {
+		if err := os.Remove(fmt.Sprintf("storage/avatars/%s.jpg", *user.AvatarID)); err != nil {
+			log.Fatalln(err)
+		}
+	}
+
+	// Save uploaded avatar file
+	avatarID := uuid.New()
+	avatar, err := c.FormFile("avatar")
+	if err != nil {
+		return fiber.ErrBadRequest
+	}
+	if err = c.SaveFile(avatar, fmt.Sprintf("storage/avatars/%s.jpg", avatarID.String())); err != nil {
+		log.Fatalln(err)
+	}
+
+	// Save avatar id for user
+	models.UserModel().Where("id", user.ID).Update(database.Map{
+		"avatar": avatarID.String(),
+	})
+	return c.JSON(fiber.Map{"success": true})
+}
+
+func UsersAvatarDelete(c *fiber.Ctx) error {
+	// Check if user exists
+	user := models.UserModel().Find(c.Params("userID"))
+	if user == nil {
+		return fiber.ErrNotFound
+	}
+
+	// Check auth
+	authUser := c.Locals("authUser").(*models.User)
+	if authUser.Role != "admin" && authUser.ID != user.ID {
+		return fiber.ErrUnauthorized
+	}
+
+	// Check if user has avatar
+	if user.AvatarID != nil && *user.AvatarID != "" {
+		// Remove old avatar file
+		if err := os.Remove(fmt.Sprintf("storage/avatars/%s.jpg", *user.AvatarID)); err != nil {
+			log.Fatalln(err)
+		}
+
+		// Clear avatar id for user
+		models.UserModel().Where("id", user.ID).Update(database.Map{
+			"avatar": nil,
+		})
+	}
+	return c.JSON(fiber.Map{"success": true})
+}
+
 func UsersLikedArtists(c *fiber.Ctx) error {
 	query, page, limit := utils.ParseIndexVars(c)
 
@@ -248,191 +435,4 @@ func UsersPlaylists(c *fiber.Ctx) error {
 	// Get user playlists
 	userPlaylists := models.PlaylistModel(c).With("like").Where("user_id", user.ID).OrderByRaw("LOWER(`name`)").Paginate(page, limit)
 	return c.JSON(userPlaylists)
-}
-
-type UsersEditParams struct {
-	Username      string `form:"username" validate:"required,min=2"`
-	Email         string `form:"email" validate:"required,email"`
-	Password      string `form:"password" validate:"omitempty,min=6"`
-	AllowExplicit string `form:"allow_explicit" validate:"omitempty,required"`
-	Role          string `form:"role" validate:"omitempty,required"`
-	Theme         string `form:"theme" validate:"required"`
-}
-
-func UsersEdit(c *fiber.Ctx) error {
-	// Check if user exists
-	user := models.UserModel().Find(c.Params("userID"))
-	if user == nil {
-		return fiber.ErrNotFound
-	}
-
-	// Check auth
-	authUser := c.Locals("authUser").(*models.User)
-	if authUser.Role != "admin" && authUser.ID != user.ID {
-		return fiber.ErrUnauthorized
-	}
-
-	// Parse body
-	var params UsersEditParams
-	if err := c.BodyParser(&params); err != nil {
-		log.Println(err)
-		return fiber.ErrBadRequest
-	}
-
-	// Validate values
-	validate := validator.New()
-	if err := validate.Struct(params); err != nil {
-		log.Println(err)
-		return fiber.ErrBadRequest
-	}
-
-	// Validate username is unique when diffrent
-	if user.Username != params.Username && models.UserModel().Where("username", params.Username).First() != nil {
-		log.Println("username not unique")
-		return fiber.ErrBadRequest
-	}
-
-	// Validate email is unique
-	if user.Email != params.Email && models.UserModel().Where("email", params.Email).First() != nil {
-		log.Println("email not unique")
-		return fiber.ErrBadRequest
-	}
-
-	// Validate allow_explicit is correct
-	if params.AllowExplicit != "" && params.AllowExplicit != "true" && params.AllowExplicit != "false" {
-		log.Println("allow_explicit not valid")
-		return fiber.ErrBadRequest
-	}
-
-	// Validate role is correct
-	if params.Role != "" && params.Role != "normal" && params.Role != "admin" {
-		log.Println("role not valid")
-		return fiber.ErrBadRequest
-	}
-
-	// Validate theme is correct
-	if params.Theme != "system" && params.Theme != "light" && params.Theme != "dark" {
-		log.Println("theme not valid")
-		return fiber.ErrBadRequest
-	}
-
-	// Update user
-	var userRole models.UserRole
-	if params.Role == "normal" {
-		userRole = models.UserRoleNormal
-	}
-	if params.Role == "admin" {
-		userRole = models.UserRoleAdmin
-	}
-
-	var userTheme models.UserTheme
-	if params.Theme == "system" {
-		userTheme = models.UserThemeSystem
-	}
-	if params.Theme == "light" {
-		userTheme = models.UserThemeLight
-	}
-	if params.Theme == "dark" {
-		userTheme = models.UserThemeDark
-	}
-
-	updates := database.Map{
-		"username":       params.Username,
-		"email":          params.Email,
-		"allow_explicit": params.AllowExplicit == "true",
-		"theme":          userTheme,
-	}
-	if params.Password != "" {
-		updates["password"] = utils.HashPassword(params.Password)
-	}
-	if authUser.Role == "admin" && params.Role != "" {
-		updates["role"] = userRole
-	}
-	models.UserModel().Where("id", user.ID).Update(updates)
-
-	// Get updated user
-	return c.JSON(models.UserModel().Find(user.ID))
-}
-
-func UsersAvatar(c *fiber.Ctx) error {
-	// Check if user exists
-	user := models.UserModel().Find(c.Params("userID"))
-	if user == nil {
-		return fiber.ErrNotFound
-	}
-
-	// Check auth
-	authUser := c.Locals("authUser").(*models.User)
-	if authUser.Role != "admin" && authUser.ID != user.ID {
-		return fiber.ErrUnauthorized
-	}
-
-	// Remove old avatar file
-	if user.AvatarID != nil && *user.AvatarID != "" {
-		if err := os.Remove(fmt.Sprintf("storage/avatars/%s.jpg", *user.AvatarID)); err != nil {
-			log.Fatalln(err)
-		}
-	}
-
-	// Save uploaded avatar file
-	avatarID := uuid.New()
-	avatar, err := c.FormFile("avatar")
-	if err != nil {
-		return fiber.ErrBadRequest
-	}
-	if err = c.SaveFile(avatar, fmt.Sprintf("storage/avatars/%s.jpg", avatarID.String())); err != nil {
-		log.Fatalln(err)
-	}
-
-	// Save avatar id for user
-	models.UserModel().Where("id", user.ID).Update(database.Map{
-		"avatar": avatarID.String(),
-	})
-	return c.JSON(fiber.Map{"success": true})
-}
-
-func UsersAvatarDelete(c *fiber.Ctx) error {
-	// Check if user exists
-	user := models.UserModel().Find(c.Params("userID"))
-	if user == nil {
-		return fiber.ErrNotFound
-	}
-
-	// Check auth
-	authUser := c.Locals("authUser").(*models.User)
-	if authUser.Role != "admin" && authUser.ID != user.ID {
-		return fiber.ErrUnauthorized
-	}
-
-	// Check if user has avatar
-	if user.AvatarID != nil && *user.AvatarID != "" {
-		// Remove old avatar file
-		if err := os.Remove(fmt.Sprintf("storage/avatars/%s.jpg", *user.AvatarID)); err != nil {
-			log.Fatalln(err)
-		}
-
-		// Clear avatar id for user
-		models.UserModel().Where("id", user.ID).Update(database.Map{
-			"avatar": nil,
-		})
-	}
-	return c.JSON(fiber.Map{"success": true})
-}
-
-func UsersDelete(c *fiber.Ctx) error {
-	// Check if user exists
-	user := models.UserModel().Find(c.Params("userID"))
-	if user == nil {
-		return fiber.ErrNotFound
-	}
-
-	// Check auth
-	authUser := c.Locals("authUser").(*models.User)
-	if authUser.Role != "admin" && authUser.ID != user.ID {
-		return fiber.ErrUnauthorized
-	}
-
-	// Delete user
-	models.UserModel().Where("id", user.ID).Delete()
-	return c.JSON(fiber.Map{"success": true})
 }

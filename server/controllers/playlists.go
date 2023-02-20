@@ -121,6 +121,24 @@ func PlaylistsEdit(c *fiber.Ctx) error {
 	return c.JSON(models.PlaylistModel(c).Find(playlist.ID))
 }
 
+func PlaylistsDelete(c *fiber.Ctx) error {
+	// Check if playlist exists
+	playlist := models.PlaylistModel(c).Find(c.Params("playlistID"))
+	if playlist == nil {
+		return fiber.ErrNotFound
+	}
+
+	// Check auth
+	authUser := c.Locals("authUser").(*models.User)
+	if authUser.Role != "admin" || playlist.UserID != authUser.ID {
+		return fiber.ErrUnauthorized
+	}
+
+	// Delete playlist
+	models.PlaylistModel(c).Where("id", playlist.ID).Delete()
+	return c.JSON(fiber.Map{"success": true})
+}
+
 type PlaylistsInsertTrackParams struct {
 	TrackID  string `form:"track_id" validate:"required"`
 	Position string `form:"position" validate:"required,integer"`
@@ -269,23 +287,5 @@ func PlaylistsLikeDelete(c *fiber.Ctx) error {
 
 	// Delete like
 	models.PlaylistLikeModel().Where("playlist_id", c.Params("playlistID")).Where("user_id", authUser.ID).Delete()
-	return c.JSON(fiber.Map{"success": true})
-}
-
-func PlaylistsDelete(c *fiber.Ctx) error {
-	// Check if playlist exists
-	playlist := models.PlaylistModel(c).Find(c.Params("playlistID"))
-	if playlist == nil {
-		return fiber.ErrNotFound
-	}
-
-	// Check auth
-	authUser := c.Locals("authUser").(*models.User)
-	if authUser.Role != "admin" || playlist.UserID != authUser.ID {
-		return fiber.ErrUnauthorized
-	}
-
-	// Delete playlist
-	models.PlaylistModel(c).Where("id", playlist.ID).Delete()
 	return c.JSON(fiber.Map{"success": true})
 }

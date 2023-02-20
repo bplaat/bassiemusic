@@ -7,7 +7,7 @@
 
     async function changeDetails() {
         const response = await fetch(`${import.meta.env.VITE_API_URL}/users/${authUser.id}`, {
-            method: 'POST',
+            method: 'PUT',
             headers: {
                 Authorization: `Bearer ${token}`,
             },
@@ -38,7 +38,7 @@
         formData.append('avatar', avatarInput.files[0], avatarInput.files[0].name);
 
         const response = await fetch(`${import.meta.env.VITE_API_URL}/users/${authUser.id}/avatar`, {
-            method: 'POST',
+            method: 'PUT',
             headers: {
                 Authorization: `Bearer ${token}`,
             },
@@ -52,7 +52,8 @@
     }
 
     async function deleteAvatar() {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/users/${authUser.id}/avatar/delete`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/users/${authUser.id}/avatar`, {
+            method: 'DELETE',
             headers: {
                 Authorization: `Bearer ${token}`,
             },
@@ -66,7 +67,8 @@
 
     // Delete user
     async function deleteUser() {
-        await fetch(`${import.meta.env.VITE_API_URL}/users/${authUser.id}/delete`, {
+        await fetch(`${import.meta.env.VITE_API_URL}/users/${authUser.id}`, {
+            method: 'DELETE',
             headers: {
                 Authorization: `Bearer ${token}`,
             },
@@ -101,6 +103,7 @@
 
     async function revokeSession(session) {
         fetch(`${import.meta.env.VITE_API_URL}/sessions/${session.id}/revoke`, {
+            method: 'PUT',
             headers: {
                 Authorization: `Bearer ${token}`,
             },

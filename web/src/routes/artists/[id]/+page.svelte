@@ -29,7 +29,8 @@
     let topTracksTable;
 
     function likeArtist() {
-        fetch(`${import.meta.env.VITE_API_URL}/artists/${artist.id}/like${artist.liked ? '/delete' : ''}`, {
+        fetch(`${import.meta.env.VITE_API_URL}/artists/${artist.id}/like`, {
+            method: artist.liked ? 'DELETE' : 'PUT',
             headers: {
                 Authorization: `Bearer ${token}`,
             },

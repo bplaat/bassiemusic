@@ -40,15 +40,17 @@ func SearchIndex(c *fiber.Ctx) error {
 }
 
 func DeezerSearchIndex(c *fiber.Ctx) error {
+	query := c.Query("q")
+
 	// Search deezer artists
 	var deezerArtistSearch structs.DeezerArtistSearch
-	if err := utils.FetchJson(fmt.Sprintf("https://api.deezer.com/search/artist?q=%s", url.QueryEscape(c.Query("q"))), &deezerArtistSearch); err != nil {
+	if err := utils.FetchJson(fmt.Sprintf("https://api.deezer.com/search/artist?q=%s", url.QueryEscape(query)), &deezerArtistSearch); err != nil {
 		return fiber.ErrBadGateway
 	}
 
 	// Search deezer albums and filter out what already exists
 	var deezerAlbumSearch structs.DeezerAlbumSearch
-	if err := utils.FetchJson(fmt.Sprintf("https://api.deezer.com/search/album?q=%s", url.QueryEscape(c.Query("q"))), &deezerAlbumSearch); err != nil {
+	if err := utils.FetchJson(fmt.Sprintf("https://api.deezer.com/search/album?q=%s", url.QueryEscape(query)), &deezerAlbumSearch); err != nil {
 		return fiber.ErrBadGateway
 	}
 	deezerAlbums := []structs.DeezerAlbumSearchItem{}

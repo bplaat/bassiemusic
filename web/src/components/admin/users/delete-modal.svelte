@@ -14,7 +14,8 @@
 
     const dispatch = createEventDispatcher();
     async function deleteUser() {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/users/${user.id}/delete`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/users/${user.id}`, {
+            method: 'DELETE',
             headers: {
                 Authorization: `Bearer ${token}`,
             },

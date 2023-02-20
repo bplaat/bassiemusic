@@ -40,6 +40,7 @@
                 deezer_id: album.id,
             })}`,
             {
+                method: 'POST',
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -55,6 +56,7 @@
                 singles: true,
             })}`,
             {
+                method: 'POST',
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },

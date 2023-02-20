@@ -261,7 +261,8 @@
 
     // Like
     function likeTrack() {
-        fetch(`${import.meta.env.VITE_API_URL}/tracks/${track.id}/like${track.liked ? '/delete' : ''}`, {
+        fetch(`${import.meta.env.VITE_API_URL}/tracks/${track.id}/like`, {
+            method: track.liked ? 'DELETE' : 'PUT',
             headers: {
                 Authorization: `Bearer ${token}`,
             },
