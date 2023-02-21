@@ -1,14 +1,59 @@
 <script>
     import { page } from '$app/stores';
     import { goto } from '$app/navigation';
-    import lang from '../lang/components/sidebar.json';
+    import { language } from '../stores.js';
 
+    // Language strings
+    const lang = {
+        en: {
+            home: 'Home',
+
+            library: 'Library',
+            search: 'Search',
+            artists: 'Artists',
+            genres: 'Genres',
+            albums: 'Albums',
+            tracks: 'Tracks',
+            liked: 'Liked',
+            history: 'History',
+            playlists: 'Playlists',
+            admin: 'Admin',
+            users: 'Users',
+            downloader: 'Downloader',
+            settings: 'Settings',
+            logout: 'Logout',
+            made_by: 'Made with $1 by $2',
+        },
+        nl: {
+            home: 'Home',
+
+            library: 'Bibliotheek',
+            search: 'Zoeken',
+            artists: 'Artisten',
+            genres: 'Genres',
+            albums: 'Albums',
+            tracks: 'Tracks',
+            liked: 'Geliked',
+            history: 'Geschiedenis',
+            playlists: 'Playlists',
+            admin: 'Admin',
+            users: 'Gebruikers',
+            downloader: 'Downloader',
+            settings: 'Instellingen',
+            logout: 'Log uit',
+            made_by: 'Gemaakt met $1<br/> door $2',
+        },
+    };
+    const t = (key, p1, p2) => lang[$language][key].replace('$1', p1).replace('$2', p2);
+
+    // Props
     export let token = undefined;
     export let authUser = undefined;
 
-    const t = (key, p1, p2) => lang[authUser.language][key].replace('$1', p1).replace('$2', p2);
-
+    // State
     let isOpen = false;
+
+    // Methods
     export function open() {
         isOpen = true;
     }

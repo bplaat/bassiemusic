@@ -3,9 +3,15 @@
     import { afterNavigate } from '$app/navigation';
     import Sidebar from '../components/sidebar.svelte';
     import MusicPlayer from '../components/music-player.svelte';
+    import { language } from '../stores.js';
 
     export let data;
     const { token, authUser, agent, lastTrack, lastTrackPosition } = data;
+
+    // Language
+    if (authUser) {
+        language.set(authUser.language);
+    }
 
     // Sidebar
     let app, sidebar;
