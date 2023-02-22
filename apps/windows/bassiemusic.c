@@ -1,7 +1,6 @@
 // window decoration styling
-// window maximized state icon change
-// alt f4
-// center about window in main window
+// remove webview2 messaging
+// move alert dialog to direct2d dcomp visual
 
 #define UNICODE
 #include <dwmapi.h>
@@ -9,7 +8,10 @@
 #include <shlobj.h>
 #include <windows.h>
 #define COBJMACROS
+#include <d2d1.h>
 #include <d3d11.h>
+#include <d3d11_2.h>
+#include <dxgi1_3.h>
 #include <wincodec.h>
 
 #include "../res/resource.h"
@@ -27,7 +29,6 @@ ICoreWebView2CompositionController *composition_controller = NULL;
 ICoreWebView2Controller *controller = NULL;
 ICoreWebView2 *webview2 = NULL;
 IDCompositionDevice *dcompDevice = NULL;
-IDCompositionVisual *rootVisual = NULL;
 IDCompositionVisual *webviewVisual = NULL;
 
 #define ABOUT_WINDOW_STYLE (WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME ^ WS_MAXIMIZEBOX)
@@ -68,6 +69,8 @@ int wcscmp(const wchar_t *s1, const wchar_t *s2) {
 }
 
 // Helper functions
+#define WS_EX_NOREDIRECTIONBITMAP 0x00200000L
+
 #define GET_X_LPARAM(lParam) (int)(short)LOWORD(lParam)
 #define GET_Y_LPARAM(lParam) (int)(short)HIWORD(lParam)
 
@@ -198,8 +201,8 @@ void WindowClose(void) {
     DestroyWindow(window_hwnd);
 }
 
-BOOL HandleKeyDown(UINT key) {
-    if (GetKeyState(VK_MENU) & 0x8000 && key == VK_F4) {
+BOOL HandleSystemKeyDown(UINT key) {
+    if (key == VK_F4) {
         WindowClose();
         return TRUE;
     }
@@ -295,8 +298,8 @@ HRESULT STDMETHODCALLTYPE ControllerCompletedHandler_Invoke(ICoreWebView2CreateC
     newAcceleratorKeyPressedHandler->lpVtbl = &AcceleratorKeyPressedHandlerVtbl;
     ICoreWebView2Controller_add_AcceleratorKeyPressed(controller, newAcceleratorKeyPressedHandler, NULL);
 
-    ICoreWebView2Controller_put_IsVisible(controller, TRUE);
     ResizeBrowser(window_hwnd);
+    ICoreWebView2Controller_put_IsVisible(controller, TRUE);
     ICoreWebView2_Navigate(webview2, GetString(ID_STRING_WEBVIEW_URL));
     return S_OK;
 }
@@ -359,8 +362,10 @@ HRESULT STDMETHODCALLTYPE AcceleratorKeyPressedHandler_Invoke(ICoreWebView2Accel
     ICoreWebView2AcceleratorKeyPressedEventArgs_get_KeyEventKind(args, &state);
     UINT key;
     ICoreWebView2AcceleratorKeyPressedEventArgs_get_VirtualKey(args, &key);
-    if (state == COREWEBVIEW2_KEY_EVENT_KIND_KEY_DOWN && HandleKeyDown(key)) {
-        ICoreWebView2AcceleratorKeyPressedEventArgs_put_Handled(args, TRUE);
+    if (state == COREWEBVIEW2_KEY_EVENT_KIND_SYSTEM_KEY_DOWN) {
+        if (HandleSystemKeyDown(key)) {
+            ICoreWebView2AcceleratorKeyPressedEventArgs_put_Handled(args, TRUE);
+        }
     }
     return S_OK;
 }
@@ -514,19 +519,21 @@ LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
         // Create D3D11Devic
         ID3D11Device *d3d11Device;
-        D3D_FEATURE_LEVEL featureLevelSupported;
-        ID3D11DeviceContext *d3d11DeviceContext;
-        D3D11CreateDevice(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, D3D11_CREATE_DEVICE_BGRA_SUPPORT, NULL, 0, D3D11_SDK_VERSION, &d3d11Device,
-                          &featureLevelSupported, &d3d11DeviceContext);
+        D3D11CreateDevice(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, D3D11_CREATE_DEVICE_BGRA_SUPPORT, NULL, 0, D3D11_SDK_VERSION, &d3d11Device, NULL, NULL);
+
+        //https://learn.microsoft.com/en-us/archive/msdn-magazine/2014/june/windows-with-c-high-performance-window-layering-using-the-windows-composition-engine
+        IDXGIDevice *dxgiDevice;
+        IID IID_IDXGIDevice = {0x54ec77fa, 0x1377, 0x44e6, {0x8c, 0x32, 0x88, 0xfd, 0x5f, 0x44, 0xc8, 0x4c}};
+        ID3D11Device_QueryInterface(d3d11Device, &IID_IDXGIDevice, (void **)&dxgiDevice);
+
+        IDXGIFactory2 *dxgiFactory2;
+        IID IID_IDXGIFactory2 = {0x25483823, 0xcd46, 0x4c7d, {0x86, 0xca, 0x47, 0xaa, 0x95, 0xb8, 0x37, 0xbd}};
+        CreateDXGIFactory2(DXGI_CREATE_FACTORY_DEBUG, &IID_IDXGIFactory2, (void **)&dxgiFactory2);
 
         // Create DCompositionDevice
         HMODULE hDcomp = LoadLibrary(L"dcomp.dll");
         _DCompositionCreateDevice DCompositionCreateDevice = (_DCompositionCreateDevice)GetProcAddress(hDcomp, "DCompositionCreateDevice");
         if (DCompositionCreateDevice != NULL) {
-            IDXGIDevice *dxgiDevice;
-            IID IID_IDXGIDevice = {0x54ec77fa, 0x1377, 0x44e6, {0x8c, 0x32, 0x88, 0xfd, 0x5f, 0x44, 0xc8, 0x4c}};
-            ID3D11Device_QueryInterface(d3d11Device, &IID_IDXGIDevice, (void **)&dxgiDevice);
-
             IID IID_IDCompositionDevice = {0xC37EA93A, 0xE7AA, 0x450D, {0xB1, 0x6F, 0x97, 0x46, 0xCB, 0x04, 0x07, 0xF3}};
             DCompositionCreateDevice(dxgiDevice, &IID_IDCompositionDevice, (void **)&dcompDevice);
 
@@ -534,6 +541,7 @@ LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             dcompDevice->lpVtbl->CreateTargetForHwnd(dcompDevice, hwnd, TRUE, &hwndRenderTarget);
 
             // Create dcomp visuals
+            IDCompositionVisual *rootVisual;
             dcompDevice->lpVtbl->CreateVisual(dcompDevice, &rootVisual);
             hwndRenderTarget->lpVtbl->SetRoot(hwndRenderTarget, rootVisual);
 
@@ -654,8 +662,8 @@ LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     }
 
     // Handle keydown messages
-    if (msg == WM_KEYDOWN) {
-        HandleKeyDown(wParam);
+    if (msg == WM_SYSKEYDOWN) {
+        HandleSystemKeyDown(wParam);
         return 0;
     }
 
@@ -772,11 +780,11 @@ void _start(void) {
     // Register window class
     WNDCLASSEX wc = {0};
     wc.cbSize = sizeof(WNDCLASSEX);
+    wc.style = CS_HREDRAW | CS_VREDRAW;
     wc.lpfnWndProc = WndProc;
     wc.hInstance = instance;
     wc.hIcon = (HICON)LoadImage(instance, MAKEINTRESOURCE(ID_ICON_APP), IMAGE_ICON, 0, 0, LR_DEFAULTSIZE | LR_DEFAULTCOLOR | LR_SHARED);
     wc.hCursor = LoadCursor(NULL, IDC_ARROW);
-    wc.hbrBackground = CreateSolidBrush(0x0a0a0a);
     wc.lpszClassName = window_class_name;
     wc.hIconSm = (HICON)LoadImage(instance, MAKEINTRESOURCE(ID_ICON_APP), IMAGE_ICON, GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON),
                                   LR_DEFAULTCOLOR | LR_SHARED);
@@ -792,7 +800,7 @@ void _start(void) {
     window_rect.right = window_rect.left + window_width;
     window_rect.bottom = window_rect.top + window_height;
     AdjustWindowRectExForDpi(&window_rect, WINDOW_STYLE, FALSE, 0, window_dpi);
-    window_hwnd = CreateWindowEx(0, wc.lpszClassName, GetString(ID_STRING_APP_NAME), WINDOW_STYLE, window_rect.left, window_rect.top,
+    window_hwnd = CreateWindowEx(WS_EX_NOREDIRECTIONBITMAP, wc.lpszClassName, GetString(ID_STRING_APP_NAME), WINDOW_STYLE, window_rect.left, window_rect.top,
                                  window_rect.right - window_rect.left, window_rect.bottom - window_rect.top, HWND_DESKTOP, NULL, instance, NULL);
 
     // Enable dark window decoration
