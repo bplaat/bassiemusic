@@ -5,13 +5,13 @@
     // Language strings
     const lang = {
         en: {
-            title: 'Delete user',
+            header: 'Delete user',
             text: 'Do your realy want to delete this user?',
             delete: 'Delete user',
             cancel: 'Cancel',
         },
         nl: {
-            title: 'Verwijder gebruiker',
+            header: 'Verwijder gebruiker',
             text: 'Weet je zeker dat je deze gebruiker wilt verwijderen?',
             delete: 'Verwijder gebruiker',
             cancel: 'Annuleren',
@@ -55,7 +55,7 @@
     <div class="modal-background" on:click={close} />
     <div class="modal-card">
         <header class="modal-card-head">
-            <p class="modal-card-title">{t('title')}</p>
+            <p class="modal-card-title">{t('header')}</p>
             <button type="button" class="delete" aria-label="close" on:click={close} />
         </header>
         <section class="modal-card-body">

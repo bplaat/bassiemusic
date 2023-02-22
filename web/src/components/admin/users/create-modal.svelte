@@ -5,7 +5,7 @@
     // Language strings
     const lang = {
         en: {
-            title: 'Create new user',
+            header: 'Create new user',
             username: 'Username',
             email: 'Email address',
             password: 'Password',
@@ -16,7 +16,7 @@
             cancel: 'Cancel',
         },
         nl: {
-            title: 'Maak nieuw gebruiker aan',
+            header: 'Maak nieuw gebruiker aan',
             username: 'Gebruikersnaam',
             email: 'Email adres',
             password: 'Wachtwoord',
@@ -78,7 +78,7 @@
     <div class="modal-background" on:click={close} />
     <div class="modal-card">
         <header class="modal-card-head">
-            <p class="modal-card-title">{t('title')}</p>
+            <p class="modal-card-title">{t('header')}</p>
             <button type="button" class="delete" aria-label="close" on:click={close} />
         </header>
         <section class="modal-card-body">

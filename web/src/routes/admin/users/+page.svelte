@@ -1,12 +1,52 @@
 <script>
+    import { onMount } from 'svelte';
     import CreateModal from '../../../components/admin/users/create-modal.svelte';
     import EditModal from '../../../components/admin/users/edit-modal.svelte';
     import DeleteModal from '../../../components/admin/users/delete-modal.svelte';
-    import { onMount } from 'svelte';
+    import { language } from '../../../stores.js';
 
+    // Language strings
+    const lang = {
+        en: {
+            title: 'Users - Admin - BassieMusic',
+            create: 'Create new user',
+            index: '#',
+            username: 'Username',
+            email: 'Email address',
+            role: 'Role',
+            role_normal: 'Normal',
+            role_admin: 'Admin',
+            actions: 'Actions',
+            edit: 'Edit',
+            delete: 'Delete',
+        },
+        nl: {
+            title: 'Gebruikers - Admin - BassieMusic',
+            create: 'Maake nieuwe gebruiker aan',
+            index: '#',
+            username: 'Gebruikersnaam',
+            email: 'Email adres',
+            role: 'Rol',
+            role_normal: 'Normaal',
+            role_admin: 'Admin',
+            actions: 'Acties',
+            edit: 'Verander',
+            delete: 'Verwijder',
+        }
+    };
+    const t = (key) => lang[$language][key];
+
+    // Props
     export let data;
     let { token, users } = data;
 
+    // State
+    let selectedUser = {};
+    let createModal;
+    let editModal;
+    let deleteModal;
+
+    // Methods
     async function fetchPage(page) {
         const response = await fetch(
             `${import.meta.env.VITE_API_URL}/users?${new URLSearchParams({
@@ -36,11 +76,6 @@
         fetchPage(1);
     }
 
-    let selectedUser = {};
-    let createModal;
-    let editModal;
-    let deleteModal;
-
     function editUser(user) {
         selectedUser = user;
         editModal.open();
@@ -53,7 +88,7 @@
 </script>
 
 <svelte:head>
-    <title>Users - Admin - BassieMusic</title>
+    <title>{t('title')}</title>
 </svelte:head>
 
 <div class="columns">
@@ -62,18 +97,18 @@
     </div>
     <div class="column">
         <div class="buttons is-pulled-right">
-            <button class="button is-link" on:click={createModal.open()}>Create new user</button>
+            <button class="button is-link" on:click={createModal.open()}>{t('create')}</button>
         </div>
     </div>
 </div>
 
 <table class="table" style="width: 100%;">
     <thead>
-        <th style="width: 10%;">#</th>
-        <th style="width: 30%;">Username</th>
-        <th style="width: 30%;">Email</th>
-        <th style="width: 15%;">Role</th>
-        <th style="width: 15%;">Actions</th>
+        <th style="width: 10%;">{t('index')}</th>
+        <th style="width: 30%;">{t('username')}</th>
+        <th style="width: 30%;">{t('email')}</th>
+        <th style="width: 15%;">{t('role')}</th>
+        <th style="width: 15%;">{t('actions')}</th>
     </thead>
     <tbody>
         {#each users as user, index}
@@ -81,11 +116,11 @@
                 <td>{index + 1}</td>
                 <td>{user.username}</td>
                 <td>{user.email}</td>
-                <td>{user.role == 'normal' ? 'Normal' : 'Admin'}</td>
+                <td>{user.role == 'normal' ? t('role_normal') : t('role_admin')}</td>
                 <td>
                     <div class="buttons">
-                        <button class="button is-link is-small" on:click={() => editUser(user)}>Edit</button>
-                        <button class="button is-danger is-small" on:click={() => deleteUser(user)}>Delete</button>
+                        <button class="button is-link is-small" on:click={() => editUser(user)}>{t('edit')}</button>
+                        <button class="button is-danger is-small" on:click={() => deleteUser(user)}>{t('delete')}</button>
                     </div>
                 </td>
             </tr>

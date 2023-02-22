@@ -1,14 +1,63 @@
 <script>
     import { formatBytes } from '../../../filters.js';
+    import { language } from '../../../stores.js';
 
+    // Language strings
+    const lang = {
+        en: {
+            title: 'Downloader - Admin - BassieMusic',
+            header: 'Admin Downloader',
+
+            storage_size: 'Storage folder size',
+            storage_used: 'Used: $1',
+            storage_max: 'Max: $1',
+
+            search_header: 'Search and download albums and artists',
+            query_placeholder: 'Find an album or artist...',
+            search: 'Search',
+            albums: 'Albums',
+            cover_alt: 'Cover of album $1',
+            add_album: 'Add album to BassieMusic',
+            albums_empty: 'Can\'t find any albums on Deezer',
+            artists: 'Artists',
+            image_alt: 'Image of artist $1',
+            add_artist: 'Add artist to BassieMusic',
+            artists_empty: 'Can\'t find any artists on Deezer',
+        },
+        nl: {
+            title: 'Downloader - Admin - BassieMusic',
+            header: 'Admin Downloader',
+
+            storage_size: 'Storage folder groote',
+            storage_used: 'Gebruikt: $1',
+            storage_max: 'Max: $1',
+
+            search_header: 'Zoek en download albums en artisten',
+            query_placeholder: 'Vind een album of artist...',
+            search: 'Zoeken',
+            albums: 'Albums',
+            cover_alt: 'Hoes van album $1',
+            add_album: 'Voeg album toe aan BassieMusic',
+            albums_empty: 'Kan geen albums vinden op Deezer',
+            artists: 'Artisten',
+            image_alt: 'Afbeelding van artist $1',
+            add_artist: 'Voeg artist toe aan BassieMusic',
+            artists_empty: 'Kan geen artisten vinden op Deezer',
+        }
+    };
+    const t = (key, p1 = '') => lang[$language][key].replace('$1', p1);
+
+    // Props
     export let data;
     const { token, storage } = data;
 
+    // State
     let query = '';
     let results = false;
     let albums = [];
     let artists = [];
 
+    // Methods
     async function search() {
         if (query == '') {
             results = false;
@@ -66,43 +115,43 @@
 </script>
 
 <svelte:head>
-    <title>Downloader - Admin - BassieMusic</title>
+    <title>{t('title')}</title>
 </svelte:head>
 
-<h1 class="title">Admin Downloader</h1>
+<h1 class="title">{t('header')}</h1>
 
 <div class="box">
-    <h2 class="title is-4">Storage folder size</h2>
+    <h2 class="title is-4">{t('storage_size')}</h2>
     <progress class="progress is-link" value={storage.used} max={storage.max}>
         {((storage.used / storage.max) * 100).toFixed(2)}%
     </progress>
     <p>
-        <span class="mr-3">Used: {formatBytes(storage.used)}</span>
-        <span>Max: {formatBytes(storage.max)}</span>
+        <span class="mr-3">{t('storage_used', formatBytes(storage.used))}</span>
+        <span>{t('storage_max', formatBytes(storage.max))}</span>
     </p>
 </div>
 
 <div class="box">
-    <h2 class="title is-4">Search and download albums and artists</h2>
+    <h2 class="title is-4">{t('search_header')}</h2>
 
     <form on:submit|preventDefault={search} class="field has-addons">
         <div class="control" style="width: 100%;">
-            <input class="input" type="text" bind:value={query} placeholder="Find an album or artist..." />
+            <input class="input" type="text" bind:value={query} placeholder={t('query_placeholder')} />
         </div>
         <div class="control">
-            <button type="submit" class="button is-link">Search</button>
+            <button type="submit" class="button is-link">{t('search')}</button>
         </div>
     </form>
 
     {#if results}
         <div class="columns mt-5">
             <div class="column is-half">
-                <h2 class="title is-4">Albums</h2>
+                <h2 class="title is-4">{t('albums')}</h2>
                 {#each albums as album}
                     <div class="media">
                         <div class="media-left">
                             <div class="box m-0 p-0" style="width: 48px; height: 48px;">
-                                <img src={album.cover_medium} alt="Cover of album {album.title}" loading="lazy" />
+                                <img src={album.cover_medium} alt={t('cover_alt', album.title)} loading="lazy" />
                             </div>
                         </div>
                         <div class="media-content" style="min-width: 0;">
@@ -113,7 +162,7 @@
                             <button
                                 class="button is-link"
                                 on:click={() => downloadAlbum(album)}
-                                title="Add album to BassieMusic"
+                                title={t('add_album')}
                             >
                                 <svg class="icon" viewBox="0 0 24 24">
                                     <path d="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z" />
@@ -123,17 +172,17 @@
                     </div>
                 {/each}
                 {#if albums.length == 0}
-                    <p><i>Can't find any albums on Deezer</i></p>
+                    <p><i>{t('albums_empty')}</i></p>
                 {/if}
             </div>
 
             <div class="column is-half">
-                <h2 class="title is-4">Artists</h2>
+                <h2 class="title is-4">{t('artists')}</h2>
                 {#each artists as artist}
                     <div class="media">
                         <div class="media-left">
                             <div class="box m-0 p-0" style="width: 48px; height: 48px;">
-                                <img src={artist.picture_medium} alt="Image of artist {artist.name}" loading="lazy" />
+                                <img src={artist.picture_medium} alt={t('image_alt', artist.name)} loading="lazy" />
                             </div>
                         </div>
                         <div class="media-content">
@@ -142,7 +191,7 @@
                         <button
                             class="button is-link"
                             on:click={() => downloadArtist(artist)}
-                            title="Add artist to BassieMusic"
+                            title={t('add_artist')}
                         >
                             <svg class="icon" viewBox="0 0 24 24">
                                 <path d="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z" />
@@ -151,7 +200,7 @@
                     </div>
                 {/each}
                 {#if artists.length == 0}
-                    <p><i>Can't find any artist on Deezer</i></p>
+                    <p><i>{t('artists_empty')}</i></p>
                 {/if}
             </div>
         </div>
