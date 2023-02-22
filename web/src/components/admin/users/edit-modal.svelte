@@ -1,14 +1,57 @@
 <script>
     import { createEventDispatcher } from 'svelte';
+    import { language } from '../../../stores.js';
 
+    // Language strings
+    const lang = {
+        en: {
+            title: 'Edit user',
+            username: 'Username',
+            email: 'Email address',
+            password: 'Password (leave empty to not change)',
+            role: 'Role',
+            role_normal: 'Normal',
+            role_admin: 'Admin',
+            language: 'Language',
+            theme: 'Theme',
+            theme_system: 'System',
+            theme_light: 'Light',
+            theme_dark: 'Dark',
+            edit: 'Edit user',
+            cancel: 'Cancel',
+        },
+        nl: {
+            title: 'Verander gebruiker',
+            username: 'Gebruikersnaam',
+            email: 'Email adres',
+            password: 'Wachtwoord (laat leeg om niet te veranderen)',
+            role: 'Rol',
+            role_normal: 'Normaal',
+            role_admin: 'Admin',
+            language: 'Taal',
+            theme: 'Thema',
+            theme_system: 'Systeem',
+            theme_light: 'Licht',
+            theme_dark: 'Donker',
+            create: 'Verander gebruiker',
+            cancel: 'Annuleren',
+        }
+    };
+    const t = (key) => lang[$language][key];
+
+    // Props
     export let token;
     export let user;
-    let newPassword = '';
 
+    // State
+    let newPassword = '';
     let isOpen = false;
+
+    // Methods
     export function open() {
         isOpen = true;
     }
+
     export function close() {
         isOpen = false;
     }
@@ -42,14 +85,14 @@
     <div class="modal-background" on:click={close} />
     <div class="modal-card">
         <header class="modal-card-head">
-            <p class="modal-card-title">Edit user</p>
+            <p class="modal-card-title">{t('title')}</p>
             <button type="button" class="delete" aria-label="close" on:click={close} />
         </header>
         <section class="modal-card-body">
             <div class="columns">
                 <div class="column">
                     <div class="field">
-                        <label class="label" for="edit-username">Username</label>
+                        <label class="label" for="edit-username">{t('username')}</label>
                         <div class="control">
                             <input class="input" type="text" id="edit-username" bind:value={user.username} required />
                         </div>
@@ -58,7 +101,7 @@
 
                 <div class="column">
                     <div class="field">
-                        <label class="label" for="edit-email">Email</label>
+                        <label class="label" for="edit-email">{t('email')}</label>
                         <div class="control">
                             <input class="input" type="email" id="edit-email" bind:value={user.email} required />
                         </div>
@@ -67,7 +110,7 @@
             </div>
 
             <div class="field">
-                <label class="label" for="edit-password">Password (leave empty to not change)</label>
+                <label class="label" for="edit-password">{t('password')}</label>
                 <div class="control">
                     <input class="input" type="password" id="edit-password" bind:value={newPassword} />
                 </div>
@@ -76,12 +119,12 @@
             <div class="columns">
                 <div class="column">
                     <div class="field">
-                        <label class="label" for="edit-role">Role</label>
+                        <label class="label" for="edit-role">{t('role')}</label>
                         <div class="control">
                             <div class="select is-fullwidth">
                                 <select id="edit-role" bind:value={user.role} required>
-                                    <option value="normal">Normal</option>
-                                    <option value="admin">Admin</option>
+                                    <option value="normal">{t('role_normal')}</option>
+                                    <option value="admin">{t('role_admin')}</option>
                                 </select>
                             </div>
                         </div>
@@ -90,7 +133,7 @@
 
                 <div class="column">
                     <div class="field">
-                        <label class="label" for="edit-language">Language</label>
+                        <label class="label" for="edit-language">{t('language')}</label>
                         <div class="control">
                             <div class="select is-fullwidth">
                                 <select id="edit-language" bind:value={user.language} required>
@@ -104,13 +147,13 @@
 
                 <div class="column">
                     <div class="field">
-                        <label class="label" for="edit-theme">Theme</label>
+                        <label class="label" for="edit-theme">{t('theme')}</label>
                         <div class="control">
                             <div class="select is-fullwidth">
                                 <select id="edit-theme" bind:value={user.theme} required>
-                                    <option value="system">System</option>
-                                    <option value="light">Light</option>
-                                    <option value="dark">Dark</option>
+                                    <option value="system">{t('theme_system')}</option>
+                                    <option value="light">{t('theme_light')}</option>
+                                    <option value="dark">{t('theme_dark')}</option>
                                 </select>
                             </div>
                         </div>
@@ -119,8 +162,8 @@
             </div>
         </section>
         <footer class="modal-card-foot">
-            <button type="submit" class="button is-link">Edit user</button>
-            <button class="button" on:click|preventDefault={close}>Cancel</button>
+            <button type="submit" class="button is-link">{t('edit')}</button>
+            <button class="button" on:click|preventDefault={close}>{t('cancel')}</button>
         </footer>
     </div>
 </form>
