@@ -1,6 +1,5 @@
 // window decoration styling
 // remove webview2 messaging
-// move alert dialog to direct2d dcomp visual
 
 #define UNICODE
 #include <dwmapi.h>
@@ -15,22 +14,21 @@
 
 #include "../res/resource.h"
 #include "WebView2.h"
-#include "dcomp.h"
 #include "about.h"
+#include "dcomp.h"
 #include "utils.h"
 
 #define ID_MENU_ABOUT 2
 #define WINDOW_STYLE (WS_POPUP | WS_THICKFRAME | WS_CAPTION | WS_SYSMENU | WS_MAXIMIZEBOX | WS_MINIMIZEBOX)
-wchar_t *window_class_name = L"bassiemusic";
-HINSTANCE instance;
+
 HWND window_hwnd;
 UINT window_dpi;
 BOOL window_titlebar_drag = FALSE;
 ICoreWebView2CompositionController *composition_controller = NULL;
 ICoreWebView2Controller *controller = NULL;
-ICoreWebView2 *webview2 = NULL;
-IDCompositionDevice *dcompDevice = NULL;
-IDCompositionVisual *webviewVisual = NULL;
+ICoreWebView2 *webview = NULL;
+IDCompositionDevice *composition_device = NULL;
+IDCompositionVisual *webview_visual = NULL;
 
 typedef HRESULT(STDMETHODCALLTYPE *_CreateCoreWebView2EnvironmentWithOptions)(
     PCWSTR browserExecutableFolder, PCWSTR userDataFolder, ICoreWebView2EnvironmentOptions *environmentOptions,
@@ -115,22 +113,26 @@ HRESULT STDMETHODCALLTYPE ControllerCompletedHandler_Invoke(ICoreWebView2CreateC
     ICoreWebView2CompositionController_AddRef(new_composition_controller);
     composition_controller = new_composition_controller;
 
-    ICoreWebView2CompositionController_put_RootVisualTarget(composition_controller, (void *)webviewVisual);
-    dcompDevice->lpVtbl->Commit(dcompDevice);
+    ICoreWebView2CompositionController_put_RootVisualTarget(composition_controller, (void *)webview_visual);
+    composition_device->lpVtbl->Commit(composition_device);
 
     ICoreWebView2CompositionController_QueryInterface(composition_controller, &IID_ICoreWebView2Controller, (void **)&controller);
-    ICoreWebView2Controller_get_CoreWebView2(controller, &webview2);
+    ICoreWebView2Controller_get_CoreWebView2(controller, &webview);
 
-    ICoreWebView2_13 *webview2_13;
-    ICoreWebView2_QueryInterface(webview2, &IID_ICoreWebView2_13, (void **)&webview2_13);
+    ICoreWebView2Controller2 *controller2;
+    ICoreWebView2Controller_QueryInterface(controller, &IID_ICoreWebView2Controller2, (void **)&controller2);
+    ICoreWebView2Controller2_put_DefaultBackgroundColor(controller2, ((COREWEBVIEW2_COLOR){0xff, 0x0a, 0x0a, 0x0a}));
+
+    ICoreWebView2_13 *webview13;
+    ICoreWebView2_QueryInterface(webview, &IID_ICoreWebView2_13, (void **)&webview13);
     ICoreWebView2Profile *profile;
-    ICoreWebView2_13_get_Profile(webview2_13, &profile);
-    ICoreWebView2_13_Release(webview2_13);
+    ICoreWebView2_13_get_Profile(webview13, &profile);
+    ICoreWebView2_13_Release(webview13);
     ICoreWebView2Profile_put_PreferredColorScheme(profile, COREWEBVIEW2_PREFERRED_COLOR_SCHEME_DARK);
     ICoreWebView2Profile_Release(profile);
 
     ICoreWebView2Settings *settings;
-    ICoreWebView2_get_Settings(webview2, &settings);
+    ICoreWebView2_get_Settings(webview, &settings);
     ICoreWebView2Settings_put_AreDevToolsEnabled(settings, FALSE);
     ICoreWebView2Settings_put_AreDefaultContextMenusEnabled(settings, FALSE);
     ICoreWebView2Settings_put_IsStatusBarEnabled(settings, FALSE);
@@ -141,17 +143,17 @@ HRESULT STDMETHODCALLTYPE ControllerCompletedHandler_Invoke(ICoreWebView2CreateC
     UINT app_version[4];
     GetAppVersion(app_version);
     wchar_t userAgent[255];
-    wsprintfW(userAgent, L"BassieMusic Windows App v%d.%d.%d.%d", app_version[0], app_version[1], app_version[2], app_version[3]);
+    wsprintf(userAgent, L"BassieMusic Windows App v%d.%d.%d.%d", app_version[0], app_version[1], app_version[2], app_version[3]);
     ICoreWebView2Settings2_put_UserAgent(settings2, userAgent);
     ICoreWebView2Settings2_Release(settings2);
 
     ICoreWebView2WebMessageReceivedEventHandler *webMessageReceivedEventHandler = malloc(sizeof(ICoreWebView2WebMessageReceivedEventHandler));
     webMessageReceivedEventHandler->lpVtbl = &WebMessageReceivedEventHandlerVtbl;
-    ICoreWebView2_add_WebMessageReceived(webview2, webMessageReceivedEventHandler, NULL);
+    ICoreWebView2_add_WebMessageReceived(webview, webMessageReceivedEventHandler, NULL);
 
     ICoreWebView2NewWindowRequestedEventHandler *newWindowRequestedHandler = malloc(sizeof(ICoreWebView2NewWindowRequestedEventHandler));
     newWindowRequestedHandler->lpVtbl = &NewWindowRequestedHandlerVtbl;
-    ICoreWebView2_add_NewWindowRequested(webview2, newWindowRequestedHandler, NULL);
+    ICoreWebView2_add_NewWindowRequested(webview, newWindowRequestedHandler, NULL);
 
     ICoreWebView2AcceleratorKeyPressedEventHandler *newAcceleratorKeyPressedHandler = malloc(sizeof(ICoreWebView2AcceleratorKeyPressedEventHandler));
     newAcceleratorKeyPressedHandler->lpVtbl = &AcceleratorKeyPressedHandlerVtbl;
@@ -159,7 +161,7 @@ HRESULT STDMETHODCALLTYPE ControllerCompletedHandler_Invoke(ICoreWebView2CreateC
 
     ResizeBrowser(window_hwnd);
     ICoreWebView2Controller_put_IsVisible(controller, TRUE);
-    ICoreWebView2_Navigate(webview2, GetString(ID_STRING_WEBVIEW_URL));
+    ICoreWebView2_Navigate(webview, GetString(ID_STRING_WEBVIEW_URL));
     return S_OK;
 }
 
@@ -246,35 +248,29 @@ LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         ID3D11Device *d3d11Device;
         D3D11CreateDevice(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, D3D11_CREATE_DEVICE_BGRA_SUPPORT, NULL, 0, D3D11_SDK_VERSION, &d3d11Device, NULL, NULL);
 
-        //https://learn.microsoft.com/en-us/archive/msdn-magazine/2014/june/windows-with-c-high-performance-window-layering-using-the-windows-composition-engine
+        // https://learn.microsoft.com/en-us/archive/msdn-magazine/2014/june/windows-with-c-high-performance-window-layering-using-the-windows-composition-engine
         IDXGIDevice *dxgiDevice;
         IID IID_IDXGIDevice = {0x54ec77fa, 0x1377, 0x44e6, {0x8c, 0x32, 0x88, 0xfd, 0x5f, 0x44, 0xc8, 0x4c}};
         ID3D11Device_QueryInterface(d3d11Device, &IID_IDXGIDevice, (void **)&dxgiDevice);
 
-        IDXGIFactory2 *dxgiFactory2;
-        IID IID_IDXGIFactory2 = {0x25483823, 0xcd46, 0x4c7d, {0x86, 0xca, 0x47, 0xaa, 0x95, 0xb8, 0x37, 0xbd}};
-        CreateDXGIFactory2(DXGI_CREATE_FACTORY_DEBUG, &IID_IDXGIFactory2, (void **)&dxgiFactory2);
-
-        // Create DCompositionDevice
+        // Create composition device
         HMODULE hDcomp = LoadLibrary(L"dcomp.dll");
         _DCompositionCreateDevice DCompositionCreateDevice = (_DCompositionCreateDevice)GetProcAddress(hDcomp, "DCompositionCreateDevice");
-        if (DCompositionCreateDevice != NULL) {
-            IID IID_IDCompositionDevice = {0xC37EA93A, 0xE7AA, 0x450D, {0xB1, 0x6F, 0x97, 0x46, 0xCB, 0x04, 0x07, 0xF3}};
-            DCompositionCreateDevice(dxgiDevice, &IID_IDCompositionDevice, (void **)&dcompDevice);
+        IID IID_IDCompositionDevice = {0xC37EA93A, 0xE7AA, 0x450D, {0xB1, 0x6F, 0x97, 0x46, 0xCB, 0x04, 0x07, 0xF3}};
+        DCompositionCreateDevice(dxgiDevice, &IID_IDCompositionDevice, (void **)&composition_device);
 
-            IDCompositionTarget *hwndRenderTarget;
-            dcompDevice->lpVtbl->CreateTargetForHwnd(dcompDevice, hwnd, TRUE, &hwndRenderTarget);
+        IDCompositionTarget *hwndRenderTarget;
+        composition_device->lpVtbl->CreateTargetForHwnd(composition_device, hwnd, TRUE, &hwndRenderTarget);
 
-            // Create dcomp visuals
-            IDCompositionVisual *rootVisual;
-            dcompDevice->lpVtbl->CreateVisual(dcompDevice, &rootVisual);
-            hwndRenderTarget->lpVtbl->SetRoot(hwndRenderTarget, rootVisual);
+        // Create composition visuals
+        IDCompositionVisual *rootVisual;
+        composition_device->lpVtbl->CreateVisual(composition_device, &rootVisual);
+        hwndRenderTarget->lpVtbl->SetRoot(hwndRenderTarget, rootVisual);
 
-            dcompDevice->lpVtbl->CreateVisual(dcompDevice, &webviewVisual);
-            rootVisual->lpVtbl->AddVisual(rootVisual, webviewVisual, TRUE, NULL);
+        composition_device->lpVtbl->CreateVisual(composition_device, &webview_visual);
+        rootVisual->lpVtbl->AddVisual(rootVisual, webview_visual, TRUE, NULL);
 
-            dcompDevice->lpVtbl->Commit(dcompDevice);
-        }
+        composition_device->lpVtbl->Commit(composition_device);
         return 0;
     }
 
@@ -315,7 +311,7 @@ LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (!monitor) return 0;
                 MONITORINFO monitor_info;
                 monitor_info.cbSize = sizeof(MONITORINFO);
-                if (!GetMonitorInfoW(monitor, &monitor_info)) {
+                if (!GetMonitorInfo(monitor, &monitor_info)) {
                     return 0;
                 }
                 params->rgrc[0] = monitor_info.rcWork;
@@ -487,9 +483,10 @@ LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
 void _start(void) {
     // Only allow own app instance
-    HANDLE mutex = CreateMutexW(NULL, TRUE, window_class_name);
+    wchar_t *window_class_name = L"bassiemusic";
+    HANDLE mutex = CreateMutex(NULL, TRUE, window_class_name);
     if (mutex == NULL) {
-        HWND window = FindWindowW(window_class_name, NULL);
+        HWND window = FindWindow(window_class_name, NULL);
         if (window != NULL) {
             if (IsIconic(window)) {
                 ShowWindow(window, SW_SHOW);
@@ -499,19 +496,16 @@ void _start(void) {
         ExitProcess(0);
     }
 
-    // Get instance
-    instance = GetModuleHandle(NULL);
-
     // Register window class
     WNDCLASSEX wc = {0};
     wc.cbSize = sizeof(WNDCLASSEX);
     wc.style = CS_HREDRAW | CS_VREDRAW;
     wc.lpfnWndProc = WndProc;
-    wc.hInstance = instance;
-    wc.hIcon = (HICON)LoadImage(instance, MAKEINTRESOURCE(ID_ICON_APP), IMAGE_ICON, 0, 0, LR_DEFAULTSIZE | LR_DEFAULTCOLOR | LR_SHARED);
+    wc.hInstance = GetModuleHandle(NULL);
+    wc.hIcon = (HICON)LoadImage(wc.hInstance, MAKEINTRESOURCE(ID_ICON_APP), IMAGE_ICON, 0, 0, LR_DEFAULTSIZE | LR_DEFAULTCOLOR | LR_SHARED);
     wc.hCursor = LoadCursor(NULL, IDC_ARROW);
     wc.lpszClassName = window_class_name;
-    wc.hIconSm = (HICON)LoadImage(instance, MAKEINTRESOURCE(ID_ICON_APP), IMAGE_ICON, GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON),
+    wc.hIconSm = (HICON)LoadImage(wc.hInstance, MAKEINTRESOURCE(ID_ICON_APP), IMAGE_ICON, GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON),
                                   LR_DEFAULTCOLOR | LR_SHARED);
     RegisterClassEx(&wc);
 
@@ -526,7 +520,7 @@ void _start(void) {
     window_rect.bottom = window_rect.top + window_height;
     AdjustWindowRectExForDpi(&window_rect, WINDOW_STYLE, FALSE, 0, window_dpi);
     window_hwnd = CreateWindowEx(WS_EX_NOREDIRECTIONBITMAP, wc.lpszClassName, GetString(ID_STRING_APP_NAME), WINDOW_STYLE, window_rect.left, window_rect.top,
-                                 window_rect.right - window_rect.left, window_rect.bottom - window_rect.top, HWND_DESKTOP, NULL, instance, NULL);
+                                 window_rect.right - window_rect.left, window_rect.bottom - window_rect.top, HWND_DESKTOP, NULL, wc.hInstance, NULL);
 
     // Enable dark window decoration
     BOOL enabled = TRUE;
@@ -547,8 +541,6 @@ void _start(void) {
     } else {
         ShowWindow(window_hwnd, window_width >= GetSystemMetrics(SM_CXSCREEN) ? SW_SHOWMAXIMIZED : SW_SHOWDEFAULT);
     }
-
-    // Show window
     UpdateWindow(window_hwnd);
 
     // Load webview2 laoder
@@ -562,7 +554,6 @@ void _start(void) {
         wcscat(appDataPath, L"\\BassieMusic");
 
         // Init webview2 stuff
-        SetEnvironmentVariable(L"WEBVIEW2_DEFAULT_BACKGROUND_COLOR", L"0a0a0a");
         ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler *environmentCompletedHandler =
             malloc(sizeof(ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler));
         environmentCompletedHandler->lpVtbl = &EnvironmentCompletedHandlerVtbl;

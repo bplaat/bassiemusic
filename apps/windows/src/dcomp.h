@@ -1,6 +1,6 @@
 #pragma once
 
-// Custom dcomp headers because they only have C++ headers and no IDl file is published :(
+// Custom DComposition headers because they only have C++ headers and no IDL file is published :(
 
 typedef struct IDCompositionVisual IDCompositionVisual;
 typedef struct IDCompositionVisualVtbl {

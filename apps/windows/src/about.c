@@ -149,6 +149,6 @@ void OpenAboutWindow(void) {
     }
 
     // Show window
-    ShowWindow(hwnd, SW_SHOWDEFAULT);
+    ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
 }

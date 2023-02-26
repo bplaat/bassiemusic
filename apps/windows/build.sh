@@ -17,7 +17,7 @@ if [ "$1" = "release" ]; then
     mkdir build/bassiemusic-win64
     gcc -c -Os -IWebView2 bassiemusic.c -o build/bassiemusic.o || exit
     ld -s --subsystem windows build/bassiemusic.o build/resource.o -e _start \
-        -L"C:\\Windows\\System32" -lkernel32 -luser32 -lgdi32 -lshell32 -lole32 -ldwmapi -ld3d11 -ldxgi -lversion -o build/bassiemusic-win64/bassiemusic.exe
+        -L"C:\\Windows\\System32" -lkernel32 -luser32 -lgdi32 -lshell32 -lole32 -lversion -ldwmapi -ld3d11 -o build/bassiemusic-win64/bassiemusic.exe
     cp WebView2/WebView2Loader.dll build/bassiemusic-win64
 
     cd build
@@ -29,6 +29,6 @@ gcc -c -IWebView2 src/main.c -o build/main.o || exit
 gcc -c src/about.c -o build/about.o || exit
 gcc -c src/utils.c -o build/utils.o || exit
 ld build/main.o build/about.o build/utils.o build/resource.o -e _start \
-    -L"C:\\Windows\\System32" -lkernel32 -luser32 -lgdi32 -lshell32 -lole32 -ldwmapi -ld3d11 -ldxgi -lversion -o build/bassiemusic.exe
+    -L"C:\\Windows\\System32" -lkernel32 -luser32 -lgdi32 -lshell32 -lole32 -lversion -ldwmapi -ld3d11 -o build/bassiemusic.exe
 cp WebView2/WebView2Loader.dll build
 ./build/bassiemusic

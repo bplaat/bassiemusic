@@ -62,7 +62,7 @@ wchar_t *GetString(UINT id) {
 }
 
 HBITMAP LoadPNGFromResource(wchar_t *type, wchar_t *name) {
-    HRSRC hsrc = FindResourceW(NULL, name, type);
+    HRSRC hsrc = FindResource(NULL, name, type);
 
     CLSID CLSID_WICImagingFactory = {0xcacaf262, 0x9370, 0x4615, {0xa1, 0x3b, 0x9f, 0x55, 0x39, 0xda, 0x4c, 0x0a}};
     IID IID_IWICImagingFactory = {0xec5ec8a9, 0xc395, 0x4314, {0x9c, 0x77, 0x54, 0xd7, 0xa9, 0x35, 0xff, 0x70}};
