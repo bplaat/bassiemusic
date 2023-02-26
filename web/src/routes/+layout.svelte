@@ -76,6 +76,7 @@
 <div
     bind:this={app}
     class="app"
+    class:has-sidebar={authUser != undefined}
     class:is-macos-app={agent.os == 'macOS' && agent.name == 'BassieMusic App'}
     class:is-windows-app={agent.os == 'Windows' && agent.name == 'BassieMusic App'}
     class:is-linux-app={agent.os == 'Linux' && agent.name == 'BassieMusic App'}
@@ -96,7 +97,9 @@
         </div>
     </nav>
 
-    <Sidebar bind:this={sidebar} {token} {authUser} />
+    {#if authUser != undefined}
+        <Sidebar bind:this={sidebar} {token} {authUser} />
+    {/if}
 
     <div class="section">
         <slot />
@@ -136,10 +139,12 @@
     @media (min-width: 1024px) {
         .app {
             margin-top: 0;
-            margin-left: 16.5rem;
             height: 100%;
         }
-        .app.app.is-playing {
+        .app.has-sidebar {
+            margin-left: 16.5rem;
+        }
+        .app.is-playing {
             margin-bottom: 6rem;
             height: calc(100% - 6rem);
         }
