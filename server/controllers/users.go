@@ -23,7 +23,6 @@ type UsersCreateParams struct {
 	Email    string `form:"email" validate:"required,email"`
 	Password string `form:"password" validate:"required,min=6"`
 	Role     string `form:"role" validate:"required"`
-	Theme    string `form:"theme" validate:"required"`
 }
 
 func UsersCreate(c *fiber.Ctx) error {
@@ -66,29 +65,14 @@ func UsersCreate(c *fiber.Ctx) error {
 		userRole = models.UserRoleAdmin
 	}
 
-	// Validate theme is correct
-	if params.Theme != "system" && params.Theme != "light" && params.Theme != "dark" {
-		log.Println("theme not valid")
-		return fiber.ErrBadRequest
-	}
-	var userTheme models.UserTheme
-	if params.Theme == "system" {
-		userTheme = models.UserThemeSystem
-	}
-	if params.Theme == "light" {
-		userTheme = models.UserThemeLight
-	}
-	if params.Theme == "dark" {
-		userTheme = models.UserThemeDark
-	}
-
 	// Create user
 	return c.JSON(models.UserModel().Create(database.Map{
 		"username": params.Username,
 		"email":    params.Email,
 		"password": utils.HashPassword(params.Password),
 		"role":     userRole,
-		"theme":    userTheme,
+		"language": "en",
+		"theme":    models.UserThemeSystem,
 	}))
 }
 
@@ -106,6 +90,7 @@ type UsersEditParams struct {
 	Password      string `form:"password" validate:"omitempty,min=6"`
 	AllowExplicit string `form:"allow_explicit" validate:"omitempty,required"`
 	Role          string `form:"role" validate:"omitempty,required"`
+	Language      string `form:"language" validate:"required"`
 	Theme         string `form:"theme" validate:"required"`
 }
 
@@ -160,6 +145,12 @@ func UsersEdit(c *fiber.Ctx) error {
 		return fiber.ErrBadRequest
 	}
 
+	// Validate lang is correct
+	if params.Language != "en" && params.Language != "nl" {
+		log.Println("lang not valid")
+		return fiber.ErrBadRequest
+	}
+
 	// Validate theme is correct
 	if params.Theme != "system" && params.Theme != "light" && params.Theme != "dark" {
 		log.Println("theme not valid")
@@ -190,6 +181,7 @@ func UsersEdit(c *fiber.Ctx) error {
 		"username":       params.Username,
 		"email":          params.Email,
 		"allow_explicit": params.AllowExplicit == "true",
+		"language":       params.Language,
 		"theme":          userTheme,
 	}
 	if params.Password != "" {

@@ -1,13 +1,36 @@
 <script>
     import { createEventDispatcher } from 'svelte';
+    import { language } from '../../../stores.js';
 
+    // Language strings
+    const lang = {
+        en: {
+            header: 'Delete user',
+            text: 'Do your realy want to delete this user?',
+            delete: 'Delete user',
+            cancel: 'Cancel',
+        },
+        nl: {
+            header: 'Verwijder gebruiker',
+            text: 'Weet je zeker dat je deze gebruiker wilt verwijderen?',
+            delete: 'Verwijder gebruiker',
+            cancel: 'Annuleren',
+        },
+    };
+    const t = (key) => lang[$language][key];
+
+    // Props
     export let token;
     export let user;
 
+    // State
     let isOpen = false;
+
+    // Methods
     export function open() {
         isOpen = true;
     }
+
     export function close() {
         isOpen = false;
     }
@@ -32,15 +55,15 @@
     <div class="modal-background" on:click={close} />
     <div class="modal-card">
         <header class="modal-card-head">
-            <p class="modal-card-title">Delete user</p>
+            <p class="modal-card-title">{t('header')}</p>
             <button type="button" class="delete" aria-label="close" on:click={close} />
         </header>
         <section class="modal-card-body">
-            <p>Do your realy want to delete this user?</p>
+            <p>{t('text')}</p>
         </section>
         <footer class="modal-card-foot">
-            <button type="submit" class="button is-danger">Delete user</button>
-            <button class="button" on:click|preventDefault={close}>Cancel</button>
+            <button type="submit" class="button is-danger">{t('delete')}</button>
+            <button class="button" on:click|preventDefault={close}>{t('cancel')}</button>
         </footer>
     </div>
 </form>

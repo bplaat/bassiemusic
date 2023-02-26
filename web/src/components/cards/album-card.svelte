@@ -1,10 +1,26 @@
 <script>
-    import { musicPlayer } from '../stores.js';
+    import { musicPlayer } from '../../stores.js';
+    import { language } from '../../stores.js';
 
+    // Language strings
+    const lang = {
+        en: {
+            cover_alt: 'Cover of album $1',
+            explicit: 'Explicit lyrics',
+        },
+        nl: {
+            cover_alt: 'Hoes van album $1',
+            explicit: 'Expliciete songtekst',
+        },
+    };
+    const t = (key, p1) => lang[$language][key].replace('$1', p1);
+
+    // Props
     export let authUser;
     export let album;
     export let token;
 
+    // Methods
     async function fetchAndPlayTracks() {
         const response = await fetch(`${import.meta.env.VITE_API_URL}/albums/${album.id}`, {
             headers: {
@@ -26,7 +42,7 @@
     href="/albums/{album.id}"
 >
     <div class="card-image has-image-tags" style="aspect-ratio: 1;">
-        <img src={album.medium_cover} alt="Cover of album {album.name}" loading="lazy" />
+        <img src={album.medium_cover} alt={t('cover_alt', album.name)} loading="lazy" />
         <div class="image-tags">
             {#if album.type == 'album'}
                 <span class="tag">ALBUM</span>
@@ -38,7 +54,7 @@
                 <span class="tag">SINGLE</span>
             {/if}
             {#if album.explicit}
-                <span class="tag is-danger" title="Explicit lyrics">E</span>
+                <span class="tag is-danger" title={t('explicit')}>E</span>
             {/if}
         </div>
         <button class="button image-play-button" on:click|preventDefault={fetchAndPlayTracks}>
