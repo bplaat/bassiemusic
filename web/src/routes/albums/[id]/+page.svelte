@@ -34,10 +34,12 @@
     // State
     export let data;
     let { token, authUser, album } = data;
-    album.tracks = album.tracks.slice().map((track) => {
-        track.album = album;
-        return track;
-    });
+    if (album.tracks) {
+        album.tracks = album.tracks.slice().map((track) => {
+            track.album = album;
+            return track;
+        });
+    }
     let tracksTable;
 
     // Page update id param
@@ -51,10 +53,12 @@
                     },
                 });
                 album = await response.json();
-                album.tracks = album.tracks.slice().map((track) => {
-                    track.album = album;
-                    return track;
-                });
+                if (album.tracks) {
+                    album.tracks = album.tracks.slice().map((track) => {
+                        track.album = album;
+                        return track;
+                    });
+                }
             }
         });
     });
@@ -156,7 +160,7 @@
 </div>
 
 <h3 class="title is-4">{t('tracks')}</h3>
-{#if album.tracks.length > 0}
+{#if album.tracks}
     <TracksTable bind:this={tracksTable} {token} {authUser} tracks={album.tracks} isAlbum={true} />
 {:else}
     <p><i>{t('tracks_empty')}</i></p>
