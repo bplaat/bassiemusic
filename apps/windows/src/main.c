@@ -12,11 +12,12 @@
 #include <d3d11.h>
 #include <d3d11_2.h>
 #include <dxgi1_3.h>
-#include <wincodec.h>
 
 #include "../res/resource.h"
 #include "WebView2.h"
 #include "dcomp.h"
+#include "about.h"
+#include "utils.h"
 
 #define ID_MENU_ABOUT 2
 #define WINDOW_STYLE (WS_POPUP | WS_THICKFRAME | WS_CAPTION | WS_SYSMENU | WS_MAXIMIZEBOX | WS_MINIMIZEBOX)
@@ -31,157 +32,15 @@ ICoreWebView2 *webview2 = NULL;
 IDCompositionDevice *dcompDevice = NULL;
 IDCompositionVisual *webviewVisual = NULL;
 
-#define ABOUT_WINDOW_STYLE (WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME ^ WS_MAXIMIZEBOX)
-UINT about_window_dpi;
-HBITMAP about_image;
-
-// Standard C Library wrapper functions
-void *malloc(size_t size) { return HeapAlloc(GetProcessHeap(), 0, size); }
-
-void free(void *ptr) { HeapFree(GetProcessHeap(), 0, ptr); }
-
-size_t wcslen(const wchar_t *string) {
-    wchar_t *c = (wchar_t *)string;
-    while (*c != '\0') c++;
-    return c - string;
-}
-
-wchar_t *wcscpy(wchar_t *dest, const wchar_t *src) {
-    wchar_t *start = dest;
-    while ((*dest++ = *src++) != '\0')
-        ;
-    return start;
-}
-
-wchar_t *wcscat(wchar_t *dest, const wchar_t *src) {
-    wchar_t *start = dest;
-    while (*dest != '\0') dest++;
-    wcscpy(dest, src);
-    return start;
-}
-
-int wcscmp(const wchar_t *s1, const wchar_t *s2) {
-    while (*s1 && (*s1 == *s2)) {
-        s1++;
-        s2++;
-    }
-    return *(const wchar_t *)s1 - *(const wchar_t *)s2;
-}
-
-// Helper functions
-#define WS_EX_NOREDIRECTIONBITMAP 0x00200000L
-
-#define GET_X_LPARAM(lParam) (int)(short)LOWORD(lParam)
-#define GET_Y_LPARAM(lParam) (int)(short)HIWORD(lParam)
-
-#define DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1 19
-#define DWMWA_USE_IMMERSIVE_DARK_MODE 20
-
 typedef HRESULT(STDMETHODCALLTYPE *_CreateCoreWebView2EnvironmentWithOptions)(
     PCWSTR browserExecutableFolder, PCWSTR userDataFolder, ICoreWebView2EnvironmentOptions *environmentOptions,
     ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler *environmentCreatedHandler);
-
-UINT GetPrimaryDesktopDpi(void) {
-    HDC hdc = GetDC(HWND_DESKTOP);
-    UINT dpi = GetDeviceCaps(hdc, LOGPIXELSY);
-    ReleaseDC(HWND_DESKTOP, hdc);
-    return dpi;
-}
-
-typedef BOOL(STDMETHODCALLTYPE *_AdjustWindowRectExForDpi)(RECT *lpRect, DWORD dwStyle, BOOL bMenu, DWORD dwExStyle, UINT dpi);
-
-BOOL AdjustWindowRectExForDpi(RECT *lpRect, DWORD dwStyle, BOOL bMenu, DWORD dwExStyle, UINT dpi) {
-    HMODULE huser32 = LoadLibrary(L"user32.dll");
-    _AdjustWindowRectExForDpi AdjustWindowRectExForDpi = (_AdjustWindowRectExForDpi)GetProcAddress(huser32, "AdjustWindowRectExForDpi");
-    if (AdjustWindowRectExForDpi) {
-        return AdjustWindowRectExForDpi(lpRect, dwStyle, bMenu, dwExStyle, dpi);
-    }
-    return AdjustWindowRectEx(lpRect, dwStyle, bMenu, dwExStyle);
-}
-
-wchar_t *GetString(UINT id) {
-    wchar_t *string;
-    LoadString(instance, id, (wchar_t *)&string, 0);
-    return string;
-}
-
-HBITMAP LoadPNGFromResource(wchar_t *type, wchar_t *name) {
-    HRSRC hsrc = FindResourceW(NULL, name, type);
-
-    CLSID CLSID_WICImagingFactory = {0xcacaf262, 0x9370, 0x4615, {0xa1, 0x3b, 0x9f, 0x55, 0x39, 0xda, 0x4c, 0x0a}};
-    IID IID_IWICImagingFactory = {0xec5ec8a9, 0xc395, 0x4314, {0x9c, 0x77, 0x54, 0xd7, 0xa9, 0x35, 0xff, 0x70}};
-    IWICImagingFactory *wicFactory;
-    CoCreateInstance(&CLSID_WICImagingFactory, NULL, CLSCTX_INPROC_SERVER, &IID_IWICImagingFactory, (void **)&wicFactory);
-
-    IWICStream *wicStream;
-    IWICImagingFactory_CreateStream(wicFactory, &wicStream);
-    IWICStream_InitializeFromMemory(wicStream, LockResource(LoadResource(NULL, hsrc)), SizeofResource(NULL, hsrc));
-
-    IWICBitmapDecoder *wicDecoder;
-    IWICImagingFactory_CreateDecoderFromStream(wicFactory, (IStream *)wicStream, NULL, WICDecodeMetadataCacheOnDemand, &wicDecoder);
-
-    IWICBitmapFrameDecode *wicFrame;
-    IWICBitmapDecoder_GetFrame(wicDecoder, 0, &wicFrame);
-    UINT width, height;
-    IWICBitmapSource_GetSize(wicFrame, &width, &height);
-
-    IWICFormatConverter *wicConverter;
-    IWICImagingFactory_CreateFormatConverter(wicFactory, &wicConverter);
-    GUID GUID_WICPixelFormat24bppBGR = {0x6fddc324, 0x4e03, 0x4bfe, {0xb1, 0x85, 0x3d, 0x77, 0x76, 0x8d, 0xc9, 0x0c}};
-    IWICFormatConverter_Initialize(wicConverter, (IWICBitmapSource *)wicFrame, &GUID_WICPixelFormat24bppBGR, WICBitmapDitherTypeNone, NULL, 0,
-                                   WICBitmapPaletteTypeCustom);
-
-    IID IID_IWICBitmapSource = {0x00000120, 0xa8f2, 0x4877, {0xba, 0x0a, 0xfd, 0x2b, 0x66, 0x45, 0xfb, 0x94}};
-    IWICBitmapSource *wicConvertedSource;
-    IWICFormatConverter_QueryInterface(wicConverter, &IID_IWICBitmapSource, (void **)&wicConvertedSource);
-
-    HDC hdc = GetDC(HWND_DESKTOP);
-    BITMAPINFO bitmapInfo = {0};
-    bitmapInfo.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-    bitmapInfo.bmiHeader.biWidth = width;
-    bitmapInfo.bmiHeader.biHeight = -height;
-    bitmapInfo.bmiHeader.biPlanes = 1;
-    bitmapInfo.bmiHeader.biBitCount = 24;
-    bitmapInfo.bmiHeader.biCompression = BI_RGB;
-    BYTE *bitmapBuffer = NULL;
-    HBITMAP bitmap = CreateDIBSection(hdc, &bitmapInfo, DIB_RGB_COLORS, (void **)&bitmapBuffer, NULL, 0);
-    IWICBitmapSource_CopyPixels(wicConvertedSource, NULL, width * 3, width * 3 * height, bitmapBuffer);
-    ReleaseDC(HWND_DESKTOP, hdc);
-
-    IWICBitmapSource_Release(wicConvertedSource);
-    IWICFormatConverter_Release(wicConverter);
-    IWICBitmapFrameDecode_Release(wicFrame);
-    IWICBitmapFrameDecode_Release(wicDecoder);
-    IWICStream_Release(wicStream);
-    IWICImagingFactory_Release(wicFactory);
-    return bitmap;
-}
 
 void FatalError(wchar_t *message) {
     MessageBox(HWND_DESKTOP, message, L"BassieMusic Error", MB_OK | MB_ICONSTOP);
     ExitProcess(1);
 }
 
-void GetAppVersion(UINT *version) {
-    wchar_t file_name[MAX_PATH];
-    GetModuleFileName(NULL, file_name, sizeof(file_name) / sizeof(wchar_t));
-    DWORD version_info_size = GetFileVersionInfoSize(file_name, NULL);
-    BYTE *version_info = malloc(version_info_size);
-    GetFileVersionInfo(file_name, 0, version_info_size, version_info);
-
-    VS_FIXEDFILEINFO *file_info;
-    UINT file_info_size;
-    VerQueryValue(version_info, L"\\", (LPVOID *)&file_info, &file_info_size);
-
-    version[0] = HIWORD(file_info->dwProductVersionMS);
-    version[1] = LOWORD(file_info->dwProductVersionMS);
-    version[2] = HIWORD(file_info->dwProductVersionLS);
-    version[3] = LOWORD(file_info->dwProductVersionLS);
-
-    free(version_info);
-}
-
-// Browser functionality
 void ResizeBrowser(HWND hwnd) {
     if (controller == NULL) return;
     RECT window_rect;
@@ -374,140 +233,6 @@ ICoreWebView2AcceleratorKeyPressedEventHandlerVtbl AcceleratorKeyPressedHandlerV
     (HRESULT(STDMETHODCALLTYPE *)(ICoreWebView2AcceleratorKeyPressedEventHandler * This, REFIID riid, void **ppvObject)) Unknown_QueryInterface,
     (ULONG(STDMETHODCALLTYPE *)(ICoreWebView2AcceleratorKeyPressedEventHandler * This)) Unknown_AddRef,
     (ULONG(STDMETHODCALLTYPE *)(ICoreWebView2AcceleratorKeyPressedEventHandler * This)) Unknown_Release, AcceleratorKeyPressedHandler_Invoke};
-
-// About window code
-LRESULT WINAPI AboutWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
-    // Load icon image PNG
-    if (msg == WM_CREATE) {
-        about_image = LoadPNGFromResource(L"IMAGE", (wchar_t *)ID_IMAGE_ICON);
-        return 0;
-    }
-
-    // Handle dpi changes
-    if (msg == WM_DPICHANGED) {
-        about_window_dpi = HIWORD(wParam);
-        RECT *window_rect = (RECT *)lParam;
-        SetWindowPos(hwnd, NULL, window_rect->left, window_rect->top, window_rect->right - window_rect->left, window_rect->bottom - window_rect->top,
-                     SWP_NOZORDER | SWP_NOACTIVATE);
-        return 0;
-    }
-
-    // Paint something nice
-    if (msg == WM_ERASEBKGND) {
-        return TRUE;
-    }
-    if (msg == WM_PAINT) {
-        PAINTSTRUCT ps;
-        HDC hdc = BeginPaint(hwnd, &ps);
-
-        RECT clientRect;
-        GetClientRect(hwnd, &clientRect);
-
-        // Create back buffer
-        HDC hdcBuffer = CreateCompatibleDC(hdc);
-        SetBkMode(hdcBuffer, TRANSPARENT);
-        HBITMAP bitmapBuffer = CreateCompatibleBitmap(hdc, clientRect.right, clientRect.bottom);
-        SelectObject(hdcBuffer, bitmapBuffer);
-
-        // Draw background color
-        HBRUSH brush = CreateSolidBrush(0x0a0a0a);
-        RECT rect = {0, 0, clientRect.right, clientRect.bottom};
-        FillRect(hdcBuffer, &rect, brush);
-        DeleteObject(brush);
-
-        // Draw about icon image
-        HDC hdcImage = CreateCompatibleDC(hdcBuffer);
-        SelectObject(hdcImage, about_image);
-        SetStretchBltMode(hdcBuffer, STRETCH_HALFTONE);
-        StretchBlt(hdcBuffer, MulDiv(16, about_window_dpi, 96), MulDiv(16 + 16, about_window_dpi, 96), MulDiv(128, about_window_dpi, 96),
-                   MulDiv(128, about_window_dpi, 96), hdcImage, 0, 0, 256, 256, SRCCOPY);
-        DeleteDC(hdcImage);
-
-        // Draw about title
-        HFONT titleFont = CreateFont(MulDiv(32, about_window_dpi, 96), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS,
-                                     CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, L"Segoe UI");
-        SelectObject(hdcBuffer, titleFont);
-        SetTextColor(hdcBuffer, 0xffffff);
-        TextOutW(hdcBuffer, MulDiv(16 + 128 + 24, about_window_dpi, 96), MulDiv(32, about_window_dpi, 96), GetString(ID_STRING_ABOUT_TITLE),
-                 wcslen(GetString(ID_STRING_ABOUT_TITLE)));
-        DeleteObject(titleFont);
-
-        // Draw about text
-        UINT app_version[4];
-        GetAppVersion(app_version);
-        wchar_t about_text[512];
-        wsprintf(about_text, GetString(ID_STRING_ABOUT_TEXT_FORMAT), app_version[0], app_version[1], app_version[2], app_version[3]);
-
-        HFONT textFont = CreateFont(MulDiv(20, about_window_dpi, 96), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS,
-                                    CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, L"Segoe UI");
-        SelectObject(hdcBuffer, textFont);
-        int y = 32 + 32 + 16;
-        wchar_t *c = about_text;
-        for (;;) {
-            wchar_t *lineStart = c;
-            while (*c != '\n' && *c != '\0') c++;
-            TextOutW(hdcBuffer, MulDiv(16 + 128 + 24, about_window_dpi, 96), MulDiv(y, about_window_dpi, 96), lineStart, c - lineStart);
-            if (*c == '\0') break;
-            c++;
-            y += 20 + 8;
-        }
-        DeleteObject(textFont);
-
-        // Draw and delete back buffer
-        BitBlt(hdc, 0, 0, clientRect.right, clientRect.bottom, hdcBuffer, 0, 0, SRCCOPY);
-        DeleteObject(bitmapBuffer);
-        DeleteDC(hdcBuffer);
-
-        EndPaint(hwnd, &ps);
-        return 0;
-    }
-
-    // Clean up
-    if (msg == WM_DESTROY) {
-        DeleteObject(about_image);
-        return 0;
-    }
-
-    return DefWindowProc(hwnd, msg, wParam, lParam);
-}
-
-void OpenAboutWindow(void) {
-    // Register window class
-    WNDCLASSEX wc = {0};
-    wc.cbSize = sizeof(WNDCLASSEX);
-    wc.style = CS_HREDRAW | CS_VREDRAW;
-    wc.lpfnWndProc = AboutWndProc;
-    wc.hInstance = instance;
-    wc.hIcon = (HICON)LoadImage(instance, MAKEINTRESOURCE(ID_ICON_APP), IMAGE_ICON, 0, 0, LR_DEFAULTSIZE | LR_DEFAULTCOLOR | LR_SHARED);
-    wc.hCursor = LoadCursor(NULL, IDC_ARROW);
-    wc.lpszClassName = L"bassiemusic-about";
-    wc.hIconSm = (HICON)LoadImage(instance, MAKEINTRESOURCE(ID_ICON_APP), IMAGE_ICON, GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON),
-                                  LR_DEFAULTCOLOR | LR_SHARED);
-    RegisterClassEx(&wc);
-
-    // Create centered window
-    about_window_dpi = GetPrimaryDesktopDpi();
-    UINT window_width = MulDiv(540, about_window_dpi, 96);
-    UINT window_height = MulDiv(196, about_window_dpi, 96);
-    RECT window_rect;
-    window_rect.left = (GetSystemMetrics(SM_CXSCREEN) - window_width) / 2;
-    window_rect.top = (GetSystemMetrics(SM_CYSCREEN) - window_height) / 2;
-    window_rect.right = window_rect.left + window_width;
-    window_rect.bottom = window_rect.top + window_height;
-    AdjustWindowRectExForDpi(&window_rect, ABOUT_WINDOW_STYLE, FALSE, 0, about_window_dpi);
-    HWND hwnd = CreateWindowEx(0, wc.lpszClassName, GetString(ID_STRING_ABOUT_TITLE), ABOUT_WINDOW_STYLE, window_rect.left, window_rect.top,
-                               window_rect.right - window_rect.left, window_rect.bottom - window_rect.top, HWND_DESKTOP, NULL, instance, NULL);
-
-    // Enable dark window decoration
-    BOOL enabled = TRUE;
-    if (FAILED(DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &enabled, sizeof(BOOL)))) {
-        DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1, &enabled, sizeof(BOOL));
-    }
-
-    // Show window
-    ShowWindow(hwnd, SW_SHOWDEFAULT);
-    UpdateWindow(hwnd);
-}
 
 // Window code
 LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
