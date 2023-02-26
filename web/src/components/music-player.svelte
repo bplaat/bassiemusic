@@ -52,7 +52,7 @@
     const t = (key, p1) => lang[$language][key].replace('$1', p1);
 
     // Props
-    export let token = undefined;
+    export let token;
     export let queue = [];
     export let track = undefined;
     export let position = 0;

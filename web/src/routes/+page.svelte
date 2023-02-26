@@ -40,44 +40,37 @@
     export let data;
     const { token, authUser, lastPlayedTracks } = data;
 
-    $: lastPlayedAlbums =
-        authUser != undefined ? uniques(lastPlayedTracks.map((track) => track.album)).slice(0, 5) : [];
-    $: lastPlayedArtists =
-        authUser != undefined ? uniques(lastPlayedTracks.map((track) => track.artists).flat()).slice(0, 5) : [];
+    $: lastPlayedAlbums = uniques(lastPlayedTracks.map((track) => track.album)).slice(0, 5);
+    $: lastPlayedArtists = uniques(lastPlayedTracks.map((track) => track.artists).flat()).slice(0, 5);
 </script>
 
 <svelte:head>
     <title>{t('title')}</title>
 </svelte:head>
 
-{#if authUser != undefined}
-    <h1 class="title">{t('hey', authUser.username)}</h1>
+<h1 class="title">{t('hey', authUser.username)}</h1>
 
-    {#if lastPlayedTracks.length > 0}
-        <h2 class="title is-4">{t('last_albums')}</h2>
-        <div class="columns is-multiline is-mobile">
-            {#each lastPlayedAlbums as album}
-                <div class="column is-half-mobile is-one-third-tablet is-one-quarter-desktop is-one-fifth-widescreen">
-                    <AlbumCard {album} {token} {authUser} />
-                </div>
-            {/each}
-        </div>
+{#if lastPlayedTracks.length > 0}
+    <h2 class="title is-4">{t('last_albums')}</h2>
+    <div class="columns is-multiline is-mobile">
+        {#each lastPlayedAlbums as album}
+            <div class="column is-half-mobile is-one-third-tablet is-one-quarter-desktop is-one-fifth-widescreen">
+                <AlbumCard {album} {token} {authUser} />
+            </div>
+        {/each}
+    </div>
 
-        <h2 class="title is-4 mt-5">{t('last_artists')}</h2>
-        <div class="columns is-multiline is-mobile">
-            {#each lastPlayedArtists as artist}
-                <div class="column is-half-mobile is-one-third-tablet is-one-quarter-desktop is-one-fifth-widescreen">
-                    <ArtistCard {artist} {token} />
-                </div>
-            {/each}
-        </div>
+    <h2 class="title is-4 mt-5">{t('last_artists')}</h2>
+    <div class="columns is-multiline is-mobile">
+        {#each lastPlayedArtists as artist}
+            <div class="column is-half-mobile is-one-third-tablet is-one-quarter-desktop is-one-fifth-widescreen">
+                <ArtistCard {artist} {token} />
+            </div>
+        {/each}
+    </div>
 
-        <h2 class="title is-4 mt-5">{t('last_tracks')}</h2>
-        <TracksTable {token} {authUser} tracks={lastPlayedTracks.slice(0, 5)} />
-    {:else}
-        <p>{t('empty')}</p>
-    {/if}
+    <h2 class="title is-4 mt-5">{t('last_tracks')}</h2>
+    <TracksTable {token} {authUser} tracks={lastPlayedTracks.slice(0, 5)} />
 {:else}
-    <h1 class="title">Welcome to BassieMusic</h1>
-    <p>Login with your account to start listening to music</p>
+    <p>{t('empty')}</p>
 {/if}
