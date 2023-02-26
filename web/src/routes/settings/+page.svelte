@@ -338,7 +338,7 @@
                                 'location',
                                 session.ip,
                                 session.ip_city != undefined && session.ip_country != undefined
-                                    ? `${session.ip_city}, ${session.ip_country}`
+                                    ? `${session.ip_city}, ${session.ip_country.toUpperCase()}`
                                     : t('unknown_location')
                             )}
                         </p>

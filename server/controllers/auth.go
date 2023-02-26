@@ -91,7 +91,7 @@ func AuthLogin(c *fiber.Ctx) error {
 	if !ipInfo.Bogon {
 		session["ip_latitude"] = strings.Split(ipInfo.Loc, ",")[0]
 		session["ip_longitude"] = strings.Split(ipInfo.Loc, ",")[1]
-		session["ip_country"] = ipInfo.Country
+		session["ip_country"] = strings.ToLower(ipInfo.Country)
 		session["ip_city"] = ipInfo.City
 	}
 	models.SessionModel().Create(session)
