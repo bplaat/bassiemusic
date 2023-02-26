@@ -5,7 +5,36 @@
     import AlbumCard from '../../components/cards/album-card.svelte';
     import ArtistCard from '../../components/cards/artist-card.svelte';
     import TracksTable from '../../components/tracks-table.svelte';
+    import { language } from '../../stores.js';
 
+    // Language strings
+    const lang = {
+        en: {
+            title: 'Search - BassieMusic',
+            header: 'Search',
+            query_placeholder: 'Find a track, album, artist or genre...',
+            search: 'Search',
+            empty: "Can't find anything with your search query",
+            tracks: 'Tracks',
+            artists: 'Artists',
+            albums: 'Albums',
+            genres: 'Genres',
+        },
+        nl: {
+            title: 'Zoeken - BassieMusic',
+            header: 'Zoeken',
+            query_placeholder: 'Zoek een nummer, album, artiest of genre...',
+            search: 'Zoeken',
+            empty: 'Kan niets vinden met je zoekopdracht',
+            tracks: 'Tracks',
+            artists: 'Artisten',
+            albums: 'Albums',
+            genres: 'Genres',
+        },
+    };
+    const t = (key) => lang[$language][key];
+
+    // State
     export let data;
     let { token, authUser, genres: allGenres, query } = data;
 
@@ -119,38 +148,32 @@
 </script>
 
 <svelte:head>
-    <title>Search - BassieMusic</title>
+    <title>{t('title')}</title>
 </svelte:head>
 
-<h2 class="title">Search</h2>
+<h2 class="title">{t('header')}</h2>
 
 <form on:submit|preventDefault={search} class="field has-addons mb-5">
     <div class="control" style="width: 100%;">
         <!-- svelte-ignore a11y-autofocus -->
-        <input
-            class="input"
-            type="text"
-            placeholder="Find a track, album, artist or genre..."
-            bind:value={searchTerm}
-            autofocus
-        />
+        <input class="input" type="text" placeholder={t('query_placeholder')} bind:value={searchTerm} autofocus />
     </div>
     <div class="control">
-        <button type="submit" class="button is-link">Search</button>
+        <button type="submit" class="button is-link">{t('search')}</button>
     </div>
 </form>
 
 {#if hasResult}
     {#if isEmpty}
-        <p><i>Can't find anything with your search query</i></p>
+        <p><i>{t('empty')}</i></p>
     {:else}
         {#if tracks.length > 0}
-            <h2 class="title is-5">Tracks</h2>
+            <h2 class="title is-5">{t('tracks')}</h2>
             <TracksTable {token} {authUser} tracks={tracks.slice(5)} />
         {/if}
 
         {#if artists.length > 0}
-            <h2 class="title is-5 mt-5">Artists</h2>
+            <h2 class="title is-5 mt-5">{t('artists')}</h2>
             <div class="columns is-multiline mb-5">
                 {#each artists as artist}
                     <div
@@ -163,7 +186,7 @@
         {/if}
 
         {#if albums.length > 0}
-            <h2 class="title is-5">Albums</h2>
+            <h2 class="title is-5">{t('albums')}</h2>
             <div class="columns is-multiline mb-5">
                 {#each albums as album}
                     <div
@@ -176,7 +199,7 @@
         {/if}
 
         {#if genres.length > 0}
-            <h2 class="title is-5">Genres</h2>
+            <h2 class="title is-5">{t('genres')}</h2>
             <div class="columns is-multiline is-mobile">
                 {#each genres as genre}
                     <div
@@ -189,7 +212,7 @@
         {/if}
     {/if}
 {:else if query == undefined}
-    <h2 class="title is-5">Genres</h2>
+    <h2 class="title is-5">{t('genres')}</h2>
     <div class="columns is-multiline is-mobile">
         {#each allGenres as genre}
             <div class="column is-half-mobile is-one-third-tablet is-one-quarter-desktop is-one-fifth-widescreen">

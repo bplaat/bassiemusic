@@ -32,15 +32,13 @@
             actions: 'Acties',
             edit: 'Verander',
             delete: 'Verwijder',
-        }
+        },
     };
     const t = (key) => lang[$language][key];
 
-    // Props
+    // State
     export let data;
     let { token, users } = data;
-
-    // State
     let selectedUser = {};
     let createModal;
     let editModal;
@@ -120,7 +118,9 @@
                 <td>
                     <div class="buttons">
                         <button class="button is-link is-small" on:click={() => editUser(user)}>{t('edit')}</button>
-                        <button class="button is-danger is-small" on:click={() => deleteUser(user)}>{t('delete')}</button>
+                        <button class="button is-danger is-small" on:click={() => deleteUser(user)}
+                            >{t('delete')}</button
+                        >
                     </div>
                 </td>
             </tr>

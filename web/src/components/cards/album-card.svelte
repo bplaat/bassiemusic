@@ -6,12 +6,12 @@
     const lang = {
         en: {
             cover_alt: 'Cover of album $1',
-            explicit: 'Explicit lyrics'
+            explicit: 'Explicit lyrics',
         },
         nl: {
             cover_alt: 'Hoes van album $1',
-            explicit: 'Expliciete songtekst'
-        }
+            explicit: 'Expliciete songtekst',
+        },
     };
     const t = (key, p1) => lang[$language][key].replace('$1', p1);
 

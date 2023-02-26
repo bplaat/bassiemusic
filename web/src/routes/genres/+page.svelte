@@ -1,10 +1,28 @@
 <script>
     import { onDestroy, onMount } from 'svelte';
     import GenreCard from '../../components/cards/genre-card.svelte';
+    import { language } from '../../stores.js';
 
+    // Language strings
+    const lang = {
+        en: {
+            title: 'Genres - BassieMusic',
+            header: 'Genres',
+            empty: "You don't have added any genres",
+        },
+        nl: {
+            title: 'Genres - BassieMusic',
+            header: 'Genres',
+            empty: 'Je hebt nog geen enkele genre toegevoegd',
+        },
+    };
+    const t = (key) => lang[$language][key];
+
+    // State
     export let data;
     let { token, genres } = data;
 
+    // Page fetcher
     async function fetchPage(page) {
         const response = await fetch(
             `${import.meta.env.VITE_API_URL}/genres?${new URLSearchParams({
@@ -49,10 +67,10 @@
 </script>
 
 <svelte:head>
-    <title>Genres - BassieMusic</title>
+    <title>{t('title')}</title>
 </svelte:head>
 
-<h2 class="title">Genres</h2>
+<h2 class="title">{t('header')}</h2>
 
 {#if genres.length > 0}
     <div class="columns is-multiline is-mobile">
@@ -63,7 +81,7 @@
         {/each}
     </div>
 {:else}
-    <p><i>You don't have added any genres</i></p>
+    <p><i>{t('empty')}</i></p>
 {/if}
 
 <div bind:this={bottom} />

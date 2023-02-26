@@ -25,7 +25,7 @@
             role_admin: 'Admin',
             create: 'Maak nieuwe gebruiker aan',
             cancel: 'Annuleren',
-        }
+        },
     };
     const t = (key) => lang[$language][key];
 

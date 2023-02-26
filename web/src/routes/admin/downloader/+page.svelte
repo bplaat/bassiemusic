@@ -18,11 +18,11 @@
             albums: 'Albums',
             cover_alt: 'Cover of album $1',
             add_album: 'Add album to BassieMusic',
-            albums_empty: 'Can\'t find any albums on Deezer',
+            albums_empty: "Can't find any albums on Deezer",
             artists: 'Artists',
             image_alt: 'Image of artist $1',
             add_artist: 'Add artist to BassieMusic',
-            artists_empty: 'Can\'t find any artists on Deezer',
+            artists_empty: "Can't find any artists on Deezer",
         },
         nl: {
             title: 'Downloader - Admin - BassieMusic',
@@ -43,15 +43,13 @@
             image_alt: 'Afbeelding van artist $1',
             add_artist: 'Voeg artist toe aan BassieMusic',
             artists_empty: 'Kan geen artisten vinden op Deezer',
-        }
+        },
     };
     const t = (key, p1 = '') => lang[$language][key].replace('$1', p1);
 
-    // Props
+    // State
     export let data;
     const { token, storage } = data;
-
-    // State
     let query = '';
     let results = false;
     let albums = [];
@@ -151,7 +149,7 @@
                     <div class="media">
                         <div class="media-left">
                             <div class="box m-0 p-0" style="width: 48px; height: 48px;">
-                                <img src={album.cover_medium} alt={t('cover_alt', album.title)} loading="lazy" />
+                                <img src={album.cover_medium} alt={t('cover_alt', album.title)} />
                             </div>
                         </div>
                         <div class="media-content" style="min-width: 0;">
@@ -159,11 +157,7 @@
                             <p class="ellipsis">{album.artist.name}</p>
                         </div>
                         <div class="media-right">
-                            <button
-                                class="button is-link"
-                                on:click={() => downloadAlbum(album)}
-                                title={t('add_album')}
-                            >
+                            <button class="button is-link" on:click={() => downloadAlbum(album)} title={t('add_album')}>
                                 <svg class="icon" viewBox="0 0 24 24">
                                     <path d="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z" />
                                 </svg>
@@ -188,11 +182,7 @@
                         <div class="media-content">
                             <p class="ellipsis" style="font-weight: 500;">{artist.name}</p>
                         </div>
-                        <button
-                            class="button is-link"
-                            on:click={() => downloadArtist(artist)}
-                            title={t('add_artist')}
-                        >
+                        <button class="button is-link" on:click={() => downloadArtist(artist)} title={t('add_artist')}>
                             <svg class="icon" viewBox="0 0 24 24">
                                 <path d="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z" />
                             </svg>

@@ -35,7 +35,7 @@
             theme_dark: 'Donker',
             create: 'Verander gebruiker',
             cancel: 'Annuleren',
-        }
+        },
     };
     const t = (key) => lang[$language][key];
 

@@ -243,7 +243,6 @@
                     <img
                         src={authUser.avatar ? authUser.avatar : '/images/avatar-default.svg'}
                         alt="Avatar of user {authUser.username}"
-                        loading="lazy"
                     />
                 </div>
             </div>

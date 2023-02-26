@@ -15,7 +15,7 @@
             text: 'Weet je zeker dat je deze gebruiker wilt verwijderen?',
             delete: 'Verwijder gebruiker',
             cancel: 'Annuleren',
-        }
+        },
     };
     const t = (key) => lang[$language][key];
 

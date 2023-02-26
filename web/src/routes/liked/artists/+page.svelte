@@ -1,10 +1,34 @@
 <script>
     import { onMount, onDestroy } from 'svelte';
     import ArtistCard from '../../../components/cards/artist-card.svelte';
+    import { language } from '../../../stores.js';
 
+    // Language strings
+    const lang = {
+        en: {
+            title: 'Artists - Liked - BassieMusic',
+            artists: 'Artists',
+            albums: 'Albums',
+            tracks: 'Tracks',
+            header: 'Liked Artists',
+            empty: 'You have not liked any artists',
+        },
+        nl: {
+            title: 'Artisten - Geliked - BassieMusic',
+            artists: 'Artisten',
+            albums: 'Albums',
+            tracks: 'Tracks',
+            header: 'Gelikede Artisten',
+            empty: 'Je hebt geen artist geliked',
+        },
+    };
+    const t = (key) => lang[$language][key];
+
+    // State
     export let data;
     let { token, authUser, artists } = data;
 
+    // Page fetcher
     async function fetchPage(page) {
         const response = await fetch(
             `${import.meta.env.VITE_API_URL}/users/${authUser.id}/liked_artists?${new URLSearchParams({
@@ -53,18 +77,18 @@
 </script>
 
 <svelte:head>
-    <title>Artists - Liked - BassieMusic</title>
+    <title>{t('title')}</title>
 </svelte:head>
 
 <div class="tabs is-toggle">
     <ul>
-        <li class="is-active"><a href="/liked/artists">Artists</a></li>
-        <li><a href="/liked/albums">Albums</a></li>
-        <li><a href="/liked/tracks">Tracks</a></li>
+        <li class="is-active"><a href="/liked/artists">{t('artists')}</a></li>
+        <li><a href="/liked/albums">{t('albums')}</a></li>
+        <li><a href="/liked/tracks">{t('tracks')}</a></li>
     </ul>
 </div>
 
-<h1 class="title">Liked Artists</h1>
+<h1 class="title">{t('header')}</h1>
 
 {#if artists.length > 0}
     <div class="columns is-multiline is-mobile">
@@ -75,7 +99,7 @@
         {/each}
     </div>
 {:else}
-    <p><i>You have not liked any artists</i></p>
+    <p><i>{t('empty')}</i></p>
 {/if}
 
 <div bind:this={bottom} />

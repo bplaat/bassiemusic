@@ -5,11 +5,11 @@
     // Language strings
     const lang = {
         en: {
-            image_alt: 'Image of artist $1'
+            image_alt: 'Image of artist $1',
         },
         nl: {
-            image_alt: 'Afbeelding van artiest $1'
-        }
+            image_alt: 'Afbeelding van artiest $1',
+        },
     };
     const t = (key, p1) => lang[$language][key].replace('$1', p1);
 

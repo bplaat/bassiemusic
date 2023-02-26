@@ -2,7 +2,28 @@
     import { page } from '$app/stores';
     import { onMount, onDestroy } from 'svelte';
     import AlbumCard from '../../../components/cards/album-card.svelte';
+    import { language } from '../../../stores.js';
 
+    // Language strings
+    const lang = {
+        en: {
+            title: '$1 - Genres - BassieMusic',
+            back: 'Go back one page',
+            image_alt: 'Image of genre $1',
+            albums: 'Albums',
+            empty: "This genre doesn't have any albums",
+        },
+        nl: {
+            title: '$1 - Genres - BassieMusic',
+            back: 'Ga een pagina terug',
+            image_alt: 'Afbeelding van genre $1',
+            albums: 'Albums',
+            empty: "Dit genre heeft geen albums",
+        },
+    };
+    const t = (key, p1) => lang[$language][key].replace('$1', p1);
+
+    // State
     export let data;
     let { token, authUser, genre } = data;
 
@@ -71,11 +92,11 @@
 </script>
 
 <svelte:head>
-    <title>{genre.name} - Genres - BassieMusic</title>
+    <title>{t('title', genre.name)}</title>
 </svelte:head>
 
 <div class="buttons">
-    <button class="button" on:click={() => history.back()} title="Go back one page">
+    <button class="button" on:click={() => history.back()} title={t('back')}>
         <svg class="icon" viewBox="0 0 24 24">
             <path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" />
         </svg>
@@ -85,7 +106,7 @@
 <div class="columns">
     <div class="column is-one-quarter mr-5 mr-0-mobile">
         <div class="box has-image m-0 p-0" style="aspect-ratio: 1;">
-            <img src={genre.large_image} alt="Image of genre {genre.name}" loading="lazy" />
+            <img src={genre.large_image} alt={t('image_alt', genre.name)} />
         </div>
     </div>
 
@@ -94,7 +115,7 @@
     </div>
 </div>
 
-<h2 class="title">Albums</h2>
+<h2 class="title">{t('albums')}</h2>
 {#if genre.albums != undefined}
     <div class="columns is-multiline is-mobile">
         {#each genre.albums as album}
@@ -104,7 +125,7 @@
         {/each}
     </div>
 {:else}
-    <p><i>This genre has no albums</i></p>
+    <p><i>{t('empty')}</i></p>
 {/if}
 
 <div bind:this={bottom} />

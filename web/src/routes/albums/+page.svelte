@@ -1,10 +1,28 @@
 <script>
     import { onMount, onDestroy } from 'svelte';
     import AlbumCard from '../../components/cards/album-card.svelte';
+    import { language } from '../../stores.js';
 
+    // Language strings
+    const lang = {
+        en: {
+            title: 'Albums - BassieMusic',
+            header: 'Albums',
+            empty: "You don't have added any albums",
+        },
+        nl: {
+            title: 'Albums - BassieMusic',
+            header: 'Albums',
+            empty: 'Je hebt nog geen enkele album toegevoegd',
+        },
+    };
+    const t = (key) => lang[$language][key];
+
+    // State
     export let data;
     let { token, authUser, albums } = data;
 
+    // Page fetcher
     async function fetchPage(page) {
         const response = await fetch(
             `${import.meta.env.VITE_API_URL}/albums?${new URLSearchParams({
@@ -49,10 +67,10 @@
 </script>
 
 <svelte:head>
-    <title>Albums - BassieMusic</title>
+    <title>{t('title')}</title>
 </svelte:head>
 
-<h2 class="title">Albums</h2>
+<h2 class="title">{t('header')}</h2>
 
 {#if albums.length > 0}
     <div class="columns is-multiline is-mobile">
@@ -63,7 +81,7 @@
         {/each}
     </div>
 {:else}
-    <p><i>You don't have added any albums</i></p>
+    <p><i>{t('empty')}</i></p>
 {/if}
 
 <div bind:this={bottom} />

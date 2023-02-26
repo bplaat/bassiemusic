@@ -1,10 +1,28 @@
 <script>
     import { onMount, onDestroy } from 'svelte';
     import TracksTable from '../../components/tracks-table.svelte';
+    import { language } from '../../stores.js';
 
+    // Language strings
+    const lang = {
+        en: {
+            title: 'Tracks - BassieMusic',
+            header: 'Tracks',
+            empty: "You don't have added any tracks",
+        },
+        nl: {
+            title: 'Tracks - BassieMusic',
+            header: 'Tracks',
+            empty: 'Je hebt nog geen enkele track toegevoegd',
+        },
+    };
+    const t = (key) => lang[$language][key];
+
+    // State
     export let data;
     let { token, authUser, tracks } = data;
 
+    // Page fetcher
     async function fetchPage(page) {
         const response = await fetch(
             `${import.meta.env.VITE_API_URL}/tracks?${new URLSearchParams({
@@ -49,14 +67,14 @@
 </script>
 
 <svelte:head>
-    <title>Tracks - BassieMusic</title>
+    <title>{t('title')}</title>
 </svelte:head>
 
-<h2 class="title">Tracks</h2>
+<h2 class="title">{t('header')}</h2>
 {#if tracks.length > 0}
     <TracksTable {token} {authUser} {tracks} />
 {:else}
-    <p><i>You don't have added any tracks</i></p>
+    <p><i>{t('empty')}</i></p>
 {/if}
 
 <div bind:this={bottom} />
