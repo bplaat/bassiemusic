@@ -1,5 +1,6 @@
 <script>
     import { onMount } from 'svelte';
+    import DeleteAccountModal from '../../components/delete-account-modal.svelte';
     import { language } from '../../stores.js';
 
     // Language strings
@@ -26,7 +27,6 @@
             delete_avatar: 'Delete avatar',
 
             delete_account: 'Delete account',
-            delete_account_button: "Delete account (this can't be undone)",
 
             sessions: 'Sessions management',
             current: 'CURRENT',
@@ -58,7 +58,6 @@
             delete_avatar: 'Verwijder avatar',
 
             delete_account: 'Verwijder account',
-            delete_account_button: "Verwijder account (dit kan niet ongedaan gemaakt worden)",
 
             sessions: 'Sessie beheer',
             current: 'HUIDIGE',
@@ -74,6 +73,7 @@
     // State
     export let data;
     let { token, authUser, currentSessionId, sessions } = data;
+    let deleteAccountModal;
 
     // Change details
     let newPassword = '';
@@ -137,19 +137,6 @@
         } else {
             alert('Error!');
         }
-    }
-
-    // Delete user
-    async function deleteUser() {
-        await fetch(`${import.meta.env.VITE_API_URL}/users/${authUser.id}`, {
-            method: 'DELETE',
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
-
-        document.cookie = `token=; expires=${new Date(0).toUTCString()}`;
-        window.location = '/auth/login';
     }
 
     // Sessions management
@@ -310,9 +297,9 @@
             <h3 class="title is-4">{t('delete_account')}</h3>
 
             <div class="buttons">
-                <button class="button is-danger" on:click|preventDefault={deleteUser}
-                    >{t('delete_account_button')}</button
-                >
+                <button class="button is-danger" on:click|preventDefault={() => deleteAccountModal.open()}>
+                    {t('delete_account')}
+                </button>
             </div>
         </div>
     </div>
@@ -362,3 +349,5 @@
         {/each}
     </div>
 </div>
+
+<DeleteAccountModal bind:this={deleteAccountModal} {token} {authUser} />
