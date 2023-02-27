@@ -38,7 +38,7 @@
     <title>Login - BassieMusic</title>
 </svelte:head>
 
-<div class="flex"></div>
+<div class="flex" />
 
 <form class="box content" style="width: 40rem; max-width: 100%;" on:submit|preventDefault={login}>
     <h2 class="title is-4">Login with you BassieMusic account</h2>
@@ -89,7 +89,7 @@
     </div>
 </form>
 
-<div class="flex"></div>
+<div class="flex" />
 
 <p>
     Made with

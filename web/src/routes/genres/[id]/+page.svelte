@@ -18,7 +18,7 @@
             back: 'Ga een pagina terug',
             image_alt: 'Afbeelding van genre $1',
             albums: 'Albums',
-            empty: "Dit genre heeft geen albums",
+            empty: 'Dit genre heeft geen albums',
         },
     };
     const t = (key, p1) => lang[$language][key].replace('$1', p1);

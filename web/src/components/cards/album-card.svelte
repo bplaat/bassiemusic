@@ -1,6 +1,6 @@
 <script>
-    import { musicPlayer } from '../../stores.js';
-    import { language } from '../../stores.js';
+    import { goto } from '$app/navigation';
+    import { musicPlayer, language } from '../../stores.js';
 
     // Language strings
     const lang = {
@@ -36,13 +36,16 @@
     }
 </script>
 
-<a
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<div
     class="card has-image-play-button"
     class:disabled={!authUser.allow_explicit && album.explicit}
-    href="/albums/{album.id}"
+    on:click={() => goto(`/albums/${album.id}`)}
 >
-    <div class="card-image has-image-tags" style="aspect-ratio: 1;">
-        <img src={album.medium_cover} alt={t('cover_alt', album.name)} loading="lazy" />
+    <div class="card-image has-image-tags">
+        <figure class="image is-1by1">
+            <img src={album.medium_cover} alt={t('cover_alt', album.name)} loading="lazy" />
+        </figure>
         <div class="image-tags">
             {#if album.type == 'album'}
                 <span class="tag">ALBUM</span>
@@ -64,11 +67,11 @@
         </button>
     </div>
     <div class="card-content">
-        <h3 class="title is-6 mb-2 ellipsis">{album.title}</h3>
+        <h3 class="title is-6 mb-2 ellipsis"><a href="/albums/{album.id}">{album.title}</a></h3>
         <p class="ellipsis">
             {#each album.artists as artist}
                 <a href="/artists/{artist.id}" class="mr-2">{artist.name}</a>
             {/each}
         </p>
     </div>
-</a>
+</div>
