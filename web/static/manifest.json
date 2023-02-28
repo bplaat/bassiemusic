@@ -1,9 +1,8 @@
 {
     "name": "BassieMusic",
-    "short_name": "BassieMusic",
     "description": "An online music streaming platform with download capabilities",
-    "start_url": "/",
     "scope": "/",
+    "start_url": "/",
     "theme_color": "#121212",
     "background_color": "#0a0a0a",
     "orientation": "portrait",

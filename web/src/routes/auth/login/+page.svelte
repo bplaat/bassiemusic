@@ -108,6 +108,6 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        height: 100%;
+        min-height: 100%;
     }
 </style>
