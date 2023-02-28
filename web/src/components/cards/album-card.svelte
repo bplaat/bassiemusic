@@ -60,7 +60,7 @@
                 <span class="tag is-danger" title={t('explicit')}>E</span>
             {/if}
         </div>
-        <button class="button image-play-button" on:click|preventDefault={fetchAndPlayTracks}>
+        <button class="button image-play-button" on:click|stopPropagation={fetchAndPlayTracks}>
             <svg class="icon" viewBox="0 0 24 24">
                 <path d="M8,5.14V19.14L19,12.14L8,5.14Z" />
             </svg>

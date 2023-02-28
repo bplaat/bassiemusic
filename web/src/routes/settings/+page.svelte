@@ -297,7 +297,7 @@
             <h3 class="title is-4">{t('delete_account')}</h3>
 
             <div class="buttons">
-                <button class="button is-danger" on:click|preventDefault={() => deleteAccountModal.open()}>
+                <button class="button is-danger" on:click={() => deleteAccountModal.open()}>
                     {t('delete_account')}
                 </button>
             </div>
