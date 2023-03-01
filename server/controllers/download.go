@@ -10,7 +10,6 @@ func DownloadArtist(c *fiber.Ctx) error {
 	models.DownloadTaskModel().Create(database.Map{
 		"type":      models.DownloadTaskTypeDeezerArtist,
 		"deezer_id": c.Query("deezer_id"),
-		"singles":   c.Query("singles") == "true",
 	})
 	return c.JSON(fiber.Map{"success": true})
 }

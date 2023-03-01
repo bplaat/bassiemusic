@@ -941,12 +941,6 @@ paths:
           schema:
             type: integer
             format: int64
-        - name: singles
-          in: query
-          description: Download also singles
-          required: true
-          schema:
-            type: boolean
       responses:
         "200":
           description: Successfull response

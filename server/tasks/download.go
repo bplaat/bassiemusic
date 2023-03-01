@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os/exec"
+	"strings"
 	"time"
 
 	"github.com/bplaat/bassiemusic/consts"
@@ -73,6 +74,77 @@ func createGenre(deezerID int, name string) string {
 	return genreID.String()
 }
 
+func CreateTrack(albumID string, deezerID int) {
+	// Get Deezer track info
+	var deezerTrack structs.DeezerTrack
+	if err := utils.FetchJson(fmt.Sprintf("https://api.deezer.com/track/%d", deezerID), &deezerTrack); err != nil {
+		log.Fatalln(err)
+	}
+
+	// Create track
+	trackID := uuid.New()
+	models.TrackModel(nil).Create(database.Map{
+		"id":         trackID.String(),
+		"album_id":   albumID,
+		"title":      deezerTrack.Title,
+		"disk":       deezerTrack.DiskNumber,
+		"position":   deezerTrack.TrackPosition,
+		"duration":   deezerTrack.Duration,
+		"explicit":   deezerTrack.ExplicitLyrics,
+		"deezer_id":  deezerTrack.ID,
+		"youtube_id": nil,
+	})
+
+	// Create track artists bindings
+	for _, artist := range deezerTrack.Contributors {
+		artistID := createArtist(artist.ID, artist.Name)
+		models.TrackArtistModel().Create(database.Map{
+			"track_id":  trackID.String(),
+			"artist_id": artistID,
+		})
+	}
+}
+
+func SearchAndDownloadTrackMusic(track *models.Track) error {
+	// Search for youtube video
+	searchCommand := exec.Command("yt-dlp", "--dump-json", fmt.Sprintf("ytsearch25:%s - %s - %s", track.Artists[0].Name, track.Album.Title, track.Title))
+	stdout, err := searchCommand.StdoutPipe()
+	if err != nil {
+		return err
+	}
+	if err := searchCommand.Start(); err != nil {
+		return err
+	}
+	for {
+		var youtubeVideo structs.YoutubeVideo
+		if err := json.NewDecoder(stdout).Decode(&youtubeVideo); err != nil {
+			return err
+		}
+
+		// When video duration is in slack download it
+		if track.Duration >= float32(youtubeVideo.Duration-consts.TRACK_DURATION_SLACK) &&
+			track.Duration <= float32(youtubeVideo.Duration+consts.TRACK_DURATION_SLACK) {
+			if err := searchCommand.Process.Kill(); err != nil {
+				log.Fatalln(err)
+			}
+
+			// Update track
+			models.TrackModel(nil).Where("id", track.ID).Update(database.Map{
+				"duration":   youtubeVideo.Duration,
+				"youtube_id": youtubeVideo.ID,
+			})
+
+			// Download right youtube video
+			downloadCommand := exec.Command("yt-dlp", "-f", "bestaudio[ext=m4a]", fmt.Sprintf("https://www.youtube.com/watch?v=%s", youtubeVideo.ID),
+				"-o", fmt.Sprintf("storage/tracks/%s.m4a", track.ID))
+			if err := downloadCommand.Start(); err != nil {
+				log.Fatalln(err)
+			}
+			return nil
+		}
+	}
+}
+
 func DownloadAlbum(deezerID int) {
 	// Get Deezer album info
 	var deezerAlbum structs.DeezerAlbum
@@ -125,75 +197,21 @@ func DownloadAlbum(deezerID int) {
 		})
 	}
 
-	// Create tracks
+	// Create album tracks
 	for _, incompleteTrack := range deezerAlbum.Tracks.Data {
-		DownloadTrack(albumID.String(), incompleteTrack.ID)
-	}
-	log.Printf("[DOWNLOAD] Downloading album done\n")
-}
-
-func DownloadTrack(albumID string, deezerID int) {
-	// Get Deezer track info
-	var deezerTrack structs.DeezerTrack
-	if err := utils.FetchJson(fmt.Sprintf("https://api.deezer.com/track/%d", deezerID), &deezerTrack); err != nil {
-		log.Fatalln(err)
+		CreateTrack(albumID.String(), incompleteTrack.ID)
 	}
 
-	// Search for youtube video
-	searchCommand := exec.Command("yt-dlp", "--dump-json", fmt.Sprintf("ytsearch25:%s - %s - %s", deezerTrack.Contributors[0].Name, deezerTrack.Album.Title, deezerTrack.Title))
-	stdout, err := searchCommand.StdoutPipe()
-	if err != nil {
-		log.Fatalln(err)
-	}
-	if err := searchCommand.Start(); err != nil {
-		log.Fatalln(err)
-	}
-	for {
-		var youtubeVideo structs.YoutubeVideo
-		if err := json.NewDecoder(stdout).Decode(&youtubeVideo); err != nil {
-			break
+	// Download album tracks music
+	for _, deezerTrack := range deezerAlbum.Tracks.Data {
+		track := models.TrackModel(nil).With("artists").Where("album_id", albumID.String()).Where("title", deezerTrack.Title).First()
+		if err := SearchAndDownloadTrackMusic(track); err != nil {
+			log.Fatalln(err)
 		}
-
-		if deezerTrack.Duration >= youtubeVideo.Duration-consts.TRACK_DURATION_SLACK &&
-			deezerTrack.Duration <= youtubeVideo.Duration+consts.TRACK_DURATION_SLACK {
-			if err := searchCommand.Process.Kill(); err != nil {
-				log.Fatalln(err)
-			}
-
-			// Create track
-			trackID := uuid.New()
-			models.TrackModel(nil).Create(database.Map{
-				"id":         trackID.String(),
-				"album_id":   albumID,
-				"title":      deezerTrack.Title,
-				"disk":       deezerTrack.DiskNumber,
-				"position":   deezerTrack.TrackPosition,
-				"duration":   youtubeVideo.Duration,
-				"explicit":   deezerTrack.ExplicitLyrics,
-				"deezer_id":  deezerTrack.ID,
-				"youtube_id": youtubeVideo.ID,
-			})
-
-			// Create track artists bindings
-			for _, artist := range deezerTrack.Contributors {
-				artistID := createArtist(artist.ID, artist.Name)
-				models.TrackArtistModel().Create(database.Map{
-					"track_id":  trackID.String(),
-					"artist_id": artistID,
-				})
-			}
-
-			// Download right youtube video
-			downloadCommand := exec.Command("yt-dlp", "-f", "bestaudio[ext=m4a]", fmt.Sprintf("https://www.youtube.com/watch?v=%s", youtubeVideo.ID),
-				"-o", fmt.Sprintf("storage/tracks/%s.m4a", trackID.String()))
-			if err := downloadCommand.Start(); err != nil {
-				log.Fatalln(err)
-			}
-
-			log.Printf("[DOWNLOAD] %d. %s\n", deezerTrack.TrackPosition, deezerTrack.Title)
-			break
-		}
+		log.Printf("[DOWNLOAD] %s - %d-%d - %s\n", deezerAlbum.Title, track.Disk, track.Position, track.Title)
 	}
+
+	log.Printf("[DOWNLOAD] Done downloading album\n")
 }
 
 func DownloadTask() {
@@ -214,7 +232,7 @@ func DownloadTask() {
 				log.Fatalln(err)
 			}
 			for _, album := range artistAlbums.Data {
-				if !downloadTask.Singles && album.RecordType == "single" {
+				if !strings.Contains(album.Title, "Deezer") {
 					continue
 				}
 				DownloadAlbum(album.ID)

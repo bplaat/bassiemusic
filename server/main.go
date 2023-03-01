@@ -83,5 +83,5 @@ func main() {
 		"\tserve\t\tStart the BassieMusic server and serve content\n" +
 		"\trestore\t\tRedownload the storage/ folder with your filled database\n" +
 		"\tclean\t\tClean up storage files that are not referenced in the database\n" +
-		"\tfix\t\tCheck all albums with Deezer if they are complete when not download missing tracks\n")
+		"\tfix\t\tCreate missing track entries and try to find and download track YouTube videos\n")
 }

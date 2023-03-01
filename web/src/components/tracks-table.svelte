@@ -65,23 +65,24 @@
     // Methods
     function playTrack(track) {
         if (authUser.allow_explicit) {
-            $musicPlayer.playTracks(tracks.slice(), track);
+            $musicPlayer.playTracks(
+                tracks.filter((otherTrack) => otherTrack.music != null),
+                track
+            );
         } else {
             $musicPlayer.playTracks(
-                tracks.filter((otherTrack) => !otherTrack.explicit),
+                tracks.filter((otherTrack) => otherTrack.music != null && !otherTrack.explicit),
                 track
             );
         }
     }
 
     export function playFirstTrack() {
-        if (authUser.allow_explicit) {
-            playTrack(tracks[0]);
-        } else {
-            const firstTrack = tracks.find((otherTrack) => !otherTrack.explicit);
-            if (firstTrack != null) {
-                playTrack(firstTrack);
-            }
+        let firstTrack = authUser.allow_explicit
+            ? tracks.find((otherTrack) => otherTrack.music != null)
+            : tracks.find((otherTrack) => otherTrack.music != null && !otherTrack.explicit);
+        if (firstTrack != null) {
+            playTrack(firstTrack);
         }
     }
 
@@ -140,7 +141,7 @@
             <tr
                 id={isAlbum ? `${track.disk}-${track.position}` : undefined}
                 class="track-container"
-                class:disabled={!authUser.allow_explicit && track.explicit}
+                class:disabled={track.music == null || (!authUser.allow_explicit && track.explicit)}
                 on:dblclick|preventDefault={() => playTrack(track)}
                 class:has-background-light={$musicState.track != undefined && $musicState.track.id == track.id}
             >
