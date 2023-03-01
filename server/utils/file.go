@@ -7,12 +7,12 @@ import (
 
 func DirSize(path string) (int64, error) {
 	var size int64
-	err := filepath.Walk(path, func(_ string, info os.FileInfo, err error) error {
+	err := filepath.Walk(path, func(_ string, file os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
-		if !info.IsDir() {
-			size += info.Size()
+		if !file.IsDir() {
+			size += file.Size()
 		}
 		return err
 	})

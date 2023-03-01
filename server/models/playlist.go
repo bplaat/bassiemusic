@@ -15,7 +15,7 @@ type Playlist struct {
 	UserID    string    `column:"user_id,uuid" json:"-"`
 	Name      string    `column:"name,string" json:"name"`
 	ImageID   *string   `column:"image,uuid" json:"-"`
-	Image     string    `json:"image,omitempty"`
+	Image     *string   `json:"image"`
 	Public    bool      `column:"public,bool" json:"public"`
 	Liked     *bool     `json:"liked,omitempty"`
 	CreatedAt time.Time `column:"created_at,timestamp" json:"created_at"`
@@ -28,7 +28,8 @@ func PlaylistModel(c *fiber.Ctx) *database.Model[Playlist] {
 		TableName: "playlists",
 		Process: func(playlist *Playlist) {
 			if playlist.ImageID != nil && *playlist.ImageID != "" {
-				playlist.Image = fmt.Sprintf("%s/playlists/%s.jpg", os.Getenv("STORAGE_URL"), *playlist.ImageID)
+				image := fmt.Sprintf("%s/playlists/%s.jpg", os.Getenv("STORAGE_URL"), *playlist.ImageID)
+				playlist.Image = &image
 			}
 		},
 		Relationships: map[string]database.QueryBuilderProcess[Playlist]{

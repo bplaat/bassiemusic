@@ -99,7 +99,6 @@
         await fetch(
             `${import.meta.env.VITE_API_URL}/download/artist?${new URLSearchParams({
                 deezer_id: artist.id,
-                singles: true,
             })}`,
             {
                 method: 'POST',

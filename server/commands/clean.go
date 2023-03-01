@@ -12,7 +12,7 @@ import (
 
 // Clean up all unused user avatars
 func cleanUserAvatars() {
-	if err := filepath.Walk("storage/avatars", func(path string, info os.FileInfo, err error) error {
+	if err := filepath.Walk("storage/avatars", func(path string, _ os.FileInfo, err error) error {
 		parts := strings.Split(filepath.Base(path), ".")
 		if len(parts) == 2 {
 			avatarID := parts[0]
@@ -31,7 +31,7 @@ func cleanUserAvatars() {
 
 // Clean up all unused artists images
 func cleanArtistImages() {
-	if err := filepath.Walk("storage/artists/small", func(path string, info os.FileInfo, err error) error {
+	if err := filepath.Walk("storage/artists/small", func(path string, _ os.FileInfo, err error) error {
 		parts := strings.Split(filepath.Base(path), ".")
 		if len(parts) == 2 {
 			artistID := parts[0]
@@ -56,7 +56,7 @@ func cleanArtistImages() {
 
 // Clean up all unused albums images
 func cleanAlbumImages() {
-	if err := filepath.Walk("storage/albums/small", func(path string, info os.FileInfo, err error) error {
+	if err := filepath.Walk("storage/albums/small", func(path string, _ os.FileInfo, err error) error {
 		parts := strings.Split(filepath.Base(path), ".")
 		if len(parts) == 2 {
 			albumID := parts[0]
@@ -81,7 +81,7 @@ func cleanAlbumImages() {
 
 // Clean up all unused genres images
 func cleanGenreImages() {
-	if err := filepath.Walk("storage/genres/small", func(path string, info os.FileInfo, err error) error {
+	if err := filepath.Walk("storage/genres/small", func(path string, _ os.FileInfo, err error) error {
 		parts := strings.Split(filepath.Base(path), ".")
 		if len(parts) == 2 {
 			genreID := parts[0]
@@ -106,11 +106,11 @@ func cleanGenreImages() {
 
 // Clean up all unused tracks music
 func cleanTrackMusic() {
-	if err := filepath.Walk("storage/tracks", func(path string, info os.FileInfo, err error) error {
+	if err := filepath.Walk("storage/tracks", func(path string, _ os.FileInfo, err error) error {
 		parts := strings.Split(filepath.Base(path), ".")
 		if len(parts) == 2 {
 			trackID := parts[0]
-			if models.TrackModel(nil).Find(trackID) == nil {
+			if models.TrackModel(nil).WhereNotNull("youtube_id").Find(trackID) == nil {
 				if err := os.Remove(fmt.Sprintf("storage/tracks/%s.m4a", trackID)); err != nil {
 					log.Fatalln(err)
 				}
