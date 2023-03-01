@@ -18,8 +18,8 @@ CREATE TABLE `users` (
     UNIQUE (`email`)
 );
 
-INSERT INTO `users` (`id`, `username`, `email`, `password`, `role`, `theme`) VALUES
-    (UUID_TO_BIN(UUID()), 'admin', 'admin@plaatsoft.nl', '$2a$10$GwDKz/4HjEklaq3FtdMYo.p3ildTU36iX1.29rdDRIIi9qgIlT7n2', 1, 0);
+INSERT INTO `users` (`id`, `username`, `email`, `password`, `role`, `language`, `theme`) VALUES
+    (UUID_TO_BIN(UUID()), 'admin', 'admin@plaatsoft.nl', '$2a$10$GwDKz/4HjEklaq3FtdMYo.p3ildTU36iX1.29rdDRIIi9qgIlT7n2', 1, 'en', 0);
 
 -- Sessions
 CREATE TABLE `sessions` (
