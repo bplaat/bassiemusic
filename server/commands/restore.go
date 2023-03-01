@@ -13,11 +13,11 @@ import (
 )
 
 func removeOldUserAvatarIDs() {
-	total := models.UserModel().Count()
+	total := models.UserModel().WhereNotNull("avatar").Count()
 	index := 0
-	models.UserModel().Chunk(50, func(users []models.User) {
+	models.UserModel().WhereNotNull("avatar").Chunk(50, func(users []models.User) {
 		for _, user := range users {
-			if _, err := os.Stat(fmt.Sprintf("storage/avatars/%s.jpg", user.Avatar)); os.IsNotExist(err) {
+			if _, err := os.Stat(fmt.Sprintf("storage/avatars/%s.jpg", *user.Avatar)); os.IsNotExist(err) {
 				models.UserModel().Where("id", user.ID).Update(database.Map{
 					"avatar": nil,
 				})
@@ -102,6 +102,7 @@ func restoreTrackMusic() {
 			if _, err := os.Stat(fmt.Sprintf("storage/tracks/%s.m4a", track.ID)); os.IsNotExist(err) {
 				downloadCommand := exec.Command("yt-dlp", "-f", "bestaudio[ext=m4a]", fmt.Sprintf("https://www.youtube.com/watch?v=%s", *track.YoutubeID),
 					"-o", fmt.Sprintf("storage/tracks/%s.m4a", track.ID))
+				log.Println(downloadCommand.String())
 				if err := downloadCommand.Run(); err != nil {
 					log.Fatalln(err)
 				}

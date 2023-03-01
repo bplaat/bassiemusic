@@ -3,6 +3,7 @@ package tasks
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"os/exec"
 	"strings"
@@ -16,10 +17,15 @@ import (
 	"github.com/bplaat/bassiemusic/utils/uuid"
 )
 
-func createArtist(deezerID int, name string) string {
+func createArtist(deezerID int, name string, synced bool) string {
 	// Check if artist already exists
 	artist := models.ArtistModel(nil).Where("name", name).First()
 	if artist != nil {
+		if artist.Synced != synced {
+			models.ArtistModel(nil).Where("id", artist.ID).Update(database.Map{
+				"synced": synced,
+			})
+		}
 		return artist.ID
 	}
 
@@ -35,6 +41,7 @@ func createArtist(deezerID int, name string) string {
 		"id":        artistID.String(),
 		"name":      name,
 		"deezer_id": deezerID,
+		"synced":    synced,
 	})
 	utils.FetchFile(deezerArtist.PictureMedium, fmt.Sprintf("storage/artists/small/%s.jpg", artistID.String()))
 	utils.FetchFile(deezerArtist.PictureBig, fmt.Sprintf("storage/artists/medium/%s.jpg", artistID.String()))
@@ -97,7 +104,7 @@ func CreateTrack(albumID string, deezerID int) {
 
 	// Create track artists bindings
 	for _, artist := range deezerTrack.Contributors {
-		artistID := createArtist(artist.ID, artist.Name)
+		artistID := createArtist(artist.ID, artist.Name, false)
 		models.TrackArtistModel().Create(database.Map{
 			"track_id":  trackID.String(),
 			"artist_id": artistID,
@@ -108,6 +115,7 @@ func CreateTrack(albumID string, deezerID int) {
 func SearchAndDownloadTrackMusic(track *models.Track) error {
 	// Search for youtube video
 	searchCommand := exec.Command("yt-dlp", "--dump-json", fmt.Sprintf("ytsearch25:%s - %s - %s", track.Artists[0].Name, track.Album.Title, track.Title))
+	log.Println(searchCommand.String())
 	stdout, err := searchCommand.StdoutPipe()
 	if err != nil {
 		return err
@@ -128,18 +136,20 @@ func SearchAndDownloadTrackMusic(track *models.Track) error {
 				log.Fatalln(err)
 			}
 
+			// Download right youtube video
+			downloadCommand := exec.Command("yt-dlp", "-f", "bestaudio[ext=m4a]", fmt.Sprintf("https://www.youtube.com/watch?v=%s", youtubeVideo.ID),
+				"-o", fmt.Sprintf("storage/tracks/%s.m4a", track.ID))
+			log.Println(downloadCommand.String())
+
+			if err := downloadCommand.Run(); err != nil {
+				log.Fatalln(err)
+			}
+
 			// Update track
 			models.TrackModel(nil).Where("id", track.ID).Update(database.Map{
 				"duration":   youtubeVideo.Duration,
 				"youtube_id": youtubeVideo.ID,
 			})
-
-			// Download right youtube video
-			downloadCommand := exec.Command("yt-dlp", "-f", "bestaudio[ext=m4a]", fmt.Sprintf("https://www.youtube.com/watch?v=%s", youtubeVideo.ID),
-				"-o", fmt.Sprintf("storage/tracks/%s.m4a", track.ID))
-			if err := downloadCommand.Start(); err != nil {
-				log.Fatalln(err)
-			}
 			return nil
 		}
 	}
@@ -190,7 +200,7 @@ func DownloadAlbum(deezerID int) {
 
 	// Create album artist bindings
 	for _, artist := range deezerAlbum.Contributors {
-		artistID := createArtist(artist.ID, artist.Name)
+		artistID := createArtist(artist.ID, artist.Name, false)
 		models.AlbumArtistModel().Create(database.Map{
 			"album_id":  albumID.String(),
 			"artist_id": artistID,
@@ -204,8 +214,8 @@ func DownloadAlbum(deezerID int) {
 
 	// Download album tracks music
 	for _, deezerTrack := range deezerAlbum.Tracks.Data {
-		track := models.TrackModel(nil).With("artists").Where("album_id", albumID.String()).Where("title", deezerTrack.Title).First()
-		if err := SearchAndDownloadTrackMusic(track); err != nil {
+		track := models.TrackModel(nil).With("album", "artists").Where("album_id", albumID.String()).Where("title", deezerTrack.Title).First()
+		if err := SearchAndDownloadTrackMusic(track); err != nil && err != io.EOF {
 			log.Fatalln(err)
 		}
 		log.Printf("[DOWNLOAD] %s - %d-%d - %s\n", deezerAlbum.Title, track.Disk, track.Position, track.Title)
@@ -227,6 +237,14 @@ func DownloadTask() {
 
 		// Do download task
 		if downloadTask.Type == "deezer_artist" {
+			// Create artist
+			var deezerArtist structs.DeezerArtist
+			if err := utils.FetchJson(fmt.Sprintf("https://api.deezer.com/artist/%d", downloadTask.DeezerID), &deezerArtist); err != nil {
+				log.Fatalln(err)
+			}
+			createArtist(deezerArtist.ID, deezerArtist.Name, true)
+
+			// Download artist albums
 			var artistAlbums structs.DeezerArtistAlbums
 			if err := utils.FetchJson(fmt.Sprintf("https://api.deezer.com/artist/%d/albums", downloadTask.DeezerID), &artistAlbums); err != nil {
 				log.Fatalln(err)
