@@ -125,7 +125,7 @@
 </div>
 
 <h3 class="title is-4">{t('tracks')}</h3>
-{#if data.album.tracks}
+{#if data.album.tracks.length > 0}
     <TracksTable
         bind:this={tracksTable}
         token={data.token}

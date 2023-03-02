@@ -73,10 +73,10 @@
                 },
             }
         );
-        const data = await response.json();
+        const result = await response.json();
         results = true;
-        albums = data.albums;
-        artists = data.artists;
+        albums = result.albums;
+        artists = result.artists;
     }
 
     async function downloadAlbum(album) {
