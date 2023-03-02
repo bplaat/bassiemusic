@@ -347,9 +347,9 @@
             </div>
             <div class="media-content" style="width: 10rem; min-width: 0;">
                 <p class="ellipsis">
-                    <a href="/albums/{track.album.id}#{track.disk}-{track.position}" style="font-weight: 500;"
-                        >{track.title}</a
-                    >
+                    <a href="/albums/{track.album.id}#{track.disk}-{track.position}" style="font-weight: 500;">
+                        {track.title}
+                    </a>
                 </p>
                 <p class="ellipsis">
                     {#each track.artists as artist}
@@ -429,9 +429,9 @@
             </div>
 
             <div class="flex" />
-            <span class="is-hidden-desktop" style="width: 2.5rem; text-align: right;"
-                >-{formatDuration(duration - position)}</span
-            >
+            <span class="is-hidden-desktop" style="width: 2.5rem; text-align: right;">
+                -{formatDuration(duration - position)}
+            </span>
         </div>
 
         <div class="music-player-slider px-4">

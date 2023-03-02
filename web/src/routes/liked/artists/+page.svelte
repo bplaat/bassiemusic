@@ -1,6 +1,8 @@
 <script>
-    import { onMount, onDestroy } from 'svelte';
+    import { onMount } from 'svelte';
+    import SortByDropdown from '../../../components/sort-by-dropdown.svelte';
     import ArtistCard from '../../../components/cards/artist-card.svelte';
+    import { lazyLoader } from '../../../utils.js';
     import { language } from '../../../stores.js';
 
     // Language strings
@@ -11,6 +13,12 @@
             albums: 'Albums',
             tracks: 'Tracks',
             header: 'Liked Artists',
+            sort_by_liked_at_desc: 'Liked at (new - old)',
+            sort_by_liked_at: 'Liked at (old - new)',
+            sort_by_name: 'Name (A - Z)',
+            sort_by_name_desc: 'Name (Z - A)',
+            sort_by_created_at_desc: 'Downloaded at (new - old)',
+            sort_by_created_at: 'Downloaded at (old - new)',
             empty: 'You have not liked any artists',
         },
         nl: {
@@ -19,6 +27,12 @@
             albums: 'Albums',
             tracks: 'Tracks',
             header: 'Gelikede Artisten',
+            sort_by_liked_at_desc: 'Geliked op (nieuw - oud)',
+            sort_by_liked_at: 'Geliked op (oud - nieuw)',
+            sort_by_name: 'Naam (A - Z)',
+            sort_by_name_desc: 'Naam (Z - A)',
+            sort_by_created_at_desc: 'Gedownload op (nieuw - oud)',
+            sort_by_created_at: 'Gedownload op (oud - nieuw)',
             empty: 'Je hebt geen artist geliked',
         },
     };
@@ -26,54 +40,31 @@
 
     // State
     export let data;
-    let { token, authUser, artists } = data;
-
-    // Page fetcher
-    async function fetchPage(page) {
-        const response = await fetch(
-            `${import.meta.env.VITE_API_URL}/users/${authUser.id}/liked_artists?${new URLSearchParams({
-                page,
-            })}`,
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            }
-        );
-        const { data: newArtists } = await response.json();
-        artists.push(...newArtists);
-        artists = artists;
-    }
 
     onMount(() => {
         localStorage.setItem('liked-tab', 'artists');
     });
 
-    let bottom;
-    if (artists.length != data.total) {
-        let observer;
-        onMount(() => {
-            let page = 2;
-            observer = new IntersectionObserver(
-                (entries, observer) => {
-                    for (const entry of entries) {
-                        if (artists.length >= data.total) {
-                            observer.unobserve(entry.target);
-                        } else {
-                            fetchPage(page++);
-                        }
-                    }
-                },
+    // Lazy loader
+    lazyLoader(
+        data.total,
+        () => data.artists.length,
+        async (page) => {
+            const response = await fetch(
+                `${import.meta.env.VITE_API_URL}/users/${data.authUser.id}/liked_artists?${new URLSearchParams({
+                    page,
+                    sort_by: data.sortBy,
+                })}`,
                 {
-                    root: document.body,
+                    headers: {
+                        Authorization: `Bearer ${data.token}`,
+                    },
                 }
             );
-            observer.observe(bottom);
-        });
-        onDestroy(() => {
-            if (observer) observer.unobserve(bottom);
-        });
-    }
+            const { data: newArtists } = await response.json();
+            data.artists = [...data.artists, ...newArtists];
+        }
+    );
 </script>
 
 <svelte:head>
@@ -88,18 +79,33 @@
     </ul>
 </div>
 
-<h1 class="title">{t('header')}</h1>
+<div class="columns">
+    <div class="column">
+        <h2 class="title">{t('header')}</h2>
+    </div>
+    <div class="column">
+        <SortByDropdown
+            sortBy={data.sortBy}
+            options={{
+                liked_at_desc: t('sort_by_liked_at_desc'),
+                liked_at: t('sort_by_liked_at'),
+                name: t('sort_by_name'),
+                name_desc: t('sort_by_name_desc'),
+                created_at_desc: t('sort_by_created_at_desc'),
+                created_at: t('sort_by_created_at'),
+            }}
+        />
+    </div>
+</div>
 
-{#if artists.length > 0}
+{#if data.artists.length > 0}
     <div class="columns is-multiline is-mobile">
-        {#each artists as artist}
+        {#each data.artists as artist}
             <div class="column is-half-mobile is-one-third-tablet is-one-quarter-desktop is-one-fifth-widescreen">
-                <ArtistCard {artist} {token} />
+                <ArtistCard {artist} token={data.token} />
             </div>
         {/each}
     </div>
 {:else}
     <p><i>{t('empty')}</i></p>
 {/if}
-
-<div bind:this={bottom} />

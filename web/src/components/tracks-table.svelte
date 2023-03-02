@@ -183,8 +183,9 @@
                     </p>
                 </td>
                 {#if !isAlbum}
-                    <td class="ellipsis is-hidden-mobile"><a href="/albums/{track.album.id}">{track.album.title}</a></td
-                    >
+                    <td class="ellipsis is-hidden-mobile">
+                        <a href="/albums/{track.album.id}">{track.album.title}</a>
+                    </td>
                 {/if}
                 <td>{formatDuration(track.duration)}</td>
                 <td class="is-hidden-mobile">{track.plays}</td>

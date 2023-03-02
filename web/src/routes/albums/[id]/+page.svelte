@@ -1,6 +1,4 @@
 <script>
-    import { page } from '$app/stores';
-    import { onMount, onDestroy } from 'svelte';
     import TracksTable from '../../../components/tracks-table.svelte';
     import { language } from '../../../stores.js';
 
@@ -33,55 +31,22 @@
 
     // State
     export let data;
-    let { token, authUser, album } = data;
-    if (album.tracks) {
-        album.tracks = album.tracks.slice().map((track) => {
-            track.album = album;
-            return track;
-        });
-    }
     let tracksTable;
-
-    // Page update id param
-    let unsubscribe;
-    onMount(() => {
-        unsubscribe = page.subscribe(async (page) => {
-            if (page.url.pathname.startsWith('/albums/') && page.url.pathname != `/albums/${album.id}`) {
-                const response = await fetch(`${import.meta.env.VITE_API_URL}/albums/${page.params.id}`, {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
-                album = await response.json();
-                if (album.tracks) {
-                    album.tracks = album.tracks.slice().map((track) => {
-                        track.album = album;
-                        return track;
-                    });
-                }
-            }
-        });
-    });
-    onDestroy(() => {
-        if (unsubscribe) {
-            unsubscribe();
-        }
-    });
 
     // Methods
     function likeAlbum() {
-        fetch(`${import.meta.env.VITE_API_URL}/albums/${album.id}/like`, {
-            method: album.liked ? 'DELETE' : 'PUT',
+        fetch(`${import.meta.env.VITE_API_URL}/albums/${data.album.id}/like`, {
+            method: data.album.liked ? 'DELETE' : 'PUT',
             headers: {
-                Authorization: `Bearer ${token}`,
+                Authorization: `Bearer ${data.token}`,
             },
         });
-        album.liked = !album.liked;
+        data.album.liked = !data.album.liked;
     }
 </script>
 
 <svelte:head>
-    <title>{t('title', album.title)}</title>
+    <title>{t('title', data.album.title)}</title>
 </svelte:head>
 
 <div class="buttons">
@@ -95,19 +60,19 @@
 <div class="columns">
     <div class="column is-one-quarter mr-5 mr-0-mobile">
         <div class="box has-image p-0 has-image-tags" style="aspect-ratio: 1;">
-            <img src={album.large_cover} alt={t('cover_alt', album.title)} />
+            <img src={data.album.large_cover} alt={t('cover_alt', data.album.title)} />
 
             <div class="image-tags">
-                {#if album.type == 'album'}
+                {#if data.album.type == 'album'}
                     <span class="tag">ALBUM</span>
                 {/if}
-                {#if album.type == 'ep'}
+                {#if data.album.type == 'ep'}
                     <span class="tag">EP</span>
                 {/if}
-                {#if album.type == 'single'}
+                {#if data.album.type == 'single'}
                     <span class="tag">SINGLE</span>
                 {/if}
-                {#if album.explicit}
+                {#if data.album.explicit}
                     <span class="tag is-danger" title={t('explicit')}>E</span>
                 {/if}
             </div>
@@ -115,17 +80,17 @@
     </div>
 
     <div class="column" style="display: flex; flex-direction: column; justify-content: center;">
-        <h2 class="title mb-3">{album.title}</h2>
-        <p class="mb-3">{album.released_at.split('T')[0]}</p>
-        {#if album.genres != undefined}
+        <h2 class="title mb-3">{data.album.title}</h2>
+        <p class="mb-3">{data.album.released_at.split('T')[0]}</p>
+        {#if data.album.genres != undefined}
             <p class="mb-3">
-                {#each album.genres as genre}
+                {#each data.album.genres as genre}
                     <a href="/genres/{genre.id}" class="mr-2">{genre.name}</a>
                 {/each}
             </p>
         {/if}
         <p class="mb-4">
-            {#each album.artists as artist}
+            {#each data.album.artists as artist}
                 <a href="/artists/{artist.id}" class="mr-2">{artist.name}</a>
             {/each}
         </p>
@@ -137,7 +102,7 @@
                 </svg>
             </button>
 
-            {#if !album.liked}
+            {#if !data.album.liked}
                 <button class="button is-large" on:click={likeAlbum} title={t('like')}>
                     <svg class="icon" viewBox="0 0 24 24">
                         <path
@@ -160,8 +125,14 @@
 </div>
 
 <h3 class="title is-4">{t('tracks')}</h3>
-{#if album.tracks}
-    <TracksTable bind:this={tracksTable} {token} {authUser} tracks={album.tracks} isAlbum={true} />
+{#if data.album.tracks}
+    <TracksTable
+        bind:this={tracksTable}
+        token={data.token}
+        authUser={data.authUser}
+        tracks={data.album.tracks}
+        isAlbum={true}
+    />
 {:else}
     <p><i>{t('tracks_empty')}</i></p>
 {/if}

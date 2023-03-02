@@ -11,7 +11,21 @@ import (
 
 func TracksIndex(c *fiber.Ctx) error {
 	query, page, limit := utils.ParseIndexVars(c)
-	return c.JSON(models.TrackModel(c).With("like", "artists", "album").WhereRaw("`title` LIKE ?", "%"+query+"%").OrderByRaw("`plays` DESC, `updated_at` DESC").Paginate(page, limit))
+	q := models.TrackModel(c).With("like", "artists", "album").WhereRaw("`title` LIKE ?", "%"+query+"%")
+	if c.Query("sort_by") == "title" {
+		q = q.OrderByRaw("LOWER(`title`)")
+	} else if c.Query("sort_by") == "title_desc" {
+		q = q.OrderByRaw("LOWER(`title`) DESC")
+	} else if c.Query("sort_by") == "created_at" {
+		q = q.OrderBy("created_at")
+	} else if c.Query("sort_by") == "created_at_desc" {
+		q = q.OrderByDesc("created_at")
+	} else if c.Query("sort_by") == "plays" {
+		q = q.OrderByRaw("`plays`, LOWER(`title`)")
+	} else {
+		q = q.OrderByRaw("`plays` DESC, LOWER(`title`)")
+	}
+	return c.JSON(q.Paginate(page, limit))
 }
 
 func TracksShow(c *fiber.Ctx) error {

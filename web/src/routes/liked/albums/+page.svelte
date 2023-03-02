@@ -1,6 +1,8 @@
 <script>
-    import { onMount, onDestroy } from 'svelte';
+    import { onMount } from 'svelte';
+    import SortByDropdown from '../../../components/sort-by-dropdown.svelte';
     import AlbumCard from '../../../components/cards/album-card.svelte';
+    import { lazyLoader } from '../../../utils.js';
     import { language } from '../../../stores.js';
 
     // Language strings
@@ -11,6 +13,14 @@
             albums: 'Albums',
             tracks: 'Tracks',
             header: 'Liked Albums',
+            sort_by_liked_at_desc: 'Liked at (new - old)',
+            sort_by_liked_at: 'Liked at (old - new)',
+            sort_by_title: 'Title (A - Z)',
+            sort_by_title_desc: 'Title (Z - A)',
+            sort_by_released_at_desc: 'Released at (new - old)',
+            sort_by_released_at: 'Released at (old - new)',
+            sort_by_created_at_desc: 'Downloaded at (new - old)',
+            sort_by_created_at: 'Downloaded at (old - new)',
             empty: 'You have not liked any albums',
         },
         nl: {
@@ -19,6 +29,14 @@
             albums: 'Albums',
             tracks: 'Tracks',
             header: 'Gelikede Albums',
+            sort_by_liked_at_desc: 'Geliked op (nieuw - oud)',
+            sort_by_liked_at: 'Geliked op (oud - nieuw)',
+            sort_by_title: 'Titel (A - Z)',
+            sort_by_title_desc: 'Titel (Z - A)',
+            sort_by_released_at_desc: 'Verschenen op (nieuw - oud)',
+            sort_by_released_at: 'Verschenen op (oud - nieuw)',
+            sort_by_created_at_desc: 'Gedownload op (nieuw - oud)',
+            sort_by_created_at: 'Gedownload op (oud - nieuw)',
             empty: 'Je hebt geen albums geliked',
         },
     };
@@ -26,54 +44,31 @@
 
     // State
     export let data;
-    let { token, authUser, albums } = data;
-
-    // Page fetcher
-    async function fetchPage(page) {
-        const response = await fetch(
-            `${import.meta.env.VITE_API_URL}/users/${authUser.id}/liked_albums?${new URLSearchParams({
-                page,
-            })}`,
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            }
-        );
-        const { data: newAlbums } = await response.json();
-        albums.push(...newAlbums);
-        albums = albums;
-    }
 
     onMount(() => {
         localStorage.setItem('liked-tab', 'albums');
     });
 
-    let bottom;
-    if (albums.length != data.total) {
-        let observer;
-        onMount(() => {
-            let page = 2;
-            observer = new IntersectionObserver(
-                (entries, observer) => {
-                    for (const entry of entries) {
-                        if (albums.length >= data.total) {
-                            observer.unobserve(entry.target);
-                        } else {
-                            fetchPage(page++);
-                        }
-                    }
-                },
+    // Lazy loader
+    lazyLoader(
+        data.total,
+        () => data.albums.length,
+        async (page) => {
+            const response = await fetch(
+                `${import.meta.env.VITE_API_URL}/users/${data.authUser.id}/liked_albums?${new URLSearchParams({
+                    page,
+                    sort_by: data.sortBy,
+                })}`,
                 {
-                    root: document.body,
+                    headers: {
+                        Authorization: `Bearer ${data.token}`,
+                    },
                 }
             );
-            observer.observe(bottom);
-        });
-        onDestroy(() => {
-            if (observer) observer.unobserve(bottom);
-        });
-    }
+            const { data: newAlbums } = await response.json();
+            data.albums = [...data.albums, ...newAlbums];
+        }
+    );
 </script>
 
 <svelte:head>
@@ -88,18 +83,35 @@
     </ul>
 </div>
 
-<h1 class="title">{t('header')}</h1>
+<div class="columns">
+    <div class="column">
+        <h2 class="title">{t('header')}</h2>
+    </div>
+    <div class="column">
+        <SortByDropdown
+            sortBy={data.sortBy}
+            options={{
+                liked_at_desc: t('sort_by_liked_at_desc'),
+                liked_at: t('sort_by_liked_at'),
+                title: t('sort_by_title'),
+                title_desc: t('sort_by_title_desc'),
+                released_at_desc: t('sort_by_released_at_desc'),
+                released_at: t('sort_by_released_at'),
+                created_at_desc: t('sort_by_created_at_desc'),
+                created_at: t('sort_by_created_at'),
+            }}
+        />
+    </div>
+</div>
 
-{#if albums.length > 0}
+{#if data.albums.length > 0}
     <div class="columns is-multiline is-mobile">
-        {#each albums as album}
+        {#each data.albums as album}
             <div class="column is-half-mobile is-one-third-tablet is-one-quarter-desktop is-one-fifth-widescreen">
-                <AlbumCard {album} {token} {authUser} />
+                <AlbumCard {album} token={data.token} authUser={data.authUser} />
             </div>
         {/each}
     </div>
 {:else}
     <p>{t('empty')}</p>
 {/if}
-
-<div bind:this={bottom} />

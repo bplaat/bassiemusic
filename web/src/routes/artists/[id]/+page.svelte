@@ -1,6 +1,4 @@
 <script>
-    import { page } from '$app/stores';
-    import { onMount, onDestroy } from 'svelte';
     import TracksTable from '../../../components/tracks-table.svelte';
     import AlbumCard from '../../../components/cards/album-card.svelte';
     import { language } from '../../../stores.js';
@@ -46,50 +44,29 @@
 
     // State
     export let data;
-    let { token, authUser, artist } = data;
     let topTracksTable;
     let albumType = 'all';
-    $: filteredAlbums = (artist.albums || []).filter((album) => {
+    $: filteredAlbums = (data.artist.albums || []).filter((album) => {
         if (albumType == 'all') return true;
         if (albumType == 'album') return album.type == 'album';
         if (albumType == 'ep') return album.type == 'ep';
         if (albumType == 'single') return album.type == 'single';
     });
 
-    // Page update id param
-    let unsubscribe;
-    onMount(() => {
-        unsubscribe = page.subscribe(async (page) => {
-            if (page.url.pathname.startsWith('/artists/') && page.url.pathname != `/artists/${artist.id}`) {
-                const response = await fetch(`${import.meta.env.VITE_API_URL}/artists/${page.params.id}`, {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
-                artist = await response.json();
-            }
-        });
-    });
-    onDestroy(() => {
-        if (unsubscribe) {
-            unsubscribe();
-        }
-    });
-
     // Methods
     function likeArtist() {
-        fetch(`${import.meta.env.VITE_API_URL}/artists/${artist.id}/like`, {
-            method: artist.liked ? 'DELETE' : 'PUT',
+        fetch(`${import.meta.env.VITE_API_URL}/artists/${data.artist.id}/like`, {
+            method: data.artist.liked ? 'DELETE' : 'PUT',
             headers: {
-                Authorization: `Bearer ${token}`,
+                Authorization: `Bearer ${data.token}`,
             },
         });
-        artist.liked = !artist.liked;
+        data.artist.liked = !data.artist.liked;
     }
 </script>
 
 <svelte:head>
-    <title>{t('title', artist.name)}</title>
+    <title>{t('title', data.artist.name)}</title>
 </svelte:head>
 
 <div class="buttons">
@@ -103,12 +80,12 @@
 <div class="columns">
     <div class="column is-one-quarter mr-5 mr-0-mobile">
         <div class="box has-image p-0" style="aspect-ratio: 1;">
-            <img src={artist.large_image} alt={t('image_alt', artist.name)} />
+            <img src={data.artist.large_image} alt={t('image_alt', data.artist.name)} />
         </div>
     </div>
 
     <div class="column" style="display: flex; flex-direction: column; justify-content: center;">
-        <h2 class="title">{artist.name}</h2>
+        <h2 class="title">{data.artist.name}</h2>
 
         <div class="buttons">
             <button class="button is-large" on:click={topTracksTable.playFirstTrack} title={t('play')}>
@@ -117,7 +94,7 @@
                 </svg>
             </button>
 
-            {#if !artist.liked}
+            {#if !data.artist.liked}
                 <button class="button is-large" on:click={likeArtist} title={t('like')}>
                     <svg class="icon" viewBox="0 0 24 24">
                         <path
@@ -140,14 +117,19 @@
 </div>
 
 <h2 class="title mt-5">{t('top_tracks')}</h2>
-{#if artist.top_tracks != undefined}
-    <TracksTable bind:this={topTracksTable} {token} {authUser} tracks={artist.top_tracks} />
+{#if data.artist.top_tracks != undefined}
+    <TracksTable
+        bind:this={topTracksTable}
+        token={data.token}
+        authUser={data.authUser}
+        tracks={data.artist.top_tracks}
+    />
 {:else}
     <p><i>{t('top_tracks_empty')}</i></p>
 {/if}
 
 <h2 class="title mt-5">{t('albums')}</h2>
-{#if artist.albums != undefined}
+{#if data.artist.albums != undefined}
     <div class="tabs is-toggle">
         <ul>
             <li class:is-active={albumType == 'all'}>
@@ -173,7 +155,7 @@
         <div class="columns is-multiline is-mobile">
             {#each filteredAlbums as album}
                 <div class="column is-half-mobile is-one-third-tablet is-one-quarter-desktop is-one-fifth-widescreen">
-                    <AlbumCard {album} {token} {authUser} />
+                    <AlbumCard {album} token={data.token} authUser={data.authUser} />
                 </div>
             {/each}
         </div>

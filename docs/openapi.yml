@@ -15,6 +15,35 @@ components:
       scheme: bearer
 
   parameters:
+    Query:
+      name: q
+      in: query
+      description: Search query
+      required: false
+      schema:
+        type: string
+    QueryRequired:
+      name: q
+      in: query
+      description: Search query
+      required: true
+      schema:
+        type: string
+    Page:
+      name: page
+      in: query
+      description: Page index (page size is set by limit)
+      required: false
+      schema:
+        type: integer
+    Limit:
+      name: limit
+      in: query
+      description: Item count per page
+      required: false
+      schema:
+        type: integer
+
     ArtistID:
       name: id
       in: path
@@ -23,7 +52,6 @@ components:
       schema:
         type: string
         format: uuid
-
     AlbumID:
       name: id
       in: path
@@ -32,7 +60,6 @@ components:
       schema:
         type: string
         format: uuid
-
     GenreID:
       name: id
       in: path
@@ -41,7 +68,6 @@ components:
       schema:
         type: string
         format: uuid
-
     TrackID:
       name: id
       in: path
@@ -50,7 +76,6 @@ components:
       schema:
         type: string
         format: uuid
-
     PlaylistID:
       name: id
       in: path
@@ -59,7 +84,6 @@ components:
       schema:
         type: string
         format: uuid
-
     UserID:
       name: id
       in: path
@@ -68,7 +92,6 @@ components:
       schema:
         type: string
         format: uuid
-
     SessionID:
       name: id
       in: path
@@ -184,16 +207,11 @@ paths:
   /search:
     get:
       tags: [Search]
-      description: Search all items with query
+      description: Search your whole library with query
       security:
         - TokenAuth: []
       parameters:
-        - name: q
-          in: query
-          description: Query to search by
-          required: true
-          schema:
-            type: string
+        - $ref: "#/components/parameters/QueryRequired"
       responses:
         "200":
           description: Successfull response
@@ -202,16 +220,11 @@ paths:
   /deezer_search:
     get:
       tags: [Search]
-      description: Search Deezer API items that wont exists with query
+      description: Search Deezer API items that are not missing in your library with query
       security:
         - TokenAuth: []
       parameters:
-        - name: q
-          in: query
-          description: Query to search by
-          required: true
-          schema:
-            type: string
+        - $ref: "#/components/parameters/QueryRequired"
       responses:
         "200":
           description: Successfull response
@@ -225,6 +238,17 @@ paths:
       description: Get a list of artists
       security:
         - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Query"
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+        - name: sort_by
+          in: query
+          description: Sort items by
+          required: false
+          schema:
+            type: string
+            enum: ['name', 'name_desc', 'created_at', 'created_at_desc']
       responses:
         "200":
           description: Successfull response
@@ -248,7 +272,7 @@ paths:
   /artists/{id}/like:
     put:
       tags: [Artists]
-      description: Like an artist
+      description: Like an artist with authed user
       security:
         - TokenAuth: []
       parameters:
@@ -282,6 +306,17 @@ paths:
       description: Get a list of albums
       security:
         - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Query"
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+        - name: sort_by
+          in: query
+          description: Sort items by
+          required: false
+          schema:
+            type: string
+            enum: ['title', 'title_desc', 'released_at', 'released_at_desc', 'created_at', 'created_at_desc']
       responses:
         "200":
           description: Successfull response
@@ -305,7 +340,7 @@ paths:
   /albums/{id}/like:
     put:
       tags: [Albums]
-      description: Like an album
+      description: Like an album with authed user
       security:
         - TokenAuth: []
       parameters:
@@ -339,6 +374,17 @@ paths:
       description: Get a list of genres
       security:
         - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Query"
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+        - name: sort_by
+          in: query
+          description: Sort items by
+          required: false
+          schema:
+            type: string
+            enum: ['name', 'name_desc', 'created_at', 'created_at_desc']
       responses:
         "200":
           description: Successfull response
@@ -382,6 +428,17 @@ paths:
       description: Get a list of tracks
       security:
         - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Query"
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+        - name: sort_by
+          in: query
+          description: Sort items by
+          required: false
+          schema:
+            type: string
+            enum: ['plays', 'plays_desc', 'title', 'title_desc', 'created_at', 'created_at_desc']
       responses:
         "200":
           description: Successfull response
@@ -405,7 +462,7 @@ paths:
   /tracks/{id}/like:
     put:
       tags: [Tracks]
-      description: Like a track
+      description: Like a track with authed user
       security:
         - TokenAuth: []
       parameters:
@@ -454,6 +511,17 @@ paths:
       description: Get a list of playlists
       security:
         - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Query"
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+        - name: sort_by
+          in: query
+          description: Sort items by
+          required: false
+          schema:
+            type: string
+            enum: ['name', 'name_desc', 'created_at', 'created_at_desc', 'updated_at', 'updated_at_desc']
       responses:
         "200":
           description: Successfull response
@@ -602,7 +670,7 @@ paths:
   /playlists/{id}/like:
     put:
       tags: [Playlists]
-      description: Like an playlist
+      description: Like an playlist with authed user
       security:
         - TokenAuth: []
       parameters:
@@ -636,6 +704,10 @@ paths:
       description: Get a list of users
       security:
         - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Query"
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
       responses:
         "200":
           description: Successfull response
@@ -783,6 +855,16 @@ paths:
         - TokenAuth: []
       parameters:
         - $ref: "#/components/parameters/UserID"
+        - $ref: "#/components/parameters/Query"
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+        - name: sort_by
+          in: query
+          description: Sort items by
+          required: false
+          schema:
+            type: string
+            enum: ['liked_at', 'liked_at_desc', 'name', 'name_desc', 'created_at', 'created_at_desc']
       responses:
         "200":
           description: Successfull response
@@ -798,6 +880,16 @@ paths:
         - TokenAuth: []
       parameters:
         - $ref: "#/components/parameters/UserID"
+        - $ref: "#/components/parameters/Query"
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+        - name: sort_by
+          in: query
+          description: Sort items by
+          required: false
+          schema:
+            type: string
+            enum: ['liked_at', 'liked_at_desc', 'title', 'title_desc', 'released_at', 'released_at_desc', 'created_at', 'created_at_desc']
       responses:
         "200":
           description: Successfull response
@@ -813,6 +905,16 @@ paths:
         - TokenAuth: []
       parameters:
         - $ref: "#/components/parameters/UserID"
+        - $ref: "#/components/parameters/Query"
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+        - name: sort_by
+          in: query
+          description: Sort items by
+          required: false
+          schema:
+            type: string
+            enum: ['liked_at', 'liked_at_desc', 'title', 'title_desc', 'plays', 'plays_desc', 'created_at', 'created_at_desc']
       responses:
         "200":
           description: Successfull response
@@ -828,6 +930,16 @@ paths:
         - TokenAuth: []
       parameters:
         - $ref: "#/components/parameters/UserID"
+        - $ref: "#/components/parameters/Query"
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+        - name: sort_by
+          in: query
+          description: Sort items by
+          required: false
+          schema:
+            type: string
+            enum: ['liked_at', 'liked_at_desc', 'name', 'name_desc', 'created_at', 'created_at_desc', 'updated_at', 'updated_at_desc']
       responses:
         "200":
           description: Successfull response
@@ -843,6 +955,9 @@ paths:
         - TokenAuth: []
       parameters:
         - $ref: "#/components/parameters/UserID"
+        - $ref: "#/components/parameters/Query"
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
       responses:
         "200":
           description: Successfull response
@@ -858,6 +973,25 @@ paths:
         - TokenAuth: []
       parameters:
         - $ref: "#/components/parameters/UserID"
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: Successfull response
+        "401":
+          description: Authorization error
+        "404":
+          description: User not found
+  /users/{id}/active_sessions:
+    get:
+      tags: [Users]
+      description: Get a list of active user sessions
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/UserID"
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
       responses:
         "200":
           description: Successfull response
@@ -873,6 +1007,8 @@ paths:
         - TokenAuth: []
       parameters:
         - $ref: "#/components/parameters/UserID"
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
       responses:
         "200":
           description: Successfull response

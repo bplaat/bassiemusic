@@ -20,7 +20,7 @@
 - Create the tables in [`server/database.sql`](../server/database.sql)
 
 ### Server
-- Download and install [Go compiler](https://go.dev/dl/) 1.20 or higher
+- Download and install [Go compiler](https://go.dev/dl/) 1.18 or higher
 - Go into the server folder with `cd server`
 - Build the server `go build`
 - Copy the `.env.example` file to `.env`
@@ -100,7 +100,7 @@
 - Create the tables in [`server/database.sql`](../server/database.sql)
 
 ### Server
-- Download and install [Go compiler](https://go.dev/dl/) 1.20 or higher
+- Download and install [Go compiler](https://go.dev/dl/) 1.18 or higher
 - Add the `go/bin` folder to your path
 - Go into the server folder with `cd server`
 - Build the server `go build`
