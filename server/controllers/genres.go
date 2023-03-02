@@ -8,7 +8,17 @@ import (
 
 func GenresIndex(c *fiber.Ctx) error {
 	query, page, limit := utils.ParseIndexVars(c)
-	return c.JSON(models.GenreModel(c).WhereRaw("`name` LIKE ?", "%"+query+"%").OrderByRaw("LOWER(`name`)").Paginate(page, limit))
+	q := models.GenreModel(c).WhereRaw("`name` LIKE ?", "%"+query+"%")
+	if c.Query("sort_by") == "created_at" {
+		q = q.OrderBy("created_at")
+	} else if c.Query("sort_by") == "created_at_desc" {
+		q = q.OrderByDesc("created_at")
+	} else if c.Query("sort_by") == "name_desc" {
+		q = q.OrderByRaw("LOWER(`name`) DESC")
+	} else {
+		q = q.OrderByRaw("LOWER(`name`)")
+	}
+	return c.JSON(q.Paginate(page, limit))
 }
 
 func GenresShow(c *fiber.Ctx) error {

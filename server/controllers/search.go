@@ -40,7 +40,7 @@ func SearchIndex(c *fiber.Ctx) error {
 }
 
 func DeezerSearchIndex(c *fiber.Ctx) error {
-	query := c.Query("q")
+	query, _, _ := utils.ParseIndexVars(c)
 
 	// Search deezer artists
 	var deezerArtistSearch structs.DeezerArtistSearch
