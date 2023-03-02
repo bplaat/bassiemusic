@@ -19,7 +19,7 @@
         if (to.url == undefined || to.url.hash == '') {
             app.scrollTop = 0;
         }
-        sidebar.close();
+        if (sidebar) sidebar.close();
     });
 
     // App is-resizing

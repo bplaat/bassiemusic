@@ -20,10 +20,10 @@ func TracksIndex(c *fiber.Ctx) error {
 		q = q.OrderBy("created_at")
 	} else if c.Query("sort_by") == "created_at_desc" {
 		q = q.OrderByDesc("created_at")
-	} else if c.Query("sort_by") == "plays_desc" {
-		q = q.OrderByDesc("plays")
+	} else if c.Query("sort_by") == "plays" {
+		q = q.OrderByRaw("`plays`, LOWER(`title`)")
 	} else {
-		q = q.OrderBy("plays")
+		q = q.OrderByRaw("`plays` DESC, LOWER(`title`)")
 	}
 	return c.JSON(q.Paginate(page, limit))
 }

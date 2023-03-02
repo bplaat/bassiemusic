@@ -22,7 +22,6 @@
 
     // State
     export let data;
-    const { token, authUser } = data;
 </script>
 
 <svelte:head>
@@ -39,7 +38,7 @@
 
 <h2 class="title">{t('header')}</h2>
 {#if $musicState.queue.length > 0}
-    <TracksTable {token} {authUser} isMusicQueue={true} tracks={$musicState.queue} />
+    <TracksTable token={data.token} authUser={data.authUser} isMusicQueue={true} tracks={$musicState.queue} />
 {:else}
     <p><i>{t('empty')}</i></p>
 {/if}

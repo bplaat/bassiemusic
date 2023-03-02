@@ -28,11 +28,17 @@
             },
         });
         const completeAlbum = await response.json();
-        const tracks = completeAlbum.tracks.map((track) => {
+        const tracks = (
+            authUser.allow_explicit
+                ? completeAlbum.tracks.filter((track) => track.music != null)
+                : completeAlbum.tracks.filter((track) => track.music != null && !track.explicit)
+        ).map((track) => {
             track.album = album;
             return track;
         });
-        $musicPlayer.playTracks(tracks, tracks[0]);
+        if (tracks.length > 0) {
+            $musicPlayer.playTracks(tracks, tracks[0]);
+        }
     }
 </script>
 

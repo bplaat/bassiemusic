@@ -1,7 +1,6 @@
 <script>
-    import { page } from '$app/stores';
-    import { onMount, onDestroy } from 'svelte';
     import AlbumCard from '../../../components/cards/album-card.svelte';
+    import { lazyLoader } from '../../../utils.js';
     import { language } from '../../../stores.js';
 
     // Language strings
@@ -25,74 +24,30 @@
 
     // State
     export let data;
-    let { token, authUser, genre } = data;
 
-    // Reresh genre on page change to same page
-    let unsubscribe;
-    onMount(() => {
-        unsubscribe = page.subscribe(async (page) => {
-            if (page.url.pathname.startsWith('/genres/') && page.url.pathname != `/genres/${genre.id}`) {
-                const response = await fetch(`${import.meta.env.VITE_API_URL}/genres/${page.params.id}`, {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
-                genre = await response.json();
-            }
-        });
-    });
-    onDestroy(() => {
-        if (unsubscribe) {
-            unsubscribe();
-        }
-    });
-
-    // Genre albums
-    async function fetchPage(page) {
-        const response = await fetch(
-            `${import.meta.env.VITE_API_URL}/genres/${genre.id}/albums?${new URLSearchParams({
-                page,
-            })}`,
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            }
-        );
-        const { data: newAlbums } = await response.json();
-        genre.albums.push(...newAlbums);
-        genre = genre;
-    }
-
-    let bottom;
-    if (genre.albums.length != data.albumsTotal) {
-        let observer;
-        onMount(() => {
-            let page = 2;
-            observer = new IntersectionObserver(
-                (entries, observer) => {
-                    for (const entry of entries) {
-                        if (genre.albums.length >= data.albumsTotal) {
-                            observer.unobserve(entry.target);
-                        } else {
-                            fetchPage(page++);
-                        }
-                    }
-                },
+    // Lazy loader
+    lazyLoader(
+        data.albumsTotal,
+        () => data.genre.albums.length,
+        async (page) => {
+            const response = await fetch(
+                `${import.meta.env.VITE_API_URL}/genres/${data.genre.id}/albums?${new URLSearchParams({
+                    page,
+                })}`,
                 {
-                    root: document.body,
+                    headers: {
+                        Authorization: `Bearer ${data.token}`,
+                    },
                 }
             );
-            observer.observe(bottom);
-        });
-        onDestroy(() => {
-            if (observer) observer.unobserve(bottom);
-        });
-    }
+            const { data: newAlbums } = await response.json();
+            data.genre.albums = [...data.genre.albums, ...newAlbums];
+        }
+    );
 </script>
 
 <svelte:head>
-    <title>{t('title', genre.name)}</title>
+    <title>{t('title', data.genre.name)}</title>
 </svelte:head>
 
 <div class="buttons">
@@ -106,26 +61,24 @@
 <div class="columns">
     <div class="column is-one-quarter mr-5 mr-0-mobile">
         <div class="box has-image m-0 p-0" style="aspect-ratio: 1;">
-            <img src={genre.large_image} alt={t('image_alt', genre.name)} />
+            <img src={data.genre.large_image} alt={t('image_alt', data.genre.name)} />
         </div>
     </div>
 
     <div class="column" style="display: flex; flex-direction: column; justify-content: center;">
-        <h2 class="title">{genre.name}</h2>
+        <h2 class="title">{data.genre.name}</h2>
     </div>
 </div>
 
 <h2 class="title">{t('albums')}</h2>
-{#if genre.albums != undefined}
+{#if data.genre.albums.length > 0}
     <div class="columns is-multiline is-mobile">
-        {#each genre.albums as album}
+        {#each data.genre.albums as album}
             <div class="column is-half-mobile is-one-third-tablet is-one-quarter-desktop is-one-fifth-widescreen">
-                <AlbumCard {album} {token} {authUser} />
+                <AlbumCard {album} token={data.token} authUser={data.authUser} />
             </div>
         {/each}
     </div>
 {:else}
     <p><i>{t('empty')}</i></p>
 {/if}
-
-<div bind:this={bottom} />

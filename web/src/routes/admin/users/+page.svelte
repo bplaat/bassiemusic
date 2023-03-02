@@ -57,17 +57,16 @@
             }
         );
         const { data: newUsers, pagination } = await response.json();
-        users.push(...newUsers);
-        users = users;
-        if (users.length != pagination.total) {
+        users = [...users, ...newUsers];
+        if (users.length < pagination.total) {
             fetchPage(page + 1);
         }
     }
-    onMount(() => {
-        if (users.length != data.total) {
+    if (users.length < data.total) {
+        onMount(() => {
             fetchPage(2);
-        }
-    });
+        });
+    }
 
     function updateUsers() {
         users = [];
@@ -103,10 +102,10 @@
 <table class="table" style="width: 100%;">
     <thead>
         <th style="width: 10%;">{t('index')}</th>
-        <th style="width: 30%;">{t('username')}</th>
+        <th style="width: 25%;">{t('username')}</th>
         <th style="width: 30%;">{t('email')}</th>
         <th style="width: 15%;">{t('role')}</th>
-        <th style="width: 15%;">{t('actions')}</th>
+        <th style="width: 20%;">{t('actions')}</th>
     </thead>
     <tbody>
         {#each users as user, index}
@@ -118,9 +117,9 @@
                 <td>
                     <div class="buttons">
                         <button class="button is-link is-small" on:click={() => editUser(user)}>{t('edit')}</button>
-                        <button class="button is-danger is-small" on:click={() => deleteUser(user)}
-                            >{t('delete')}</button
-                        >
+                        <button class="button is-danger is-small" on:click={() => deleteUser(user)}>
+                            {t('delete')}
+                        </button>
                     </div>
                 </td>
             </tr>

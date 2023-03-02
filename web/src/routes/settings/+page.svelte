@@ -1,6 +1,7 @@
 <script>
     import { onMount } from 'svelte';
     import DeleteAccountModal from '../../components/delete-account-modal.svelte';
+    import { lazyLoader } from '../../utils.js';
     import { language } from '../../stores.js';
 
     // Language strings
@@ -140,32 +141,27 @@
     }
 
     // Sessions management
-    async function fetchSessionsPage(page) {
-        const response = await fetch(
-            `${import.meta.env.VITE_API_URL}/users/${authUser.id}/sessions?${new URLSearchParams({
-                page,
-            })}`,
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            }
-        );
-        const { data: newSessions, pagination } = await response.json();
-        sessions.push(...newSessions);
-        sessions = sessions;
-        if (sessions.length != pagination.total) {
-            fetchSessionsPage(page + 1);
+    lazyLoader(
+        data.sessionsTotal,
+        () => data.sessions.length,
+        async (page) => {
+            const response = await fetch(
+                `${import.meta.env.VITE_API_URL}/users/${authUser.id}/active_sessions?${new URLSearchParams({
+                    page,
+                })}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+            const { data: newSessions } = await response.json();
+            sessions = [...sessions, ...newSessions];
         }
-    }
-    onMount(() => {
-        if (sessions.length != data.sessionsTotal) {
-            fetchSessionsPage(2);
-        }
-    });
+    );
 
     async function revokeSession(session) {
-        fetch(`${import.meta.env.VITE_API_URL}/sessions/${session.id}/revoke`, {
+        await fetch(`${import.meta.env.VITE_API_URL}/sessions/${session.id}/revoke`, {
             method: 'PUT',
             headers: {
                 Authorization: `Bearer ${token}`,
@@ -284,9 +280,9 @@
                     <button type="submit" class="button is-link">{t('change_avatar')}</button>
 
                     {#if authUser.avatar}
-                        <button type="button" class="button is-danger" on:click|preventDefault={deleteAvatar}
-                            >{t('delete_avatar')}</button
-                        >
+                        <button type="button" class="button is-danger" on:click|preventDefault={deleteAvatar}>
+                            {t('delete_avatar')}
+                        </button>
                     {/if}
                 </div>
             </div>
@@ -311,41 +307,40 @@
 
     <div class="columns is-multiline">
         {#each sessions as session}
-            {#if new Date(session.expires_at).getTime() > Date.now()}
-                <div class="column is-half">
-                    <div class="box content">
-                        <h3 class="title is-4">
-                            {session.client_name} on {session.client_os}
-                            {#if currentSessionId == session.id}
-                                <span class="tag is-link is-pulled-right">{t('current')}</span>
-                            {/if}
-                        </h3>
-                        <p>
-                            {t(
-                                'location',
-                                session.ip,
-                                session.ip_city != undefined && session.ip_country != undefined
-                                    ? `${session.ip_city}, ${session.ip_country.toUpperCase()}`
-                                    : t('unknown_location')
-                            )}
-                        </p>
-                        <p>
-                            {t('logged_in_at', new Date(session.created_at).toLocaleString(authUser.lang))}
-                        </p>
-                        <p>
-                            {t('expires_at', new Date(session.expires_at).toLocaleString(authUser.lang))}
-                        </p>
-                        <div class="buttons">
-                            <button
-                                class="button is-danger"
-                                on:click={() => revokeSession(session)}
-                                title="This will revoke this active session, you will be logged out of this browser or client"
-                                >{t('revoke_session')}</button
-                            >
-                        </div>
+            <div class="column is-half">
+                <div class="box content">
+                    <h3 class="title is-4">
+                        {session.client_name} on {session.client_os}
+                        {#if currentSessionId == session.id}
+                            <span class="tag is-link is-pulled-right">{t('current')}</span>
+                        {/if}
+                    </h3>
+                    <p>
+                        {t(
+                            'location',
+                            session.ip,
+                            session.ip_city != undefined && session.ip_country != undefined
+                                ? `${session.ip_city}, ${session.ip_country.toUpperCase()}`
+                                : t('unknown_location')
+                        )}
+                    </p>
+                    <p>
+                        {t('logged_in_at', new Date(session.created_at).toLocaleString(authUser.lang))}
+                    </p>
+                    <p>
+                        {t('expires_at', new Date(session.expires_at).toLocaleString(authUser.lang))}
+                    </p>
+                    <div class="buttons">
+                        <button
+                            class="button is-danger"
+                            on:click={() => revokeSession(session)}
+                            title="This will revoke this active session, you will be logged out of this browser or client"
+                        >
+                            {t('revoke_session')}
+                        </button>
                     </div>
                 </div>
-            {/if}
+            </div>
         {/each}
     </div>
 </div>

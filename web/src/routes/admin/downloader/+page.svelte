@@ -49,7 +49,6 @@
 
     // State
     export let data;
-    const { token, storage } = data;
     let query = '';
     let results = false;
     let albums = [];
@@ -70,7 +69,7 @@
             })}`,
             {
                 headers: {
-                    Authorization: `Bearer ${token}`,
+                    Authorization: `Bearer ${data.token}`,
                 },
             }
         );
@@ -88,7 +87,7 @@
             {
                 method: 'POST',
                 headers: {
-                    Authorization: `Bearer ${token}`,
+                    Authorization: `Bearer ${data.token}`,
                 },
             }
         );
@@ -103,7 +102,7 @@
             {
                 method: 'POST',
                 headers: {
-                    Authorization: `Bearer ${token}`,
+                    Authorization: `Bearer ${data.token}`,
                 },
             }
         );
@@ -119,12 +118,12 @@
 
 <div class="box">
     <h2 class="title is-4">{t('storage_size')}</h2>
-    <progress class="progress is-link" value={storage.used} max={storage.max}>
-        {((storage.used / storage.max) * 100).toFixed(2)}%
+    <progress class="progress is-link" value={data.storage.used} max={data.storage.max}>
+        {((data.storage.used / data.storage.max) * 100).toFixed(2)}%
     </progress>
     <p>
-        <span class="mr-3">{t('storage_used', formatBytes(storage.used))}</span>
-        <span>{t('storage_max', formatBytes(storage.max))}</span>
+        <span class="mr-3">{t('storage_used', formatBytes(data.storage.used))}</span>
+        <span>{t('storage_max', formatBytes(data.storage.max))}</span>
     </p>
 </div>
 

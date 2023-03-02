@@ -122,6 +122,7 @@ func Serve() {
 	app.Get("/users/:userID/liked_playlists", controllers.UsersLikedPlaylists)
 	app.Get("/users/:userID/played_tracks", controllers.UsersPlayedTracks)
 	app.Get("/users/:userID/sessions", controllers.UsersSessions)
+	app.Get("/users/:userID/active_sessions", controllers.UsersActiveSessions)
 	app.Get("/users/:userID/playlists", controllers.UsersPlaylists)
 
 	app.Use(middlewares.IsAdmin)

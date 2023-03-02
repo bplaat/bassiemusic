@@ -13,11 +13,24 @@ import (
 func PlaylistsIndex(c *fiber.Ctx) error {
 	authUser := c.Locals("authUser").(*models.User)
 	query, page, limit := utils.ParseIndexVars(c)
-	if authUser.Role == "admin" {
-		return c.JSON(models.PlaylistModel(c).With("like", "user").WhereRaw("`name` LIKE ?", "%"+query+"%").OrderByRaw("LOWER(`name`)").Paginate(page, limit))
-	} else {
-		return c.JSON(models.PlaylistModel(c).With("like", "user").Where("public", true).WhereRaw("`name` LIKE ?", "%"+query+"%").OrderByRaw("LOWER(`name`)").Paginate(page, limit))
+	q := models.PlaylistModel(c).With("like", "user").WhereRaw("`name` LIKE ?", "%"+query+"%")
+	if authUser.Role != "admin" {
+		q = q.Where("public", true)
 	}
+	if c.Query("sort_by") == "created_at" {
+		q = q.OrderBy("created_at")
+	} else if c.Query("sort_by") == "created_at_desc" {
+		q = q.OrderByDesc("created_at")
+	} else if c.Query("sort_by") == "updated_at" {
+		q = q.OrderBy("updated_at")
+	} else if c.Query("sort_by") == "updated_at_desc" {
+		q = q.OrderByDesc("updated_at")
+	} else if c.Query("sort_by") == "name_desc" {
+		q = q.OrderByRaw("LOWER(`name`) DESC")
+	} else {
+		q = q.OrderByRaw("LOWER(`name`)")
+	}
+	return c.JSON(q.Paginate(page, limit))
 }
 
 type PlaylistsCreateParams struct {

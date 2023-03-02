@@ -24,5 +24,5 @@ export async function load({ url, fetch, cookies, params }) {
     const { data, pagination } = await albumsResponse.json();
     genre.albums = data;
 
-    return { token: cookies.get('token'), authUser, genre, albumsTotal: pagination.total };
+    return { token: cookies.get('token'), authUser, genre, albumsTotal: pagination.total, albumsPage: 2 };
 }

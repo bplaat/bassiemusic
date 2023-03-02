@@ -25,7 +25,9 @@
             },
         });
         const completeArtist = await response.json();
-        $musicPlayer.playTracks(completeArtist.top_tracks, completeArtist.top_tracks[0]);
+        if (completeArtist.top_tracks.length > 0) {
+            $musicPlayer.playTracks(completeArtist.top_tracks, completeArtist.top_tracks[0]);
+        }
     }
 </script>
 
