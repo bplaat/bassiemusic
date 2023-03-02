@@ -160,7 +160,7 @@
                 {#if !isAlbum}
                     <td>
                         <div class="box has-image m-0 p-0" style="width: 64px; height: 64px;">
-                            <img src={track.album.small_cover} alt={t('cover_alt', track.album)} loading="lazy" />
+                            <img src={track.album.small_cover} alt={t('cover_alt', track.album)} />
                         </div>
                     </td>
                 {/if}

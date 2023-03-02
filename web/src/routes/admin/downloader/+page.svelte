@@ -174,7 +174,7 @@
                     <div class="media">
                         <div class="media-left">
                             <div class="box m-0 p-0" style="width: 48px; height: 48px;">
-                                <img src={artist.picture_medium} alt={t('image_alt', artist.name)} loading="lazy" />
+                                <img src={artist.picture_medium} alt={t('image_alt', artist.name)} />
                             </div>
                         </div>
                         <div class="media-content">

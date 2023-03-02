@@ -33,7 +33,7 @@
 
 <a class="card has-image-play-button" href="/artists/{artist.id}">
     <div class="card-image" style="aspect-ratio: 1;">
-        <img src={artist.medium_image} alt={t('image_alt', artist.name)} loading="lazy" />
+        <img src={artist.medium_image} alt={t('image_alt', artist.name)} />
         <button class="button image-play-button" on:click|preventDefault={fetchAndPlayTracks}>
             <svg class="icon" viewBox="0 0 24 24">
                 <path d="M8,5.14V19.14L19,12.14L8,5.14Z" />
