@@ -24,6 +24,7 @@
 
 HWND window_hwnd;
 UINT window_dpi;
+BOOL ignore_dpichange_rect = FALSE;
 ID2D1Factory *d2d_factory = NULL;
 IDCompositionDevice *composition_device = NULL;
 IDCompositionVisual *webview_visual = NULL;
@@ -350,9 +351,11 @@ LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     // Handle dpi changes
     if (msg == WM_DPICHANGED) {
         window_dpi = HIWORD(wParam);
-        RECT *window_rect = (RECT *)lParam;
-        SetWindowPos(hwnd, NULL, window_rect->left, window_rect->top, window_rect->right - window_rect->left, window_rect->bottom - window_rect->top,
-                     SWP_NOZORDER | SWP_NOACTIVATE);
+        if (!ignore_dpichange_rect) {
+            RECT *window_rect = (RECT *)lParam;
+            SetWindowPos(hwnd, NULL, window_rect->left, window_rect->top, window_rect->right - window_rect->left, window_rect->bottom - window_rect->top,
+                         SWP_NOZORDER | SWP_NOACTIVATE);
+        }
         return 0;
     }
 
@@ -740,7 +743,9 @@ void _start(void) {
     if (windowStateFile != INVALID_HANDLE_VALUE) {
         WINDOWPLACEMENT windowState;
         ReadFile(windowStateFile, &windowState, sizeof(WINDOWPLACEMENT), NULL, NULL);
+        ignore_dpichange_rect = TRUE;
         SetWindowPlacement(window_hwnd, &windowState);
+        ignore_dpichange_rect = FALSE;
         CloseHandle(windowStateFile);
     } else {
         ShowWindow(window_hwnd, window_width >= GetSystemMetrics(SM_CXSCREEN) ? SW_SHOWMAXIMIZED : SW_SHOWDEFAULT);
