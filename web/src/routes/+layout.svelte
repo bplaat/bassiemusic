@@ -85,6 +85,7 @@
     class:is-playing={lastTrack != undefined}
     class:is-resizing={resizing}
 >
+
     {#if authUser != undefined}
         <nav class="navbar has-background-white-bis is-fixed-top is-hidden-desktop">
             <div class="navbar-brand">
