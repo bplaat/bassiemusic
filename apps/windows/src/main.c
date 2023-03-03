@@ -1,5 +1,4 @@
 // window decoration styling
-// remove webview2 messaging
 
 #define UNICODE
 #include <dwmapi.h>
@@ -76,7 +75,6 @@ ULONG STDMETHODCALLTYPE Unknown_Release(IUnknown *This) { return E_NOTIMPL; }
 // Forward interface reference
 ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandlerVtbl EnvironmentCompletedHandlerVtbl;
 ICoreWebView2CreateCoreWebView2CompositionControllerCompletedHandlerVtbl ControllerCompletedHandlerVtbl;
-ICoreWebView2WebMessageReceivedEventHandlerVtbl WebMessageReceivedEventHandlerVtbl;
 ICoreWebView2NewWindowRequestedEventHandlerVtbl NewWindowRequestedHandlerVtbl;
 ICoreWebView2AcceleratorKeyPressedEventHandlerVtbl AcceleratorKeyPressedHandlerVtbl;
 
@@ -147,10 +145,6 @@ HRESULT STDMETHODCALLTYPE ControllerCompletedHandler_Invoke(ICoreWebView2CreateC
     ICoreWebView2Settings2_put_UserAgent(settings2, userAgent);
     ICoreWebView2Settings2_Release(settings2);
 
-    ICoreWebView2WebMessageReceivedEventHandler *webMessageReceivedEventHandler = malloc(sizeof(ICoreWebView2WebMessageReceivedEventHandler));
-    webMessageReceivedEventHandler->lpVtbl = &WebMessageReceivedEventHandlerVtbl;
-    ICoreWebView2_add_WebMessageReceived(webview, webMessageReceivedEventHandler, NULL);
-
     ICoreWebView2NewWindowRequestedEventHandler *newWindowRequestedHandler = malloc(sizeof(ICoreWebView2NewWindowRequestedEventHandler));
     newWindowRequestedHandler->lpVtbl = &NewWindowRequestedHandlerVtbl;
     ICoreWebView2_add_NewWindowRequested(webview, newWindowRequestedHandler, NULL);
@@ -172,34 +166,6 @@ ICoreWebView2CreateCoreWebView2CompositionControllerCompletedHandlerVtbl Control
     (ULONG(STDMETHODCALLTYPE *)(ICoreWebView2CreateCoreWebView2CompositionControllerCompletedHandler * This)) Unknown_Release,
     ControllerCompletedHandler_Invoke,
 };
-
-// ICoreWebView2WebMessageReceivedEventHandler
-HRESULT STDMETHODCALLTYPE WebMessageReceivedEventHandler_Invoke(ICoreWebView2WebMessageReceivedEventHandler *This, ICoreWebView2 *sender,
-                                                                ICoreWebView2WebMessageReceivedEventArgs *args) {
-    wchar_t *message;
-    ICoreWebView2WebMessageReceivedEventArgs_get_WebMessageAsJson(args, &message);
-    if (!wcscmp(message, L"\"minimize\"")) {
-        ShowWindow(window_hwnd, SW_MINIMIZE);
-    }
-    if (!wcscmp(message, L"\"maximize\"")) {
-        WINDOWPLACEMENT placement;
-        GetWindowPlacement(window_hwnd, &placement);
-        if (placement.showCmd == SW_MAXIMIZE) {
-            ShowWindow(window_hwnd, SW_RESTORE);
-        } else {
-            ShowWindow(window_hwnd, SW_MAXIMIZE);
-        }
-    }
-    if (!wcscmp(message, L"\"close\"")) {
-        WindowClose();
-    }
-    return S_OK;
-}
-
-ICoreWebView2WebMessageReceivedEventHandlerVtbl WebMessageReceivedEventHandlerVtbl = {
-    (HRESULT(STDMETHODCALLTYPE *)(ICoreWebView2WebMessageReceivedEventHandler * This, REFIID riid, void **ppvObject)) Unknown_QueryInterface,
-    (ULONG(STDMETHODCALLTYPE *)(ICoreWebView2WebMessageReceivedEventHandler * This)) Unknown_AddRef,
-    (ULONG(STDMETHODCALLTYPE *)(ICoreWebView2WebMessageReceivedEventHandler * This)) Unknown_Release, WebMessageReceivedEventHandler_Invoke};
 
 // ICoreWebView2NewWindowRequestedEventHandler
 HRESULT STDMETHODCALLTYPE NewWindowRequestedHandler_Invoke(ICoreWebView2NewWindowRequestedEventHandler *This, ICoreWebView2 *sender,
