@@ -2,6 +2,7 @@ package database
 
 import (
 	"log"
+	"math"
 	"reflect"
 	"strconv"
 )
@@ -74,11 +75,9 @@ func (qb *QueryBuilder[T]) where(column string, value any, operator string) *Que
 	}
 	return qb
 }
-
 func (qb *QueryBuilder[T]) Where(column string, value any) *QueryBuilder[T] {
 	return qb.where(column, value, "AND")
 }
-
 func (qb *QueryBuilder[T]) WhereOr(column string, value any) *QueryBuilder[T] {
 	return qb.where(column, value, "OR")
 }
@@ -91,13 +90,39 @@ func (qb *QueryBuilder[T]) whereRaw(whereRaw string, value any, operator string)
 	qb.WhereValues = append(qb.WhereValues, value)
 	return qb
 }
-
 func (qb *QueryBuilder[T]) WhereRaw(whereRaw string, value any) *QueryBuilder[T] {
 	return qb.whereRaw(whereRaw, value, "AND")
 }
-
 func (qb *QueryBuilder[T]) WhereOrRaw(whereRaw string, value any) *QueryBuilder[T] {
 	return qb.whereRaw(whereRaw, value, "OR")
+}
+
+func (qb *QueryBuilder[T]) whereNull(column string, operator string) *QueryBuilder[T] {
+	if qb.WhereStr != "" {
+		qb.WhereStr += " " + operator + " "
+	}
+	qb.WhereStr += qb.FormatColumn(column) + " IS NULL"
+	return qb
+}
+func (qb *QueryBuilder[T]) WhereNull(column string) *QueryBuilder[T] {
+	return qb.whereNull(column, "AND")
+}
+func (qb *QueryBuilder[T]) WhereOrNull(column string) *QueryBuilder[T] {
+	return qb.whereNull(column, "OR")
+}
+
+func (qb *QueryBuilder[T]) whereNotNull(column string, operator string) *QueryBuilder[T] {
+	if qb.WhereStr != "" {
+		qb.WhereStr += " " + operator + " "
+	}
+	qb.WhereStr += qb.FormatColumn(column) + " IS NOT NULL"
+	return qb
+}
+func (qb *QueryBuilder[T]) WhereNotNull(column string) *QueryBuilder[T] {
+	return qb.whereNotNull(column, "AND")
+}
+func (qb *QueryBuilder[T]) WhereOrNotNull(column string) *QueryBuilder[T] {
+	return qb.whereNotNull(column, "OR")
 }
 
 func (qb *QueryBuilder[T]) WhereIn(pivotTableName string, pivotModelId string, pivotRelationshipId string, value any) *QueryBuilder[T] {
@@ -251,6 +276,13 @@ func (qb *QueryBuilder[T]) Paginate(page int, limit int) QueryBuilderPaginated[T
 	paginated.Pagination.Limit = limit
 	paginated.Pagination.Total = qb.Count()
 	return paginated
+}
+
+func (qb *QueryBuilder[T]) Chunk(limit int, callback func(items []T)) {
+	total := qb.Count()
+	for page := 1; page <= int(math.Ceil(float64(total)/float64(limit))); page++ {
+		callback(qb.Limit(strconv.Itoa((page-1)*limit) + ", " + strconv.Itoa(limit)).Get())
+	}
 }
 
 func (qb *QueryBuilder[T]) First() *T {

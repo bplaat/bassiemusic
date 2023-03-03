@@ -19,20 +19,23 @@ type Track struct {
 	Duration  float32   `column:"duration,float" json:"duration"`
 	Explicit  bool      `column:"explicit,bool" json:"explicit"`
 	DeezerID  int64     `column:"deezer_id,bigint" json:"-"`
-	YoutubeID string    `column:"youtube_id,string" json:"-"`
+	YoutubeID *string   `column:"youtube_id,string" json:"-"`
 	Plays     int64     `column:"plays,bigint" json:"plays"`
-	Music     string    `json:"music"`
+	Music     *string   `json:"music"`
 	Liked     *bool     `json:"liked,omitempty"`
 	CreatedAt time.Time `column:"created_at,timestamp" json:"created_at"`
 	Album     *Album    `json:"album,omitempty"`
-	Artists   []Artist  `json:"artists,omitempty"`
+	Artists   *[]Artist `json:"artists,omitempty"`
 }
 
 func TrackModel(c *fiber.Ctx) *database.Model[Track] {
 	return (&database.Model[Track]{
 		TableName: "tracks",
 		Process: func(track *Track) {
-			track.Music = fmt.Sprintf("%s/tracks/%s.m4a", os.Getenv("STORAGE_URL"), track.ID)
+			if track.YoutubeID != nil && *track.YoutubeID != "" {
+				music := fmt.Sprintf("%s/tracks/%s.m4a", os.Getenv("STORAGE_URL"), track.ID)
+				track.Music = &music
+			}
 		},
 		Relationships: map[string]database.QueryBuilderProcess[Track]{
 			"like": func(track *Track) {
@@ -46,7 +49,8 @@ func TrackModel(c *fiber.Ctx) *database.Model[Track] {
 				track.Album = AlbumModel(c).With("genres", "artists").Find(track.AlbumID)
 			},
 			"artists": func(track *Track) {
-				track.Artists = ArtistModel(c).WhereIn("track_artist", "artist_id", "track_id", track.ID).OrderByRaw("LOWER(`name`)").Get()
+				artists := ArtistModel(c).WhereIn("track_artist", "artist_id", "track_id", track.ID).OrderByRaw("LOWER(`name`)").Get()
+				track.Artists = &artists
 			},
 		},
 	}).Init()

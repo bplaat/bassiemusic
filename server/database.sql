@@ -1,11 +1,15 @@
 -- BassieMusic database
+
+-- Users
 CREATE TABLE `users` (
     `id` BINARY(16) NOT NULL,
     `username` VARCHAR(255) NOT NULL,
     `email` VARCHAR(255) NOT NULL,
     `password` VARCHAR(255) NOT NULL,
     `avatar` BINARY(16) NULL,
+    `allow_explicit` TINYINT(1) UNSIGNED NOT NULL DEFAULT 1,
     `role` TINYINT UNSIGNED NOT NULL,
+    `language` CHAR(2) NOT NULL,
     `theme` TINYINT UNSIGNED NOT NULL,
     `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -14,9 +18,10 @@ CREATE TABLE `users` (
     UNIQUE (`email`)
 );
 
-INSERT INTO `users` (`id`, `username`, `email`, `password`, `role`, `theme`) VALUES
-    (UUID_TO_BIN(UUID()), 'admin', 'admin@bassiemusic.ml', '$2a$10$GwDKz/4HjEklaq3FtdMYo.p3ildTU36iX1.29rdDRIIi9qgIlT7n2', 1, 0);
+INSERT INTO `users` (`id`, `username`, `email`, `password`, `role`, `language`, `theme`) VALUES
+    (UUID_TO_BIN(UUID()), 'admin', 'admin@plaatsoft.nl', '$2a$10$GwDKz/4HjEklaq3FtdMYo.p3ildTU36iX1.29rdDRIIi9qgIlT7n2', 1, 'en', 0);
 
+-- Sessions
 CREATE TABLE `sessions` (
     `id` BINARY(16) NOT NULL,
     `user_id` BINARY(16) NOT NULL,
@@ -37,9 +42,11 @@ CREATE TABLE `sessions` (
     UNIQUE (`token`)
 );
 
+-- Artists
 CREATE TABLE `artists` (
     `id` BINARY(16) NOT NULL,
     `name` VARCHAR(255) NOT NULL,
+    `synced` TINYINT(1) UNSIGNED NOT NULL DEFAULT 1,
     `deezer_id` BIGINT UNSIGNED NOT NULL,
     `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -57,13 +64,13 @@ CREATE TABLE `artist_likes` (
     FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
 );
 
+-- Albums
 CREATE TABLE `albums` (
     `id` BINARY(16) NOT NULL,
     `type` TINYINT UNSIGNED NOT NULL,
     `title` VARCHAR(255) NOT NULL,
     `released_at` DATE NOT NULL,
     `explicit` TINYINT(1) UNSIGNED NOT NULL,
-    `verified` TINYINT(1) UNSIGNED NOT NULL DEFAULT 0,
     `deezer_id` BIGINT UNSIGNED NOT NULL,
     `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -90,6 +97,7 @@ CREATE TABLE `album_likes` (
     FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
 );
 
+-- Genres
 CREATE TABLE `genres` (
     `id` BINARY(16) NOT NULL,
     `name` VARCHAR(255) NOT NULL,
@@ -108,6 +116,7 @@ CREATE TABLE `album_genre` (
     FOREIGN KEY (`genre_id`) REFERENCES `genres`(`id`) ON DELETE CASCADE
 );
 
+-- Tracks
 CREATE TABLE `tracks` (
     `id` BINARY(16) NOT NULL,
     `album_id` BINARY(16) NOT NULL,
@@ -117,7 +126,7 @@ CREATE TABLE `tracks` (
     `duration` FLOAT NOT NULL,
     `explicit` TINYINT(1) UNSIGNED NOT NULL,
     `deezer_id` BIGINT UNSIGNED NOT NULL,
-    `youtube_id` VARCHAR(16) NOT NULL,
+    `youtube_id` VARCHAR(16) NULL,
     `plays` BIGINT UNSIGNED NOT NULL DEFAULT 0,
     `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -157,11 +166,46 @@ CREATE TABLE `track_plays` (
     FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
 );
 
+-- Playlists
+CREATE TABLE `playlists` (
+    `id` BINARY(16) NOT NULL,
+    `user_id` BINARY(16) NOT NULL,
+    `name` VARCHAR(255) NOT NULL,
+    `image` BINARY(16) NULL,
+    `public` TINYINT(1) UNSIGNED NOT NULL DEFAULT 0,
+    `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`)
+);
+
+CREATE TABLE `playlist_track` (
+    `id` BINARY(16) NOT NULL,
+    `playlist_id` BINARY(16) NOT NULL,
+    `position` INT UNSIGNED NOT NULL,
+    `track_id` BINARY(16) NOT NULL,
+    `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    FOREIGN KEY (`playlist_id`) REFERENCES `playlists`(`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`track_id`) REFERENCES `tracks`(`id`) ON DELETE CASCADE
+);
+
+CREATE TABLE `playlist_likes` (
+    `id` BINARY(16) NOT NULL,
+    `playlist_id` BINARY(16) NOT NULL,
+    `user_id` BINARY(16) NOT NULL,
+    `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    FOREIGN KEY (`playlist_id`) REFERENCES `playlists`(`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
+);
+
+-- Download tasks
 CREATE TABLE `download_tasks` (
     `id` BINARY(16) NOT NULL,
     `type` TINYINT UNSIGNED NOT NULL,
-    `deezer_id` BIGINT UNSIGNED NULL,
-    `singles` TINYINT(1) UNSIGNED NOT NULL DEFAULT 0,
+    `deezer_id` BIGINT UNSIGNED NOT NULL,
     `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`)

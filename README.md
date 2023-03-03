@@ -14,3 +14,4 @@
 
 ## Documentation
 - [Installation documentation](docs/installation.md)
+- [REST API documentation](https://bassiemusic.plaatsoft.nl/api.html)

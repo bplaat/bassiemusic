@@ -1,33 +1,45 @@
 html {
     overflow: hidden;
 }
+
 body {
     overflow: auto;
     -webkit-user-select: none;
     user-select: none;
     cursor: default;
 }
+
 html,
 body {
     height: 100%;
 }
 
+.disabled {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
 a {
     color: currentColor;
 }
+
 a:hover,
 a:focus {
     text-decoration: underline;
 }
+
 a.card,
+.card .title > a,
 .tabs a,
-.menu-list a {
+.menu-list a,
+.dropdown a {
     text-decoration: none !important;
 }
 
 img {
     display: block;
 }
+
 img:-moz-loading {
     visibility: hidden;
 }
@@ -36,16 +48,10 @@ img:-moz-loading {
     vertical-align: middle;
 }
 
-.column > .card {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    margin-bottom: 0;
+.card {
+    display: block;
+    cursor: pointer;
     overflow: hidden;
-}
-.column > .card > .card-content {
-    flex: 1;
-    margin-bottom: 0;
 }
 
 .box {
@@ -72,6 +78,7 @@ img:-moz-loading {
     right: 0.5rem;
     bottom: 0.5rem;
 }
+
 .has-image-play-button:hover .image-play-button {
     display: block;
 }
@@ -81,9 +88,11 @@ img:-moz-loading {
     width: 24px;
     height: 24px;
 }
+
 .icon:not(.is-colored) path {
     fill: currentColor;
 }
+
 .icon.is-inline {
     display: inline-block;
     vertical-align: middle;
@@ -103,14 +112,27 @@ img:-moz-loading {
 body {
     scrollbar-width: thin;
 }
+
 ::-webkit-scrollbar {
     width: 8px;
+}
+
+@media (min-width: 768px) {
+    .is-pulled-right-tablet {
+        float: right !important;
+    }
+
+    .dropdown.is-right-tablet > .dropdown-menu {
+        left: auto;
+        right: 0;
+    }
 }
 
 @media (max-width: 768px) {
     .tabs {
         width: 100%;
     }
+
     .tabs li {
         flex: 1;
     }
@@ -125,20 +147,25 @@ body {
 .card-image {
     background-color: #ccc;
 }
+
 .app {
     scrollbar-color: rgba(0, 0, 0, 0.3) transparent;
 }
+
 ::-webkit-scrollbar-thumb {
     background-color: rgba(0, 0, 0, 0.3);
 }
+
 @media (prefers-color-scheme: dark) {
     .box.has-image,
     .card-image {
         background-color: #333;
     }
+
     .app {
         scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
     }
+
     ::-webkit-scrollbar-thumb {
         background-color: rgba(255, 255, 255, 0.3);
     }
@@ -149,6 +176,7 @@ body {
 .app.is-light .card-image {
     background-color: #ccc !important;
 }
+
 .app.is-light {
     scrollbar-color: rgba(0, 0, 0, 0.3) transparent !important;
 }
@@ -158,6 +186,7 @@ body {
 .app.is-dark .card-image {
     background-color: #333 !important;
 }
+
 .app.is-dark {
     scrollbar-color: rgba(255, 255, 255, 0.3) transparent !important;
 }

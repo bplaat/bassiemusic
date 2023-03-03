@@ -18,10 +18,10 @@ export async function load({ url, fetch, cookies }) {
             })}`
         );
     }
-    const { user: authUser, session: currentSession } = await validateResponse.json();
+    const { user: authUser, session_id: currentSessionId } = await validateResponse.json();
 
     // Fetch sessions
-    const response = await fetch(`${import.meta.env.VITE_API_URL}/users/${authUser.id}/sessions`, {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/users/${authUser.id}/active_sessions`, {
         headers: {
             Authorization: `Bearer ${cookies.get('token')}`,
         },
@@ -31,7 +31,7 @@ export async function load({ url, fetch, cookies }) {
     return {
         token: cookies.get('token'),
         authUser,
-        currentSession,
+        currentSessionId,
         sessions,
         sessionsTotal: pagination.total,
     };

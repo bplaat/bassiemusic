@@ -3,13 +3,14 @@
 
 #define LocalizedString(key) NSLocalizedString(key, nil)
 
+@interface WindowDragger : NSView
+@end
+
 NSApplication *application;
 NSWindow *window;
 WKWebView *webview;
 NSString *appVersion;
-
-@interface WindowDragger : NSView
-@end
+WindowDragger *dragger;
 
 @implementation WindowDragger
 - (void)mouseUp:(NSEvent *)event {
@@ -26,8 +27,6 @@ NSString *appVersion;
     [window performWindowDragWithEvent:event];
 }
 @end
-
-WindowDragger *dragger;
 
 @interface WindowDelegate : NSObject <NSWindowDelegate>
 @end
@@ -47,6 +46,38 @@ WindowDragger *dragger;
 }
 @end
 
+@interface WebkitUIDelegate : NSObject <WKUIDelegate>
+@end
+
+@implementation WebkitUIDelegate
+- (WKWebView *)webView:(WKWebView *)webView createWebViewWithConfiguration:(WKWebViewConfiguration *)configuration
+    forNavigationAction:(WKNavigationAction *)navigationAction windowFeatures:(WKWindowFeatures *)windowFeatures {
+    if (!navigationAction.targetFrame.isMainFrame) {
+        [[NSWorkspace sharedWorkspace] openURL:navigationAction.request.URL];
+    }
+    return nil;
+}
+@end
+
+// Fetch latest version information and display alert when app is outdated
+void checkForUpdates(void) {
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^(void) {
+        NSURL *url = [NSURL URLWithString:@"https://bassiemusic-api.plaatsoft.nl/apps/macos/version"];
+        NSString *latestVersion = [NSString stringWithContentsOfURL:url encoding:NSUTF8StringEncoding error:NULL];
+        dispatch_async(dispatch_get_main_queue(), ^(void) {
+            if (![appVersion isEqualToString:latestVersion]) {
+                NSAlert *alert = [[NSAlert alloc] init];
+                alert.messageText = LocalizedString(@"update_alert_title");
+                alert.informativeText = LocalizedString(@"update_alert_text");
+                [alert addButtonWithTitle:LocalizedString(@"update_alert_button")];
+                [alert runModal];
+
+                [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:@"https://bassiemusic-api.plaatsoft.nl/apps/macos/download"]];
+            }
+        });
+    });
+}
+
 @interface AppDelegate : NSObject <NSApplicationDelegate>
 @end
 
@@ -65,14 +96,12 @@ WindowDragger *dragger;
     NSMenu *appMenu = [[NSMenu alloc] init];
     menuBarItem.submenu = appMenu;
 
-    NSMenuItem* aboutMenuItem = [[NSMenuItem alloc] initWithTitle:LocalizedString(@"menu_about")
-        action:@selector(openAboutAlert:) keyEquivalent:@""];
+    NSMenuItem* aboutMenuItem = [[NSMenuItem alloc] initWithTitle:LocalizedString(@"menu_about") action:@selector(openAboutAlert:) keyEquivalent:@""];
     [appMenu addItem:aboutMenuItem];
 
     [appMenu addItem:[NSMenuItem separatorItem]];
 
-    NSMenuItem* quitMenuItem = [[NSMenuItem alloc] initWithTitle:LocalizedString(@"menu_quit")
-        action:@selector(terminate:) keyEquivalent:@"q"];
+    NSMenuItem* quitMenuItem = [[NSMenuItem alloc] initWithTitle:LocalizedString(@"menu_quit") action:@selector(terminate:) keyEquivalent:@"q"];
     [appMenu addItem:quitMenuItem];
 
     // Create window
@@ -93,32 +122,31 @@ WindowDragger *dragger;
 
     // Create webview
     webview = [[WKWebView alloc] initWithFrame:[window.contentView bounds]];
-    webview.customUserAgent = [[NSString alloc] initWithFormat:@"BassieMusic macOS App v%@", appVersion];
-    [webview setValue:@NO forKey:@"drawsBackground"];
-
-    NSURL *url = [NSURL URLWithString:LocalizedString(@"webview_url")];
-    NSURLRequest *request = [NSURLRequest requestWithURL:url];
-    [webview loadRequest:request];
-
     [window.contentView addSubview:webview];
+    [webview setValue:@NO forKey:@"drawsBackground"];
+    webview.customUserAgent = [[NSString alloc] initWithFormat:@"BassieMusic macOS App v%@", appVersion];
+    webview.UIDelegate = [[WebkitUIDelegate alloc] init];
+    [webview loadRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:LocalizedString(@"webview_url")]]];
 
     // Create window dragger
     dragger = [[WindowDragger alloc] initWithFrame:NSMakeRect(0, NSHeight(window.frame) - 28, NSWidth(window.frame), 28)];
     [window.contentView addSubview:dragger];
 
+    // Make window visible
     [window makeKeyAndOrderFront:nil];
+
+    // Check for updates
+    checkForUpdates();
 }
 
 - (BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication *)sender {
     return YES;
 }
 
-- (void)applicationWillTerminate:(NSNotification *)aNotification {}
-
 - (void)openAboutAlert:(NSNotification *)aNotification {
     NSAlert *alert = [[NSAlert alloc] init];
-    alert.messageText = LocalizedString(@"about_title");
-    alert.informativeText = [[NSString alloc] initWithFormat:LocalizedString(@"about_text"), appVersion];
+    alert.messageText = LocalizedString(@"about_alert_title");
+    alert.informativeText = [[NSString alloc] initWithFormat:LocalizedString(@"about_alert_text"), appVersion];
     [alert runModal];
 }
 @end

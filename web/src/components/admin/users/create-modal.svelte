@@ -1,20 +1,52 @@
 <script>
     import { createEventDispatcher } from 'svelte';
+    import { language } from '../../../stores.js';
 
+    // Language strings
+    const lang = {
+        en: {
+            header: 'Create new user',
+            username: 'Username',
+            email: 'Email address',
+            password: 'Password',
+            role: 'Role',
+            role_normal: 'Normal',
+            role_admin: 'Admin',
+            create: 'Create new user',
+            cancel: 'Cancel',
+        },
+        nl: {
+            header: 'Maak nieuw gebruiker aan',
+            username: 'Gebruikersnaam',
+            email: 'Email adres',
+            password: 'Wachtwoord',
+            role: 'Rol',
+            role_normal: 'Normaal',
+            role_admin: 'Admin',
+            create: 'Maak nieuwe gebruiker aan',
+            cancel: 'Annuleren',
+        },
+    };
+    const t = (key) => lang[$language][key];
+
+    // Props
     export let token;
 
+    // State
     let user = {
         username: '',
         email: '',
         password: '',
         role: 'normal',
-        theme: 'system',
+        theme: 'dark',
     };
-
     let isOpen = false;
+
+    // Methods
     export function open() {
         isOpen = true;
     }
+
     export function close() {
         isOpen = false;
     }
@@ -31,7 +63,6 @@
                 email: user.email,
                 password: user.password,
                 role: user.role,
-                theme: user.theme,
             }),
         });
         if (response.status == 200) {
@@ -47,14 +78,14 @@
     <div class="modal-background" on:click={close} />
     <div class="modal-card">
         <header class="modal-card-head">
-            <p class="modal-card-title">Create new user</p>
+            <p class="modal-card-title">{t('header')}</p>
             <button type="button" class="delete" aria-label="close" on:click={close} />
         </header>
         <section class="modal-card-body">
             <div class="columns">
                 <div class="column">
                     <div class="field">
-                        <label class="label" for="create-username">Username</label>
+                        <label class="label" for="create-username">{t('username')}</label>
                         <div class="control">
                             <input class="input" type="text" id="create-username" bind:value={user.username} required />
                         </div>
@@ -63,7 +94,7 @@
 
                 <div class="column">
                     <div class="field">
-                        <label class="label" for="create-email">Email</label>
+                        <label class="label" for="create-email">{t('email')}</label>
                         <div class="control">
                             <input class="input" type="email" id="create-email" bind:value={user.email} required />
                         </div>
@@ -72,46 +103,27 @@
             </div>
 
             <div class="field">
-                <label class="label" for="create-password">Password</label>
+                <label class="label" for="create-password">{t('password')}</label>
                 <div class="control">
                     <input class="input" type="password" id="create-password" bind:value={user.password} />
                 </div>
             </div>
 
-            <div class="columns">
-                <div class="column">
-                    <div class="field">
-                        <label class="label" for="create-role">Role</label>
-                        <div class="control">
-                            <div class="select is-fullwidth">
-                                <select id="create-role" bind:value={user.role} required>
-                                    <option value="normal">Normal</option>
-                                    <option value="admin">Admin</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="column">
-                    <div class="field">
-                        <label class="label" for="create-theme">Theme</label>
-                        <div class="control">
-                            <div class="select is-fullwidth">
-                                <select id="create-theme" bind:value={user.theme} required>
-                                    <option value="system">System</option>
-                                    <option value="light">Light</option>
-                                    <option value="dark">Dark</option>
-                                </select>
-                            </div>
-                        </div>
+            <div class="field">
+                <label class="label" for="create-role">{t('role')}</label>
+                <div class="control">
+                    <div class="select is-fullwidth">
+                        <select id="create-role" bind:value={user.role} required>
+                            <option value="normal">{t('role_normal')}</option>
+                            <option value="admin">{t('role_admin')}</option>
+                        </select>
                     </div>
                 </div>
             </div>
         </section>
         <footer class="modal-card-foot">
-            <button type="submit" class="button is-link">Create new user</button>
-            <button class="button" on:click|preventDefault={close}>Cancel</button>
+            <button type="submit" class="button is-link">{t('create')}</button>
+            <button class="button" on:click|preventDefault={close}>{t('cancel')}</button>
         </footer>
     </div>
 </form>

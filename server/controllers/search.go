@@ -11,10 +11,11 @@ import (
 )
 
 func SearchIndex(c *fiber.Ctx) error {
+	authUser := c.Locals("authUser").(*models.User)
 	query, _, _ := utils.ParseIndexVars(c)
 
 	// Get tracks
-	tracks := models.TrackModel(c).With("like", "artists", "album").WhereRaw("`title` LIKE ?", "%"+query+"%").OrderByRaw("`plays` DESC, `updated_at` DESC").Limit("5").Get()
+	tracks := models.TrackModel(c).With("like", "artists", "album").WhereRaw("`title` LIKE ?", "%"+query+"%").OrderByRaw("`plays` DESC, LOWER(`title`)").Limit("10").Get()
 
 	// Get albums
 	albums := models.AlbumModel(c).With("artists", "genres").WhereRaw("`title` LIKE ?", "%"+query+"%").OrderByRaw("LOWER(`title`)").Limit("10").Get()
@@ -25,26 +26,36 @@ func SearchIndex(c *fiber.Ctx) error {
 	// Get Genres
 	genres := models.GenreModel(c).WhereRaw("`name` LIKE ?", "%"+query+"%").OrderByRaw("LOWER(`name`)").Limit("10").Get()
 
+	// Get Playlists
+	playlistsQuery := models.PlaylistModel(c).With("like", "user").WhereRaw("`name` LIKE ?", "%"+query+"%").OrderByRaw("LOWER(`name`)")
+	if authUser.Role != "admin" {
+		playlistsQuery = playlistsQuery.Where("public", true)
+	}
+	playlists := playlistsQuery.Limit("10").Get()
+
 	// Return all values
 	return c.JSON(fiber.Map{
-		"success": true,
-		"tracks":  tracks,
-		"albums":  albums,
-		"artists": artists,
-		"genres":  genres,
+		"success":   true,
+		"tracks":    tracks,
+		"albums":    albums,
+		"artists":   artists,
+		"genres":    genres,
+		"playlists": playlists,
 	})
 }
 
 func DeezerSearchIndex(c *fiber.Ctx) error {
+	query, _, _ := utils.ParseIndexVars(c)
+
 	// Search deezer artists
 	var deezerArtistSearch structs.DeezerArtistSearch
-	if err := utils.FetchJson(fmt.Sprintf("https://api.deezer.com/search/artist?q=%s", url.QueryEscape(c.Query("q"))), &deezerArtistSearch); err != nil {
+	if err := utils.FetchJson(fmt.Sprintf("https://api.deezer.com/search/artist?q=%s", url.QueryEscape(query)), &deezerArtistSearch); err != nil {
 		return fiber.ErrBadGateway
 	}
 
 	// Search deezer albums and filter out what already exists
 	var deezerAlbumSearch structs.DeezerAlbumSearch
-	if err := utils.FetchJson(fmt.Sprintf("https://api.deezer.com/search/album?q=%s", url.QueryEscape(c.Query("q"))), &deezerAlbumSearch); err != nil {
+	if err := utils.FetchJson(fmt.Sprintf("https://api.deezer.com/search/album?q=%s", url.QueryEscape(query)), &deezerAlbumSearch); err != nil {
 		return fiber.ErrBadGateway
 	}
 	deezerAlbums := []structs.DeezerAlbumSearchItem{}

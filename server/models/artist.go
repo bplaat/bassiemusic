@@ -13,14 +13,15 @@ import (
 type Artist struct {
 	ID          string    `column:"id,uuid" json:"id"`
 	Name        string    `column:"name,string" json:"name"`
+	Synced      bool      `column:"synced,bool" json:"synced"`
 	DeezerID    int64     `column:"deezer_id,bigint" json:"-"`
 	SmallImage  string    `json:"small_image"`
 	MediumImage string    `json:"medium_image"`
 	LargeImage  string    `json:"large_image"`
 	Liked       *bool     `json:"liked,omitempty"`
 	CreatedAt   time.Time `column:"created_at,timestamp" json:"created_at"`
-	Albums      []Album   `json:"albums,omitempty"`
-	TopTracks   []Track   `json:"top_tracks,omitempty"`
+	Albums      *[]Album  `json:"albums,omitempty"`
+	TopTracks   *[]Track  `json:"top_tracks,omitempty"`
 }
 
 func ArtistModel(c *fiber.Ctx) *database.Model[Artist] {
@@ -40,10 +41,12 @@ func ArtistModel(c *fiber.Ctx) *database.Model[Artist] {
 				}
 			},
 			"albums": func(artist *Artist) {
-				artist.Albums = AlbumModel(c).With("artists", "genres").WhereIn("album_artist", "album_id", "artist_id", artist.ID).OrderByDesc("released_at").Get()
+				albums := AlbumModel(c).With("artists", "genres").WhereIn("album_artist", "album_id", "artist_id", artist.ID).OrderByDesc("released_at").Get()
+				artist.Albums = &albums
 			},
 			"top_tracks": func(artist *Artist) {
-				artist.TopTracks = TrackModel(c).With("like", "artists", "album").WhereIn("track_artist", "track_id", "artist_id", artist.ID).OrderByDesc("plays").Limit("5").Get()
+				topTracks := TrackModel(c).With("like", "artists", "album").WhereIn("track_artist", "track_id", "artist_id", artist.ID).OrderByDesc("plays").Limit("5").Get()
+				artist.TopTracks = &topTracks
 			},
 		},
 	}).Init()

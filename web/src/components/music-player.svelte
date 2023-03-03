@@ -1,6 +1,7 @@
 <script>
     import { page } from '$app/stores';
-    import { musicState } from '../stores.js';
+    import { onMount, onDestroy } from 'svelte';
+    import { musicState, language } from '../stores.js';
     import {
         WEBSOCKET_RECONNECT_TIMEOUT,
         PLAYER_PREVIOUS_RESET_TIMEOUT,
@@ -9,20 +10,55 @@
         PLAYER_SEEK_TIME,
     } from '../consts.js';
     import { formatDuration } from '../filters.js';
-    import { onMount, onDestroy } from 'svelte';
+    import { rand } from '../utils.js';
 
-    // Utils
-    function rand(min, max) {
-        return Math.floor(Math.random() * (max - min + 1)) + min;
-    }
+    // Language strings
+    const lang = {
+        en: {
+            cover_alt: 'Cover of album $1',
+            like: 'Like track',
+            remove_like: 'Remove track like',
+            shuffle: 'Start shuffling play queue',
+            stop_shuffle: 'Stop shuffling play queue',
+            previous: 'Previous',
+            seek_backward: 'Seek backward',
+            play: 'Play',
+            pause: 'Pause',
+            seek_forward: 'Seek forward',
+            next: 'Next',
+            open_queue: 'Open play queue',
+            close_queue: 'Close play queue',
+            mute_volume: 'Mute volume',
+            restore_volume: 'Restore volume',
+        },
+        nl: {
+            cover_alt: 'Hoes van album $1',
+            like: 'Like track',
+            remove_like: 'Verwijder track like',
+            shuffle: 'Start willekeurige wachtrij',
+            stop_shuffle: 'Stop willekeurige wachtrij',
+            previous: 'Vorige',
+            seek_backward: 'Spoel terug',
+            play: 'Speel',
+            pause: 'Pauze',
+            seek_forward: 'Spel naar voren',
+            next: 'Volgende',
+            open_queue: 'Open wachtrij',
+            close_queue: 'Sluit wachtrij',
+            mute_volume: 'Demp volume',
+            restore_volume: 'Herstel volume',
+        },
+    };
+    const t = (key, p1) => lang[$language][key].replace('$1', p1);
 
-    // Interface
-    export let token = undefined;
+    // Props
+    export let token;
     export let queue = [];
     export let track = undefined;
     export let position = 0;
     export let duration = 0;
 
+    // Methods
     export function playTracks(_queue, _track) {
         queue = _queue;
         track = _track;
@@ -30,6 +66,7 @@
         musicState.set({ queue, track });
         loadAndPlayTrack(true);
     }
+
     export function addTrack(track) {
         queue = [...queue, track];
         musicState.update((musicState) => {
@@ -37,6 +74,7 @@
             return musicState;
         });
     }
+
     export function removeTrack(track) {
         queue = queue.filter((otherTrack) => otherTrack.id != track.id);
         musicState.update((musicState) => {
@@ -261,7 +299,8 @@
 
     // Like
     function likeTrack() {
-        fetch(`${import.meta.env.VITE_API_URL}/tracks/${track.id}/like${track.liked ? '/delete' : ''}`, {
+        fetch(`${import.meta.env.VITE_API_URL}/tracks/${track.id}/like`, {
+            method: track.liked ? 'DELETE' : 'PUT',
             headers: {
                 Authorization: `Bearer ${token}`,
             },
@@ -303,12 +342,14 @@
         <div class="media px-4 py-2">
             <div class="media-left">
                 <a href="/albums/{track.album.id}" class="music-player-album-cover box m-0 p-0">
-                    <img src={track.album.small_cover} alt="Cover of album {track.album}" loading="lazy" />
+                    <img src={track.album.small_cover} alt={t('cover_alt', track.album)} />
                 </a>
             </div>
             <div class="media-content" style="width: 10rem; min-width: 0;">
                 <p class="ellipsis">
-                    <a href="/albums/{track.album.id}#{track.disk}-{track.position}" style="font-weight: 500;">{track.title}</a>
+                    <a href="/albums/{track.album.id}#{track.disk}-{track.position}" style="font-weight: 500;">
+                        {track.title}
+                    </a>
                 </p>
                 <p class="ellipsis">
                     {#each track.artists as artist}
@@ -317,20 +358,20 @@
                 </p>
             </div>
             <div class="media-right">
-                {#if track.liked}
-                    <button class="button ml-3" on:click={likeTrack} title="Remove track like">
-                        <svg class="icon is-colored" viewBox="0 0 24 24">
+                {#if !track.liked}
+                    <button class="button ml-3" on:click={likeTrack} title={t('like')}>
+                        <svg class="icon" viewBox="0 0 24 24">
                             <path
-                                fill="#f14668"
-                                d="M12,21.35L10.55,20.03C5.4,15.36 2,12.27 2,8.5C2,5.41 4.42,3 7.5,3C9.24,3 10.91,3.81 12,5.08C13.09,3.81 14.76,3 16.5,3C19.58,3 22,5.41 22,8.5C22,12.27 18.6,15.36 13.45,20.03L12,21.35Z"
+                                d="M12.1,18.55L12,18.65L11.89,18.55C7.14,14.24 4,11.39 4,8.5C4,6.5 5.5,5 7.5,5C9.04,5 10.54,6 11.07,7.36H12.93C13.46,6 14.96,5 16.5,5C18.5,5 20,6.5 20,8.5C20,11.39 16.86,14.24 12.1,18.55M16.5,3C14.76,3 13.09,3.81 12,5.08C10.91,3.81 9.24,3 7.5,3C4.42,3 2,5.41 2,8.5C2,12.27 5.4,15.36 10.55,20.03L12,21.35L13.45,20.03C18.6,15.36 22,12.27 22,8.5C22,5.41 19.58,3 16.5,3Z"
                             />
                         </svg>
                     </button>
                 {:else}
-                    <button class="button ml-3" on:click={likeTrack} title="Like track">
-                        <svg class="icon" viewBox="0 0 24 24">
+                    <button class="button ml-3" on:click={likeTrack} title={t('remove_like')}>
+                        <svg class="icon is-colored" viewBox="0 0 24 24">
                             <path
-                                d="M12.1,18.55L12,18.65L11.89,18.55C7.14,14.24 4,11.39 4,8.5C4,6.5 5.5,5 7.5,5C9.04,5 10.54,6 11.07,7.36H12.93C13.46,6 14.96,5 16.5,5C18.5,5 20,6.5 20,8.5C20,11.39 16.86,14.24 12.1,18.55M16.5,3C14.76,3 13.09,3.81 12,5.08C10.91,3.81 9.24,3 7.5,3C4.42,3 2,5.41 2,8.5C2,12.27 5.4,15.36 10.55,20.03L12,21.35L13.45,20.03C18.6,15.36 22,12.27 22,8.5C22,5.41 19.58,3 16.5,3Z"
+                                fill="#f14668"
+                                d="M12,21.35L10.55,20.03C5.4,15.36 2,12.27 2,8.5C2,5.41 4.42,3 7.5,3C9.24,3 10.91,3.81 12,5.08C13.09,3.81 14.76,3 16.5,3C19.58,3 22,5.41 22,8.5C22,12.27 18.6,15.36 13.45,20.03L12,21.35Z"
                             />
                         </svg>
                     </button>
@@ -342,7 +383,7 @@
             class="button is-hidden-touch"
             class:is-link={isShuffling}
             on:click={() => setIsShuffling(!isShuffling)}
-            title={isShuffling ? 'Stop shuffling play queue' : 'Start shuffling play queue'}
+            title={!isShuffling ? t('shuffle') : t('stop_shuffle')}
         >
             <svg class="icon" viewBox="0 0 24 24">
                 <path
@@ -356,17 +397,17 @@
             <div class="flex" />
 
             <div class="buttons has-addons m-0">
-                <button class="button m-0" on:click={previousTrack} title="Previous">
+                <button class="button m-0" on:click={previousTrack} title={t('previous')}>
                     <svg class="icon" viewBox="0 0 24 24">
                         <path d="M6,18V6H8V18H6M9.5,12L18,6V18L9.5,12Z" />
                     </svg>
                 </button>
-                <button class="button m-0" on:click={seekBackward} title="Seek backward">
+                <button class="button m-0" on:click={seekBackward} title={t('seek_backward')}>
                     <svg class="icon" viewBox="0 0 24 24">
                         <path d="M11.5,12L20,18V6M11,18V6L2.5,12L11,18Z" />
                     </svg>
                 </button>
-                <button class="button m-0" on:click={playPause} title={isPlaying ? 'Pause' : 'Play'}>
+                <button class="button m-0" on:click={playPause} title={!isPlaying ? t('play') : t('pause')}>
                     <svg class="icon" viewBox="0 0 24 24">
                         {#if isPlaying}
                             <path d="M14,19H18V5H14M6,19H10V5H6V19Z" />
@@ -375,12 +416,12 @@
                         {/if}
                     </svg>
                 </button>
-                <button class="button m-0" on:click={seekForward} title="Seek forward">
+                <button class="button m-0" on:click={seekForward} title={t('seek_forward')}>
                     <svg class="icon" viewBox="0 0 24 24">
                         <path d="M13,6V18L21.5,12M4,18L12.5,12L4,6V18Z" />
                     </svg>
                 </button>
-                <button class="button m-0" on:click={nextTrack} title="Next">
+                <button class="button m-0" on:click={nextTrack} title={t('next')}>
                     <svg class="icon" viewBox="0 0 24 24">
                         <path d="M16,18H18V6H16M6,18L14.5,12L6,6V18Z" />
                     </svg>
@@ -388,9 +429,9 @@
             </div>
 
             <div class="flex" />
-            <span class="is-hidden-desktop" style="width: 2.5rem; text-align: right;"
-                >-{formatDuration(duration - position)}</span
-            >
+            <span class="is-hidden-desktop" style="width: 2.5rem; text-align: right;">
+                -{formatDuration(duration - position)}
+            </span>
         </div>
 
         <div class="music-player-slider px-4">
@@ -407,14 +448,8 @@
         </div>
 
         <div class="music-player-volume px-4 is-hidden-touch">
-            {#if $page.url.pathname == '/queue'}
-                <!-- svelte-ignore a11y-invalid-attribute -->
-                <a
-                    class="button mr-4 is-link"
-                    href="#"
-                    on:click|preventDefault={() => history.back()}
-                    title="Close play queue"
-                >
+            {#if $page.url.pathname != '/queue'}
+                <a class="button mr-4" href="/queue" title={t('open_queue')}>
                     <svg class="icon" viewBox="0 0 24 24">
                         <path
                             d="M15,6H3V8H15V6M15,10H3V12H15V10M3,16H11V14H3V16M17,6V14.18C16.69,14.07 16.35,14 16,14A3,3 0 0,0 13,17A3,3 0 0,0 16,20A3,3 0 0,0 19,17V8H22V6H17Z"
@@ -422,7 +457,13 @@
                     </svg>
                 </a>
             {:else}
-                <a class="button mr-4" href="/queue" title="Open play queue">
+                <!-- svelte-ignore a11y-invalid-attribute -->
+                <a
+                    class="button mr-4 is-link"
+                    href="#"
+                    on:click|preventDefault={() => history.back()}
+                    title={t('close_queue')}
+                >
                     <svg class="icon" viewBox="0 0 24 24">
                         <path
                             d="M15,6H3V8H15V6M15,10H3V12H15V10M3,16H11V14H3V16M17,6V14.18C16.69,14.07 16.35,14 16,14A3,3 0 0,0 13,17A3,3 0 0,0 16,20A3,3 0 0,0 19,17V8H22V6H17Z"
@@ -431,7 +472,11 @@
                 </a>
             {/if}
 
-            <button class="button mr-3" on:click={toggleVolume} title={volume > 0 ? 'Mute volume' : 'Restore volume'}>
+            <button
+                class="button mr-3"
+                on:click={toggleVolume}
+                title={volume > 0 ? t('mute_volume') : t('restore_volume')}
+            >
                 <svg class="icon" viewBox="0 0 24 24">
                     {#if volume == 0}
                         <path

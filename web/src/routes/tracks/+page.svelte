@@ -1,62 +1,86 @@
 <script>
-    import { onMount, onDestroy } from 'svelte';
+    import SortByDropdown from '../../components/sort-by-dropdown.svelte';
     import TracksTable from '../../components/tracks-table.svelte';
+    import { lazyLoader } from '../../utils.js';
+    import { language } from '../../stores.js';
 
+    // Language strings
+    const lang = {
+        en: {
+            title: 'Tracks - BassieMusic',
+            header: 'Tracks',
+            sort_by_plays_desc: 'Plays (high - low)',
+            sort_by_plays: 'Plays (low - high)',
+            sort_by_title: 'Title (A - Z)',
+            sort_by_title_desc: 'Title (Z - A)',
+            sort_by_created_at_desc: 'Downloaded at (new - old)',
+            sort_by_created_at: 'Downloaded at (old - new)',
+            empty: "You don't have added any tracks",
+        },
+        nl: {
+            title: 'Tracks - BassieMusic',
+            header: 'Tracks',
+            sort_by_plays_desc: 'Plays (hoog - laag)',
+            sort_by_plays: 'Plays (laag - hoog)',
+            sort_by_title: 'Titel (A - Z)',
+            sort_by_title_desc: 'Titel (Z - A)',
+            sort_by_created_at_desc: 'Gedownload op (nieuw - oud)',
+            sort_by_created_at: 'Gedownload op (oud - nieuw)',
+            empty: 'Je hebt nog geen enkele track toegevoegd',
+        },
+    };
+    const t = (key) => lang[$language][key];
+
+    // State
     export let data;
-    let { token, tracks } = data;
 
-    async function fetchPage(page) {
-        const response = await fetch(
-            `${import.meta.env.VITE_API_URL}/tracks?${new URLSearchParams({
-                page,
-            })}`,
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            }
-        );
-        const { data: newTracks } = await response.json();
-        tracks.push(...newTracks);
-        tracks = tracks;
-    }
-
-    let bottom;
-    if (tracks.length != data.total) {
-        let observer;
-        onMount(() => {
-            let page = 2;
-            observer = new IntersectionObserver(
-                (entries, observer) => {
-                    for (const entry of entries) {
-                        if (tracks.length >= data.total) {
-                            observer.unobserve(entry.target);
-                        } else {
-                            fetchPage(page++);
-                        }
-                    }
-                },
+    // Lazy loader
+    lazyLoader(
+        data.total,
+        () => data.tracks.length,
+        async (page) => {
+            const response = await fetch(
+                `${import.meta.env.VITE_API_URL}/tracks?${new URLSearchParams({
+                    page: page,
+                    sort_by: data.sortBy,
+                })}`,
                 {
-                    root: document.body,
+                    headers: {
+                        Authorization: `Bearer ${data.token}`,
+                    },
                 }
             );
-            observer.observe(bottom);
-        });
-        onDestroy(() => {
-            if (observer) observer.unobserve(bottom);
-        });
-    }
+            const { data: newTracks } = await response.json();
+            data.tracks = [...data.tracks, ...newTracks];
+        }
+    );
 </script>
 
 <svelte:head>
-    <title>Tracks - BassieMusic</title>
+    <title>{t('title')}</title>
 </svelte:head>
 
-<h2 class="title">Tracks</h2>
-{#if tracks.length > 0}
-    <TracksTable {token} {tracks} />
-{:else}
-    <p><i>You don't have added any tracks</i></p>
-{/if}
+<div class="columns">
+    <div class="column">
+        <h2 class="title">{t('header')}</h2>
+    </div>
+    <div class="column">
+        <SortByDropdown
+            sortBy={data.sortBy}
+            options={{
+                plays_desc: t('sort_by_plays_desc'),
+                plays: t('sort_by_plays'),
+                title: t('sort_by_title'),
+                title_desc: t('sort_by_title_desc'),
+                created_at_desc: t('sort_by_created_at_desc'),
+                created_at: t('sort_by_created_at'),
+            }}
+        />
+    </div>
+</div>
 
-<div bind:this={bottom} />
+{#if data.tracks.length > 0}
+    <TracksTable token={data.token} authUser={data.authUser} tracks={data.tracks} />
+{:else}
+    <p><i>{t('empty')}</i></p>
+{/if}

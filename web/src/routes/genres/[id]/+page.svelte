@@ -1,31 +1,57 @@
 <script>
-    import { page } from '$app/stores';
-    import { browser } from '$app/environment';
-    import AlbumCard from '../../../components/album-card.svelte';
+    import AlbumCard from '../../../components/cards/album-card.svelte';
+    import { lazyLoader } from '../../../utils.js';
+    import { language } from '../../../stores.js';
 
+    // Language strings
+    const lang = {
+        en: {
+            title: '$1 - Genres - BassieMusic',
+            back: 'Go back one page',
+            image_alt: 'Image of genre $1',
+            albums: 'Albums',
+            empty: "This genre doesn't have any albums",
+        },
+        nl: {
+            title: '$1 - Genres - BassieMusic',
+            back: 'Ga een pagina terug',
+            image_alt: 'Afbeelding van genre $1',
+            albums: 'Albums',
+            empty: 'Dit genre heeft geen albums',
+        },
+    };
+    const t = (key, p1) => lang[$language][key].replace('$1', p1);
+
+    // State
     export let data;
-    let { token, genre } = data;
 
-    if (browser) {
-        page.subscribe(async (page) => {
-            if (page.url.pathname.startsWith('/genres/') && page.url.pathname != `/genres/${genre.id}`) {
-                const response = await fetch(`${import.meta.env.VITE_API_URL}/genres/${page.params.id}`, {
+    // Lazy loader
+    lazyLoader(
+        data.albumsTotal,
+        () => data.genre.albums.length,
+        async (page) => {
+            const response = await fetch(
+                `${import.meta.env.VITE_API_URL}/genres/${data.genre.id}/albums?${new URLSearchParams({
+                    page,
+                })}`,
+                {
                     headers: {
-                        Authorization: `Bearer ${token}`,
+                        Authorization: `Bearer ${data.token}`,
                     },
-                });
-                genre = await response.json();
-            }
-        });
-    }
+                }
+            );
+            const { data: newAlbums } = await response.json();
+            data.genre.albums = [...data.genre.albums, ...newAlbums];
+        }
+    );
 </script>
 
 <svelte:head>
-    <title>{genre.name} - Genres - BassieMusic</title>
+    <title>{t('title', data.genre.name)}</title>
 </svelte:head>
 
 <div class="buttons">
-    <button class="button" on:click={() => history.back()} title="Go back one page">
+    <button class="button" on:click={() => history.back()} title={t('back')}>
         <svg class="icon" viewBox="0 0 24 24">
             <path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" />
         </svg>
@@ -35,24 +61,24 @@
 <div class="columns">
     <div class="column is-one-quarter mr-5 mr-0-mobile">
         <div class="box has-image m-0 p-0" style="aspect-ratio: 1;">
-            <img src={genre.large_image} alt="Image of genre {genre.name}" loading="lazy" />
+            <img src={data.genre.large_image} alt={t('image_alt', data.genre.name)} />
         </div>
     </div>
 
     <div class="column" style="display: flex; flex-direction: column; justify-content: center;">
-        <h2 class="title">{genre.name}</h2>
+        <h2 class="title">{data.genre.name}</h2>
     </div>
 </div>
 
-<h2 class="title">Albums</h2>
-{#if genre.albums != undefined}
+<h2 class="title">{t('albums')}</h2>
+{#if data.genre.albums.length > 0}
     <div class="columns is-multiline is-mobile">
-        {#each genre.albums as album}
+        {#each data.genre.albums as album}
             <div class="column is-half-mobile is-one-third-tablet is-one-quarter-desktop is-one-fifth-widescreen">
-                <AlbumCard {album} {token} />
+                <AlbumCard {album} token={data.token} authUser={data.authUser} />
             </div>
         {/each}
     </div>
 {:else}
-    <p><i>This genre has no albums</i></p>
+    <p><i>{t('empty')}</i></p>
 {/if}

@@ -1,69 +1,86 @@
 <script>
-    import { onDestroy, onMount } from 'svelte';
-    import GenreCard from '../../components/genre-card.svelte';
+    import SortByDropdown from '../../components/sort-by-dropdown.svelte';
+    import GenreCard from '../../components/cards/genre-card.svelte';
+    import { lazyLoader } from '../../utils.js';
+    import { language } from '../../stores.js';
 
+    // Language strings
+    const lang = {
+        en: {
+            title: 'Genres - BassieMusic',
+            header: 'Genres',
+            sort_by_name: 'Name (A - Z)',
+            sort_by_name_desc: 'Name (Z - A)',
+            sort_by_created_at_desc: 'Downloaded at (new - old)',
+            sort_by_created_at: 'Downloaded at (old - new)',
+            empty: "You don't have added any genres",
+        },
+        nl: {
+            title: 'Genres - BassieMusic',
+            header: 'Genres',
+            sort_by_name: 'Naam (A - Z)',
+            sort_by_name_desc: 'Naam (Z - A)',
+            sort_by_created_at_desc: 'Gedownload op (nieuw - oud)',
+            sort_by_created_at: 'Gedownload op (oud - nieuw)',
+            empty: 'Je hebt nog geen enkele genre toegevoegd',
+        },
+    };
+    const t = (key) => lang[$language][key];
+
+    // State
     export let data;
-    let { token, genres } = data;
 
-    async function fetchPage(page) {
-        const response = await fetch(
-            `${import.meta.env.VITE_API_URL}/genres?${new URLSearchParams({
-                page,
-            })}`,
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            }
-        );
-        const { data: newGenres } = await response.json();
-        genres.push(...newGenres);
-        genres = genres;
-    }
-
-    let bottom;
-    if (genres.length != data.total) {
-        let observer;
-        onMount(() => {
-            let page = 2;
-            observer = new IntersectionObserver(
-                (entries, observer) => {
-                    for (const entry of entries) {
-                        if (genres.length >= data.total) {
-                            observer.unobserve(entry.target);
-                        } else {
-                            fetchPage(page++);
-                        }
-                    }
-                },
+    // Lazy loader
+    lazyLoader(
+        data.total,
+        () => data.genres.length,
+        async (page) => {
+            const response = await fetch(
+                `${import.meta.env.VITE_API_URL}/genres?${new URLSearchParams({
+                    page,
+                    sort_by: data.sortBy,
+                })}`,
                 {
-                    root: document.body,
+                    headers: {
+                        Authorization: `Bearer ${data.token}`,
+                    },
                 }
             );
-            observer.observe(bottom);
-        });
-        onDestroy(() => {
-            if (observer) observer.unobserve(bottom);
-        });
-    }
+            const { data: newGenres } = await response.json();
+            data.genres = [...data.genres, ...newGenres];
+        }
+    );
 </script>
 
 <svelte:head>
-    <title>Genres - BassieMusic</title>
+    <title>{t('title')}</title>
 </svelte:head>
 
-<h2 class="title">Genres</h2>
+<div class="columns">
+    <div class="column">
+        <h2 class="title">{t('header')}</h2>
+    </div>
+    <div class="column">
+        <SortByDropdown
+            sortBy={data.sortBy}
+            options={{
+                name: t('sort_by_name'),
+                name_desc: t('sort_by_name_desc'),
+                created_at_desc: t('sort_by_created_at_desc'),
+                created_at: t('sort_by_created_at'),
+            }}
+        />
+    </div>
+</div>
 
-{#if genres.length > 0}
+{#if data.genres.length > 0}
     <div class="columns is-multiline is-mobile">
-        {#each genres as genre}
+        {#each data.genres as genre}
             <div class="column is-half-mobile is-one-third-tablet is-one-quarter-desktop is-one-fifth-widescreen">
                 <GenreCard {genre} />
             </div>
         {/each}
     </div>
 {:else}
-    <p><i>You don't have added any genres</i></p>
+    <p><i>{t('empty')}</i></p>
 {/if}
-
-<div bind:this={bottom} />

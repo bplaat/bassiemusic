@@ -16,16 +16,15 @@ type Album struct {
 	Title       string    `column:"title,string" json:"title"`
 	ReleasedAt  time.Time `column:"released_at,date" json:"released_at"`
 	Explicit    bool      `column:"explicit,bool" json:"explicit"`
-	Verified    bool      `column:"verified,bool" json:"verified"`
 	DeezerID    int64     `column:"deezer_id,bigint" json:"-"`
 	SmallCover  string    `json:"small_cover"`
 	MediumCover string    `json:"medium_cover"`
 	LargeCover  string    `json:"large_cover"`
 	Liked       *bool     `json:"liked,omitempty"`
 	CreatedAt   time.Time `column:"created_at,timestamp" json:"created_at"`
-	Artists     []Artist  `json:"artists,omitempty"`
-	Genres      []Genre   `json:"genres,omitempty"`
-	Tracks      []Track   `json:"tracks,omitempty"`
+	Artists     *[]Artist `json:"artists,omitempty"`
+	Genres      *[]Genre  `json:"genres,omitempty"`
+	Tracks      *[]Track  `json:"tracks,omitempty"`
 }
 
 type AlbumType int
@@ -60,13 +59,16 @@ func AlbumModel(c *fiber.Ctx) *database.Model[Album] {
 				}
 			},
 			"artists": func(album *Album) {
-				album.Artists = ArtistModel(c).WhereIn("album_artist", "artist_id", "album_id", album.ID).OrderByRaw("LOWER(`name`)").Get()
+				artists := ArtistModel(c).WhereIn("album_artist", "artist_id", "album_id", album.ID).OrderByRaw("LOWER(`name`)").Get()
+				album.Artists = &artists
 			},
 			"genres": func(album *Album) {
-				album.Genres = GenreModel(c).WhereIn("album_genre", "genre_id", "album_id", album.ID).OrderByRaw("LOWER(`name`)").Get()
+				genres := GenreModel(c).WhereIn("album_genre", "genre_id", "album_id", album.ID).OrderByRaw("LOWER(`name`)").Get()
+				album.Genres = &genres
 			},
 			"tracks": func(album *Album) {
-				album.Tracks = TrackModel(c).With("like", "artists").Where("album_id", album.ID).OrderByRaw("`disk`, `position`").Get()
+				tracks := TrackModel(c).With("like", "artists").Where("album_id", album.ID).OrderByRaw("`disk`, `position`").Get()
+				album.Tracks = &tracks
 			},
 		},
 	}).Init()

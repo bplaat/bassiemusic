@@ -91,7 +91,7 @@ func AuthLogin(c *fiber.Ctx) error {
 	if !ipInfo.Bogon {
 		session["ip_latitude"] = strings.Split(ipInfo.Loc, ",")[0]
 		session["ip_longitude"] = strings.Split(ipInfo.Loc, ",")[1]
-		session["ip_country"] = ipInfo.Country
+		session["ip_country"] = strings.ToLower(ipInfo.Country)
 		session["ip_city"] = ipInfo.City
 	}
 	models.SessionModel().Create(session)
@@ -117,7 +117,7 @@ func AuthValidate(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{
 			"success":             true,
 			"user":                authUser,
-			"session":             session,
+			"session_id":          session.ID,
 			"agent":               agent,
 			"last_track":          models.TrackModel(c).With("like", "artists", "album").Find(lastTackPlay.TrackID),
 			"last_track_position": lastTackPlay.Position,
@@ -126,10 +126,10 @@ func AuthValidate(c *fiber.Ctx) error {
 
 	// Return response
 	return c.JSON(fiber.Map{
-		"success": true,
-		"user":    authUser,
-		"session": session,
-		"agent":   agent,
+		"success":     true,
+		"user":        authUser,
+		"session_id	": session.ID,
+		"agent":       agent,
 	})
 }
 

@@ -49,6 +49,20 @@ func Serve() {
 		}))
 	}
 
+	// Apps
+	app.Get("/apps/macos/version", func(c *fiber.Ctx) error {
+		return c.SendString("0.1.0")
+	})
+	app.Get("/apps/macos/download", func(c *fiber.Ctx) error {
+		return c.Redirect("https://github.com/bplaat/bassiemusic/releases")
+	})
+	app.Get("/apps/windows/version", func(c *fiber.Ctx) error {
+		return c.SendString("0.1.0.0")
+	})
+	app.Get("/apps/windows/download", func(c *fiber.Ctx) error {
+		return c.Redirect("https://github.com/bplaat/bassiemusic/releases")
+	})
+
 	// Websocket
 	app.Get("/ws", controllers.Websocket)
 
@@ -62,39 +76,54 @@ func Serve() {
 	app.Use(middlewares.IsAuthed)
 
 	app.Get("/auth/validate", controllers.AuthValidate)
-	app.Get("/auth/logout", controllers.AuthLogout)
+	app.Put("/auth/logout", controllers.AuthLogout)
 
 	app.Get("/search", controllers.SearchIndex)
 	app.Get("/deezer_search", controllers.DeezerSearchIndex)
 
 	app.Get("/artists", controllers.ArtistsIndex)
 	app.Get("/artists/:artistID", controllers.ArtistsShow)
-	app.Get("/artists/:artistID/like", controllers.ArtistsLike)
-	app.Get("/artists/:artistID/like/delete", controllers.ArtistsLikeDelete)
+	app.Put("/artists/:artistID/like", controllers.ArtistsLike)
+	app.Delete("/artists/:artistID/like", controllers.ArtistsLikeDelete)
 
 	app.Get("/albums", controllers.AlbumsIndex)
 	app.Get("/albums/:albumID", controllers.AlbumsShow)
-	app.Get("/albums/:albumID/like", controllers.AlbumsLike)
-	app.Get("/albums/:albumID/like/delete", controllers.AlbumsLikeDelete)
+	app.Put("/albums/:albumID/like", controllers.AlbumsLike)
+	app.Delete("/albums/:albumID/like", controllers.AlbumsLikeDelete)
 
 	app.Get("/genres", controllers.GenresIndex)
 	app.Get("/genres/:genreID", controllers.GenresShow)
+	app.Get("/genres/:genreID/albums", controllers.GenresAlbums)
 
 	app.Get("/tracks", controllers.TracksIndex)
 	app.Get("/tracks/:trackID", controllers.TracksShow)
-	app.Get("/tracks/:trackID/like", controllers.TracksLike)
-	app.Get("/tracks/:trackID/like/delete", controllers.TracksLikeDelete)
-	app.Get("/tracks/:trackID/play", controllers.TracksPlay)
+	app.Put("/tracks/:trackID/like", controllers.TracksLike)
+	app.Delete("/tracks/:trackID/like", controllers.TracksLikeDelete)
+	app.Put("/tracks/:trackID/play", controllers.TracksPlay)
+
+	app.Get("/playlists", controllers.PlaylistsIndex)
+	app.Post("/playlists", controllers.PlaylistsCreate)
+	app.Get("/playlists/:playlistID", controllers.PlaylistsShow)
+	app.Put("/playlists/:playlistID", controllers.PlaylistsEdit)
+	app.Delete("/playlists/:playlistID", controllers.PlaylistsDelete)
+	app.Put("/playlists/:playlistID/insert_track", controllers.PlaylistsInsertTrack)
+	app.Delete("/playlists/:playlistID/remove_track", controllers.PlaylistsRemoveTrack)
+	app.Put("/playlists/:playlistID/like", controllers.PlaylistsLike)
+	app.Delete("/playlists/:playlistID/like", controllers.PlaylistsLikeDelete)
 
 	app.Get("/users/:userID", controllers.UsersShow)
+	app.Put("/users/:userID", controllers.UsersEdit)
+	app.Delete("/users/:userID", controllers.UsersDelete)
+	app.Put("/users/:userID/avatar", controllers.UsersAvatar)
+	app.Delete("/users/:userID/avatar", controllers.UsersAvatarDelete)
 	app.Get("/users/:userID/liked_artists", controllers.UsersLikedArtists)
 	app.Get("/users/:userID/liked_albums", controllers.UsersLikedAlbums)
 	app.Get("/users/:userID/liked_tracks", controllers.UsersLikedTracks)
+	app.Get("/users/:userID/liked_playlists", controllers.UsersLikedPlaylists)
 	app.Get("/users/:userID/played_tracks", controllers.UsersPlayedTracks)
 	app.Get("/users/:userID/sessions", controllers.UsersSessions)
-	app.Post("/users/:userID", controllers.UsersEdit)
-	app.Post("/users/:userID/avatar", controllers.UsersAvatar)
-	app.Get("/users/:userID/avatar/delete", controllers.UsersAvatarDelete)
+	app.Get("/users/:userID/active_sessions", controllers.UsersActiveSessions)
+	app.Get("/users/:userID/playlists", controllers.UsersPlaylists)
 
 	app.Use(middlewares.IsAdmin)
 
@@ -109,16 +138,15 @@ func Serve() {
 		})
 	})
 
-	app.Get("/download/artist", controllers.DownloadArtist)
-	app.Get("/download/album", controllers.DownloadAlbum)
+	app.Post("/download/artist", controllers.DownloadArtist)
+	app.Post("/download/album", controllers.DownloadAlbum)
 
 	app.Get("/users", controllers.UsersIndex)
 	app.Post("/users", controllers.UsersCreate)
-	app.Get("/users/:userID/delete", controllers.UsersDelete)
 
 	app.Get("/sessions", controllers.SessionsIndex)
 	app.Get("/sessions/:sessionID", controllers.SessionsShow)
-	app.Get("/sessions/:sessionID/revoke", controllers.SessionsRevoke)
+	app.Put("/sessions/:sessionID/revoke", controllers.SessionsRevoke)
 
 	log.Fatal(app.Listen(":" + os.Getenv("SERVER_PORT")))
 }

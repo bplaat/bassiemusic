@@ -11,7 +11,6 @@ type DownloadTask struct {
 	TypeInt   DownloadTaskType `column:"type,int" json:"-"`
 	Type      string           `json:"type"`
 	DeezerID  int64            `column:"deezer_id,bigint" json:"deezer_id"`
-	Singles   bool             `column:"singles,bool" json:"singles"`
 	CreatedAt time.Time        `column:"created_at,timestamp" json:"created_at"`
 }
 

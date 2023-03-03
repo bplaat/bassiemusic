@@ -94,7 +94,6 @@ func (m *Model[T]) With(relationships ...string) *QueryBuilder[T] {
 func (m *Model[T]) Where(column string, value any) *QueryBuilder[T] {
 	return m.query().Where(column, value)
 }
-
 func (m *Model[T]) WhereOr(column string, value any) *QueryBuilder[T] {
 	return m.query().WhereOr(column, value)
 }
@@ -102,9 +101,22 @@ func (m *Model[T]) WhereOr(column string, value any) *QueryBuilder[T] {
 func (m *Model[T]) WhereRaw(whereRaw string, value any) *QueryBuilder[T] {
 	return m.query().WhereRaw(whereRaw, value)
 }
-
 func (m *Model[T]) WhereOrRaw(whereRaw string, value any) *QueryBuilder[T] {
 	return m.query().WhereOrRaw(whereRaw, value)
+}
+
+func (m *Model[T]) WhereNull(column string) *QueryBuilder[T] {
+	return m.query().WhereNull(column)
+}
+func (m *Model[T]) WhereOrNull(column string) *QueryBuilder[T] {
+	return m.query().WhereOrNull(column)
+}
+
+func (m *Model[T]) WhereNotNull(column string) *QueryBuilder[T] {
+	return m.query().WhereNotNull(column)
+}
+func (m *Model[T]) WhereOrNotNull(column string) *QueryBuilder[T] {
+	return m.query().WhereOrNotNull(column)
 }
 
 func (m *Model[T]) WhereIn(pivotTableName string, pivotModelId string, pivotRelationshipId string, value string) *QueryBuilder[T] {
@@ -145,6 +157,10 @@ func (m *Model[T]) Delete() {
 
 func (m *Model[T]) Paginate(page int, limit int) QueryBuilderPaginated[T] {
 	return m.query().Paginate(page, limit)
+}
+
+func (m *Model[T]) Chunk(limit int, callback func(items []T)) {
+	m.query().Chunk(limit, callback)
 }
 
 func (m *Model[T]) First() *T {
