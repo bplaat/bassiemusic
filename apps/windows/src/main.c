@@ -31,6 +31,9 @@ ICoreWebView2CompositionController *composition_controller = NULL;
 ICoreWebView2Controller *controller = NULL;
 ICoreWebView2 *webview = NULL;
 IDCompositionVirtualSurface *titlebar_surface;
+BOOL minimize_hover = FALSE;
+BOOL maximize_hover = FALSE;
+BOOL close_hover = FALSE;
 
 typedef HRESULT(STDMETHODCALLTYPE *_CreateCoreWebView2EnvironmentWithOptions)(
     PCWSTR browserExecutableFolder, PCWSTR userDataFolder, ICoreWebView2EnvironmentOptions *environmentOptions,
@@ -456,19 +459,37 @@ LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         // Desktop
         else {
-            if (point.y < MulDiv(TITLEBAR_BUTTON_HEIGHT_DESKTOP, window_dpi, 96) &&
-                point.x < client_rect.right - MulDiv(3 * TITLEBAR_BUTTON_WIDTH, window_dpi, 96)) {
-                if ((GetKeyState(VK_LBUTTON) & 0x100) != 0 && msg == WM_MOUSEMOVE) {
-                    ReleaseCapture();
-                    SendMessage(hwnd, WM_NCLBUTTONDOWN, HTCAPTION, 0);
+            if (point.y < MulDiv(TITLEBAR_BUTTON_HEIGHT_DESKTOP, window_dpi, 96)) {
+                if (point.x < client_rect.right - MulDiv(3 * TITLEBAR_BUTTON_WIDTH, window_dpi, 96)) {
+                    if ((GetKeyState(VK_LBUTTON) & 0x100) != 0 && msg == WM_MOUSEMOVE) {
+                        ReleaseCapture();
+                        SendMessage(hwnd, WM_NCLBUTTONDOWN, HTCAPTION, 0);
+                    }
+                    if (msg == WM_LBUTTONDBLCLK) {
+                        WindowToggleMaximize();
+                    }
+                    if (msg == WM_RBUTTONUP) {
+                        ClientToScreen(hwnd, &point);
+                        TrackPopupMenu(GetSystemMenu(hwnd, FALSE), TPM_TOPALIGN | TPM_LEFTALIGN, point.x, point.y, 0, hwnd, NULL);
+                    }
                 }
-                if (msg == WM_LBUTTONDBLCLK) {
-                    WindowToggleMaximize();
-                }
-                if (msg == WM_RBUTTONUP) {
-                    ClientToScreen(hwnd, &point);
-                    TrackPopupMenu(GetSystemMenu(hwnd, FALSE), TPM_TOPALIGN | TPM_LEFTALIGN, point.x, point.y, 0, hwnd, NULL);
-                }
+            }
+        }
+
+        // Titlebar buttons hover
+        if (msg == WM_MOUSEMOVE) {
+            int titlebar_height = client_rect.right < MulDiv(1024, window_dpi, 96) ? MulDiv(TITLEBAR_BUTTON_HEIGHT_MOBILE, window_dpi, 96)
+                                                                                   : MulDiv(TITLEBAR_BUTTON_HEIGHT_DESKTOP, window_dpi, 96);
+            BOOL new_minimize_hover = point.y < titlebar_height && point.x >= client_rect.right - MulDiv(3 * TITLEBAR_BUTTON_WIDTH, window_dpi, 96) &&
+                                      point.x < client_rect.right - MulDiv(2 * TITLEBAR_BUTTON_WIDTH, window_dpi, 96);
+            BOOL new_maximize_hover = point.y < titlebar_height && point.x >= client_rect.right - MulDiv(2 * TITLEBAR_BUTTON_WIDTH, window_dpi, 96) &&
+                                      point.x < client_rect.right - MulDiv(TITLEBAR_BUTTON_WIDTH, window_dpi, 96);
+            BOOL new_close_hover = point.y < titlebar_height && point.x >= client_rect.right - MulDiv(TITLEBAR_BUTTON_WIDTH, window_dpi, 96);
+            if (new_minimize_hover != minimize_hover || new_maximize_hover != maximize_hover || new_close_hover != close_hover) {
+                minimize_hover = new_minimize_hover;
+                maximize_hover = new_maximize_hover;
+                close_hover = new_close_hover;
+                InvalidateRect(hwnd, NULL, TRUE);
             }
         }
     }
@@ -485,10 +506,12 @@ LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         if (y < titlebar_height) {
             if (x >= client_rect.right - MulDiv(3 * TITLEBAR_BUTTON_WIDTH, window_dpi, 96) &&
                 x < client_rect.right - MulDiv(2 * TITLEBAR_BUTTON_WIDTH, window_dpi, 96)) {
+                minimize_hover = FALSE;
                 ShowWindow(hwnd, SW_MINIMIZE);
             }
             if (x >= client_rect.right - MulDiv(2 * TITLEBAR_BUTTON_WIDTH, window_dpi, 96) &&
                 x < client_rect.right - MulDiv(TITLEBAR_BUTTON_WIDTH, window_dpi, 96)) {
+                maximize_hover = FALSE;
                 WindowToggleMaximize();
             }
             if (x >= client_rect.right - MulDiv(TITLEBAR_BUTTON_WIDTH, window_dpi, 96)) {
@@ -543,34 +566,62 @@ LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         ID2D1RenderTarget_BeginDraw(render_target);
         ID2D1RenderTarget_Clear(render_target, (&(D2D1_COLOR_F){0, 0, 0, 0}));
 
-        int titlebar_height = client_rect.right < MulDiv(1024, window_dpi, 96) ? MulDiv(TITLEBAR_BUTTON_HEIGHT_MOBILE, window_dpi, 96)
-                                                                               : MulDiv(TITLEBAR_BUTTON_HEIGHT_DESKTOP, window_dpi, 96);
-        Direct2d_FillRect(render_target, &(CanvasRect){client_rect.right - 3 * TITLEBAR_BUTTON_WIDTH, 0, 3 * TITLEBAR_BUTTON_WIDTH, titlebar_height},
+        // Titlebar
+        int titlebar_height = client_rect.right < MulDiv(1024, window_dpi, 96) ? TITLEBAR_BUTTON_HEIGHT_MOBILE : TITLEBAR_BUTTON_HEIGHT_DESKTOP;
+        Direct2d_FillRect(render_target,
+                          &(CanvasRect){client_rect.right - MulDiv(3 * TITLEBAR_BUTTON_WIDTH, window_dpi, 96), 0,
+                                        MulDiv(3 * TITLEBAR_BUTTON_WIDTH, window_dpi, 96), MulDiv(titlebar_height, window_dpi, 96)},
                           client_rect.right < MulDiv(1024, window_dpi, 96) ? 0xff121212 : 0xff0a0a0a);
 
-        Direct2d_FillPath(d2d_factory, render_target,
-                          &(CanvasRect){client_rect.right - 3 * TITLEBAR_BUTTON_WIDTH + (TITLEBAR_BUTTON_WIDTH - 10) / 2, (titlebar_height - 10) / 2, 10, 10},
-                          2048, 2048, "M2048 1229v-205h-2048v205h2048z", 0xffffffff);
+        // Minimize button
+        if (minimize_hover) {
+            Direct2d_FillRect(render_target,
+                              &(CanvasRect){client_rect.right - MulDiv(3 * TITLEBAR_BUTTON_WIDTH, window_dpi, 96), 0,
+                                            MulDiv(TITLEBAR_BUTTON_WIDTH, window_dpi, 96), MulDiv(titlebar_height, window_dpi, 96)},
+                              0x20ffffff);
+        }
+        Direct2d_FillPath(
+            d2d_factory, render_target,
+            &(CanvasRect){client_rect.right - MulDiv(3 * TITLEBAR_BUTTON_WIDTH, window_dpi, 96) + MulDiv((TITLEBAR_BUTTON_WIDTH - 10) / 2, window_dpi, 96),
+                          MulDiv((titlebar_height - 10) / 2, window_dpi, 96), MulDiv(10, window_dpi, 96), MulDiv(10, window_dpi, 96)},
+            2048, 2048, "M2048 1229v-205h-2048v205h2048z", 0xffffffff);
 
+        // Maximize button
+        if (maximize_hover) {
+            Direct2d_FillRect(render_target,
+                              &(CanvasRect){client_rect.right - MulDiv(2 * TITLEBAR_BUTTON_WIDTH, window_dpi, 96), 0,
+                                            MulDiv(TITLEBAR_BUTTON_WIDTH, window_dpi, 96), MulDiv(titlebar_height, window_dpi, 96)},
+                              0x20ffffff);
+        }
         WINDOWPLACEMENT placement;
         GetWindowPlacement(hwnd, &placement);
         if (placement.showCmd == SW_MAXIMIZE) {
             Direct2d_FillPath(
                 d2d_factory, render_target,
-                &(CanvasRect){client_rect.right - 2 * TITLEBAR_BUTTON_WIDTH + (TITLEBAR_BUTTON_WIDTH - 10) / 2, (titlebar_height - 10) / 2 + 10, 10, 10}, 2048,
-                -2048, "M2048 410h-410v-410h-1638v1638h410v410h1638v-1638zM1434 1434h-1229v-1229h1229v1229zM1843 1843h-1229v-205h1024v-1024h205v1229z",
+                &(CanvasRect){client_rect.right - MulDiv(2 * TITLEBAR_BUTTON_WIDTH, window_dpi, 96) + MulDiv((TITLEBAR_BUTTON_WIDTH - 10) / 2, window_dpi, 96),
+                              MulDiv((titlebar_height - 10) / 2 + 10, window_dpi, 96), MulDiv(10, window_dpi, 96), MulDiv(10, window_dpi, 96)},
+                2048, -2048, "M2048 410h-410v-410h-1638v1638h410v410h1638v-1638zM1434 1434h-1229v-1229h1229v1229zM1843 1843h-1229v-205h1024v-1024h205v1229z",
                 0xffffffff);
         } else {
             Direct2d_FillPath(
                 d2d_factory, render_target,
-                &(CanvasRect){client_rect.right - 2 * TITLEBAR_BUTTON_WIDTH + (TITLEBAR_BUTTON_WIDTH - 10) / 2, (titlebar_height - 10) / 2, 10, 10}, 2048, 2048,
-                "M2048 2048v-2048h-2048v2048h2048zM1843 1843h-1638v-1638h1638v1638z", 0xffffffff);
+                &(CanvasRect){client_rect.right - MulDiv(2 * TITLEBAR_BUTTON_WIDTH, window_dpi, 96) + MulDiv((TITLEBAR_BUTTON_WIDTH - 10) / 2, window_dpi, 96),
+                              MulDiv((titlebar_height - 10) / 2, window_dpi, 96), MulDiv(10, window_dpi, 96), MulDiv(10, window_dpi, 96)},
+                2048, 2048, "M2048 2048v-2048h-2048v2048h2048zM1843 1843h-1638v-1638h1638v1638z", 0xffffffff);
         }
 
-        Direct2d_FillPath(d2d_factory, render_target,
-                          &(CanvasRect){client_rect.right - 1 * TITLEBAR_BUTTON_WIDTH + (TITLEBAR_BUTTON_WIDTH - 10) / 2, (titlebar_height - 10) / 2, 10, 10},
-                          2048, 2048, "M1169 1024l879 -879l-145 -145l-879 879l-879 -879l-145 145l879 879l-879 879l145 145l879 -879l879 879l145 -145z",
-                          0xffffffff);
+        // Close button
+        if (close_hover) {
+            Direct2d_FillRect(render_target,
+                              &(CanvasRect){client_rect.right - MulDiv(TITLEBAR_BUTTON_WIDTH, window_dpi, 96), 0,
+                                            MulDiv(TITLEBAR_BUTTON_WIDTH, window_dpi, 96), MulDiv(titlebar_height, window_dpi, 96)},
+                              0xa00000ff);
+        }
+        Direct2d_FillPath(
+            d2d_factory, render_target,
+            &(CanvasRect){client_rect.right - MulDiv(TITLEBAR_BUTTON_WIDTH, window_dpi, 96) + MulDiv((TITLEBAR_BUTTON_WIDTH - 10) / 2, window_dpi, 96),
+                          MulDiv((titlebar_height - 10) / 2, window_dpi, 96), MulDiv(10, window_dpi, 96), MulDiv(10, window_dpi, 96)},
+            2048, 2048, "M1169 1024l879 -879l-145 -145l-879 879l-879 -879l-145 145l879 879l-879 879l145 145l879 -879l879 879l145 -145z", 0xffffffff);
 
         ID2D1RenderTarget_EndDraw(render_target, NULL, NULL);
         ID2D1RenderTarget_Release(render_target);
