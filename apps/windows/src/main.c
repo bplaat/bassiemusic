@@ -134,6 +134,7 @@ ULONG STDMETHODCALLTYPE Unknown_Release(IUnknown *This) { return E_NOTIMPL; }
 // Forward interface reference
 ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandlerVtbl EnvironmentCompletedHandlerVtbl;
 ICoreWebView2CreateCoreWebView2CompositionControllerCompletedHandlerVtbl ControllerCompletedHandlerVtbl;
+ICoreWebView2CursorChangedEventHandlerVtbl CursorChangedEventHandlerVtbl;
 ICoreWebView2NewWindowRequestedEventHandlerVtbl NewWindowRequestedHandlerVtbl;
 ICoreWebView2AcceleratorKeyPressedEventHandlerVtbl AcceleratorKeyPressedHandlerVtbl;
 
@@ -204,6 +205,10 @@ HRESULT STDMETHODCALLTYPE ControllerCompletedHandler_Invoke(ICoreWebView2CreateC
     ICoreWebView2Settings2_put_UserAgent(settings2, userAgent);
     ICoreWebView2Settings2_Release(settings2);
 
+    ICoreWebView2CursorChangedEventHandler *cursorChangedEventHandler = malloc(sizeof(ICoreWebView2CursorChangedEventHandler));
+    cursorChangedEventHandler->lpVtbl = &CursorChangedEventHandlerVtbl;
+    ICoreWebView2CompositionController_add_CursorChanged(composition_controller, cursorChangedEventHandler, NULL);
+
     ICoreWebView2NewWindowRequestedEventHandler *newWindowRequestedHandler = malloc(sizeof(ICoreWebView2NewWindowRequestedEventHandler));
     newWindowRequestedHandler->lpVtbl = &NewWindowRequestedHandlerVtbl;
     ICoreWebView2_add_NewWindowRequested(webview, newWindowRequestedHandler, NULL);
@@ -225,6 +230,21 @@ ICoreWebView2CreateCoreWebView2CompositionControllerCompletedHandlerVtbl Control
     (ULONG(STDMETHODCALLTYPE *)(ICoreWebView2CreateCoreWebView2CompositionControllerCompletedHandler * This)) Unknown_Release,
     ControllerCompletedHandler_Invoke,
 };
+
+// ICoreWebView2CursorChangedEventHandler
+HRESULT STDMETHODCALLTYPE CursorChangedEventHandler_Invoke(ICoreWebView2CursorChangedEventHandler *This, ICoreWebView2CompositionController *sender,
+                                                           IUnknown *args) {
+    UINT32 cursorId;
+    ICoreWebView2CompositionController_get_SystemCursorId(sender, &cursorId);
+    HCURSOR cursor = LoadCursor(NULL, MAKEINTRESOURCE(cursorId));
+    SetClassLongPtr(window_hwnd, GCLP_HCURSOR, (LONG_PTR)cursor);
+    return S_OK;
+}
+
+ICoreWebView2CursorChangedEventHandlerVtbl CursorChangedEventHandlerVtbl = {
+    (HRESULT(STDMETHODCALLTYPE *)(ICoreWebView2CursorChangedEventHandler * This, REFIID riid, void **ppvObject)) Unknown_QueryInterface,
+    (ULONG(STDMETHODCALLTYPE *)(ICoreWebView2CursorChangedEventHandler * This)) Unknown_AddRef,
+    (ULONG(STDMETHODCALLTYPE *)(ICoreWebView2CursorChangedEventHandler * This)) Unknown_Release, CursorChangedEventHandler_Invoke};
 
 // ICoreWebView2NewWindowRequestedEventHandler
 HRESULT STDMETHODCALLTYPE NewWindowRequestedHandler_Invoke(ICoreWebView2NewWindowRequestedEventHandler *This, ICoreWebView2 *sender,
@@ -475,22 +495,34 @@ LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             }
         }
+    }
 
-        // Titlebar buttons hover
-        if (msg == WM_MOUSEMOVE) {
-            int titlebar_height = client_rect.right < MulDiv(1024, window_dpi, 96) ? MulDiv(TITLEBAR_BUTTON_HEIGHT_MOBILE, window_dpi, 96)
-                                                                                   : MulDiv(TITLEBAR_BUTTON_HEIGHT_DESKTOP, window_dpi, 96);
-            BOOL new_minimize_hover = point.y < titlebar_height && point.x >= client_rect.right - MulDiv(3 * TITLEBAR_BUTTON_WIDTH, window_dpi, 96) &&
-                                      point.x < client_rect.right - MulDiv(2 * TITLEBAR_BUTTON_WIDTH, window_dpi, 96);
-            BOOL new_maximize_hover = point.y < titlebar_height && point.x >= client_rect.right - MulDiv(2 * TITLEBAR_BUTTON_WIDTH, window_dpi, 96) &&
-                                      point.x < client_rect.right - MulDiv(TITLEBAR_BUTTON_WIDTH, window_dpi, 96);
-            BOOL new_close_hover = point.y < titlebar_height && point.x >= client_rect.right - MulDiv(TITLEBAR_BUTTON_WIDTH, window_dpi, 96);
-            if (new_minimize_hover != minimize_hover || new_maximize_hover != maximize_hover || new_close_hover != close_hover) {
-                minimize_hover = new_minimize_hover;
-                maximize_hover = new_maximize_hover;
-                close_hover = new_close_hover;
-                InvalidateRect(hwnd, NULL, TRUE);
+    // Titlebar buttons hover
+    if (msg == WM_MOUSEMOVE) {
+        POINT point;
+        POINTSTOPOINT(point, lParam);
+        RECT client_rect;
+        GetClientRect(hwnd, &client_rect);
+        int titlebar_height = client_rect.right < MulDiv(1024, window_dpi, 96) ? MulDiv(TITLEBAR_BUTTON_HEIGHT_MOBILE, window_dpi, 96)
+                                                                               : MulDiv(TITLEBAR_BUTTON_HEIGHT_DESKTOP, window_dpi, 96);
+        BOOL new_minimize_hover = point.y >= 0 && point.y < titlebar_height &&
+                                  point.x >= client_rect.right - MulDiv(3 * TITLEBAR_BUTTON_WIDTH, window_dpi, 96) &&
+                                  point.x < client_rect.right - MulDiv(2 * TITLEBAR_BUTTON_WIDTH, window_dpi, 96);
+        BOOL new_maximize_hover = point.y >= 0 && point.y < titlebar_height &&
+                                  point.x >= client_rect.right - MulDiv(2 * TITLEBAR_BUTTON_WIDTH, window_dpi, 96) &&
+                                  point.x < client_rect.right - MulDiv(TITLEBAR_BUTTON_WIDTH, window_dpi, 96);
+        BOOL new_close_hover = point.y >= 0 && point.y < titlebar_height && point.x >= client_rect.right - MulDiv(TITLEBAR_BUTTON_WIDTH, window_dpi, 96) &&
+                               point.x < client_rect.right;
+        if (new_minimize_hover != minimize_hover || new_maximize_hover != maximize_hover || new_close_hover != close_hover) {
+            minimize_hover = new_minimize_hover;
+            maximize_hover = new_maximize_hover;
+            close_hover = new_close_hover;
+            if (minimize_hover || maximize_hover || close_hover) {
+                SetCapture(hwnd);
+            } else {
+                ReleaseCapture();
             }
+            InvalidateRect(hwnd, NULL, TRUE);
         }
     }
 
@@ -613,8 +645,8 @@ LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         // Close button
         if (close_hover) {
             Direct2d_FillRect(render_target,
-                              &(CanvasRect){client_rect.right - MulDiv(TITLEBAR_BUTTON_WIDTH, window_dpi, 96), 0,
-                                            MulDiv(TITLEBAR_BUTTON_WIDTH, window_dpi, 96), MulDiv(titlebar_height, window_dpi, 96)},
+                              &(CanvasRect){client_rect.right - MulDiv(TITLEBAR_BUTTON_WIDTH, window_dpi, 96), 0, MulDiv(TITLEBAR_BUTTON_WIDTH, window_dpi, 96),
+                                            MulDiv(titlebar_height, window_dpi, 96)},
                               0xa00000ff);
         }
         Direct2d_FillPath(
