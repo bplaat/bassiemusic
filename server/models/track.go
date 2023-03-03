@@ -25,7 +25,7 @@ type Track struct {
 	Liked     *bool     `json:"liked,omitempty"`
 	CreatedAt time.Time `column:"created_at,timestamp" json:"created_at"`
 	Album     *Album    `json:"album,omitempty"`
-	Artists   []Artist  `json:"artists,omitempty"`
+	Artists   *[]Artist `json:"artists,omitempty"`
 }
 
 func TrackModel(c *fiber.Ctx) *database.Model[Track] {
@@ -49,7 +49,8 @@ func TrackModel(c *fiber.Ctx) *database.Model[Track] {
 				track.Album = AlbumModel(c).With("genres", "artists").Find(track.AlbumID)
 			},
 			"artists": func(track *Track) {
-				track.Artists = ArtistModel(c).WhereIn("track_artist", "artist_id", "track_id", track.ID).OrderByRaw("LOWER(`name`)").Get()
+				artists := ArtistModel(c).WhereIn("track_artist", "artist_id", "track_id", track.ID).OrderByRaw("LOWER(`name`)").Get()
+				track.Artists = &artists
 			},
 		},
 	}).Init()

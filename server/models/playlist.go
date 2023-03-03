@@ -20,7 +20,7 @@ type Playlist struct {
 	Liked     *bool     `json:"liked,omitempty"`
 	CreatedAt time.Time `column:"created_at,timestamp" json:"created_at"`
 	User      *User     `json:"user,omitempty"`
-	Tracks    []Track   `json:"tracks,omitempty"`
+	Tracks    *[]Track  `json:"tracks,omitempty"`
 }
 
 func PlaylistModel(c *fiber.Ctx) *database.Model[Playlist] {
@@ -44,9 +44,10 @@ func PlaylistModel(c *fiber.Ctx) *database.Model[Playlist] {
 				playlist.User = UserModel().Find(playlist.UserID)
 			},
 			"tracks": func(playlist *Playlist) {
-				playlist.Tracks = TrackModel(c).Join("INNER JOIN `playlist_track` ON `tracks`.`id` = `playlist_track`.`track_id`").
+				tracks := TrackModel(c).Join("INNER JOIN `playlist_track` ON `tracks`.`id` = `playlist_track`.`track_id`").
 					With("like", "artists", "album").WhereRaw("`playlist_track`.`playlist_id` = UUID_TO_BIN(?)", playlist.ID).
 					OrderByRaw("`playlist_track`.`position`").Get()
+				playlist.Tracks = &tracks
 			},
 		},
 	}).Init()

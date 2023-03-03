@@ -177,7 +177,7 @@
                         {#if track.explicit}
                             <span class="tag is-danger mr-1" title={t('explicit')}>E</span>
                         {/if}
-                        {#each track.artists || [] as artist}
+                        {#each track.artists as artist}
                             <a href="/artists/{artist.id}" class="mr-2">{artist.name}</a>
                         {/each}
                     </p>

@@ -46,7 +46,7 @@
     export let data;
     let topTracksTable;
     let albumType = 'all';
-    $: filteredAlbums = (data.artist.albums || []).filter((album) => {
+    $: filteredAlbums = data.artist.albums.filter((album) => {
         if (albumType == 'all') return true;
         if (albumType == 'album') return album.type == 'album';
         if (albumType == 'ep') return album.type == 'ep';
@@ -117,7 +117,7 @@
 </div>
 
 <h2 class="title mt-5">{t('top_tracks')}</h2>
-{#if data.artist.top_tracks != undefined}
+{#if data.artist.top_tracks.length > 0}
     <TracksTable
         bind:this={topTracksTable}
         token={data.token}
@@ -129,7 +129,7 @@
 {/if}
 
 <h2 class="title mt-5">{t('albums')}</h2>
-{#if data.artist.albums != undefined}
+{#if data.artist.albums.length > 0}
     <div class="tabs is-toggle">
         <ul>
             <li class:is-active={albumType == 'all'}>

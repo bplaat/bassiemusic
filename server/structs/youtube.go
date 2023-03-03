@@ -115,7 +115,7 @@ type YoutubeVideo struct {
 		FormatID           string      `json:"format_id"`
 		FormatNote         string      `json:"format_note"`
 		SourcePreference   int         `json:"source_preference"`
-		Fps                int         `json:"fps"`
+		Fps                float64     `json:"fps"`
 		AudioChannels      interface{} `json:"audio_channels"`
 		Height             int         `json:"height"`
 		Quality            float64     `json:"quality"`
@@ -160,7 +160,7 @@ type YoutubeVideo struct {
 	Width          int         `json:"width"`
 	Height         int         `json:"height"`
 	Resolution     string      `json:"resolution"`
-	Fps            int         `json:"fps"`
+	Fps            float64     `json:"fps"`
 	DynamicRange   string      `json:"dynamic_range"`
 	Vcodec         string      `json:"vcodec"`
 	Vbr            float64     `json:"vbr"`

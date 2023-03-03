@@ -13,7 +13,7 @@ export async function load({ url, fetch, cookies, params }) {
         throw error(404, 'Not Found');
     }
     const album = await response.json();
-    album.tracks = (album.tracks || []).slice().map((track) => {
+    album.tracks = album.tracks.slice().map((track) => {
         track.album = album;
         return track;
     });

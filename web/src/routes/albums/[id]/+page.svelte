@@ -82,7 +82,7 @@
     <div class="column" style="display: flex; flex-direction: column; justify-content: center;">
         <h2 class="title mb-3">{data.album.title}</h2>
         <p class="mb-3">{data.album.released_at.split('T')[0]}</p>
-        {#if data.album.genres != undefined}
+        {#if data.album.genres.length > 0}
             <p class="mb-3">
                 {#each data.album.genres as genre}
                     <a href="/genres/{genre.id}" class="mr-2">{genre.name}</a>
