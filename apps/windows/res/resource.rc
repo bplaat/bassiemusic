@@ -21,6 +21,8 @@ STRINGTABLE LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
     ID_STRING_ABOUT_TEXT_FORMAT "BassieMusic Windows App v%d.%d.%d.%d\n"
         "Made by PlaatSoft\n"
         "Copyright \xA9 2022 - 2023 PlaatSoft\x00"
+    ID_STRING_UPDATE_TITLE "New update is available\x00"
+    ID_STRING_UPDATE_TEXT "You are using an outdated version of the\nBassieMusic Windows App. Please download and\ninstall the latest version.\x00"
 }
 
 // Dutch Strings
@@ -33,6 +35,8 @@ STRINGTABLE LANGUAGE LANG_DUTCH, SUBLANG_DUTCH
     ID_STRING_ABOUT_TEXT_FORMAT "BassieMusic Windows App v%d.%d.%d.%d\n"
         "Gemaakt door PlaatSoft\n"
         "Copyright \xA9 2022 - 2023 PlaatSoft\x00"
+    ID_STRING_UPDATE_TITLE "Nieuwe update is beschikbaar\x00"
+    ID_STRING_UPDATE_TEXT "Je gebruikt een verouderde versie van de\nBassieMusic Windows App. Download en installeer\nde nieuwste versie.\x00"
 }
 
 // Version Information

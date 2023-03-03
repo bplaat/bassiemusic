@@ -36,6 +36,17 @@ int wcscmp(const wchar_t *s1, const wchar_t *s2) {
     return *(const wchar_t *)s1 - *(const wchar_t *)s2;
 }
 
+int wprintf(const wchar_t *format, ...) {
+    wchar_t string_buffer[1024];
+    va_list args;
+    va_start(args, format);
+    wvsprintf(string_buffer, format, args);
+    va_end(args);
+    int string_length = wcslen(string_buffer);
+    WriteConsole(GetStdHandle(STD_OUTPUT_HANDLE), string_buffer, string_length, NULL, NULL);
+    return string_length;
+}
+
 // Win32 Helper functions
 UINT GetPrimaryDesktopDpi(void) {
     HDC hdc = GetDC(HWND_DESKTOP);
@@ -130,4 +141,128 @@ void GetAppVersion(UINT *version) {
     version[3] = LOWORD(file_info->dwProductVersionLS);
 
     free(version_info);
+}
+
+void Direct2d_FillRect(ID2D1RenderTarget *render_target, CanvasRect *rect, CanvasColor color) {
+    ID2D1SolidColorBrush *brush;
+    ID2D1RenderTarget_CreateSolidColorBrush(render_target,
+                                            (&(D2D1_COLOR_F){(float)(color & 0xff) / 255, (float)((color >> 8) & 0xff) / 255,
+                                                             (float)((color >> 16) & 0xff) / 255, (float)((color >> 24) & 0xff) / 255}),
+                                            NULL, &brush);
+    ID2D1RenderTarget_FillRectangle(render_target, (&(D2D1_RECT_F){rect->x, rect->y, rect->x + rect->width, rect->y + rect->height}), (ID2D1Brush *)brush);
+    ID2D1SolidColorBrush_Release(brush);
+}
+
+static float ParsePathFloat(char **string) {
+    float number = 0;
+    BOOL negative = FALSE;
+    int precision = 0;
+    char *c = *string;
+    while (*c != '\0' && ((*c == '-' && !negative) || *c == '.' || (*c >= '0' && *c <= '9'))) {
+        if (*c == '-') {
+            negative = TRUE;
+            c++;
+        } else if (*c == '.') {
+            precision = 10;
+            c++;
+        } else {
+            if (precision > 0) {
+                number += (float)(*c++ - '0') / precision;
+                precision *= 10;
+            } else {
+                number = number * 10 + (*c++ - '0');
+            }
+        }
+    }
+    *string = c;
+    return negative ? -number : number;
+}
+
+void Direct2d_FillPath(ID2D1Factory *d2d_factory, ID2D1RenderTarget *render_target, CanvasRect *rect, int viewport_width, int viewport_height, char *path,
+                       CanvasColor color) {
+    ID2D1PathGeometry *path_geometry;
+    ID2D1Factory_CreatePathGeometry(d2d_factory, &path_geometry);
+
+    ID2D1GeometrySink *sink;
+    ID2D1PathGeometry_Open(path_geometry, &sink);
+    ID2D1GeometrySink_SetFillMode(sink, D2D1_FILL_MODE_WINDING);
+
+    float x = 0;
+    float y = 0;
+    float scale_x = (float)rect->width / viewport_width;
+    float scale_y = (float)rect->height / viewport_height;
+    BOOL figure_open = FALSE;
+    char *c = path;
+    while (*c != '\0') {
+        if (*c == 'M') {
+            c++;
+            x = ParsePathFloat(&c);
+            if (*c == ',' || *c == ' ') c++;
+            y = ParsePathFloat(&c);
+            if (figure_open) {
+                ID2D1GeometrySink_EndFigure(sink, D2D1_FIGURE_END_CLOSED);
+            }
+            ID2D1GeometrySink_BeginFigure(sink, ((D2D1_POINT_2F){rect->x + x * scale_x, rect->y + y * scale_y}), D2D1_FIGURE_BEGIN_FILLED);
+            figure_open = TRUE;
+        } else if (*c == 'm') {
+            c++;
+            x += ParsePathFloat(&c);
+            if (*c == ',' || *c == ' ') c++;
+            y += ParsePathFloat(&c);
+            if (figure_open) {
+                ID2D1GeometrySink_EndFigure(sink, D2D1_FIGURE_END_CLOSED);
+            }
+            ID2D1GeometrySink_BeginFigure(sink, ((D2D1_POINT_2F){rect->x + x * scale_x, rect->y + y * scale_y}), D2D1_FIGURE_BEGIN_FILLED);
+            figure_open = TRUE;
+        } else if (*c == 'L') {
+            c++;
+            x = ParsePathFloat(&c);
+            if (*c == ',' || *c == ' ') c++;
+            y = ParsePathFloat(&c);
+            ID2D1GeometrySink_AddLine(sink, ((D2D1_POINT_2F){rect->x + x * scale_x, rect->y + y * scale_y}));
+        } else if (*c == 'l') {
+            c++;
+            x += ParsePathFloat(&c);
+            if (*c == ',' || *c == ' ') c++;
+            y += ParsePathFloat(&c);
+            ID2D1GeometrySink_AddLine(sink, ((D2D1_POINT_2F){rect->x + x * scale_x, rect->y + y * scale_y}));
+        } else if (*c == 'H') {
+            c++;
+            x = ParsePathFloat(&c);
+            ID2D1GeometrySink_AddLine(sink, ((D2D1_POINT_2F){rect->x + x * scale_x, rect->y + y * scale_y}));
+        } else if (*c == 'h') {
+            c++;
+            x += ParsePathFloat(&c);
+            ID2D1GeometrySink_AddLine(sink, ((D2D1_POINT_2F){rect->x + x * scale_x, rect->y + y * scale_y}));
+        } else if (*c == 'V') {
+            c++;
+            y = ParsePathFloat(&c);
+            ID2D1GeometrySink_AddLine(sink, ((D2D1_POINT_2F){rect->x + x * scale_x, rect->y + y * scale_y}));
+        } else if (*c == 'v') {
+            c++;
+            y += ParsePathFloat(&c);
+            ID2D1GeometrySink_AddLine(sink, ((D2D1_POINT_2F){rect->x + x * scale_x, rect->y + y * scale_y}));
+        } else if (*c == 'Z' || *c == 'z') {
+            c++;
+            if (figure_open) {
+                ID2D1GeometrySink_EndFigure(sink, D2D1_FIGURE_END_CLOSED);
+                figure_open = FALSE;
+            }
+        }
+    }
+    if (figure_open) {
+        ID2D1GeometrySink_EndFigure(sink, D2D1_FIGURE_END_CLOSED);
+    }
+    ID2D1GeometrySink_Close(sink);
+    ID2D1GeometrySink_Release(sink);
+
+    ID2D1SolidColorBrush *brush;
+    ID2D1RenderTarget_CreateSolidColorBrush(render_target,
+                                            (&(D2D1_COLOR_F){(float)(color & 0xff) / 255, (float)((color >> 8) & 0xff) / 255,
+                                                             (float)((color >> 16) & 0xff) / 255, (float)((color >> 24) & 0xff) / 255}),
+                                            NULL, &brush);
+    ID2D1RenderTarget_FillGeometry(render_target, (ID2D1Geometry *)path_geometry, (ID2D1Brush *)brush, NULL);
+    ID2D1SolidColorBrush_Release(brush);
+
+    ID2D1PathGeometry_Release(path_geometry);
 }

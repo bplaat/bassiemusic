@@ -1,33 +1,36 @@
-// window decoration styling
-
 #define UNICODE
 #include <dwmapi.h>
 #include <objbase.h>
 #include <shlobj.h>
 #include <windows.h>
 #define COBJMACROS
+#include <WinHttp.h>
 #include <d2d1.h>
 #include <d3d11.h>
-#include <d3d11_2.h>
-#include <dxgi1_3.h>
 
 #include "../res/resource.h"
 #include "WebView2.h"
 #include "about.h"
 #include "dcomp.h"
+#include "update.h"
 #include "utils.h"
 
 #define ID_MENU_ABOUT 2
 #define WINDOW_STYLE (WS_POPUP | WS_THICKFRAME | WS_CAPTION | WS_SYSMENU | WS_MAXIMIZEBOX | WS_MINIMIZEBOX)
+#define WM_SHOW_UPDATE_WINDOW (WM_USER + 1)
+#define TITLEBAR_BUTTON_WIDTH 46
+#define TITLEBAR_BUTTON_HEIGHT_DESKTOP 30
+#define TITLEBAR_BUTTON_HEIGHT_MOBILE 52
 
 HWND window_hwnd;
 UINT window_dpi;
-BOOL window_titlebar_drag = FALSE;
+ID2D1Factory *d2d_factory = NULL;
+IDCompositionDevice *composition_device = NULL;
+IDCompositionVisual *webview_visual = NULL;
 ICoreWebView2CompositionController *composition_controller = NULL;
 ICoreWebView2Controller *controller = NULL;
 ICoreWebView2 *webview = NULL;
-IDCompositionDevice *composition_device = NULL;
-IDCompositionVisual *webview_visual = NULL;
+IDCompositionVirtualSurface *titlebar_surface;
 
 typedef HRESULT(STDMETHODCALLTYPE *_CreateCoreWebView2EnvironmentWithOptions)(
     PCWSTR browserExecutableFolder, PCWSTR userDataFolder, ICoreWebView2EnvironmentOptions *environmentOptions,
@@ -43,6 +46,16 @@ void ResizeBrowser(HWND hwnd) {
     RECT window_rect;
     GetClientRect(hwnd, &window_rect);
     ICoreWebView2Controller_put_Bounds(controller, window_rect);
+}
+
+void WindowToggleMaximize(void) {
+    WINDOWPLACEMENT placement;
+    GetWindowPlacement(window_hwnd, &placement);
+    if (placement.showCmd == SW_MAXIMIZE) {
+        ShowWindow(window_hwnd, SW_RESTORE);
+    } else {
+        ShowWindow(window_hwnd, SW_MAXIMIZE);
+    }
 }
 
 void WindowClose(void) {
@@ -63,6 +76,49 @@ BOOL HandleSystemKeyDown(UINT key) {
         return TRUE;
     }
     return FALSE;
+}
+
+void CheckForUpdates(void) {
+    // Get current app version
+    UINT app_version[4];
+    GetAppVersion(app_version);
+    wchar_t current_version[255];
+    wsprintf(current_version, L"%d.%d.%d.%d", app_version[0], app_version[1], app_version[2], app_version[3]);
+
+    // Fetch latest version from API
+    HINTERNET hSession = WinHttpOpen(L"WinHTTP Example/1.0", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
+    HINTERNET hConnect = WinHttpConnect(hSession, L"bassiemusic-api.plaatsoft.nl", INTERNET_DEFAULT_HTTPS_PORT, 0);
+    HINTERNET hRequest =
+        WinHttpOpenRequest(hConnect, L"GET", L"/apps/windows/version", NULL, WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES, WINHTTP_FLAG_SECURE);
+    if (!WinHttpSendRequest(hRequest, WINHTTP_NO_ADDITIONAL_HEADERS, 0, WINHTTP_NO_REQUEST_DATA, 0, 0, 0)) {
+        WinHttpCloseHandle(hRequest);
+        WinHttpCloseHandle(hConnect);
+        WinHttpCloseHandle(hSession);
+        return;
+    }
+    if (!WinHttpReceiveResponse(hRequest, NULL)) {
+        WinHttpCloseHandle(hRequest);
+        WinHttpCloseHandle(hConnect);
+        WinHttpCloseHandle(hSession);
+        return;
+    }
+
+    // Read http response and covert to UTF-16
+    DWORD latest_version_size;
+    WinHttpQueryDataAvailable(hRequest, &latest_version_size);
+    char latest_version[255];
+    WinHttpReadData(hRequest, (void *)latest_version, latest_version_size, NULL);
+    wchar_t latest_version_wide[255];
+    MultiByteToWideChar(CP_ACP, 0, latest_version, -1, latest_version_wide, latest_version_size);
+
+    // Compare version when diffrent send show update window message
+    if (wcscmp(current_version, latest_version_wide)) {
+        SendMessage(window_hwnd, WM_SHOW_UPDATE_WINDOW, 0, 0);
+    }
+
+    WinHttpCloseHandle(hRequest);
+    WinHttpCloseHandle(hConnect);
+    WinHttpCloseHandle(hSession);
 }
 
 // Default IUnknown method wrappers
@@ -210,14 +266,17 @@ LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         InsertMenu(sysMenu, 5, MF_BYPOSITION | MF_SEPARATOR, 0, NULL);
         InsertMenu(sysMenu, 6, MF_BYPOSITION, ID_MENU_ABOUT, GetString(ID_STRING_ABOUT_MENU));
 
-        // Create D3D11Devic
+        // Create dxgi device
         ID3D11Device *d3d11Device;
         D3D11CreateDevice(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, D3D11_CREATE_DEVICE_BGRA_SUPPORT, NULL, 0, D3D11_SDK_VERSION, &d3d11Device, NULL, NULL);
 
-        // https://learn.microsoft.com/en-us/archive/msdn-magazine/2014/june/windows-with-c-high-performance-window-layering-using-the-windows-composition-engine
         IDXGIDevice *dxgiDevice;
         IID IID_IDXGIDevice = {0x54ec77fa, 0x1377, 0x44e6, {0x8c, 0x32, 0x88, 0xfd, 0x5f, 0x44, 0xc8, 0x4c}};
         ID3D11Device_QueryInterface(d3d11Device, &IID_IDXGIDevice, (void **)&dxgiDevice);
+
+        // Create Direct2D Factory
+        IID IID_ID2D1Factory = {0xbb12d362, 0xdaee, 0x4b9a, {0xaa, 0x1d, 0x14, 0xba, 0x40, 0x1c, 0xfa, 0x1f}};
+        D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, &IID_ID2D1Factory, NULL, (void **)&d2d_factory);
 
         // Create composition device
         HMODULE hDcomp = LoadLibrary(L"dcomp.dll");
@@ -229,14 +288,27 @@ LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         composition_device->lpVtbl->CreateTargetForHwnd(composition_device, hwnd, TRUE, &hwndRenderTarget);
 
         // Create composition visuals
-        IDCompositionVisual *rootVisual;
-        composition_device->lpVtbl->CreateVisual(composition_device, &rootVisual);
-        hwndRenderTarget->lpVtbl->SetRoot(hwndRenderTarget, rootVisual);
+        IDCompositionVisual *root_visual;
+        composition_device->lpVtbl->CreateVisual(composition_device, &root_visual);
+        hwndRenderTarget->lpVtbl->SetRoot(hwndRenderTarget, root_visual);
 
         composition_device->lpVtbl->CreateVisual(composition_device, &webview_visual);
-        rootVisual->lpVtbl->AddVisual(rootVisual, webview_visual, TRUE, NULL);
+        root_visual->lpVtbl->AddVisual(root_visual, webview_visual, FALSE, NULL);
 
+        // Create titlebar visual
+        IDCompositionVisual *titlebar_visual;
+        composition_device->lpVtbl->CreateVisual(composition_device, &titlebar_visual);
+        root_visual->lpVtbl->AddVisual(root_visual, titlebar_visual, FALSE, NULL);
+
+        RECT client_rect;
+        GetClientRect(hwnd, &client_rect);
+        composition_device->lpVtbl->CreateVirtualSurface(composition_device, client_rect.right, client_rect.bottom, DXGI_FORMAT_B8G8R8A8_UNORM,
+                                                         DXGI_ALPHA_MODE_PREMULTIPLIED, &titlebar_surface);
+        titlebar_visual->lpVtbl->SetContent(titlebar_visual, (IUnknown *)titlebar_surface);
         composition_device->lpVtbl->Commit(composition_device);
+
+        // Check for updates
+        CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)CheckForUpdates, NULL, 0, NULL);
         return 0;
     }
 
@@ -334,7 +406,11 @@ LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
     // Resize browser
     if (msg == WM_SIZE) {
+        // Resize browser
         ResizeBrowser(hwnd);
+
+        // Resize titlebar surface
+        titlebar_surface->lpVtbl->Resize(titlebar_surface, LOWORD(lParam), HIWORD(lParam));
         return 0;
     }
 
@@ -354,38 +430,8 @@ LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         return 0;
     }
 
-    // Window titlebar drag
-    if (msg == WM_LBUTTONDOWN) {
-        int x = GET_X_LPARAM(lParam);
-        int y = GET_Y_LPARAM(lParam);
-        RECT client_rect;
-        GetClientRect(hwnd, &client_rect);
-
-        // Mobile
-        if (client_rect.right < MulDiv(1024, window_dpi, 96)) {
-            if (y < MulDiv(52, window_dpi, 96) && x > MulDiv(52, window_dpi, 96) && x < client_rect.right - MulDiv(3 * 48, window_dpi, 96)) {
-                window_titlebar_drag = TRUE;
-            }
-        }
-        // Desktop
-        else {
-            if (y < MulDiv(30, window_dpi, 96) && x < client_rect.right - MulDiv(3 * 48, window_dpi, 96)) {
-                window_titlebar_drag = TRUE;
-            }
-        }
-    }
-    if (msg == WM_MOUSEMOVE) {
-        if (window_titlebar_drag) {
-            ReleaseCapture();
-            SendMessage(hwnd, WM_NCLBUTTONDOWN, HTCAPTION, 0);
-        }
-    }
-    if (msg == WM_LBUTTONUP) {
-        window_titlebar_drag = FALSE;
-    }
-
-    // Window titlebar popup system menu
-    if (msg == WM_RBUTTONUP) {
+    // Window titlebar events
+    if (msg == WM_MOUSEMOVE || msg == WM_LBUTTONDBLCLK || msg == WM_RBUTTONUP) {
         POINT point;
         POINTSTOPOINT(point, lParam);
         RECT client_rect;
@@ -393,16 +439,60 @@ LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
         // Mobile
         if (client_rect.right < MulDiv(1024, window_dpi, 96)) {
-            if (point.y < MulDiv(52, window_dpi, 96) && point.x > MulDiv(52, window_dpi, 96)) {
-                ClientToScreen(hwnd, &point);
-                TrackPopupMenu(GetSystemMenu(hwnd, FALSE), TPM_TOPALIGN | TPM_LEFTALIGN, point.x, point.y, 0, hwnd, NULL);
+            if (point.y < MulDiv(TITLEBAR_BUTTON_HEIGHT_MOBILE, window_dpi, 96) && point.x > MulDiv(TITLEBAR_BUTTON_HEIGHT_MOBILE, window_dpi, 96) &&
+                point.x < client_rect.right - MulDiv(3 * TITLEBAR_BUTTON_WIDTH, window_dpi, 96)) {
+                if ((GetKeyState(VK_LBUTTON) & 0x100) != 0 && msg == WM_MOUSEMOVE) {
+                    ReleaseCapture();
+                    SendMessage(hwnd, WM_NCLBUTTONDOWN, HTCAPTION, 0);
+                }
+                if (msg == WM_LBUTTONDBLCLK) {
+                    WindowToggleMaximize();
+                }
+                if (msg == WM_RBUTTONUP) {
+                    ClientToScreen(hwnd, &point);
+                    TrackPopupMenu(GetSystemMenu(hwnd, FALSE), TPM_TOPALIGN | TPM_LEFTALIGN, point.x, point.y, 0, hwnd, NULL);
+                }
             }
         }
         // Desktop
         else {
-            if (point.y < MulDiv(30, window_dpi, 96) && point.x < client_rect.right - MulDiv(3 * 48, window_dpi, 96)) {
-                ClientToScreen(hwnd, &point);
-                TrackPopupMenu(GetSystemMenu(hwnd, FALSE), TPM_TOPALIGN | TPM_LEFTALIGN, point.x, point.y, 0, hwnd, NULL);
+            if (point.y < MulDiv(TITLEBAR_BUTTON_HEIGHT_DESKTOP, window_dpi, 96) &&
+                point.x < client_rect.right - MulDiv(3 * TITLEBAR_BUTTON_WIDTH, window_dpi, 96)) {
+                if ((GetKeyState(VK_LBUTTON) & 0x100) != 0 && msg == WM_MOUSEMOVE) {
+                    ReleaseCapture();
+                    SendMessage(hwnd, WM_NCLBUTTONDOWN, HTCAPTION, 0);
+                }
+                if (msg == WM_LBUTTONDBLCLK) {
+                    WindowToggleMaximize();
+                }
+                if (msg == WM_RBUTTONUP) {
+                    ClientToScreen(hwnd, &point);
+                    TrackPopupMenu(GetSystemMenu(hwnd, FALSE), TPM_TOPALIGN | TPM_LEFTALIGN, point.x, point.y, 0, hwnd, NULL);
+                }
+            }
+        }
+    }
+
+    // Window titlebar button actions
+    if (msg == WM_LBUTTONUP) {
+        int x = GET_X_LPARAM(lParam);
+        int y = GET_Y_LPARAM(lParam);
+        RECT client_rect;
+        GetClientRect(hwnd, &client_rect);
+
+        int titlebar_height = client_rect.right < MulDiv(1024, window_dpi, 96) ? MulDiv(TITLEBAR_BUTTON_HEIGHT_MOBILE, window_dpi, 96)
+                                                                               : MulDiv(TITLEBAR_BUTTON_HEIGHT_DESKTOP, window_dpi, 96);
+        if (y < titlebar_height) {
+            if (x >= client_rect.right - MulDiv(3 * TITLEBAR_BUTTON_WIDTH, window_dpi, 96) &&
+                x < client_rect.right - MulDiv(2 * TITLEBAR_BUTTON_WIDTH, window_dpi, 96)) {
+                ShowWindow(hwnd, SW_MINIMIZE);
+            }
+            if (x >= client_rect.right - MulDiv(2 * TITLEBAR_BUTTON_WIDTH, window_dpi, 96) &&
+                x < client_rect.right - MulDiv(TITLEBAR_BUTTON_WIDTH, window_dpi, 96)) {
+                WindowToggleMaximize();
+            }
+            if (x >= client_rect.right - MulDiv(TITLEBAR_BUTTON_WIDTH, window_dpi, 96)) {
+                WindowClose();
             }
         }
     }
@@ -432,6 +522,65 @@ LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         return 0;
     }
 
+    // Paint window titlebar
+    if (msg == WM_PAINT) {
+        PAINTSTRUCT ps;
+        BeginPaint(hwnd, &ps);
+        RECT client_rect;
+        GetClientRect(hwnd, &client_rect);
+
+        POINT offset;
+        IDXGISurface *dxgiSurface;
+        IID IID_IDXGISurface = {0xcafcb56c, 0x6ac3, 0x4889, {0xbf, 0x47, 0x9e, 0x23, 0xbb, 0xd2, 0x60, 0xec}};
+        titlebar_surface->lpVtbl->BeginDraw(titlebar_surface, &client_rect, &IID_IDXGISurface, (void **)&dxgiSurface, &offset);
+
+        D2D1_RENDER_TARGET_PROPERTIES props = {
+            D2D1_RENDER_TARGET_TYPE_DEFAULT, {DXGI_FORMAT_B8G8R8A8_UNORM, DXGI_ALPHA_MODE_PREMULTIPLIED}, 96, 96, D2D1_RENDER_TARGET_USAGE_NONE,
+            D2D1_FEATURE_LEVEL_DEFAULT};
+        ID2D1RenderTarget *render_target;
+        ID2D1Factory_CreateDxgiSurfaceRenderTarget(d2d_factory, dxgiSurface, &props, (ID2D1RenderTarget **)&render_target);
+
+        ID2D1RenderTarget_BeginDraw(render_target);
+        ID2D1RenderTarget_Clear(render_target, (&(D2D1_COLOR_F){0, 0, 0, 0}));
+
+        int titlebar_height = client_rect.right < MulDiv(1024, window_dpi, 96) ? MulDiv(TITLEBAR_BUTTON_HEIGHT_MOBILE, window_dpi, 96)
+                                                                               : MulDiv(TITLEBAR_BUTTON_HEIGHT_DESKTOP, window_dpi, 96);
+        Direct2d_FillRect(render_target, &(CanvasRect){client_rect.right - 3 * TITLEBAR_BUTTON_WIDTH, 0, 3 * TITLEBAR_BUTTON_WIDTH, titlebar_height},
+                          client_rect.right < MulDiv(1024, window_dpi, 96) ? 0xff121212 : 0xff0a0a0a);
+
+        Direct2d_FillPath(d2d_factory, render_target,
+                          &(CanvasRect){client_rect.right - 3 * TITLEBAR_BUTTON_WIDTH + (TITLEBAR_BUTTON_WIDTH - 10) / 2, (titlebar_height - 10) / 2, 10, 10},
+                          2048, 2048, "M2048 1229v-205h-2048v205h2048z", 0xffffffff);
+
+        WINDOWPLACEMENT placement;
+        GetWindowPlacement(hwnd, &placement);
+        if (placement.showCmd == SW_MAXIMIZE) {
+            Direct2d_FillPath(
+                d2d_factory, render_target,
+                &(CanvasRect){client_rect.right - 2 * TITLEBAR_BUTTON_WIDTH + (TITLEBAR_BUTTON_WIDTH - 10) / 2, (titlebar_height - 10) / 2 + 10, 10, 10}, 2048,
+                -2048, "M2048 410h-410v-410h-1638v1638h410v410h1638v-1638zM1434 1434h-1229v-1229h1229v1229zM1843 1843h-1229v-205h1024v-1024h205v1229z",
+                0xffffffff);
+        } else {
+            Direct2d_FillPath(
+                d2d_factory, render_target,
+                &(CanvasRect){client_rect.right - 2 * TITLEBAR_BUTTON_WIDTH + (TITLEBAR_BUTTON_WIDTH - 10) / 2, (titlebar_height - 10) / 2, 10, 10}, 2048, 2048,
+                "M2048 2048v-2048h-2048v2048h2048zM1843 1843h-1638v-1638h1638v1638z", 0xffffffff);
+        }
+
+        Direct2d_FillPath(d2d_factory, render_target,
+                          &(CanvasRect){client_rect.right - 1 * TITLEBAR_BUTTON_WIDTH + (TITLEBAR_BUTTON_WIDTH - 10) / 2, (titlebar_height - 10) / 2, 10, 10},
+                          2048, 2048, "M1169 1024l879 -879l-145 -145l-879 879l-879 -879l-145 145l879 879l-879 879l145 145l879 -879l879 879l145 -145z",
+                          0xffffffff);
+
+        ID2D1RenderTarget_EndDraw(render_target, NULL, NULL);
+        ID2D1RenderTarget_Release(render_target);
+
+        titlebar_surface->lpVtbl->EndDraw(titlebar_surface);
+        composition_device->lpVtbl->Commit(composition_device);
+        EndPaint(hwnd, &ps);
+        return 0;
+    }
+
     // Save window state
     if (msg == WM_CLOSE) {
         WindowClose();
@@ -444,6 +593,12 @@ LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         return 0;
     }
 
+    // Open update window
+    if (msg == WM_SHOW_UPDATE_WINDOW) {
+        OpenUpdateWindow();
+        return 0;
+    }
+
     return DefWindowProc(hwnd, msg, wParam, lParam);
 }
 
@@ -451,7 +606,7 @@ void _start(void) {
     // Only allow own app instance
     wchar_t *window_class_name = L"bassiemusic";
     HANDLE mutex = CreateMutex(NULL, TRUE, window_class_name);
-    if (mutex == NULL) {
+    if (mutex == NULL || GetLastError() == ERROR_ALREADY_EXISTS) {
         HWND window = FindWindow(window_class_name, NULL);
         if (window != NULL) {
             if (IsIconic(window)) {
@@ -465,7 +620,7 @@ void _start(void) {
     // Register window class
     WNDCLASSEX wc = {0};
     wc.cbSize = sizeof(WNDCLASSEX);
-    wc.style = CS_HREDRAW | CS_VREDRAW;
+    wc.style = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
     wc.lpfnWndProc = WndProc;
     wc.hInstance = GetModuleHandle(NULL);
     wc.hIcon = (HICON)LoadImage(wc.hInstance, MAKEINTRESOURCE(ID_ICON_APP), IMAGE_ICON, 0, 0, LR_DEFAULTSIZE | LR_DEFAULTCOLOR | LR_SHARED);
