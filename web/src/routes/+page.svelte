@@ -64,7 +64,7 @@
     <div class="columns is-multiline is-mobile">
         {#each lastPlayedArtists as artist}
             <div class="column is-half-mobile is-one-third-tablet is-one-quarter-desktop is-one-fifth-widescreen">
-                <ArtistCard {artist} {token} />
+                <ArtistCard {artist} {token} {authUser} />
             </div>
         {/each}
     </div>

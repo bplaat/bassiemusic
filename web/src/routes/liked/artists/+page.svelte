@@ -102,7 +102,7 @@
     <div class="columns is-multiline is-mobile">
         {#each data.artists as artist}
             <div class="column is-half-mobile is-one-third-tablet is-one-quarter-desktop is-one-fifth-widescreen">
-                <ArtistCard {artist} token={data.token} />
+                <ArtistCard {artist} token={data.token} authUser={data.authUser} />
             </div>
         {/each}
     </div>

@@ -16,6 +16,7 @@
     // Props
     export let artist;
     export let token;
+    export let authUser;
 
     // Methods
     async function fetchAndPlayTracks() {
@@ -25,8 +26,11 @@
             },
         });
         const completeArtist = await response.json();
-        if (completeArtist.top_tracks.length > 0) {
-            $musicPlayer.playTracks(completeArtist.top_tracks, completeArtist.top_tracks[0]);
+        let playableTracks = authUser.allow_explicit
+            ? completeArtist.top_tracks.filter((track) => track.music != null)
+            : completeArtist.top_tracks.filter((track) => track.music != null && !track.explicit);
+        if (playableTracks.length > 0) {
+            $musicPlayer.playTracks(playableTracks, playableTracks[0]);
         }
     }
 </script>
