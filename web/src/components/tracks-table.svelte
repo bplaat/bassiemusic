@@ -159,9 +159,9 @@
                 </td>
                 {#if !isAlbum}
                     <td>
-                        <div class="box has-image m-0 p-0" style="width: 64px; height: 64px;">
+                        <a href="/albums/{track.album.id}" class="box has-image m-0 p-0" style="width: 64px; height: 64px;">
                             <img src={track.album.small_cover || '/images/album-default.svg'} alt={t('cover_alt', track.album)} />
-                        </div>
+                        </a>
                     </td>
                 {/if}
                 <td>

@@ -351,7 +351,7 @@
         <div class="media px-4 py-2">
             <div class="media-left">
                 <a href="/albums/{track.album.id}" class="music-player-album-cover box m-0 p-0">
-                    <img src={track.album.small_cover} alt={t('cover_alt', track.album)} />
+                    <img src={track.album.small_cover || '/images/album-default.svg'} alt={t('cover_alt', track.album)} />
                 </a>
             </div>
             <div class="media-content" style="width: 10rem; min-width: 0;">
