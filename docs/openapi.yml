@@ -612,6 +612,47 @@ paths:
           description: Authorization error
         "404":
           description: Playlist not found
+  /playlists/{id}/image:
+    post:
+      tags: [Playlists]
+      description: Upload new playlist image
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/PlaylistID"
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                image:
+                  type: string
+                  format: binary
+              required:
+                - image
+      responses:
+        "200":
+          description: Successfull response
+        "401":
+          description: Authorization error
+        "404":
+          description: Playlist not found
+    delete:
+      tags: [Playlists]
+      description: Delete playlist image
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/PlaylistID"
+      responses:
+        "200":
+          description: Successfull response
+        "401":
+          description: Authorization error
+        "404":
+          description: Playlist not found
   /playlists/{id}/insert_track:
     put:
       tags: [Playlists]
@@ -826,6 +867,18 @@ paths:
         - TokenAuth: []
       parameters:
         - $ref: "#/components/parameters/UserID"
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                avatar:
+                  type: string
+                  format: binary
+              required:
+                - avatar
       responses:
         "200":
           description: Successfull response

@@ -1,11 +1,14 @@
 package controllers
 
 import (
+	"fmt"
 	"log"
+	"os"
 
 	"github.com/bplaat/bassiemusic/database"
 	"github.com/bplaat/bassiemusic/models"
 	"github.com/bplaat/bassiemusic/utils"
+	"github.com/bplaat/bassiemusic/utils/uuid"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 )
@@ -149,6 +152,71 @@ func PlaylistsDelete(c *fiber.Ctx) error {
 
 	// Delete playlist
 	models.PlaylistModel(c).Where("id", playlist.ID).Delete()
+	return c.JSON(fiber.Map{"success": true})
+}
+
+func PlaylistsImage(c *fiber.Ctx) error {
+	// Check if playlist exists
+	playlist := models.PlaylistModel(c).Find(c.Params("playlistID"))
+	if playlist == nil {
+		return fiber.ErrNotFound
+	}
+
+	// Check auth
+	authUser := c.Locals("authUser").(*models.User)
+	if authUser.Role != "admin" && authUser.ID != playlist.ID {
+		return fiber.ErrUnauthorized
+	}
+
+	// Remove old image file
+	if playlist.ImageID != nil && *playlist.ImageID != "" {
+		if err := os.Remove(fmt.Sprintf("storage/playlists/%s.jpg", *playlist.ImageID)); err != nil {
+			log.Fatalln(err)
+		}
+	}
+
+	// Save uploaded image file
+	imageID := uuid.New()
+	image, err := c.FormFile("image")
+	if err != nil {
+		return fiber.ErrBadRequest
+	}
+	if err = c.SaveFile(image, fmt.Sprintf("storage/playlists/%s.jpg", imageID.String())); err != nil {
+		log.Fatalln(err)
+	}
+
+	// Save image id for playlist
+	models.PlaylistModel(c).Where("id", playlist.ID).Update(database.Map{
+		"image": imageID.String(),
+	})
+	return c.JSON(fiber.Map{"success": true})
+}
+
+func PlaylistsImageDelete(c *fiber.Ctx) error {
+	// Check if playlist exists
+	playlist := models.PlaylistModel(c).Find(c.Params("playlistID"))
+	if playlist == nil {
+		return fiber.ErrNotFound
+	}
+
+	// Check auth
+	authUser := c.Locals("authUser").(*models.User)
+	if authUser.Role != "admin" && authUser.ID != playlist.ID {
+		return fiber.ErrUnauthorized
+	}
+
+	// Check if playlist has image
+	if playlist.ImageID != nil && *playlist.ImageID != "" {
+		// Remove old image file
+		if err := os.Remove(fmt.Sprintf("storage/playlists/%s.jpg", *playlist.ImageID)); err != nil {
+			log.Fatalln(err)
+		}
+
+		// Clear image id for playlist
+		models.PlaylistModel(c).Where("id", playlist.ID).Update(database.Map{
+			"image": nil,
+		})
+	}
 	return c.JSON(fiber.Map{"success": true})
 }
 
