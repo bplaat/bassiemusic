@@ -20,10 +20,11 @@ func UsersIndex(c *fiber.Ctx) error {
 }
 
 type UsersCreateParams struct {
-	Username string `form:"username" validate:"required,min=2"`
-	Email    string `form:"email" validate:"required,email"`
-	Password string `form:"password" validate:"required,min=6"`
-	Role     string `form:"role" validate:"required"`
+	Username      string `form:"username" validate:"required,min=2"`
+	Email         string `form:"email" validate:"required,email"`
+	Password      string `form:"password" validate:"required,min=6"`
+	AllowExplicit string `form:"allow_explicit" validate:"required"`
+	Role          string `form:"role" validate:"required"`
 }
 
 func UsersCreate(c *fiber.Ctx) error {
@@ -66,14 +67,21 @@ func UsersCreate(c *fiber.Ctx) error {
 		userRole = models.UserRoleAdmin
 	}
 
+	// Validate allow_explicit is correct
+	if params.AllowExplicit != "true" && params.AllowExplicit != "false" {
+		log.Println("allow_explicit not valid")
+		return fiber.ErrBadRequest
+	}
+
 	// Create user
 	return c.JSON(models.UserModel().Create(database.Map{
-		"username": params.Username,
-		"email":    params.Email,
-		"password": utils.HashPassword(params.Password),
-		"role":     userRole,
-		"language": "en",
-		"theme":    models.UserThemeSystem,
+		"username":       params.Username,
+		"email":          params.Email,
+		"password":       utils.HashPassword(params.Password),
+		"allow_explicit": params.AllowExplicit == "true",
+		"role":           userRole,
+		"language":       "en",
+		"theme":          models.UserThemeSystem,
 	}))
 }
 

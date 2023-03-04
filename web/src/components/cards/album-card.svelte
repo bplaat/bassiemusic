@@ -50,7 +50,7 @@
 >
     <div class="card-image has-image-tags">
         <figure class="image is-1by1">
-            <img src={album.medium_cover} alt={t('cover_alt', album.title)} />
+            <img src={album.medium_cover || '/images/album-default.svg'} alt={t('cover_alt', album.title)} />
         </figure>
         <div class="image-tags">
             {#if album.type == 'album'}

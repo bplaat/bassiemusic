@@ -15,9 +15,9 @@ type Artist struct {
 	Name        string    `column:"name,string" json:"name"`
 	Synced      bool      `column:"synced,bool" json:"synced"`
 	DeezerID    int64     `column:"deezer_id,bigint" json:"-"`
-	SmallImage  string    `json:"small_image"`
-	MediumImage string    `json:"medium_image"`
-	LargeImage  string    `json:"large_image"`
+	SmallImage  *string   `json:"small_image"`
+	MediumImage *string   `json:"medium_image"`
+	LargeImage  *string   `json:"large_image"`
 	Liked       *bool     `json:"liked,omitempty"`
 	CreatedAt   time.Time `column:"created_at,timestamp" json:"created_at"`
 	Albums      *[]Album  `json:"albums,omitempty"`
@@ -28,9 +28,14 @@ func ArtistModel(c *fiber.Ctx) *database.Model[Artist] {
 	return (&database.Model[Artist]{
 		TableName: "artists",
 		Process: func(artist *Artist) {
-			artist.SmallImage = fmt.Sprintf("%s/artists/small/%s.jpg", os.Getenv("STORAGE_URL"), artist.ID)
-			artist.MediumImage = fmt.Sprintf("%s/artists/medium/%s.jpg", os.Getenv("STORAGE_URL"), artist.ID)
-			artist.LargeImage = fmt.Sprintf("%s/artists/large/%s.jpg", os.Getenv("STORAGE_URL"), artist.ID)
+			if _, err := os.Stat(fmt.Sprintf("storage/artists/small/%s.jpg", artist.ID)); err == nil {
+				smallImage := fmt.Sprintf("%s/artists/small/%s.jpg", os.Getenv("STORAGE_URL"), artist.ID)
+				artist.SmallImage = &smallImage
+				mediumImage := fmt.Sprintf("%s/artists/medium/%s.jpg", os.Getenv("STORAGE_URL"), artist.ID)
+				artist.MediumImage = &mediumImage
+				largeImage := fmt.Sprintf("%s/artists/large/%s.jpg", os.Getenv("STORAGE_URL"), artist.ID)
+				artist.LargeImage = &largeImage
+			}
 		},
 		Relationships: map[string]database.QueryBuilderProcess[Artist]{
 			"like": func(artist *Artist) {

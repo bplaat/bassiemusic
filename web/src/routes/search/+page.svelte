@@ -19,6 +19,7 @@
             artists: 'Artists',
             albums: 'Albums',
             genres: 'Genres',
+            genres_empty: "You don't have added any genres",
         },
         nl: {
             title: 'Zoeken - BassieMusic',
@@ -30,6 +31,7 @@
             artists: 'Artisten',
             albums: 'Albums',
             genres: 'Genres',
+            genres_empty: 'Je hebt nog geen enkele genre toegevoegd',
         },
     };
     const t = (key) => lang[$language][key];
@@ -140,7 +142,7 @@
             </div>
         {/if}
     {/if}
-{:else}
+{:else if data.genres.length > 0}
     <h2 class="title is-5">{t('genres')}</h2>
     <div class="columns is-multiline is-mobile">
         {#each data.genres as genre}
@@ -149,4 +151,6 @@
             </div>
         {/each}
     </div>
+{:else}
+    <p><i>{t('genres_empty')}</i></p>
 {/if}

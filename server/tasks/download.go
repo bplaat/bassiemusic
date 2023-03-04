@@ -69,14 +69,10 @@ func createGenre(deezerID int, name string) string {
 		"name":      name,
 		"deezer_id": deezerID,
 	})
-	if deezerGenre.PictureMedium != "" {
+	if deezerGenre.PictureMedium != "https://e-cdns-images.dzcdn.net/images/misc//250x250-000000-80-0-0.jpg" {
 		utils.FetchFile(deezerGenre.PictureMedium, fmt.Sprintf("storage/genres/small/%s.jpg", genreID.String()))
 		utils.FetchFile(deezerGenre.PictureBig, fmt.Sprintf("storage/genres/medium/%s.jpg", genreID.String()))
 		utils.FetchFile(deezerGenre.PictureXl, fmt.Sprintf("storage/genres/large/%s.jpg", genreID.String()))
-	} else {
-		utils.FetchFile("https://e-cdns-images.dzcdn.net/images/misc//250x250-000000-80-0-0.jpg", fmt.Sprintf("storage/genres/small/%s.jpg", genreID.String()))
-		utils.FetchFile("https://e-cdns-images.dzcdn.net/images/misc//500x500-000000-80-0-0.jpg", fmt.Sprintf("storage/genres/medium/%s.jpg", genreID.String()))
-		utils.FetchFile("https://e-cdns-images.dzcdn.net/images/misc//1000x1000-000000-80-0-0.jpg", fmt.Sprintf("storage/genres/large/%s.jpg", genreID.String()))
 	}
 	return genreID.String()
 }
@@ -100,6 +96,7 @@ func CreateTrack(albumID string, deezerID int) {
 		"explicit":   deezerTrack.ExplicitLyrics,
 		"deezer_id":  deezerTrack.ID,
 		"youtube_id": nil,
+		"plays":      0,
 	})
 
 	// Create track artists bindings

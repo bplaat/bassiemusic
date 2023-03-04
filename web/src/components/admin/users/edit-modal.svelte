@@ -17,6 +17,8 @@
             theme_system: 'System',
             theme_light: 'Light',
             theme_dark: 'Dark',
+            allow_explicit: 'Allow explicit content',
+            allow_explicit_description: 'Allow playback of explicit content',
             edit: 'Edit user',
             cancel: 'Cancel',
         },
@@ -33,6 +35,8 @@
             theme_system: 'Systeem',
             theme_light: 'Licht',
             theme_dark: 'Donker',
+            allow_explicit: 'Sta expliciete inhoud toe',
+            allow_explicit_description: 'Sta het afspelen van expliciete inhoud toe',
             create: 'Verander gebruiker',
             cancel: 'Annuleren',
         },
@@ -59,7 +63,7 @@
     const dispatch = createEventDispatcher();
     async function editUser() {
         const response = await fetch(`${import.meta.env.VITE_API_URL}/users/${user.id}`, {
-            method: 'POST',
+            method: 'PUT',
             headers: {
                 Authorization: `Bearer ${token}`,
             },
@@ -70,6 +74,7 @@
                 role: user.role,
                 language: user.language,
                 theme: user.theme,
+                allow_explicit: user.allow_explicit,
             }),
         });
         if (response.status == 200) {
@@ -159,6 +164,14 @@
                         </div>
                     </div>
                 </div>
+            </div>
+
+            <div class="field">
+                <label class="label" for="edit-allow_explicit">{t('allow_explicit')}</label>
+                <label class="checkbox" for="edit-allow_explicit">
+                    <input type="checkbox" id="edit-allow_explicit" bind:checked={user.allow_explicit} />
+                    {t('allow_explicit_description')}
+                </label>
             </div>
         </section>
         <footer class="modal-card-foot">
