@@ -140,23 +140,32 @@
                 title: track.title,
                 artist: track.artists.map((artist) => artist.name).join(', '),
                 album: track.album.title,
-                artwork: [
-                    {
-                        type: 'image/jpeg',
-                        src: track.album.small_cover,
-                        sizes: '256x256',
-                    },
-                    {
-                        type: 'image/jpeg',
-                        src: track.album.medium_cover,
-                        sizes: '512x512',
-                    },
-                    {
-                        type: 'image/jpeg',
-                        src: track.album.large_cover,
-                        sizes: '1024x1024',
-                    },
-                ],
+                artwork:
+                    track.album.small_cover != null
+                        ? [
+                              {
+                                  type: 'image/jpeg',
+                                  src: track.album.small_cover,
+                                  sizes: '256x256',
+                              },
+                              {
+                                  type: 'image/jpeg',
+                                  src: track.album.medium_cover,
+                                  sizes: '512x512',
+                              },
+                              {
+                                  type: 'image/jpeg',
+                                  src: track.album.large_cover,
+                                  sizes: '1024x1024',
+                              },
+                          ]
+                        : [
+                              {
+                                  type: 'image/svg+xml',
+                                  src: '/images/album-default.svg',
+                                  sizes: '1024x1024',
+                              },
+                          ],
             });
         }
     }

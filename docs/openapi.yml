@@ -775,18 +775,17 @@ paths:
                   format: email
                 password:
                   type: string
+                allow_explicit:
+                  type: boolean
                 role:
                   type: string
                   enum: [normal, admin]
-                theme:
-                  type: string
-                  enum: [system, light, dark]
               required:
                 - username
                 - email
                 - password
+                - allow_explicit
                 - role
-                - theme
       responses:
         "200":
           description: Successfull response
@@ -830,9 +829,14 @@ paths:
                   format: email
                 password:
                   type: string
+                allow_explicit:
+                  type: boolean
                 role:
                   type: string
                   enum: [normal, admin]
+                language:
+                  type: string
+                  enum: [en, nl]
                 theme:
                   type: string
                   enum: [system, light, dark]

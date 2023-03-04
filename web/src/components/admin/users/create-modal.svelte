@@ -12,6 +12,8 @@
             role: 'Role',
             role_normal: 'Normal',
             role_admin: 'Admin',
+            allow_explicit: 'Allow explicit content',
+            allow_explicit_description: 'Allow playback of explicit content',
             create: 'Create new user',
             cancel: 'Cancel',
         },
@@ -23,6 +25,8 @@
             role: 'Rol',
             role_normal: 'Normaal',
             role_admin: 'Admin',
+            allow_explicit: 'Sta expliciete inhoud toe',
+            allow_explicit_description: 'Sta het afspelen van expliciete inhoud toe',
             create: 'Maak nieuwe gebruiker aan',
             cancel: 'Annuleren',
         },
@@ -38,7 +42,7 @@
         email: '',
         password: '',
         role: 'normal',
-        theme: 'dark',
+        allow_explicit: true,
     };
     let isOpen = false;
 
@@ -63,11 +67,17 @@
                 email: user.email,
                 password: user.password,
                 role: user.role,
+                allow_explicit: user.allow_explicit,
             }),
         });
         if (response.status == 200) {
             const createdUser = await response.json();
             close();
+            user.username = '';
+            user.email = '';
+            user.password = '';
+            user.role = 'normal';
+            user.allow_explicit = true;
             dispatch('createUser', { user: createdUser });
         }
     }
@@ -119,6 +129,14 @@
                         </select>
                     </div>
                 </div>
+            </div>
+
+            <div class="field">
+                <label class="label" for="create-allow_explicit">{t('allow_explicit')}</label>
+                <label class="checkbox" for="create-allow_explicit">
+                    <input type="checkbox" id="create-allow_explicit" bind:checked={user.allow_explicit} />
+                    {t('allow_explicit_description')}
+                </label>
             </div>
         </section>
         <footer class="modal-card-foot">

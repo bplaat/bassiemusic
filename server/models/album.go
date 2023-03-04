@@ -17,9 +17,9 @@ type Album struct {
 	ReleasedAt  time.Time `column:"released_at,date" json:"released_at"`
 	Explicit    bool      `column:"explicit,bool" json:"explicit"`
 	DeezerID    int64     `column:"deezer_id,bigint" json:"-"`
-	SmallCover  string    `json:"small_cover"`
-	MediumCover string    `json:"medium_cover"`
-	LargeCover  string    `json:"large_cover"`
+	SmallCover  *string   `json:"small_cover"`
+	MediumCover *string   `json:"medium_cover"`
+	LargeCover  *string   `json:"large_cover"`
 	Liked       *bool     `json:"liked,omitempty"`
 	CreatedAt   time.Time `column:"created_at,timestamp" json:"created_at"`
 	Artists     *[]Artist `json:"artists,omitempty"`
@@ -46,9 +46,15 @@ func AlbumModel(c *fiber.Ctx) *database.Model[Album] {
 			if album.TypeInt == AlbumTypeSingle {
 				album.Type = "single"
 			}
-			album.SmallCover = fmt.Sprintf("%s/albums/small/%s.jpg", os.Getenv("STORAGE_URL"), album.ID)
-			album.MediumCover = fmt.Sprintf("%s/albums/medium/%s.jpg", os.Getenv("STORAGE_URL"), album.ID)
-			album.LargeCover = fmt.Sprintf("%s/albums/large/%s.jpg", os.Getenv("STORAGE_URL"), album.ID)
+
+			if _, err := os.Stat(fmt.Sprintf("storage/albums/small/%s.jpg", album.ID)); err == nil {
+				smallCover := fmt.Sprintf("%s/albums/small/%s.jpg", os.Getenv("STORAGE_URL"), album.ID)
+				album.SmallCover = &smallCover
+				mediumCover := fmt.Sprintf("%s/albums/medium/%s.jpg", os.Getenv("STORAGE_URL"), album.ID)
+				album.MediumCover = &mediumCover
+				largeCover := fmt.Sprintf("%s/albums/large/%s.jpg", os.Getenv("STORAGE_URL"), album.ID)
+				album.LargeCover = &largeCover
+			}
 		},
 		Relationships: map[string]database.QueryBuilderProcess[Album]{
 			"like": func(album *Album) {

@@ -7,7 +7,7 @@ CREATE TABLE `users` (
     `email` VARCHAR(255) NOT NULL,
     `password` VARCHAR(255) NOT NULL,
     `avatar` BINARY(16) NULL,
-    `allow_explicit` TINYINT(1) UNSIGNED NOT NULL DEFAULT 1,
+    `allow_explicit` TINYINT(1) UNSIGNED NOT NULL,
     `role` TINYINT UNSIGNED NOT NULL,
     `language` CHAR(2) NOT NULL,
     `theme` TINYINT UNSIGNED NOT NULL,
@@ -18,8 +18,8 @@ CREATE TABLE `users` (
     UNIQUE (`email`)
 );
 
-INSERT INTO `users` (`id`, `username`, `email`, `password`, `role`, `language`, `theme`) VALUES
-    (UUID_TO_BIN(UUID()), 'admin', 'admin@plaatsoft.nl', '$2a$10$GwDKz/4HjEklaq3FtdMYo.p3ildTU36iX1.29rdDRIIi9qgIlT7n2', 1, 'en', 0);
+INSERT INTO `users` (`id`, `username`, `email`, `password`, `allow_explicit`, `role`, `language`, `theme`) VALUES
+    (UUID_TO_BIN(UUID()), 'admin', 'admin@plaatsoft.nl', '$2a$10$GwDKz/4HjEklaq3FtdMYo.p3ildTU36iX1.29rdDRIIi9qgIlT7n2', 1, 1, 'en', 0);
 
 -- Sessions
 CREATE TABLE `sessions` (
@@ -46,7 +46,7 @@ CREATE TABLE `sessions` (
 CREATE TABLE `artists` (
     `id` BINARY(16) NOT NULL,
     `name` VARCHAR(255) NOT NULL,
-    `synced` TINYINT(1) UNSIGNED NOT NULL DEFAULT 1,
+    `synced` TINYINT(1) UNSIGNED NOT NULL,
     `deezer_id` BIGINT UNSIGNED NOT NULL,
     `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -127,7 +127,7 @@ CREATE TABLE `tracks` (
     `explicit` TINYINT(1) UNSIGNED NOT NULL,
     `deezer_id` BIGINT UNSIGNED NOT NULL,
     `youtube_id` VARCHAR(16) NULL,
-    `plays` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+    `plays` BIGINT UNSIGNED NOT NULL,
     `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
@@ -172,7 +172,7 @@ CREATE TABLE `playlists` (
     `user_id` BINARY(16) NOT NULL,
     `name` VARCHAR(255) NOT NULL,
     `image` BINARY(16) NULL,
-    `public` TINYINT(1) UNSIGNED NOT NULL DEFAULT 0,
+    `public` TINYINT(1) UNSIGNED NOT NULL,
     `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`)

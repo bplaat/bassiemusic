@@ -18,7 +18,7 @@
 
 <a class="card" href="/genres/{genre.id}">
     <div class="card-image" style="aspect-ratio: 1;">
-        <img src={genre.medium_image} alt={t('image_alt', genre.name)} />
+        <img src={genre.medium_image || '/images/album-default.svg'} alt={t('image_alt', genre.name)} />
     </div>
     <div class="card-content">
         <h3 class="title is-6 ellipsis">{genre.name}</h3>

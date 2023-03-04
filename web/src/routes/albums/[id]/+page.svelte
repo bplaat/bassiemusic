@@ -60,7 +60,7 @@
 <div class="columns">
     <div class="column is-one-quarter mr-5 mr-0-mobile">
         <div class="box has-image p-0 has-image-tags" style="aspect-ratio: 1;">
-            <img src={data.album.large_cover} alt={t('cover_alt', data.album.title)} />
+            <img src={data.album.large_cover || '/images/album-default.svg'} alt={t('cover_alt', data.album.title)} />
 
             <div class="image-tags">
                 {#if data.album.type == 'album'}

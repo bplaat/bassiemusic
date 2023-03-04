@@ -32,7 +32,7 @@ func TrackModel(c *fiber.Ctx) *database.Model[Track] {
 	return (&database.Model[Track]{
 		TableName: "tracks",
 		Process: func(track *Track) {
-			if track.YoutubeID != nil && *track.YoutubeID != "" {
+			if _, err := os.Stat(fmt.Sprintf("storage/tracks/%s.m4a", track.ID)); err == nil {
 				music := fmt.Sprintf("%s/tracks/%s.m4a", os.Getenv("STORAGE_URL"), track.ID)
 				track.Music = &music
 			}
