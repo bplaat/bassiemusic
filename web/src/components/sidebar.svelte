@@ -209,7 +209,7 @@
         <div class="media-left">
             <div class="box has-image m-0 p-0" style="width: 48px; height: 48px;">
                 <img
-                    src={authUser.avatar ? authUser.avatar : '/images/avatar-default.svg'}
+                    src={authUser.small_avatar || '/images/avatar-default.svg'}
                     alt="Avatar of user {authUser.username}"
                 />
             </div>

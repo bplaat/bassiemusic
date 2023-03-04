@@ -22,7 +22,13 @@ func createDirIfNotExists(path string) {
 func createStorageDirs() {
 	createDirIfNotExists("storage")
 	createDirIfNotExists("storage/avatars")
+	createDirIfNotExists("storage/avatars/original")
+	createDirIfNotExists("storage/avatars/small")
+	createDirIfNotExists("storage/avatars/medium")
 	createDirIfNotExists("storage/playlists")
+	createDirIfNotExists("storage/playlists/original")
+	createDirIfNotExists("storage/playlists/small")
+	createDirIfNotExists("storage/playlists/medium")
 	createDirIfNotExists("storage/artists")
 	createDirIfNotExists("storage/artists/small")
 	createDirIfNotExists("storage/artists/medium")

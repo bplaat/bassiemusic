@@ -11,16 +11,17 @@ import (
 
 // Playlist
 type Playlist struct {
-	ID        string    `column:"id,uuid" json:"id"`
-	UserID    string    `column:"user_id,uuid" json:"-"`
-	Name      string    `column:"name,string" json:"name"`
-	ImageID   *string   `column:"image,uuid" json:"-"`
-	Image     *string   `json:"image"`
-	Public    bool      `column:"public,bool" json:"public"`
-	Liked     *bool     `json:"liked,omitempty"`
-	CreatedAt time.Time `column:"created_at,timestamp" json:"created_at"`
-	User      *User     `json:"user,omitempty"`
-	Tracks    *[]Track  `json:"tracks,omitempty"`
+	ID          string    `column:"id,uuid" json:"id"`
+	UserID      string    `column:"user_id,uuid" json:"-"`
+	Name        string    `column:"name,string" json:"name"`
+	ImageID     *string   `column:"image,uuid" json:"-"`
+	SmallImage  *string   `json:"small_image"`
+	MediumImage *string   `json:"medium_image"`
+	Public      bool      `column:"public,bool" json:"public"`
+	Liked       *bool     `json:"liked,omitempty"`
+	CreatedAt   time.Time `column:"created_at,timestamp" json:"created_at"`
+	User        *User     `json:"user,omitempty"`
+	Tracks      *[]Track  `json:"tracks,omitempty"`
 }
 
 func PlaylistModel(c *fiber.Ctx) *database.Model[Playlist] {
@@ -28,8 +29,12 @@ func PlaylistModel(c *fiber.Ctx) *database.Model[Playlist] {
 		TableName: "playlists",
 		Process: func(playlist *Playlist) {
 			if playlist.ImageID != nil && *playlist.ImageID != "" {
-				image := fmt.Sprintf("%s/playlists/%s.jpg", os.Getenv("STORAGE_URL"), *playlist.ImageID)
-				playlist.Image = &image
+				if _, err := os.Stat(fmt.Sprintf("storage/images/original/%s", *playlist.ImageID)); err == nil {
+					smallImage := fmt.Sprintf("%s/images/small/%s.jpg", os.Getenv("STORAGE_URL"), *playlist.ImageID)
+					playlist.SmallImage = &smallImage
+					mediumImage := fmt.Sprintf("%s/images/medium/%s.jpg", os.Getenv("STORAGE_URL"), *playlist.ImageID)
+					playlist.MediumImage = &mediumImage
+				}
 			}
 		},
 		Relationships: map[string]database.QueryBuilderProcess[Playlist]{

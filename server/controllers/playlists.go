@@ -2,6 +2,9 @@ package controllers
 
 import (
 	"fmt"
+	"image"
+	"image/jpeg"
+	_ "image/png"
 	"log"
 	"os"
 
@@ -11,6 +14,7 @@ import (
 	"github.com/bplaat/bassiemusic/utils/uuid"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
+	"github.com/nfnt/resize"
 )
 
 func PlaylistsIndex(c *fiber.Ctx) error {
@@ -170,18 +174,60 @@ func PlaylistsImage(c *fiber.Ctx) error {
 
 	// Remove old image file
 	if playlist.ImageID != nil && *playlist.ImageID != "" {
-		if err := os.Remove(fmt.Sprintf("storage/playlists/%s.jpg", *playlist.ImageID)); err != nil {
-			log.Fatalln(err)
-		}
+		_ = os.Remove(fmt.Sprintf("storage/playlists/original/%s", *playlist.ImageID))
+		_ = os.Remove(fmt.Sprintf("storage/playlists/small/%s.jpg", *playlist.ImageID))
+		_ = os.Remove(fmt.Sprintf("storage/playlists/medium/%s.jpg", *playlist.ImageID))
 	}
 
 	// Save uploaded image file
 	imageID := uuid.New()
-	image, err := c.FormFile("image")
+	uploadedImage, err := c.FormFile("image")
 	if err != nil {
 		return fiber.ErrBadRequest
 	}
-	if err = c.SaveFile(image, fmt.Sprintf("storage/playlists/%s.jpg", imageID.String())); err != nil {
+	if err = c.SaveFile(uploadedImage, fmt.Sprintf("storage/playlists/original/%s", imageID.String())); err != nil {
+		log.Fatalln(err)
+	}
+
+	// Open uploaded image
+	originalFile, err := os.Open(fmt.Sprintf("storage/playlists/original/%s", imageID.String()))
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer originalFile.Close()
+	if err != nil {
+		log.Fatalln(err)
+	}
+	var originalImage image.Image
+	originalImage, _, err = image.Decode(originalFile)
+	if err != nil {
+		if err := os.Remove(fmt.Sprintf("storage/playlists/original/%s", imageID.String())); err != nil {
+			log.Fatalln(err)
+		}
+		return c.JSON(fiber.Map{"success": false})
+	}
+
+	// Save small resize
+	smallFile, err := os.Create(fmt.Sprintf("storage/playlists/small/%s.jpg", imageID.String()))
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer smallFile.Close()
+	smallImage := resize.Resize(250, 250, originalImage, resize.Lanczos3)
+	err = jpeg.Encode(smallFile, smallImage, nil)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	// Save small resize
+	mediumFile, err := os.Create(fmt.Sprintf("storage/playlists/medium/%s.jpg", imageID.String()))
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer mediumFile.Close()
+	mediumImage := resize.Resize(500, 500, originalImage, resize.Lanczos3)
+	err = jpeg.Encode(mediumFile, mediumImage, nil)
+	if err != nil {
 		log.Fatalln(err)
 	}
 
@@ -208,9 +254,9 @@ func PlaylistsImageDelete(c *fiber.Ctx) error {
 	// Check if playlist has image
 	if playlist.ImageID != nil && *playlist.ImageID != "" {
 		// Remove old image file
-		if err := os.Remove(fmt.Sprintf("storage/playlists/%s.jpg", *playlist.ImageID)); err != nil {
-			log.Fatalln(err)
-		}
+		_ = os.Remove(fmt.Sprintf("storage/playlists/original/%s", *playlist.ImageID))
+		_ = os.Remove(fmt.Sprintf("storage/playlists/small/%s.jpg", *playlist.ImageID))
+		_ = os.Remove(fmt.Sprintf("storage/playlists/medium/%s.jpg", *playlist.ImageID))
 
 		// Clear image id for playlist
 		models.PlaylistModel(c).Where("id", playlist.ID).Update(database.Map{
