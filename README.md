@@ -10,7 +10,6 @@
 </div>
 
 ## Features
-BassieMusic offers a lot of different features here is a short list of some:
 - Local online music streaming platform
 - Nice music web player build with [SvelteKit](https://kit.svelte.dev/)
 - Search your music library
@@ -36,11 +35,11 @@ Pre build macOS and Windows binaries are coming soon...
 
 ## Screenshot
 ![The BassieMusic macOS app playing the album Life from Knower](docs/screenshot.png)
-<center>
+<div align="center">
 <i>
 The BassieMusic <a href="/apps/macos/">macOS app</a> playing the album <a href="https://www.youtube.com/watch?v=dQY-wxW4nCo&list=PL6ZA--5Rknp2BXi1m5fq6d6zn1b8z3_kb">Life</a> from <a href="https://www.youtube.com/channel/UCaEKhXcW7dY65JoQB6fGhxg">Knower</a>
 </i>
-</center>
+</div>
 
 ## Documentation
 Some parts of the system are not well documented at this time, but we are working to improve this
