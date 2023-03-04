@@ -351,7 +351,10 @@
         <div class="media px-4 py-2">
             <div class="media-left">
                 <a href="/albums/{track.album.id}" class="music-player-album-cover box m-0 p-0">
-                    <img src={track.album.small_cover || '/images/album-default.svg'} alt={t('cover_alt', track.album)} />
+                    <img
+                        src={track.album.small_cover || '/images/album-default.svg'}
+                        alt={t('cover_alt', track.album)}
+                    />
                 </a>
             </div>
             <div class="media-content" style="width: 10rem; min-width: 0;">
@@ -481,42 +484,49 @@
                 </a>
             {/if}
 
-            <button
-                class="button mr-3"
-                on:click={toggleVolume}
-                title={volume > 0 ? t('mute_volume') : t('restore_volume')}
-            >
-                <svg class="icon" viewBox="0 0 24 24">
-                    {#if volume == 0}
-                        <path
-                            d="M12,4L9.91,6.09L12,8.18M4.27,3L3,4.27L7.73,9H3V15H7L12,20V13.27L16.25,17.53C15.58,18.04 14.83,18.46 14,18.7V20.77C15.38,20.45 16.63,19.82 17.68,18.96L19.73,21L21,19.73L12,10.73M19,12C19,12.94 18.8,13.82 18.46,14.64L19.97,16.15C20.62,14.91 21,13.5 21,12C21,7.72 18,4.14 14,3.23V5.29C16.89,6.15 19,8.83 19,12M16.5,12C16.5,10.23 15.5,8.71 14,7.97V10.18L16.45,12.63C16.5,12.43 16.5,12.21 16.5,12Z"
+            <div class="dropdown is-up is-right is-hoverable">
+                <div class="dropdown-trigger">
+                    <button
+                        class="button"
+                        on:click={toggleVolume}
+                        title={volume > 0 ? t('mute_volume') : t('restore_volume')}
+                    >
+                        <svg class="icon" viewBox="0 0 24 24">
+                            {#if volume == 0}
+                                <path
+                                    d="M12,4L9.91,6.09L12,8.18M4.27,3L3,4.27L7.73,9H3V15H7L12,20V13.27L16.25,17.53C15.58,18.04 14.83,18.46 14,18.7V20.77C15.38,20.45 16.63,19.82 17.68,18.96L19.73,21L21,19.73L12,10.73M19,12C19,12.94 18.8,13.82 18.46,14.64L19.97,16.15C20.62,14.91 21,13.5 21,12C21,7.72 18,4.14 14,3.23V5.29C16.89,6.15 19,8.83 19,12M16.5,12C16.5,10.23 15.5,8.71 14,7.97V10.18L16.45,12.63C16.5,12.43 16.5,12.21 16.5,12Z"
+                                />
+                            {/if}
+                            {#if volume > 0 && volume < 0.33}
+                                <path d="M7,9V15H11L16,20V4L11,9H7Z" />
+                            {/if}
+                            {#if volume >= 0.33 && volume < 0.67}
+                                <path
+                                    d="M5,9V15H9L14,20V4L9,9M18.5,12C18.5,10.23 17.5,8.71 16,7.97V16C17.5,15.29 18.5,13.76 18.5,12Z"
+                                />
+                            {/if}
+                            {#if volume >= 0.67}
+                                <path
+                                    d="M14,3.23V5.29C16.89,6.15 19,8.83 19,12C19,15.17 16.89,17.84 14,18.7V20.77C18,19.86 21,16.28 21,12C21,7.72 18,4.14 14,3.23M16.5,12C16.5,10.23 15.5,8.71 14,7.97V16C15.5,15.29 16.5,13.76 16.5,12M3,9V15H7L12,20V4L7,9H3Z"
+                                />
+                            {/if}
+                        </svg>
+                    </button>
+                </div>
+                <div class="dropdown-menu">
+                    <div class="dropdown-content px-5 py-4">
+                        <input
+                            class="range"
+                            type="range"
+                            bind:value={volume}
+                            on:input={(event) => setVolume(event.target.value)}
+                            max="1"
+                            step="0.01"
+                            style="width: 100%; background-size: {volume * 100}% 100%;"
                         />
-                    {/if}
-                    {#if volume > 0 && volume < 0.33}
-                        <path d="M7,9V15H11L16,20V4L11,9H7Z" />
-                    {/if}
-                    {#if volume >= 0.33 && volume < 0.67}
-                        <path
-                            d="M5,9V15H9L14,20V4L9,9M18.5,12C18.5,10.23 17.5,8.71 16,7.97V16C17.5,15.29 18.5,13.76 18.5,12Z"
-                        />
-                    {/if}
-                    {#if volume >= 0.67}
-                        <path
-                            d="M14,3.23V5.29C16.89,6.15 19,8.83 19,12C19,15.17 16.89,17.84 14,18.7V20.77C18,19.86 21,16.28 21,12C21,7.72 18,4.14 14,3.23M16.5,12C16.5,10.23 15.5,8.71 14,7.97V16C15.5,15.29 16.5,13.76 16.5,12M3,9V15H7L12,20V4L7,9H3Z"
-                        />
-                    {/if}
-                </svg>
-            </button>
-
-            <input
-                class="range"
-                type="range"
-                bind:value={volume}
-                on:input={(event) => setVolume(event.target.value)}
-                max="1"
-                step="0.01"
-                style="width: 8rem; background-size: {volume * 100}% 100%;"
-            />
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 {/if}
@@ -529,6 +539,7 @@
         width: 100%;
         height: 10rem;
         z-index: 100;
+        overflow: visible;
         border-radius: 0;
         display: flex;
         flex-direction: column;
