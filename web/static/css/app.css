@@ -5,6 +5,7 @@ html {
 body {
     overflow: auto;
     -webkit-user-select: none;
+    -moz-user-select: none;
     user-select: none;
     cursor: default;
 }
@@ -42,6 +43,16 @@ img {
 
 img:-moz-loading {
     visibility: hidden;
+}
+
+a,
+img {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    user-select: none;
+    -webkit-user-drag: none;
+    user-drag: none;
+    -webkit-touch-callout: none;
 }
 
 .table td {
