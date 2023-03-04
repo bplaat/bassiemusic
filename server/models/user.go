@@ -13,7 +13,8 @@ type User struct {
 	Email         string    `column:"email,string" json:"email"`
 	Password      string    `column:"password,string" json:"-"`
 	AvatarID      *string   `column:"avatar,uuid" json:"-"`
-	Avatar        *string   `json:"avatar"`
+	SmallAvatar   *string   `json:"small_avatar"`
+	MediumAvatar  *string   `json:"medium_avatar"`
 	AllowExplicit bool      `column:"allow_explicit,bool" json:"allow_explicit"`
 	RoleInt       UserRole  `column:"role,int" json:"-"`
 	Role          string    `json:"role"`
@@ -56,8 +57,12 @@ func UserModel() *database.Model[User] {
 			}
 
 			if user.AvatarID != nil && *user.AvatarID != "" {
-				avatar := fmt.Sprintf("%s/avatars/%s.jpg", os.Getenv("STORAGE_URL"), *user.AvatarID)
-				user.Avatar = &avatar
+				if _, err := os.Stat(fmt.Sprintf("storage/avatars/original/%s", *user.AvatarID)); err == nil {
+					smallAvatar := fmt.Sprintf("%s/avatars/small/%s.jpg", os.Getenv("STORAGE_URL"), *user.AvatarID)
+					user.SmallAvatar = &smallAvatar
+					mediumAvatar := fmt.Sprintf("%s/avatars/medium/%s.jpg", os.Getenv("STORAGE_URL"), *user.AvatarID)
+					user.MediumAvatar = &mediumAvatar
+				}
 			}
 		},
 	}).Init()

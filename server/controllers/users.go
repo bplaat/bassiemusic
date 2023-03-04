@@ -2,6 +2,9 @@ package controllers
 
 import (
 	"fmt"
+	"image"
+	"image/jpeg"
+	_ "image/png"
 	"log"
 	"os"
 	"time"
@@ -12,6 +15,7 @@ import (
 	"github.com/bplaat/bassiemusic/utils/uuid"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
+	"github.com/nfnt/resize"
 )
 
 func UsersIndex(c *fiber.Ctx) error {
@@ -238,9 +242,9 @@ func UsersAvatar(c *fiber.Ctx) error {
 
 	// Remove old avatar file
 	if user.AvatarID != nil && *user.AvatarID != "" {
-		if err := os.Remove(fmt.Sprintf("storage/avatars/%s.jpg", *user.AvatarID)); err != nil {
-			log.Fatalln(err)
-		}
+		_ = os.Remove(fmt.Sprintf("storage/avatars/original/%s", *user.AvatarID))
+		_ = os.Remove(fmt.Sprintf("storage/avatars/small/%s.jpg", *user.AvatarID))
+		_ = os.Remove(fmt.Sprintf("storage/avatars/medium/%s.jpg", *user.AvatarID))
 	}
 
 	// Save uploaded avatar file
@@ -249,7 +253,49 @@ func UsersAvatar(c *fiber.Ctx) error {
 	if err != nil {
 		return fiber.ErrBadRequest
 	}
-	if err = c.SaveFile(avatar, fmt.Sprintf("storage/avatars/%s.jpg", avatarID.String())); err != nil {
+	if err = c.SaveFile(avatar, fmt.Sprintf("storage/avatars/original/%s", avatarID.String())); err != nil {
+		log.Fatalln(err)
+	}
+
+	// Open uploaded image
+	originalFile, err := os.Open(fmt.Sprintf("storage/avatars/original/%s", avatarID.String()))
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer originalFile.Close()
+	if err != nil {
+		log.Fatalln(err)
+	}
+	var originalImage image.Image
+	originalImage, _, err = image.Decode(originalFile)
+	if err != nil {
+		if err := os.Remove(fmt.Sprintf("storage/avatars/original/%s", avatarID.String())); err != nil {
+			log.Fatalln(err)
+		}
+		return c.JSON(fiber.Map{"success": false})
+	}
+
+	// Save small resize
+	smallFile, err := os.Create(fmt.Sprintf("storage/avatars/small/%s.jpg", avatarID.String()))
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer smallFile.Close()
+	smallImage := resize.Resize(250, 250, originalImage, resize.Lanczos3)
+	err = jpeg.Encode(smallFile, smallImage, nil)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	// Save small resize
+	mediumFile, err := os.Create(fmt.Sprintf("storage/avatars/medium/%s.jpg", avatarID.String()))
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer mediumFile.Close()
+	mediumImage := resize.Resize(500, 500, originalImage, resize.Lanczos3)
+	err = jpeg.Encode(mediumFile, mediumImage, nil)
+	if err != nil {
 		log.Fatalln(err)
 	}
 
@@ -276,9 +322,9 @@ func UsersAvatarDelete(c *fiber.Ctx) error {
 	// Check if user has avatar
 	if user.AvatarID != nil && *user.AvatarID != "" {
 		// Remove old avatar file
-		if err := os.Remove(fmt.Sprintf("storage/avatars/%s.jpg", *user.AvatarID)); err != nil {
-			log.Fatalln(err)
-		}
+		_ = os.Remove(fmt.Sprintf("storage/avatars/original/%s", *user.AvatarID))
+		_ = os.Remove(fmt.Sprintf("storage/avatars/small/%s.jpg", *user.AvatarID))
+		_ = os.Remove(fmt.Sprintf("storage/avatars/medium/%s.jpg", *user.AvatarID))
 
 		// Clear avatar id for user
 		models.UserModel().Where("id", user.ID).Update(database.Map{

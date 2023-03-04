@@ -23,7 +23,7 @@
 
             change_avatar: 'Change avatar',
             avatar_file: 'Avatar file',
-            avatar_file_help: 'You can upload an squared .jpg image',
+            avatar_file_help: 'You can upload an squared .jpg or .png image',
             delete_avatar: 'Delete avatar',
 
             delete_account: 'Delete account',
@@ -54,7 +54,7 @@
 
             change_avatar: 'Verander avatar',
             avatar_file: 'Avatar bestand',
-            avatar_file_help: 'U kunt een vierkante .jpg-afbeelding uploaden',
+            avatar_file_help: 'U kunt een vierkante .jpg of .png-afbeelding uploaden',
             delete_avatar: 'Verwijder avatar',
 
             delete_account: 'Verwijder account',
@@ -269,7 +269,7 @@
             <div class="field">
                 <label class="label" for="avatar">{t('avatar_file')}</label>
                 <div class="control">
-                    <input class="input" type="file" id="avatar" bind:this={avatarInput} />
+                    <input class="input" type="file" id="avatar" accept="*.jpg,*.jpeg,*.png" bind:this={avatarInput} />
                     <p class="help">{t('avatar_file_help')}</p>
                 </div>
             </div>
@@ -278,7 +278,7 @@
                 <div class="buttons">
                     <button type="submit" class="button is-link">{t('change_avatar')}</button>
 
-                    {#if authUser.avatar}
+                    {#if authUser.small_avatar}
                         <button type="button" class="button is-danger" on:click|preventDefault={deleteAvatar}>
                             {t('delete_avatar')}
                         </button>

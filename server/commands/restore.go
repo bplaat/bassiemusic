@@ -17,12 +17,28 @@ func removeOldUserAvatarIDs() {
 	index := 0
 	models.UserModel().WhereNotNull("avatar").Chunk(50, func(users []models.User) {
 		for _, user := range users {
-			if _, err := os.Stat(fmt.Sprintf("storage/avatars/%s.jpg", *user.Avatar)); os.IsNotExist(err) {
+			if _, err := os.Stat(fmt.Sprintf("storage/avatars/original/%s", *user.AvatarID)); os.IsNotExist(err) {
 				models.UserModel().Where("id", user.ID).Update(database.Map{
 					"avatar": nil,
 				})
 			}
 			log.Printf("User avatars %.2f%%\n", float32(index+1)/float32(total)*100.0)
+			index++
+		}
+	})
+}
+
+func removeOldPlaylistImageIDs() {
+	total := models.PlaylistModel(nil).WhereNotNull("image").Count()
+	index := 0
+	models.PlaylistModel(nil).WhereNotNull("image").Chunk(50, func(playlists []models.Playlist) {
+		for _, playlist := range playlists {
+			if _, err := os.Stat(fmt.Sprintf("storage/playlists/original/%s", *playlist.ImageID)); os.IsNotExist(err) {
+				models.PlaylistModel(nil).Where("id", playlist.ID).Update(database.Map{
+					"image": nil,
+				})
+			}
+			log.Printf("Playlist images %.2f%%\n", float32(index+1)/float32(total)*100.0)
 			index++
 		}
 	})
@@ -38,9 +54,11 @@ func restoreArtistImages() {
 				if err := utils.FetchJson(fmt.Sprintf("https://api.deezer.com/artist/%d", artist.DeezerID), &deezerArtist); err != nil {
 					log.Fatalln(err)
 				}
-				utils.FetchFile(deezerArtist.PictureMedium, fmt.Sprintf("storage/artists/small/%s.jpg", artist.ID))
-				utils.FetchFile(deezerArtist.PictureBig, fmt.Sprintf("storage/artists/medium/%s.jpg", artist.ID))
-				utils.FetchFile(deezerArtist.PictureXl, fmt.Sprintf("storage/artists/large/%s.jpg", artist.ID))
+				if deezerArtist.PictureMedium != "https://e-cdns-images.dzcdn.net/images/artist//250x250-000000-80-0-0.jpg" {
+					utils.FetchFile(deezerArtist.PictureMedium, fmt.Sprintf("storage/artists/small/%s.jpg", artist.ID))
+					utils.FetchFile(deezerArtist.PictureBig, fmt.Sprintf("storage/artists/medium/%s.jpg", artist.ID))
+					utils.FetchFile(deezerArtist.PictureXl, fmt.Sprintf("storage/artists/large/%s.jpg", artist.ID))
+				}
 			}
 			log.Printf("Artist images %.2f%%\n", float32(index+1)/float32(total)*100.0)
 			index++
@@ -111,6 +129,7 @@ func restoreTrackMusic() {
 
 func Restore() {
 	removeOldUserAvatarIDs()
+	removeOldPlaylistImageIDs()
 	restoreArtistImages()
 	restoreGenreImages()
 	restoresAlbumCovers()
