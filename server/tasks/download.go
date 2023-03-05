@@ -21,9 +21,9 @@ func createArtist(deezerID int, name string, sync bool) string {
 	// Check if artist already exists
 	artist := models.ArtistModel(nil).Where("name", name).First()
 	if artist != nil {
-		if artist.Sync != sync {
+		if sync {
 			models.ArtistModel(nil).Where("id", artist.ID).Update(database.Map{
-				"sync": sync,
+				"sync": true,
 			})
 		}
 		return artist.ID
