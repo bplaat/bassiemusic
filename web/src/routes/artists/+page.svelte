@@ -11,6 +11,8 @@
             header: 'Artists',
             sort_by_name: 'Name (A - Z)',
             sort_by_name_desc: 'Name (Z - A)',
+            sort_by_sync: 'Sync (synced - not synced)',
+            sort_by_sync_desc: 'Sync (not synced - synced)',
             sort_by_created_at_desc: 'Downloaded at (new - old)',
             sort_by_created_at: 'Downloaded at (old - new)',
             empty: "You don't have added any artists",
@@ -20,6 +22,8 @@
             header: 'Artists',
             sort_by_name: 'Naam (A - Z)',
             sort_by_name_desc: 'Naam (Z - A)',
+            sort_by_sync: 'Gesynced (gesynced - niet gesynced)',
+            sort_by_sync_desc: 'Gesynced (niet gesynced - gesynced)',
             sort_by_created_at_desc: 'Gedownload op (nieuw - oud)',
             sort_by_created_at: 'Gedownload op (oud - nieuw)',
             empty: 'Je hebt nog geen enkele artist toegevoegd',
@@ -66,6 +70,8 @@
             options={{
                 name: t('sort_by_name'),
                 name_desc: t('sort_by_name_desc'),
+                sync: t('sort_by_sync'),
+                sync_desc: t('sort_by_sync_desc'),
                 created_at_desc: t('sort_by_created_at_desc'),
                 created_at: t('sort_by_created_at'),
             }}

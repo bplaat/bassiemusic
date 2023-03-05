@@ -356,6 +356,10 @@ func UsersLikedArtists(c *fiber.Ctx) error {
 		q = q.OrderByRaw("LOWER(`artists`.`name`)")
 	} else if c.Query("sort_by") == "name_desc" {
 		q = q.OrderByRaw("LOWER(`artists`.`name`) DESC")
+	} else if c.Query("sort_by") == "sync" {
+		q = q.OrderByRaw("`artists`.`sync` DESC, LOWER(`artists`.`name`)")
+	} else if c.Query("sort_by") == "sync_desc" {
+		q = q.OrderByRaw("`artists`.`sync`, LOWER(`artists`.`name`)")
 	} else if c.Query("sort_by") == "created_at" {
 		q = q.OrderByRaw("`artists`.`created_at`")
 	} else if c.Query("sort_by") == "created_at_desc" {

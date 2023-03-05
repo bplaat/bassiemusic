@@ -10,7 +10,11 @@ import (
 func ArtistsIndex(c *fiber.Ctx) error {
 	query, page, limit := utils.ParseIndexVars(c)
 	q := models.ArtistModel(c).With("like").WhereRaw("`name` LIKE ?", "%"+query+"%")
-	if c.Query("sort_by") == "created_at" {
+	if c.Query("sort_by") == "sync" {
+		q = q.OrderByRaw("`sync` DESC, LOWER(`name`)")
+	} else if c.Query("sort_by") == "sync_desc" {
+		q = q.OrderByRaw("`sync`, LOWER(`name`)")
+	} else if c.Query("sort_by") == "created_at" {
 		q = q.OrderBy("created_at")
 	} else if c.Query("sort_by") == "created_at_desc" {
 		q = q.OrderByDesc("created_at")

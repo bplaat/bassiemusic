@@ -248,7 +248,7 @@ paths:
           required: false
           schema:
             type: string
-            enum: ['name', 'name_desc', 'created_at', 'created_at_desc']
+            enum: ['name', 'name_desc', 'sync', 'sync_desc', 'created_at', 'created_at_desc']
       responses:
         "200":
           description: Successfull response
@@ -920,7 +920,7 @@ paths:
           required: false
           schema:
             type: string
-            enum: ['liked_at', 'liked_at_desc', 'name', 'name_desc', 'created_at', 'created_at_desc']
+            enum: ['liked_at', 'liked_at_desc', 'name', 'name_desc', 'sync', 'sync_desc', 'created_at', 'created_at_desc']
       responses:
         "200":
           description: Successfull response
