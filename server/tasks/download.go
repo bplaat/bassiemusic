@@ -17,13 +17,13 @@ import (
 	"github.com/bplaat/bassiemusic/utils/uuid"
 )
 
-func createArtist(deezerID int, name string, synced bool) string {
+func createArtist(deezerID int, name string, sync bool) string {
 	// Check if artist already exists
 	artist := models.ArtistModel(nil).Where("name", name).First()
 	if artist != nil {
-		if artist.Synced != synced {
+		if artist.Sync != sync {
 			models.ArtistModel(nil).Where("id", artist.ID).Update(database.Map{
-				"synced": synced,
+				"sync": sync,
 			})
 		}
 		return artist.ID
@@ -41,7 +41,7 @@ func createArtist(deezerID int, name string, synced bool) string {
 		"id":        artistID.String(),
 		"name":      name,
 		"deezer_id": deezerID,
-		"synced":    synced,
+		"sync":      sync,
 	})
 	if deezerArtist.PictureMedium != "https://e-cdns-images.dzcdn.net/images/artist//250x250-000000-80-0-0.jpg" {
 		utils.FetchFile(deezerArtist.PictureMedium, fmt.Sprintf("storage/artists/small/%s.jpg", artistID.String()))
@@ -249,7 +249,7 @@ func DownloadTask() {
 				log.Fatalln(err)
 			}
 			for _, album := range artistAlbums.Data {
-				if !strings.Contains(album.Title, "Deezer") {
+				if strings.Contains(album.Title, "Deezer") {
 					continue
 				}
 				DownloadAlbum(album.ID)

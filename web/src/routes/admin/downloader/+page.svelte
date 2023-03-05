@@ -80,32 +80,28 @@
     }
 
     async function downloadAlbum(album) {
-        await fetch(
-            `${import.meta.env.VITE_API_URL}/download/album?${new URLSearchParams({
+        await fetch(`${import.meta.env.VITE_API_URL}/download/album`, {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${data.token}`,
+            },
+            body: new URLSearchParams({
                 deezer_id: album.id,
-            })}`,
-            {
-                method: 'POST',
-                headers: {
-                    Authorization: `Bearer ${data.token}`,
-                },
-            }
-        );
+            }),
+        });
         albums = albums.filter((otherAlbum) => otherAlbum.id != album.id);
     }
 
     async function downloadArtist(artist) {
-        await fetch(
-            `${import.meta.env.VITE_API_URL}/download/artist?${new URLSearchParams({
+        await fetch(`${import.meta.env.VITE_API_URL}/download/artist`, {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${data.token}`,
+            },
+            body: new URLSearchParams({
                 deezer_id: artist.id,
-            })}`,
-            {
-                method: 'POST',
-                headers: {
-                    Authorization: `Bearer ${data.token}`,
-                },
-            }
-        );
+            }),
+        });
         artists = artists.filter((otherArtist) => otherArtist.id != artist.id);
     }
 </script>
