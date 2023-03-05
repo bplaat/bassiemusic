@@ -80,6 +80,11 @@ func main() {
 			commands.Fix()
 			return
 		}
+
+		if os.Args[1] == "sync" {
+			commands.Sync()
+			return
+		}
 	}
 
 	// When no command is given print help text
@@ -90,5 +95,6 @@ func main() {
 		"\tserve\t\tStart the BassieMusic server and serve content\n" +
 		"\trestore\t\tRedownload the storage/ folder with your filled database\n" +
 		"\tclean\t\tClean up storage files that are not referenced in the database\n" +
-		"\tfix\t\tCreate missing track entries and try to find and download track YouTube videos\n")
+		"\tfix\t\tCreate missing track entries and try to find and download track YouTube videos\n" +
+		"\tsync\t\tCheck all synced artists for new undownload albums and download them\n")
 }

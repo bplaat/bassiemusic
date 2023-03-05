@@ -60,8 +60,13 @@
 
 <div class="columns">
     <div class="column is-one-quarter mr-5 mr-0-mobile">
-        <div class="box has-image m-0 p-0" style="aspect-ratio: 1;">
-            <img src={data.genre.large_image || '/images/album-default.svg'} alt={t('image_alt', data.genre.name)} />
+        <div class="box has-image m-0 p-0">
+            <figure class="image is-1by1">
+                <img
+                    src={data.genre.large_image || '/images/album-default.svg'}
+                    alt={t('image_alt', data.genre.name)}
+                />
+            </figure>
         </div>
     </div>
 
