@@ -112,7 +112,7 @@
         formData.append('avatar', avatarInput.files[0], avatarInput.files[0].name);
 
         const response = await fetch(`${import.meta.env.VITE_API_URL}/users/${authUser.id}/avatar`, {
-            method: 'PUT',
+            method: 'POST',
             headers: {
                 Authorization: `Bearer ${token}`,
             },

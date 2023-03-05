@@ -675,7 +675,6 @@ paths:
                   type: integer
               required:
                 - track_id
-                - position
       responses:
         "200":
           description: Successfull response

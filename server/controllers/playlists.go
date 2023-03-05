@@ -7,6 +7,7 @@ import (
 	_ "image/png"
 	"log"
 	"os"
+	"strconv"
 
 	"github.com/bplaat/bassiemusic/database"
 	"github.com/bplaat/bassiemusic/models"
@@ -268,7 +269,7 @@ func PlaylistsImageDelete(c *fiber.Ctx) error {
 
 type PlaylistsInsertTrackParams struct {
 	TrackID  string `form:"track_id" validate:"required"`
-	Position string `form:"position" validate:"required,integer"`
+	Position string `form:"position" validate:"numeric"`
 }
 
 func PlaylistsInsertTrack(c *fiber.Ctx) error {
@@ -304,8 +305,21 @@ func PlaylistsInsertTrack(c *fiber.Ctx) error {
 		return fiber.ErrBadRequest
 	}
 
+	// Parse position
+	var position int64
+	if params.Position == "" {
+		position = models.PlaylistTrackModel().Where("playlist_id", playlist.ID).Count()
+	} else {
+		if positionInt, err := strconv.Atoi(params.Position); err == nil {
+			position = int64(positionInt)
+			if position < 0 {
+				position = 0
+			}
+		}
+	}
+
 	// Move all exisiting track ids to the left
-	playlistTracks := models.PlaylistTrackModel().Where("playlist_id", playlist.ID).WhereRaw("`position` >= ?", params.Position).Get()
+	playlistTracks := models.PlaylistTrackModel().Where("playlist_id", playlist.ID).WhereRaw("`position` >= ?", position).Get()
 	for _, playlistTrack := range playlistTracks {
 		models.PlaylistTrackModel().Where("id", playlistTrack.ID).Update(database.Map{
 			"position": playlistTrack.Position + 1,
@@ -316,13 +330,13 @@ func PlaylistsInsertTrack(c *fiber.Ctx) error {
 	models.PlaylistTrackModel().Create(database.Map{
 		"playlist_id": playlist.ID,
 		"track_id":    params.TrackID,
-		"position":    params.TrackID,
+		"position":    position,
 	})
 	return c.JSON(fiber.Map{"success": true})
 }
 
 type PlaylistsRemoveTrackParams struct {
-	Position string `form:"position" validate:"required,integer"`
+	Position string `form:"position" validate:"required,numeric"`
 }
 
 func PlaylistsRemoveTrack(c *fiber.Ctx) error {
@@ -352,11 +366,20 @@ func PlaylistsRemoveTrack(c *fiber.Ctx) error {
 		return fiber.ErrBadRequest
 	}
 
+	// Parse position
+	var position int64
+	if positionInt, err := strconv.Atoi(params.Position); err == nil {
+		position = int64(positionInt)
+		if position < 0 {
+			position = 0
+		}
+	}
+
 	// Remove playlist track
-	models.PlaylistTrackModel().Where("playlist_id", playlist.ID).Where("position", params.Position).Delete()
+	models.PlaylistTrackModel().Where("playlist_id", playlist.ID).Where("position", position).Delete()
 
 	// Move all exisiting track ids to the right
-	playlistTracks := models.PlaylistTrackModel().Where("playlist_id", playlist.ID).WhereRaw("`position` > ?", params.Position).Get()
+	playlistTracks := models.PlaylistTrackModel().Where("playlist_id", playlist.ID).WhereRaw("`position` > ?", position).Get()
 	for _, playlistTrack := range playlistTracks {
 		models.PlaylistTrackModel().Where("id", playlistTrack.ID).Update(database.Map{
 			"position": playlistTrack.Position - 1,

@@ -29,10 +29,10 @@ func PlaylistModel(c *fiber.Ctx) *database.Model[Playlist] {
 		TableName: "playlists",
 		Process: func(playlist *Playlist) {
 			if playlist.ImageID != nil && *playlist.ImageID != "" {
-				if _, err := os.Stat(fmt.Sprintf("storage/images/original/%s", *playlist.ImageID)); err == nil {
-					smallImage := fmt.Sprintf("%s/images/small/%s.jpg", os.Getenv("STORAGE_URL"), *playlist.ImageID)
+				if _, err := os.Stat(fmt.Sprintf("storage/playlists/original/%s", *playlist.ImageID)); err == nil {
+					smallImage := fmt.Sprintf("%s/playlists/small/%s.jpg", os.Getenv("STORAGE_URL"), *playlist.ImageID)
 					playlist.SmallImage = &smallImage
-					mediumImage := fmt.Sprintf("%s/images/medium/%s.jpg", os.Getenv("STORAGE_URL"), *playlist.ImageID)
+					mediumImage := fmt.Sprintf("%s/playlists/medium/%s.jpg", os.Getenv("STORAGE_URL"), *playlist.ImageID)
 					playlist.MediumImage = &mediumImage
 				}
 			}
