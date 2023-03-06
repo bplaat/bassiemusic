@@ -1,0 +1,49 @@
+{
+    "app_name": "BassieMusic",
+
+    "login_header": "Login bij BassieMusic",
+    "login_info": "Je hebt een BassieMusic-account nodig om naar muziek te luisteren",
+    "login_error": "Verkeerde gebruikersnaam, e-mailadres of wachtwoord",
+    "login_logon": "Gebruikersnaam of email adres",
+    "login_password": "Wachtwoord",
+    "login_login": "Login",
+    "login_footer": "Gemaakt met ❤️ door PlaatSoft",
+
+    "home_home": "Home",
+    "home_explore": "Ontdek",
+    "home_liked": "Geliked",
+    "home_history": "Geschiedenis",
+
+    "home_home_hey": "Hoi, {username}!",
+    "@home_home_hey": { "placeholders": { "username": {} } },
+    "home_home_last_artists": "Laast gespeelde artisten",
+    "home_home_last_albums": "Laast gespeelde albums",
+    "home_home_last_tracks": "Laast gespeelde tracks",
+    "home_home_empty": "Je hebt nog geen nummers beluisterd, gebruik de ontdek-tab om iets te vinden dat je leuk vindt",
+
+    "home_explore_artists": "Artisten",
+    "home_explore_artists_empty": "Geen artisten",
+    "home_explore_genres": "Genres",
+    "home_explore_genres_empty": "Geen genres",
+    "home_explore_albums": "Albums",
+    "home_explore_albums_empty": "Geen albums",
+    "home_explore_tracks": "Tracks",
+    "home_explore_tracks_empty": "Geen tracks",
+
+    "home_liked_artists": "Artisten",
+    "home_liked_artists_empty": "Je hebt nog geen enkele artist geliked",
+    "home_liked_albums": "Albums",
+    "home_liked_albums_empty": "Je hebt nog geen enkele album geliked",
+    "home_liked_tracks": "Tracks",
+    "home_liked_tracks_empty": "Je hebt nog geen enkele track geliked",
+
+    "home_history_empty": "Je hebt naar geen enkel nummer geluisterd",
+
+    "artist_top_tracks": "Top Tracks",
+    "artist_albums": "Albums",
+
+    "genre_albums_empty": "Dit genre heeft geen albums",
+
+    "profile_header": "Youw profiel",
+    "profile_logout": "Uitloggen"
+}

@@ -1,6 +1,10 @@
-import 'package:bassiemusic/pages/genre_page.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import '../models/user.dart';
+import '../models/artist.dart';
+import '../models/album.dart';
+import '../models/genre.dart';
 import 'search_page.dart';
 import 'profile_page.dart';
 import 'artist_page.dart';
@@ -12,15 +16,19 @@ import 'home_liked_tab.dart';
 import 'home_history_tab.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  final User user;
+  final Function(User? user) onAuthChange;
+
+  const HomePage({super.key, required this.user, required this.onAuthChange});
 
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
+  final _navigatorKey = GlobalKey<NavigatorState>();
   final _pageController = PageController(initialPage: 0);
-  int _currentPageIndex = 0;
+  int _page = 0;
 
   @override
   void dispose() {
@@ -28,14 +36,10 @@ class _HomePageState extends State<HomePage> {
     super.dispose();
   }
 
-  final _navigatorKey = GlobalKey<NavigatorState>();
-
   @override
   Widget build(BuildContext context) {
+    final lang = AppLocalizations.of(context)!;
     return Scaffold(
-        backgroundColor: Theme.of(context).colorScheme.background,
-
-        //---------------------
         body: Navigator(
             key: _navigatorKey,
             initialRoute: '/',
@@ -44,13 +48,15 @@ class _HomePageState extends State<HomePage> {
               if (settings.name == "/search") {
                 page = const SearchPage();
               } else if (settings.name == "/profile") {
-                page = const ProfilePage();
-              } else if (settings.name == "/artists") {
-                page = const ArtistPage();
-              } else if (settings.name == "/genres") {
-                page = const GenrePage();
-              } else if (settings.name == "/albums") {
-                page = const AlbumPage();
+                page = ProfilePage(
+                    user: widget.user, onAuthChange: widget.onAuthChange);
+              } else if (settings.name == "/artist") {
+                page =
+                    ArtistPage(incompleteArtist: settings.arguments as Artist);
+              } else if (settings.name == "/album") {
+                page = AlbumPage(incompleteAlbum: settings.arguments as Album);
+              } else if (settings.name == "/genre") {
+                page = GenrePage(genre: settings.arguments as Genre);
               } else {
                 page = Stack(children: [
                   Padding(
@@ -59,13 +65,13 @@ class _HomePageState extends State<HomePage> {
                       child: PageView(
                           controller: _pageController,
                           onPageChanged: (index) {
-                            setState(() => _currentPageIndex = index);
+                            setState(() => _page = index);
                           },
-                          children: const [
-                            HomeHomeTab(),
-                            HomeExplorerTab(),
-                            HomeLikedTab(),
-                            HomeHistoryTab()
+                          children: [
+                            HomeHomeTab(user: widget.user),
+                            const HomeExplorerTab(),
+                            HomeLikedTab(user: widget.user),
+                            HomeHistoryTab(user: widget.user)
                           ])),
                   Positioned(
                       //Place it at the top, and not use the entire screen
@@ -73,36 +79,39 @@ class _HomePageState extends State<HomePage> {
                       left: 0.0,
                       right: 0.0,
                       child: AppBar(
-                          title: const Text('BassieMusic'),
-                          elevation:
-                              _currentPageIndex == 1 || _currentPageIndex == 2
-                                  ? 0
-                                  : 4,
+                          title: Text(lang.app_name),
+                          elevation: 4,
                           actions: [
                             IconButton(
                               onPressed: () => _navigatorKey.currentState!
                                   .pushNamed('/search'),
                               icon: const Icon(Icons.search),
                             ),
-                            SizedBox(
-                                width: 56,
-                                height: 56,
-                                child: Card(
-                                    clipBehavior: Clip.antiAliasWithSaveLayer,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(6),
-                                    ),
-                                    elevation: 2,
-                                    child: InkWell(
-                                      onTap: () => _navigatorKey.currentState!
-                                          .pushNamed('/profile'),
-                                      child: Container(
-                                          decoration: BoxDecoration(
-                                              image: DecorationImage(
-                                                  fit: BoxFit.cover,
-                                                  image: CachedNetworkImageProvider(
-                                                      "https://bassiemusic-storage.plaatsoft.nl/avatars/c237187f-f029-414d-a682-5fef11afef1b.jpg")))),
-                                    ))),
+                            Container(
+                                margin: const EdgeInsets.all(4),
+                                child: SizedBox(
+                                    width: 48,
+                                    height: 48,
+                                    child: Card(
+                                        clipBehavior:
+                                            Clip.antiAliasWithSaveLayer,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(6),
+                                        ),
+                                        elevation: 2,
+                                        child: InkWell(
+                                          onTap: () => _navigatorKey
+                                              .currentState!
+                                              .pushNamed('/profile'),
+                                          child: Container(
+                                              decoration: BoxDecoration(
+                                                  image: DecorationImage(
+                                                      fit: BoxFit.cover,
+                                                      image: CachedNetworkImageProvider(
+                                                          widget.user
+                                                              .smallAvatarUrl!)))),
+                                        )))),
                           ])),
                 ]);
               }
@@ -113,94 +122,94 @@ class _HomePageState extends State<HomePage> {
                 settings: settings,
               );
             }),
-        //---------------------
-        // floatingActionButton: Card(
-        //     shape: RoundedRectangleBorder(
-        //       borderRadius: BorderRadius.circular(8),
-        //     ),
-        //     elevation: 5,
-        //     child: Padding(
-        //         padding: const EdgeInsets.all(16),
-        //         child: Row(
-        //           children: [Text("1989"), Text("Taylor Swift")],
-        //         ))),
-        bottomNavigationBar: Column(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              Padding(
-                  padding: EdgeInsets.all(8),
-                  child: Row(children: [
-                    Container(
-                        margin: EdgeInsets.only(right: 16),
-                        child: SizedBox(
-                            width: 56,
-                            height: 56,
-                            child: Card(
-                              clipBehavior: Clip.antiAliasWithSaveLayer,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              elevation: 2,
-                              child: Container(
-                                  decoration: BoxDecoration(
-                                      image: DecorationImage(
-                                          fit: BoxFit.cover,
-                                          image: CachedNetworkImageProvider(
-                                              "https://bassiemusic-storage.plaatsoft.nl/albums/medium/b7ba551d-e28e-47a2-8e5e-0bdd80d7bb1b.jpg")))),
-                            ))),
-                    Expanded(
-                        flex: 1,
-                        child: Column(children: [
-                          Container(
-                              margin: EdgeInsets.only(bottom: 4),
-                              child: SizedBox(
-                                  width: double.infinity,
-                                  child: Text("Flower Boy",
-                                      style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w500)))),
-                          Container(
-                              margin: EdgeInsets.only(bottom: 4),
-                              child: SizedBox(
-                                  width: double.infinity,
-                                  child: Text("Tyler, The Creator",
-                                      style: TextStyle(
-                                          fontSize: 16, color: Colors.grey)))),
-                        ])),
-                    IconButton(
-                        onPressed: () => {}, icon: Icon(Icons.skip_previous)),
-                    IconButton(
-                        onPressed: () => {}, icon: Icon(Icons.play_arrow)),
-                    IconButton(
-                        onPressed: () => {}, icon: Icon(Icons.skip_next)),
-                    IconButton(
-                        onPressed: () => {}, icon: Icon(Icons.favorite_outline))
-                  ])),
-              BottomNavigationBar(
-                  type: BottomNavigationBarType.fixed,
-                  onTap: (index) {
-                    if (_navigatorKey.currentState!.canPop()) {
-                      _navigatorKey.currentState!.pop();
-                    }
-
-                    _pageController.animateToPage(index,
-                        duration: const Duration(milliseconds: 200),
-                        curve: Curves.ease);
-
-                    setState(() => _currentPageIndex = index);
-                  },
-                  currentIndex: _currentPageIndex,
-                  items: const [
-                    BottomNavigationBarItem(
-                        icon: Icon(Icons.home), label: 'Home'),
-                    BottomNavigationBarItem(
-                        icon: Icon(Icons.explore), label: 'Explore'),
-                    BottomNavigationBarItem(
-                        icon: Icon(Icons.favorite), label: 'Liked'),
-                    BottomNavigationBarItem(
-                        icon: Icon(Icons.history), label: 'History')
-                  ])
-            ]));
+        bottomNavigationBar: Material(
+            elevation: 8,
+            child: Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Container(
+                      color: Theme.of(context)
+                          .bottomNavigationBarTheme
+                          .backgroundColor,
+                      child: Padding(
+                          padding: const EdgeInsets.all(8),
+                          child: Row(children: [
+                            SizedBox(
+                                width: 56,
+                                height: 56,
+                                child: Card(
+                                  clipBehavior: Clip.antiAliasWithSaveLayer,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  elevation: 2,
+                                  child: Container(
+                                      decoration: const BoxDecoration(
+                                          image: DecorationImage(
+                                              fit: BoxFit.cover,
+                                              image: CachedNetworkImageProvider(
+                                                  "https://bassiemusic-storage.plaatsoft.nl/albums/medium/b7ba551d-e28e-47a2-8e5e-0bdd80d7bb1b.jpg")))),
+                                )),
+                            const SizedBox(width: 16),
+                            Expanded(
+                                flex: 1,
+                                child: Column(children: const [
+                                  SizedBox(
+                                      width: double.infinity,
+                                      child: Text("Flower Boy",
+                                          style: TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w500))),
+                                  SizedBox(height: 4),
+                                  SizedBox(
+                                      width: double.infinity,
+                                      child: Text("Tyler, The Creator",
+                                          style: TextStyle(
+                                              fontSize: 16,
+                                              color: Colors.grey))),
+                                ])),
+                            const SizedBox(width: 16),
+                            IconButton(
+                                onPressed: () => {},
+                                icon: const Icon(Icons.skip_previous)),
+                            IconButton(
+                                onPressed: () => {},
+                                icon: const Icon(Icons.play_arrow)),
+                            IconButton(
+                                onPressed: () => {},
+                                icon: const Icon(Icons.skip_next)),
+                            IconButton(
+                                onPressed: () => {},
+                                icon: const Icon(Icons.favorite_outline))
+                          ]))),
+                  BottomNavigationBar(
+                      elevation: 0,
+                      type: BottomNavigationBarType.fixed,
+                      onTap: (index) {
+                        if (_navigatorKey.currentState!.canPop()) {
+                          _navigatorKey.currentState!.pop();
+                        }
+                        _pageController.animateToPage(index,
+                            duration: const Duration(milliseconds: 200),
+                            curve: Curves.ease);
+                        setState(() => _page = index);
+                      },
+                      currentIndex: _page,
+                      items: [
+                        BottomNavigationBarItem(
+                            icon: const Icon(Icons.home),
+                            label: lang.home_home),
+                        BottomNavigationBarItem(
+                            icon: const Icon(Icons.explore),
+                            label: lang.home_explore),
+                        BottomNavigationBarItem(
+                            icon: const Icon(Icons.favorite),
+                            label: lang.home_liked),
+                        BottomNavigationBarItem(
+                            icon: const Icon(Icons.history),
+                            label: lang.home_history)
+                      ])
+                ])));
   }
 }

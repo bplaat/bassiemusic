@@ -1,1 +1,1 @@
-const String token = ''; // Enter auth token here
+const String apiUrl = 'https://bassiemusic-api.plaatsoft.nl';

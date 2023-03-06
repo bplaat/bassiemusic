@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'pages/home_page.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'pages/root_page.dart';
 
 class BassieMusicApp extends StatelessWidget {
   const BassieMusicApp({super.key});
@@ -9,7 +10,21 @@ class BassieMusicApp extends StatelessWidget {
     return MaterialApp(
         title: 'BassieMusic',
         debugShowCheckedModeBanner: false,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         theme: ThemeData(
+          brightness: Brightness.light,
+          primarySwatch: Colors.blue,
+          accentColor: Colors.blue,
+          appBarTheme: const AppBarTheme(
+            foregroundColor: Color(0xff121212),
+            backgroundColor: Colors.white,
+          ),
+          bottomNavigationBarTheme: Theme.of(context)
+              .bottomNavigationBarTheme
+              .copyWith(backgroundColor: Colors.white),
+        ),
+        darkTheme: ThemeData(
             brightness: Brightness.dark,
             primarySwatch: Colors.blue,
             accentColor: Colors.blue,
@@ -26,7 +41,7 @@ class BassieMusicApp extends StatelessWidget {
             colorScheme: Theme.of(context).colorScheme.copyWith(
                 brightness: Brightness.dark,
                 background: const Color(0xff0a0a0a))),
-        home: const HomePage());
+        home: const RootPage());
   }
 }
 

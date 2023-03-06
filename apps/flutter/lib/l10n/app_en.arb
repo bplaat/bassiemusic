@@ -1,0 +1,49 @@
+{
+    "app_name": "BassieMusic",
+
+    "login_header": "Login to BassieMusic",
+    "login_info": "You need a BassieMusic account to listen to music",
+    "login_error": "Wrong username, email address or password",
+    "login_logon": "Username or email address",
+    "login_password": "Password",
+    "login_login": "Login",
+    "login_footer": "Made with ❤️ by PlaatSoft",
+
+    "home_home": "Home",
+    "home_explore": "Explore",
+    "home_liked": "Liked",
+    "home_history": "History",
+
+    "home_home_hey": "Hey, {username}!",
+    "@home_home_hey": { "placeholders": { "username": {} } },
+    "home_home_last_artists": "Last played artists",
+    "home_home_last_albums": "Last played albums",
+    "home_home_last_tracks": "Last played tracks",
+    "home_home_empty": "You haven't listened to any tracks yet, use the explore tab to find something you like",
+
+    "home_explore_artists": "Artists",
+    "home_explore_artists_empty": "No artists",
+    "home_explore_genres": "Genres",
+    "home_explore_genres_empty": "No genres",
+    "home_explore_albums": "Albums",
+    "home_explore_albums_empty": "No albums",
+    "home_explore_tracks": "Tracks",
+    "home_explore_tracks_empty": "No tracks",
+
+    "home_liked_artists": "Artists",
+    "home_liked_artists_empty": "You have not liked any artists",
+    "home_liked_albums": "Albums",
+    "home_liked_albums_empty": "You have not liked any albums",
+    "home_liked_tracks": "Tracks",
+    "home_liked_tracks_empty": "You have not liked any tracks",
+
+    "home_history_empty": "You have not listened to any tracks",
+
+    "artist_top_tracks": "Top Tracks",
+    "artist_albums": "Albums",
+
+    "genre_albums_empty": "This genre doesn't have any albums",
+
+    "profile_header": "Your profile",
+    "profile_logout": "Logout"
+}
