@@ -40,25 +40,24 @@ class _RootPageState extends State<RootPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        body: FutureBuilder(
-          future: checkAuth(),
-          builder: (context, snapshot) {
-            if (snapshot.hasError) {
-              return Center(child: Text("Error: ${snapshot.error}"));
-            } else if (snapshot.hasData) {
-              return snapshot.data! && _user != null
-                  ? HomePage(
-                      user: _user!,
-                      onAuthChange: (User? user) {
-                        setState(() => _user = user);
-                      })
-                  : LoginPage(onAuthChange: (User? user) {
-                      setState(() => _user = user);
-                    });
-            }
-            return const Center(child: CircularProgressIndicator());
-          },
-        ));
+    return FutureBuilder(
+      future: checkAuth(),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return Center(child: Text("Error: ${snapshot.error}"));
+        } else if (snapshot.hasData) {
+          return snapshot.data! && _user != null
+              ? HomePage(
+                  user: _user!,
+                  onAuthChange: (User? user) {
+                    setState(() => _user = user);
+                  })
+              : LoginPage(onAuthChange: (User? user) {
+                  setState(() => _user = user);
+                });
+        }
+        return const Center(child: CircularProgressIndicator());
+      },
+    );
   }
 }

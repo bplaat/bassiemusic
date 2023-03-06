@@ -58,62 +58,50 @@ class _HomePageState extends State<HomePage> {
               } else if (settings.name == "/genre") {
                 page = GenrePage(genre: settings.arguments as Genre);
               } else {
-                page = Stack(children: [
-                  Padding(
-                      padding:
-                          EdgeInsets.only(top: AppBar().preferredSize.height),
-                      child: PageView(
-                          controller: _pageController,
-                          onPageChanged: (index) {
-                            setState(() => _page = index);
-                          },
-                          children: [
-                            HomeHomeTab(user: widget.user),
-                            const HomeExplorerTab(),
-                            HomeLikedTab(user: widget.user),
-                            HomeHistoryTab(user: widget.user)
-                          ])),
-                  Positioned(
-                      //Place it at the top, and not use the entire screen
-                      top: 0.0,
-                      left: 0.0,
-                      right: 0.0,
-                      child: AppBar(
-                          title: Text(lang.app_name),
-                          elevation: 4,
-                          actions: [
-                            IconButton(
-                              onPressed: () => _navigatorKey.currentState!
-                                  .pushNamed('/search'),
-                              icon: const Icon(Icons.search),
-                            ),
-                            Container(
-                                margin: const EdgeInsets.all(4),
-                                child: SizedBox(
-                                    width: 48,
-                                    height: 48,
-                                    child: Card(
-                                        clipBehavior:
-                                            Clip.antiAliasWithSaveLayer,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(6),
-                                        ),
-                                        elevation: 2,
-                                        child: InkWell(
-                                          onTap: () => _navigatorKey
-                                              .currentState!
-                                              .pushNamed('/profile'),
-                                          child: Container(
-                                              decoration: BoxDecoration(
-                                                  image: DecorationImage(
-                                                      fit: BoxFit.cover,
-                                                      image: CachedNetworkImageProvider(
-                                                          widget.user
-                                                              .smallAvatarUrl!)))),
-                                        )))),
-                          ])),
-                ]);
+                page = Scaffold(
+                    appBar: AppBar(
+                        title: Text(lang.app_name),
+                        elevation: 4,
+                        actions: [
+                          IconButton(
+                            onPressed: () => _navigatorKey.currentState!
+                                .pushNamed('/search'),
+                            icon: const Icon(Icons.search),
+                          ),
+                          Container(
+                              margin: const EdgeInsets.all(4),
+                              child: SizedBox(
+                                  width: 48,
+                                  height: 48,
+                                  child: Card(
+                                      clipBehavior: Clip.antiAliasWithSaveLayer,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      elevation: 2,
+                                      child: InkWell(
+                                        onTap: () => _navigatorKey.currentState!
+                                            .pushNamed('/profile'),
+                                        child: Container(
+                                            decoration: BoxDecoration(
+                                                image: DecorationImage(
+                                                    fit: BoxFit.cover,
+                                                    image: CachedNetworkImageProvider(
+                                                        widget.user
+                                                            .smallAvatarUrl!)))),
+                                      )))),
+                        ]),
+                    body: PageView(
+                        controller: _pageController,
+                        onPageChanged: (index) {
+                          setState(() => _page = index);
+                        },
+                        children: [
+                          HomeHomeTab(user: widget.user),
+                          const HomeExplorerTab(),
+                          HomeLikedTab(user: widget.user),
+                          HomeHistoryTab(user: widget.user)
+                        ]));
               }
               return MaterialPageRoute<dynamic>(
                 builder: (context) {
