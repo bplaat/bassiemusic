@@ -127,7 +127,8 @@ class _ArtistPageState extends State<ArtistPage> {
                                         Container(
                                             margin: const EdgeInsets.symmetric(
                                                 vertical: 8),
-                                            child: GridView.builder(
+                                            child: _artist!
+                                                            .albums!.isNotEmpty? GridView.builder(
                                                 gridDelegate:
                                                     const SliverGridDelegateWithMaxCrossAxisExtent(
                                                   maxCrossAxisExtent: 240,
@@ -136,12 +137,14 @@ class _ArtistPageState extends State<ArtistPage> {
                                                   crossAxisSpacing: 8,
                                                 ),
                                                 shrinkWrap: true,
+                                                physics:
+                                                    const NeverScrollableScrollPhysics(),
                                                 itemCount:
                                                     _artist!.albums!.length,
                                                 itemBuilder: (context, index) =>
                                                     AlbumCard(
                                                         album: _artist!
-                                                            .albums![index]))),
+                                                            .albums![index])) : Text(lang.artist_albums_empty, style: const TextStyle(color: Colors.grey)))
                                       ])
                                 : Column(children: const []);
                           }

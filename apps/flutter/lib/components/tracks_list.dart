@@ -40,6 +40,9 @@ class TracksList extends StatelessWidget {
         padding: const EdgeInsets.all(8),
         controller: scrollController,
         shrinkWrap: scrollController == null,
+        physics: scrollController == null
+            ? const NeverScrollableScrollPhysics()
+            : const ScrollPhysics(),
         itemCount: tracks.length,
         itemBuilder: (context, index) => InkWell(
             onTap: () => {},

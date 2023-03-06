@@ -41,6 +41,7 @@
 
     "artist_top_tracks": "Top Tracks",
     "artist_albums": "Albums",
+    "artist_albums_empty": "This artist has no albums",
 
     "genre_albums_empty": "This genre doesn't have any albums",
 

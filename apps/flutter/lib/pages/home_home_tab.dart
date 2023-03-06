@@ -112,6 +112,7 @@ class _HomeHomeTabState extends State<HomeHomeTab>
                                     crossAxisSpacing: 8,
                                   ),
                                   shrinkWrap: true,
+                                  physics: const NeverScrollableScrollPhysics(),
                                   itemCount: lastPlayedArtists.length,
                                   itemBuilder: (context, index) => ArtistCard(
                                       artist: lastPlayedArtists[index]))),
@@ -135,6 +136,7 @@ class _HomeHomeTabState extends State<HomeHomeTab>
                                     crossAxisSpacing: 8,
                                   ),
                                   shrinkWrap: true,
+                                  physics: const NeverScrollableScrollPhysics(),
                                   itemCount: lastPlayedAlbums.length,
                                   itemBuilder: (context, index) => AlbumCard(
                                       album: lastPlayedAlbums[index]))),
