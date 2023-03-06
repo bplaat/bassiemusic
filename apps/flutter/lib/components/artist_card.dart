@@ -16,27 +16,23 @@ class ArtistCard extends StatelessWidget {
         elevation: 5,
         clipBehavior: Clip.antiAliasWithSaveLayer,
         child: InkWell(
-          onTap: () => Navigator.pushNamed(context, '/artists'),
+          onTap: () =>
+              Navigator.pushNamed(context, '/artist', arguments: artist),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Image(
-                image: CachedNetworkImageProvider(artist.mediumImageUrl),
-                fit: BoxFit.fill,
-              ),
+              AspectRatio(
+                  aspectRatio: 1,
+                  child: Image(
+                    image: CachedNetworkImageProvider(artist.mediumImageUrl!),
+                    fit: BoxFit.fill,
+                  )),
               Padding(
                   padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                          margin: const EdgeInsets.only(bottom: 8),
-                          child: Text(artist.name,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.w500))),
-                    ],
-                  ))
+                  child:  Text(artist.name,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontWeight: FontWeight.w500)),
+                    )
             ],
           ),
         ));

@@ -1,9 +1,9 @@
 class Genre {
   final String id;
   final String name;
-  final String smallImageUrl;
-  final String mediumImageUrl;
-  final String largeImageUrl;
+  final String? smallImageUrl;
+  final String? mediumImageUrl;
+  final String? largeImageUrl;
   final bool? liked;
   final DateTime createdAt;
 

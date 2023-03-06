@@ -16,25 +16,25 @@ class AlbumCard extends StatelessWidget {
         elevation: 5,
         clipBehavior: Clip.antiAliasWithSaveLayer,
         child: InkWell(
-          onTap: () => Navigator.pushNamed(context, '/albums'),
+          onTap: () => Navigator.pushNamed(context, '/album', arguments: album),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Image(
-                image: CachedNetworkImageProvider(album.mediumCoverUrl),
-                fit: BoxFit.fill,
-              ),
+              AspectRatio(
+                  aspectRatio: 1,
+                  child: Image(
+                    image: CachedNetworkImageProvider(album.mediumCoverUrl!),
+                    fit: BoxFit.fill,
+                  )),
               Padding(
                   padding: const EdgeInsets.all(16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Container(
-                          margin: const EdgeInsets.only(bottom: 8),
-                          child: Text(album.title,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.w500))),
+                      Text(album.title,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontWeight: FontWeight.w500)),
+                      const SizedBox(height: 8),
                       Text(
                           album.artists!
                               .map(

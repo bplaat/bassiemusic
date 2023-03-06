@@ -18,8 +18,8 @@ type User struct {
 	AllowExplicit bool      `column:"allow_explicit,bool" json:"allow_explicit"`
 	RoleInt       UserRole  `column:"role,int" json:"-"`
 	Role          string    `json:"role"`
-	ThemeInt      UserTheme `column:"theme,int" json:"-"`
 	Language      string    `column:"language,string" json:"language"`
+	ThemeInt      UserTheme `column:"theme,int" json:"-"`
 	Theme         string    `json:"theme"`
 	CreatedAt     string    `column:"created_at,timestamp" json:"created_at"`
 }

@@ -16,27 +16,22 @@ class GenreCard extends StatelessWidget {
         elevation: 5,
         clipBehavior: Clip.antiAliasWithSaveLayer,
         child: InkWell(
-          onTap: () => Navigator.pushNamed(context, '/genres'),
+          onTap: () => Navigator.pushNamed(context, '/genre', arguments: genre),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Image(
-                image: CachedNetworkImageProvider(genre.mediumImageUrl),
-                fit: BoxFit.fill,
-              ),
+              AspectRatio(
+                  aspectRatio: 1,
+                  child: Image(
+                    image: CachedNetworkImageProvider(genre.mediumImageUrl!),
+                    fit: BoxFit.fill,
+                  )),
               Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                          margin: const EdgeInsets.only(bottom: 8),
-                          child: Text(genre.name,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.w500))),
-                    ],
-                  ))
+                padding: const EdgeInsets.all(16),
+                child: Text(genre.name,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontWeight: FontWeight.w500)),
+              )
             ],
           ),
         ));

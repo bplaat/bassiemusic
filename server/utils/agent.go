@@ -17,6 +17,12 @@ func ParseUserAgent(c *fiber.Ctx) Agent {
 	agent := c.Get("User-Agent")
 
 	// Detect BassieMusic apps
+	if strings.HasPrefix(agent, "BassieMusic Android App") {
+		return Agent{"Android", "BassieMusic App", strings.Split(agent, "v")[1]}
+	}
+	if strings.HasPrefix(agent, "BassieMusic iOS App") {
+		return Agent{"iOS", "BassieMusic App", strings.Split(agent, "v")[1]}
+	}
 	if strings.HasPrefix(agent, "BassieMusic macOS App") {
 		return Agent{"macOS", "BassieMusic App", strings.Split(agent, "v")[1]}
 	}
@@ -25,6 +31,9 @@ func ParseUserAgent(c *fiber.Ctx) Agent {
 	}
 	if strings.HasPrefix(agent, "BassieMusic Linux App") {
 		return Agent{"Linux", "BassieMusic App", strings.Split(agent, "v")[1]}
+	}
+	if strings.HasPrefix(agent, "BassieMusic Flutter App") {
+		return Agent{"Flutter", "BassieMusic App", strings.Split(agent, "v")[1]}
 	}
 
 	// Parse browser agent

@@ -1,16 +1,18 @@
 import 'dart:convert';
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../components/artist_card.dart';
 import '../components/genre_card.dart';
 import '../components/album_card.dart';
+import '../components/tracks_list.dart';
 import '../models/artist.dart';
 import '../models/genre.dart';
 import '../models/album.dart';
 import '../models/track.dart';
 import '../config.dart';
+import '../utils.dart';
 
 class HomeExplorerTab extends StatefulWidget {
   const HomeExplorerTab({super.key});
@@ -20,54 +22,96 @@ class HomeExplorerTab extends StatefulWidget {
 }
 
 class _HomeExplorerTabState extends State<HomeExplorerTab>
-    with
-        SingleTickerProviderStateMixin,
-        AutomaticKeepAliveClientMixin<HomeExplorerTab> {
-  late TabController _tabController;
+    with AutomaticKeepAliveClientMixin<HomeExplorerTab> {
+  final _pageController = PageController(initialPage: 0);
+  int _page = 0;
 
   @override
   bool get wantKeepAlive => true;
 
   @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(vsync: this, length: 4, initialIndex: 0);
-  }
-
-  @override
   void dispose() {
-    _tabController.dispose();
+    _pageController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        backgroundColor: Theme.of(context).colorScheme.background,
-        appBar: AppBar(
-            title: TabBar(
-          controller: _tabController,
-          tabs: const [
-            Tab(
-              text: "Artists",
-            ),
-            Tab(
-              text: "Genres",
-            ),
-            Tab(
-              text: "Albums",
-            ),
-            Tab(
-              text: "Tracks",
-            ),
-          ],
-        )),
-        body: TabBarView(controller: _tabController, children: [
-          const ArtistsTab(),
-          const GenresTab(),
-          const AlbumsTab(),
-          const TracksTab(),
-        ]));
+    final lang = AppLocalizations.of(context)!;
+    return Column(children: [
+      Padding(
+          padding:
+              const EdgeInsets.only(top: 16, left: 16, right: 16, bottom: 8),
+          child: Row(children: [
+            OutlinedButton(
+                style:
+                    OutlinedButton.styleFrom(padding: const EdgeInsets.all(16)),
+                onPressed: () {
+                  _pageController.animateToPage(0,
+                      duration: const Duration(milliseconds: 200),
+                      curve: Curves.ease);
+                  setState(() => _page = 0);
+                },
+                child: Text(
+                  lang.home_explore_artists,
+                  style: const TextStyle(color: Colors.grey),
+                )),
+            const SizedBox(width: 8),
+            OutlinedButton(
+                style:
+                    OutlinedButton.styleFrom(padding: const EdgeInsets.all(16)),
+                onPressed: () {
+                  _pageController.animateToPage(1,
+                      duration: const Duration(milliseconds: 200),
+                      curve: Curves.ease);
+                  setState(() => _page = 1);
+                },
+                child: Text(
+                  lang.home_explore_genres,
+                  style: const TextStyle(color: Colors.grey),
+                )),
+            const SizedBox(width: 8),
+            OutlinedButton(
+                style:
+                    OutlinedButton.styleFrom(padding: const EdgeInsets.all(16)),
+                onPressed: () {
+                  _pageController.animateToPage(2,
+                      duration: const Duration(milliseconds: 200),
+                      curve: Curves.ease);
+                  setState(() => _page = 2);
+                },
+                child: Text(
+                  lang.home_explore_albums,
+                  style: const TextStyle(color: Colors.grey),
+                )),
+            const SizedBox(width: 8),
+            OutlinedButton(
+                style:
+                    OutlinedButton.styleFrom(padding: const EdgeInsets.all(16)),
+                onPressed: () {
+                  _pageController.animateToPage(3,
+                      duration: const Duration(milliseconds: 200),
+                      curve: Curves.ease);
+                  setState(() => _page = 3);
+                },
+                child: Text(
+                  lang.home_explore_tracks,
+                  style: const TextStyle(color: Colors.grey),
+                )),
+          ])),
+      Expanded(
+          child: PageView(
+              controller: _pageController,
+              onPageChanged: (index) {
+                setState(() => _page = index);
+              },
+              children: const [
+            ArtistsTab(),
+            GenresTab(),
+            AlbumsTab(),
+            TracksTab(),
+          ]))
+    ]);
   }
 }
 
@@ -107,10 +151,12 @@ class _ArtistsTabState extends State<ArtistsTab> {
   void loadPage() async {
     _isLoading = true;
     try {
-      final response = await http.get(
-          Uri.parse(
-              'https://bassiemusic-api.plaatsoft.nl/artists?page=${_page++}'),
-          headers: {HttpHeaders.authorizationHeader: 'Bearer ${token}'});
+      final prefs = await SharedPreferences.getInstance();
+      final response = await http
+          .get(Uri.parse('$apiUrl/artists?page=${_page++}'), headers: {
+        'User-Agent': userAgent(),
+        'Authorization': 'Bearer ${prefs.getString('token')}'
+      });
 
       if (response.statusCode == 200) {
         final artistsJson =
@@ -128,6 +174,7 @@ class _ArtistsTabState extends State<ArtistsTab> {
 
   @override
   Widget build(BuildContext context) {
+    final lang = AppLocalizations.of(context)!;
     return RefreshIndicator(
         onRefresh: () async {
           _artists = [];
@@ -139,7 +186,7 @@ class _ArtistsTabState extends State<ArtistsTab> {
             ? GridView.builder(
                 gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
                   maxCrossAxisExtent: 240,
-                  childAspectRatio: 1 / 1.5,
+                  childAspectRatio: 1 / 1.28,
                   mainAxisSpacing: 8,
                   crossAxisSpacing: 8,
                 ),
@@ -150,8 +197,8 @@ class _ArtistsTabState extends State<ArtistsTab> {
                     ArtistCard(artist: _artists[index]))
             : (_isLoading
                 ? const Center(child: CircularProgressIndicator())
-                : const Center(
-                    child: Text('No artists'),
+                : Center(
+                    child: Text(lang.home_explore_artists_empty),
                   )));
   }
 }
@@ -192,10 +239,12 @@ class _GenresTabState extends State<GenresTab> {
   void loadPage() async {
     _isLoading = true;
     try {
-      final response = await http.get(
-          Uri.parse(
-              'https://bassiemusic-api.plaatsoft.nl/genres?page=${_page++}'),
-          headers: {HttpHeaders.authorizationHeader: 'Bearer ${token}'});
+      final prefs = await SharedPreferences.getInstance();
+      final response = await http
+          .get(Uri.parse('$apiUrl/genres?page=${_page++}'), headers: {
+        'User-Agent': userAgent(),
+        'Authorization': 'Bearer ${prefs.getString('token')}'
+      });
 
       if (response.statusCode == 200) {
         final genresJson = json.decode(utf8.decode(response.bodyBytes))['data'];
@@ -212,6 +261,7 @@ class _GenresTabState extends State<GenresTab> {
 
   @override
   Widget build(BuildContext context) {
+    final lang = AppLocalizations.of(context)!;
     return RefreshIndicator(
         onRefresh: () async {
           _genres = [];
@@ -223,7 +273,7 @@ class _GenresTabState extends State<GenresTab> {
             ? GridView.builder(
                 gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
                   maxCrossAxisExtent: 240,
-                  childAspectRatio: 1 / 1.5,
+                  childAspectRatio: 1 / 1.28,
                   mainAxisSpacing: 8,
                   crossAxisSpacing: 8,
                 ),
@@ -234,8 +284,8 @@ class _GenresTabState extends State<GenresTab> {
                     GenreCard(genre: _genres[index]))
             : (_isLoading
                 ? const Center(child: CircularProgressIndicator())
-                : const Center(
-                    child: Text('No genres'),
+                : Center(
+                    child: Text(lang.home_explore_genres_empty),
                   )));
   }
 }
@@ -276,10 +326,12 @@ class _AlbumsTabState extends State<AlbumsTab> {
   void loadPage() async {
     _isLoading = true;
     try {
-      final response = await http.get(
-          Uri.parse(
-              'https://bassiemusic-api.plaatsoft.nl/albums?page=${_page++}'),
-          headers: {HttpHeaders.authorizationHeader: 'Bearer ${token}'});
+      final prefs = await SharedPreferences.getInstance();
+      final response = await http
+          .get(Uri.parse('$apiUrl/albums?page=${_page++}'), headers: {
+        'User-Agent': userAgent(),
+        'Authorization': 'Bearer ${prefs.getString('token')}'
+      });
 
       if (response.statusCode == 200) {
         final albumsJson = json.decode(utf8.decode(response.bodyBytes))['data'];
@@ -296,6 +348,7 @@ class _AlbumsTabState extends State<AlbumsTab> {
 
   @override
   Widget build(BuildContext context) {
+    final lang = AppLocalizations.of(context)!;
     return RefreshIndicator(
         onRefresh: () async {
           _albums = [];
@@ -307,7 +360,7 @@ class _AlbumsTabState extends State<AlbumsTab> {
             ? GridView.builder(
                 gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
                   maxCrossAxisExtent: 240,
-                  childAspectRatio: 1 / 1.5,
+                  childAspectRatio: 1 / 1.37,
                   mainAxisSpacing: 8,
                   crossAxisSpacing: 8,
                 ),
@@ -318,8 +371,8 @@ class _AlbumsTabState extends State<AlbumsTab> {
                     AlbumCard(album: _albums[index]))
             : (_isLoading
                 ? const Center(child: CircularProgressIndicator())
-                : const Center(
-                    child: Text('No albums'),
+                : Center(
+                    child: Text(lang.home_explore_albums_empty),
                   )));
   }
 }
@@ -360,10 +413,12 @@ class _TracksTabState extends State<TracksTab> {
   void loadPage() async {
     _isLoading = true;
     try {
-      final response = await http.get(
-          Uri.parse(
-              'https://bassiemusic-api.plaatsoft.nl/tracks?page=${_page++}'),
-          headers: {HttpHeaders.authorizationHeader: 'Bearer ${token}'});
+      final prefs = await SharedPreferences.getInstance();
+      final response = await http
+          .get(Uri.parse('$apiUrl/tracks?page=${_page++}'), headers: {
+        'User-Agent': userAgent(),
+        'Authorization': 'Bearer ${prefs.getString('token')}'
+      });
 
       if (response.statusCode == 200) {
         final tracksJson = json.decode(utf8.decode(response.bodyBytes))['data'];
@@ -380,6 +435,7 @@ class _TracksTabState extends State<TracksTab> {
 
   @override
   Widget build(BuildContext context) {
+    final lang = AppLocalizations.of(context)!;
     return RefreshIndicator(
         onRefresh: () async {
           _tracks = [];
@@ -388,68 +444,16 @@ class _TracksTabState extends State<TracksTab> {
           loadPage();
         },
         child: _tracks.isNotEmpty
-            ? ListView.builder(
-                padding: const EdgeInsets.all(8),
-                controller: _scrollController,
-                itemCount: _tracks.length,
-                itemBuilder: (context, index) => InkWell(
-                    onTap: () => {},
-                    child: Row(children: [
-                      Container(
-                          margin: EdgeInsets.only(right: 16),
-                          child: SizedBox(
-                              width: 56,
-                              height: 56,
-                              child: Card(
-                                clipBehavior: Clip.antiAliasWithSaveLayer,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                elevation: 2,
-                                child: Container(
-                                    decoration: BoxDecoration(
-                                        image: DecorationImage(
-                                            fit: BoxFit.cover,
-                                            image: CachedNetworkImageProvider(
-                                                _tracks[index]
-                                                    .album!
-                                                    .smallCoverUrl)))),
-                              ))),
-                      Expanded(
-                          flex: 1,
-                          child: Column(children: [
-                            Container(
-                                margin: EdgeInsets.only(bottom: 4),
-                                child: SizedBox(
-                                    width: double.infinity,
-                                    child: Text(_tracks[index].title,
-                                        style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w500)))),
-                            Container(
-                                margin: EdgeInsets.only(bottom: 4),
-                                child: SizedBox(
-                                    width: double.infinity,
-                                    child: Text(
-                                        _tracks[index]
-                                            .artists!
-                                            .map(
-                                              (artist) => artist.name,
-                                            )
-                                            .join(', '),
-                                        style: TextStyle(
-                                            fontSize: 16,
-                                            color: Colors.grey)))),
-                          ])),
-                      IconButton(
-                          onPressed: () => {},
-                          color: _tracks[index].liked! ? Colors.red : null,
-                          icon: Icon(_tracks[index].liked! ? Icons.favorite : Icons.favorite_outline)),
-                    ])))
+            ? TracksList(
+                scrollController: _scrollController,
+                tracks: _tracks,
+                onTrackLikedChange: (index, liked) => setState(() {
+                      _tracks[index].liked = liked;
+                    }))
             : (_isLoading
                 ? const Center(child: CircularProgressIndicator())
-                : const Center(
-                    child: Text('No tracks'),
+                : Center(
+                    child: Text(lang.home_explore_tracks_empty),
                   )));
   }
 }
