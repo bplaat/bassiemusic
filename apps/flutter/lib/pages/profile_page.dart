@@ -24,7 +24,7 @@ class _ProfilePageState extends State<ProfilePage> {
       'User-Agent': userAgent(),
       'Authorization': 'Bearer ${prefs.getString('token')}'
     });
-    await prefs.remove("token");
+    await prefs.remove('token');
     widget.onAuthChange(null);
   }
 

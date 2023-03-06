@@ -84,7 +84,7 @@ class _ArtistPageState extends State<ArtistPage> {
                         future: fetchCompleteArtist(),
                         builder: (context, snapshot) {
                           if (snapshot.hasError) {
-                            return Text("Error: ${snapshot.error}");
+                            return Text('Error: ${snapshot.error}');
                           } else if (snapshot.hasData) {
                             return snapshot.data! && _artist != null
                                 ? Column(

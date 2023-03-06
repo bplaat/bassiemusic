@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'package:cached_network_image/cached_network_image.dart';
@@ -7,6 +8,8 @@ import '../config.dart';
 import '../utils.dart';
 
 class TracksList extends StatelessWidget {
+  static const playerChannel = MethodChannel('bassiemusic.plaatsoft.nl/player');
+
   final ScrollController? scrollController;
   final List<Track> tracks;
   final Function(int, bool) onTrackLikedChange;
@@ -45,7 +48,15 @@ class TracksList extends StatelessWidget {
             : const ScrollPhysics(),
         itemCount: tracks.length,
         itemBuilder: (context, index) => InkWell(
-            onTap: () => {},
+            onTap: () async {
+              try {
+                final bool result = await playerChannel.invokeMethod(
+                    'start', tracks[index].musicUrl);
+                print('Result: $result');
+              } on PlatformException catch (e) {
+                print('Error: ${e.message}');
+              }
+            },
             child: Row(children: [
               SizedBox(
                   width: 56,

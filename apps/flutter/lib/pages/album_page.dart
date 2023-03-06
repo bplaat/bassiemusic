@@ -112,7 +112,7 @@ class _AlbumPageState extends State<AlbumPage> {
                           future: fetchCompleteAlbum(),
                           builder: (context, snapshot) {
                             if (snapshot.hasError) {
-                              return Text("Error: ${snapshot.error}");
+                              return Text('Error: ${snapshot.error}');
                             } else if (snapshot.hasData) {
                               return snapshot.data! && _album != null
                                   ? TracksList(

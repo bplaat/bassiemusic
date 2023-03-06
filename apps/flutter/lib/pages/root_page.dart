@@ -44,7 +44,7 @@ class _RootPageState extends State<RootPage> {
       future: checkAuth(),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
-          return Center(child: Text("Error: ${snapshot.error}"));
+          return Center(child: Text('Error: ${snapshot.error}'));
         } else if (snapshot.hasData) {
           return snapshot.data! && _user != null
               ? HomePage(

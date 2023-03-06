@@ -9,7 +9,7 @@ class Track {
   final double duration;
   final bool explicit;
   final int plays;
-  final String? music;
+  final String? musicUrl;
   bool? liked;
   final DateTime createdAt;
   Album? album;
@@ -23,7 +23,7 @@ class Track {
     required this.duration,
     required this.explicit,
     required this.plays,
-    required this.music,
+    required this.musicUrl,
     required this.liked,
     required this.createdAt,
     required this.album,
@@ -39,7 +39,7 @@ class Track {
         duration: json['duration'].toDouble(),
         explicit: json['explicit'],
         plays: json['plays'],
-        music: json['music'],
+        musicUrl: json['music'],
         liked: json['liked'],
         createdAt: DateTime.parse(json['created_at']),
         album: json['album'] != null ? Album.fromJson(json['album']) : null,

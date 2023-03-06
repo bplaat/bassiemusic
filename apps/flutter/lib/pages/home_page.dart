@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../models/user.dart';
@@ -26,6 +27,8 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  static const playerChannel = MethodChannel('bassiemusic.plaatsoft.nl/player');
+
   final _navigatorKey = GlobalKey<NavigatorState>();
   final _pageController = PageController(initialPage: 0);
   int _page = 0;
@@ -45,17 +48,17 @@ class _HomePageState extends State<HomePage> {
             initialRoute: '/',
             onGenerateRoute: (RouteSettings settings) {
               late Widget page;
-              if (settings.name == "/search") {
+              if (settings.name == '/search') {
                 page = const SearchPage();
-              } else if (settings.name == "/profile") {
+              } else if (settings.name == '/profile') {
                 page = ProfilePage(
                     user: widget.user, onAuthChange: widget.onAuthChange);
-              } else if (settings.name == "/artist") {
+              } else if (settings.name == '/artist') {
                 page =
                     ArtistPage(incompleteArtist: settings.arguments as Artist);
-              } else if (settings.name == "/album") {
+              } else if (settings.name == '/album') {
                 page = AlbumPage(incompleteAlbum: settings.arguments as Album);
-              } else if (settings.name == "/genre") {
+              } else if (settings.name == '/genre') {
                 page = GenrePage(genre: settings.arguments as Genre);
               } else {
                 page = Scaffold(
@@ -137,7 +140,7 @@ class _HomePageState extends State<HomePage> {
                                           image: DecorationImage(
                                               fit: BoxFit.cover,
                                               image: CachedNetworkImageProvider(
-                                                  "https://bassiemusic-storage.plaatsoft.nl/albums/medium/b7ba551d-e28e-47a2-8e5e-0bdd80d7bb1b.jpg")))),
+                                                  'https://bassiemusic-storage.plaatsoft.nl/albums/medium/b7ba551d-e28e-47a2-8e5e-0bdd80d7bb1b.jpg')))),
                                 )),
                             const SizedBox(width: 16),
                             Expanded(
@@ -145,14 +148,14 @@ class _HomePageState extends State<HomePage> {
                                 child: Column(children: const [
                                   SizedBox(
                                       width: double.infinity,
-                                      child: Text("Flower Boy",
+                                      child: Text('Flower Boy',
                                           style: TextStyle(
                                               fontSize: 16,
                                               fontWeight: FontWeight.w500))),
                                   SizedBox(height: 4),
                                   SizedBox(
                                       width: double.infinity,
-                                      child: Text("Tyler, The Creator",
+                                      child: Text('Tyler, The Creator',
                                           style: TextStyle(
                                               fontSize: 16,
                                               color: Colors.grey))),
@@ -162,7 +165,14 @@ class _HomePageState extends State<HomePage> {
                                 onPressed: () => {},
                                 icon: const Icon(Icons.skip_previous)),
                             IconButton(
-                                onPressed: () => {},
+                                onPressed: () async {
+                                  try {
+                                    await playerChannel
+                                        .invokeMethod('pause');
+                                  } on PlatformException catch (e) {
+                                    print('Error: ${e.message}');
+                                  }
+                                },
                                 icon: const Icon(Icons.play_arrow)),
                             IconButton(
                                 onPressed: () => {},

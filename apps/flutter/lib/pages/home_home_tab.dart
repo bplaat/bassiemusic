@@ -53,7 +53,7 @@ class _HomeHomeTabState extends State<HomeHomeTab>
       future: fetchLastPlayedTracks(),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
-          return Center(child: Text("Error: ${snapshot.error}"));
+          return Center(child: Text('Error: ${snapshot.error}'));
         } else if (snapshot.hasData) {
           final lang = AppLocalizations.of(context)!;
           final lastPlayedtracks = snapshot.data!;

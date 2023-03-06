@@ -14,7 +14,7 @@ class _SearchPageState extends State<SearchPage> {
         appBar: AppBar(
             title: const Text('Search'),
         ),
-        body: const Center(child: Text("Search"))
+        body: const Center(child: Text('Search'))
     );
   }
 }

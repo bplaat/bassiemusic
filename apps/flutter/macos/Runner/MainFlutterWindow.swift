@@ -1,14 +1,43 @@
 import Cocoa
+import AVFoundation
 import FlutterMacOS
 
-class MainFlutterWindow: NSWindow {
+@objc class MainFlutterWindow: NSWindow {
   override func awakeFromNib() {
-    let flutterViewController = FlutterViewController.init()
+    let controller = FlutterViewController.init()
     let windowFrame = self.frame
-    self.contentViewController = flutterViewController
+    self.contentViewController = controller
     self.setFrame(windowFrame, display: true)
 
-    RegisterGeneratedPlugins(registry: flutterViewController)
+    var player: AVPlayer?
+
+    let playerChannel = FlutterMethodChannel(name: "bassiemusic.plaatsoft.nl/player",
+                                             binaryMessenger: controller.engine.binaryMessenger)
+    playerChannel.setMethodCallHandler({
+      (call: FlutterMethodCall, result: @escaping FlutterResult) -> Void in
+
+      if call.method == "start" {
+        if let musicUrl = call.arguments as? String {
+          print(musicUrl)
+          player = AVPlayer(url: URL(string: musicUrl)!)
+          player!.play()
+          result(true);
+        }
+        result(false);
+      }
+
+      if call.method == "play" {
+        player?.play()
+        result(true);
+      }
+
+      if call.method == "pause" {
+        player?.pause()
+        result(true);
+      }
+    })
+
+    RegisterGeneratedPlugins(registry: controller)
 
     super.awakeFromNib()
   }
