@@ -33,6 +33,24 @@ class _HomePageState extends State<HomePage> {
   final _pageController = PageController(initialPage: 0);
   int _page = 0;
 
+  Future<dynamic> playerMethodCallHandler(MethodCall methodCall) async {
+    print('Native call!');
+    switch (methodCall.method) {
+      case "methodNameItz" :
+        return "This data from flutter.....";
+        break;
+      default:
+        return "Nothing";
+        break;
+    }
+  }
+
+  @override
+  void initState() {
+    playerChannel.setMethodCallHandler(playerMethodCallHandler);
+    super.initState();
+  }
+
   @override
   void dispose() {
     _pageController.dispose();
