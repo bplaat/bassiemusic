@@ -4,8 +4,6 @@
 #include <d2d1.h>
 #include <windows.h>
 
-#define WS_EX_NOREDIRECTIONBITMAP 0x00200000L
-
 #define GET_X_LPARAM(lParam) (int)(short)LOWORD(lParam)
 #define GET_Y_LPARAM(lParam) (int)(short)HIWORD(lParam)
 

@@ -71,6 +71,7 @@ void checkForUpdates(void) {
                 alert.informativeText = LocalizedString(@"update_alert_text");
                 [alert addButtonWithTitle:LocalizedString(@"update_alert_button")];
                 [alert runModal];
+                [alert release];
 
                 [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:@"https://bassiemusic-api.plaatsoft.nl/apps/macos/download"]];
             }
@@ -148,6 +149,7 @@ void checkForUpdates(void) {
     alert.messageText = LocalizedString(@"about_alert_title");
     alert.informativeText = [[NSString alloc] initWithFormat:LocalizedString(@"about_alert_text"), appVersion];
     [alert runModal];
+    [alert release];
 }
 @end
 

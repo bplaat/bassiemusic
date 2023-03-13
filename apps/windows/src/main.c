@@ -660,6 +660,7 @@ LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
         ID2D1RenderTarget_EndDraw(render_target, NULL, NULL);
         ID2D1RenderTarget_Release(render_target);
+        IDXGISurface_Release(dxgiSurface);
 
         titlebar_surface->lpVtbl->EndDraw(titlebar_surface);
         composition_device->lpVtbl->Commit(composition_device);
@@ -711,6 +712,7 @@ void _start(void) {
     wc.hInstance = GetModuleHandle(NULL);
     wc.hIcon = (HICON)LoadImage(wc.hInstance, MAKEINTRESOURCE(ID_ICON_APP), IMAGE_ICON, 0, 0, LR_DEFAULTSIZE | LR_DEFAULTCOLOR | LR_SHARED);
     wc.hCursor = LoadCursor(NULL, IDC_ARROW);
+    wc.hbrBackground = CreateSolidBrush(0x0a0a0a);
     wc.lpszClassName = window_class_name;
     wc.hIconSm = (HICON)LoadImage(wc.hInstance, MAKEINTRESOURCE(ID_ICON_APP), IMAGE_ICON, GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON),
                                   LR_DEFAULTCOLOR | LR_SHARED);
@@ -726,7 +728,7 @@ void _start(void) {
     window_rect.right = window_rect.left + window_width;
     window_rect.bottom = window_rect.top + window_height;
     AdjustWindowRectExForDpi(&window_rect, WINDOW_STYLE, FALSE, 0, window_dpi);
-    window_hwnd = CreateWindowEx(WS_EX_NOREDIRECTIONBITMAP, wc.lpszClassName, GetString(ID_STRING_APP_NAME), WINDOW_STYLE, window_rect.left, window_rect.top,
+    window_hwnd = CreateWindowEx(0, wc.lpszClassName, GetString(ID_STRING_APP_NAME), WINDOW_STYLE, window_rect.left, window_rect.top,
                                  window_rect.right - window_rect.left, window_rect.bottom - window_rect.top, HWND_DESKTOP, NULL, wc.hInstance, NULL);
 
     // Enable dark window decoration
