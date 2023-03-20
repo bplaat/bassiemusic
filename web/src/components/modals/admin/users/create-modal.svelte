@@ -1,6 +1,6 @@
 <script>
     import { createEventDispatcher } from 'svelte';
-    import { language } from '../../../stores.js';
+    import { language } from '../../../../stores.js';
 
     // Language strings
     const lang = {

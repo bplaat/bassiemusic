@@ -1,6 +1,6 @@
 <script>
     import { createEventDispatcher } from 'svelte';
-    import { language } from '../../../stores.js';
+    import { language } from '../../../../stores.js';
 
     // Language strings
     const lang = {
@@ -37,7 +37,7 @@
             theme_dark: 'Donker',
             allow_explicit: 'Sta expliciete inhoud toe',
             allow_explicit_description: 'Sta het afspelen van expliciete inhoud toe',
-            create: 'Verander gebruiker',
+            edit: 'Verander gebruiker',
             cancel: 'Annuleren',
         },
     };

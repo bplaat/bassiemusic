@@ -1,8 +1,9 @@
 import { redirect } from '@sveltejs/kit';
 
 export async function load({ url, fetch, cookies, request }) {
-    // When a token exist validate token
+    // When a token exist
     if (cookies.get('token') != null) {
+        // Validate token
         const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/validate`, {
             headers: {
                 Authorization: `Bearer ${cookies.get('token')}`,
@@ -19,11 +20,14 @@ export async function load({ url, fetch, cookies, request }) {
                 })}`
             );
         }
+
+        // Pass data down
         const {
             user: authUser,
             agent,
             last_track: lastTrack,
             last_track_position: lastTrackPosition,
+            last_playlists: lastPlaylists
         } = await response.json();
         return {
             token: cookies.get('token'),
@@ -31,6 +35,7 @@ export async function load({ url, fetch, cookies, request }) {
             agent,
             lastTrack,
             lastTrackPosition,
+            lastPlaylists
         };
     }
 

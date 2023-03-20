@@ -12,6 +12,7 @@
             artists: 'Artists',
             albums: 'Albums',
             tracks: 'Tracks',
+            playlists: 'Playlists',
             header: 'Liked Tracks',
             sort_by_liked_at_desc: 'Liked at (new - old)',
             sort_by_liked_at: 'Liked at (old - new)',
@@ -28,6 +29,7 @@
             artists: 'Artisten',
             albums: 'Albums',
             tracks: 'Tracks',
+            playlists: 'Afspeellijsten',
             header: 'Gelikede Tracks',
             sort_by_liked_at_desc: 'Geliked op (nieuw - oud)',
             sort_by_liked_at: 'Geliked op (oud - nieuw)',
@@ -80,6 +82,7 @@
         <li><a href="/liked/artists">{t('artists')}</a></li>
         <li><a href="/liked/albums">{t('albums')}</a></li>
         <li class="is-active"><a href="/liked/tracks">{t('tracks')}</a></li>
+        <li><a href="/liked/playlists">{t('playlists')}</a></li>
     </ul>
 </div>
 

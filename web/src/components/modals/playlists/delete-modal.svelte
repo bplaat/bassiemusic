@@ -5,15 +5,15 @@
     // Language strings
     const lang = {
         en: {
-            header: 'Delete user',
-            text: 'Do your really want to delete this user?',
-            delete: 'Delete user',
+            header: 'Delete playlist',
+            text: 'Do your really want to delete this playlist?',
+            delete: 'Delete playlist',
             cancel: 'Cancel',
         },
         nl: {
-            header: 'Verwijder gebruiker',
-            text: 'Weet je zeker dat je deze gebruiker wilt verwijderen?',
-            delete: 'Verwijder gebruiker',
+            header: 'Verwijder afspeellijst',
+            text: 'Weet je zeker dat je deze afspeellijst wilt verwijderen?',
+            delete: 'Verwijder afspeellijst',
             cancel: 'Annuleren',
         },
     };
@@ -21,7 +21,7 @@
 
     // Props
     export let token;
-    export let user;
+    export let playlist;
 
     // State
     let isOpen = false;
@@ -36,8 +36,8 @@
     }
 
     const dispatch = createEventDispatcher();
-    async function deleteUser() {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/users/${user.id}`, {
+    async function deletePlaylist() {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/playlists/${playlist.id}`, {
             method: 'DELETE',
             headers: {
                 Authorization: `Bearer ${token}`,
@@ -45,12 +45,12 @@
         });
         if (response.status == 200) {
             close();
-            dispatch('deleteUser', { user });
+            dispatch('deletePlaylist', { playlist });
         }
     }
 </script>
 
-<form class="modal" class:is-active={isOpen} on:submit|preventDefault={deleteUser} style="z-index: 99999;">
+<form class="modal" class:is-active={isOpen} on:submit|preventDefault={deletePlaylist} style="z-index: 99999;">
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div class="modal-background" on:click={close} />
     <div class="modal-card">

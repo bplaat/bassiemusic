@@ -1,8 +1,8 @@
 <script>
     import { onMount } from 'svelte';
-    import CreateModal from '../../../components/admin/users/create-modal.svelte';
-    import EditModal from '../../../components/admin/users/edit-modal.svelte';
-    import DeleteModal from '../../../components/admin/users/delete-modal.svelte';
+    import CreateModal from '../../../components/modals/admin/users/create-modal.svelte';
+    import EditModal from '../../../components/modals/admin/users/edit-modal.svelte';
+    import DeleteModal from '../../../components/modals/admin/users/delete-modal.svelte';
     import { language } from '../../../stores.js';
 
     // Language strings

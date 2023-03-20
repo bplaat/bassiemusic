@@ -473,6 +473,10 @@ func UsersLikedPlaylists(c *fiber.Ctx) error {
 		q = q.OrderByRaw("LOWER(`playlists`.`name`)")
 	} else if c.Query("sort_by") == "name_desc" {
 		q = q.OrderByRaw("LOWER(`playlists`.`name`) DESC")
+	} else if c.Query("sort_by") == "public" {
+		q = q.OrderByRaw("`playlists`.`public` DESC, LOWER(`playlists`.`name`)")
+	} else if c.Query("sort_by") == "public_desc" {
+		q = q.OrderByRaw("`playlists`.`public`, LOWER(`playlists`.`name`)")
 	} else if c.Query("sort_by") == "created_at" {
 		q = q.OrderByRaw("`playlists`.`created_at`")
 	} else if c.Query("sort_by") == "created_at_desc" {
@@ -568,6 +572,23 @@ func UsersPlaylists(c *fiber.Ctx) error {
 	}
 
 	// Get user playlists
-	userPlaylists := models.PlaylistModel(c).With("like").Where("user_id", user.ID).OrderByRaw("LOWER(`name`)").Paginate(page, limit)
-	return c.JSON(userPlaylists)
+	q := models.PlaylistModel(c).With("like").Where("user_id", user.ID)
+	if c.Query("sort_by") == "public" {
+		q = q.OrderByRaw("`public` DESC, LOWER(`name`)")
+	} else if c.Query("sort_by") == "public_desc" {
+		q = q.OrderByRaw("`public`, LOWER(`name`)")
+	} else if c.Query("sort_by") == "created_at" {
+		q = q.OrderBy("created_at")
+	} else if c.Query("sort_by") == "created_at_desc" {
+		q = q.OrderByDesc("created_at")
+	} else if c.Query("sort_by") == "updated_at" {
+		q = q.OrderBy("updated_at")
+	} else if c.Query("sort_by") == "updated_at_desc" {
+		q = q.OrderByDesc("updated_at")
+	} else if c.Query("sort_by") == "name_desc" {
+		q = q.OrderByRaw("LOWER(`name`) DESC")
+	} else {
+		q = q.OrderByRaw("LOWER(`name`)")
+	}
+	return c.JSON(q.Paginate(page, limit))
 }

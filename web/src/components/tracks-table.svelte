@@ -1,7 +1,7 @@
 <script>
     import { page } from '$app/stores';
-    import { onMount } from 'svelte';
-    import { musicPlayer, musicState, language } from '../stores.js';
+    import { tick, onMount } from 'svelte';
+    import { sidebar, musicPlayer, musicState, language } from '../stores.js';
     import { formatDuration } from '../filters.js';
 
     // Language strings
@@ -18,8 +18,14 @@
             explicit: 'Explicit lyrics',
             like: 'Like track',
             remove_like: 'Remove track like',
+            options: 'Track options',
+
             add_queue: 'Add track to play queue',
             remove_queue: 'Remove track from play queue',
+            go_to_album: 'Go to album',
+            go_to_artist: 'Go to artist',
+            add_to_playlist: 'Add to playlist',
+            remove_from_playlist: 'Remove from playlist',
         },
         nl: {
             index: '#',
@@ -33,8 +39,15 @@
             explicit: 'Expliciete songtekst',
             like: 'Like track',
             remove_like: 'Verwijder track like',
+            options: 'Track opties',
+
             add_queue: 'Voeg track toe aan wachtrij',
             remove_queue: 'Verwijder track van wachtrij',
+            go_to_album: 'Ga naar album',
+            go_to_artist: 'Ga naar artiest',
+            context_menu: 'Open context menu',
+            add_to_playlist: 'Voeg toe aan playlist',
+            remove_from_playlist: 'Verwijder van playlist',
         },
     };
     const t = (key, p1) => lang[$language][key].replace('$1', p1);
@@ -44,10 +57,16 @@
     export let authUser;
     export let tracks;
     export let isAlbum = false;
+    export let inPlaylist = null;
     export let isMusicQueue = false;
 
     // State
     $: isMultiDisk = tracks.find((track) => track.disk != 1) != null;
+    let isContextmenuOpen = false;
+    let contextmenu;
+    let contextmenuTrack;
+    let contextmenuPosition;
+    let lastPlaylists = [];
 
     // On mount
     if (isAlbum) {
@@ -86,6 +105,34 @@
         }
     }
 
+    async function fetchPlaylists() {
+        const response = await fetch(
+            `${import.meta.env.VITE_API_URL}/users/${authUser.id}/playlists?sort_by=updated_at_desc&limit=10`,
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            }
+        );
+        const { data } = await response.json();
+        lastPlaylists = data;
+    }
+
+    async function openContextmenu(track, position, x, y) {
+        isContextmenuOpen = true;
+        contextmenuTrack = track;
+        contextmenuPosition = position;
+        fetchPlaylists();
+        await tick();
+        const app = document.querySelector('.app');
+        contextmenu.style.left = `${
+            x + contextmenu.offsetWidth + 32 >= app.offsetWidth ? x - contextmenu.offsetWidth : x
+        }px`;
+        contextmenu.style.top = `${
+            y + contextmenu.offsetHeight >= app.scrollTop + app.offsetHeight ? y - contextmenu.offsetHeight : y
+        }px`;
+    }
+
     function likeTrack(track) {
         fetch(`${import.meta.env.VITE_API_URL}/tracks/${track.id}/like`, {
             method: track.liked ? 'DELETE' : 'PUT',
@@ -96,8 +143,40 @@
         track.liked = !track.liked;
         tracks = tracks;
     }
+
+    async function appendTrackToPlaylist(playlist) {
+        await fetch(`${import.meta.env.VITE_API_URL}/playlists/${playlist.id}/tracks`, {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+            body: new URLSearchParams({
+                track_id: contextmenuTrack.id,
+            }),
+        });
+        $sidebar.updateLastPlaylists();
+    }
+
+    async function removeTrackFromPlaylist(position) {
+        await fetch(`${import.meta.env.VITE_API_URL}/playlists/${inPlaylist.id}/tracks/${position}`, {
+            method: 'DELETE',
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+        $sidebar.updateLastPlaylists();
+        tracks.splice(position - 1, 1);
+        tracks = tracks;
+    }
 </script>
 
+<svelte:window
+    on:click={() => (isContextmenuOpen = false)}
+    on:resize={() => (isContextmenuOpen = false)}
+    on:wheel={() => (isContextmenuOpen = false)}
+/>
+
+<!-- Tracks table -->
 <table class="table" style="width: 100%; table-layout: fixed;">
     <thead>
         {#if isAlbum}
@@ -133,8 +212,8 @@
                     <td style="height: 64px; font-weight: 500; color: #777;">{t('disk', track.disk)}</td>
                     <td />
                     <td class="is-hidden-mobile" />
+                    <td class="is-hidden-mobile" />
                     <td />
-                    <td class:is-hidden-mobile={!isMusicQueue} />
                 </tr>
             {/if}
 
@@ -142,6 +221,15 @@
                 id={isAlbum ? `${track.disk}-${track.position}` : undefined}
                 class="track-container"
                 class:disabled={track.music == null || (!authUser.allow_explicit && track.explicit)}
+                on:contextmenu={(event) =>
+                    openContextmenu(
+                        track,
+                        index + 1,
+                        event.clientX - document.querySelector('.app').offsetLeft,
+                        event.clientY +
+                            document.querySelector('.app').scrollTop -
+                            document.querySelector('.app').offsetTop
+                    )}
                 on:dblclick|preventDefault={() => playTrack(track)}
                 class:has-background-light={$musicState.track != undefined && $musicState.track.id == track.id}
             >
@@ -196,7 +284,7 @@
                 {/if}
                 <td>{formatDuration(track.duration)}</td>
                 <td class="is-hidden-mobile">{track.plays}</td>
-                <td class="px-0">
+                <td class="px-0 is-hidden-mobile">
                     {#if !track.liked}
                         <button class="button" on:click={() => likeTrack(track)} title={t('like')}>
                             <svg class="icon" viewBox="0 0 24 24">
@@ -216,34 +304,137 @@
                         </button>
                     {/if}
                 </td>
-                <td class="pl-0" class:is-hidden-mobile={!isMusicQueue}>
-                    {#if !isMusicQueue}
-                        <button class="button" on:click={() => $musicPlayer.addTrack(track)} title={t('add_queue')}>
-                            <svg class="icon" viewBox="0 0 24 24">
-                                <path
-                                    d="M3 16H10V14H3M18 14V10H16V14H12V16H16V20H18V16H22V14M14 6H3V8H14M14 10H3V12H14V10Z"
-                                />
-                            </svg>
-                        </button>
-                    {:else}
-                        <button
-                            class="button"
-                            on:click={() => $musicPlayer.removeTrack(track)}
-                            disabled={$musicState.track != undefined && $musicState.track.id == track.id}
-                            title={t('remove_queue')}
-                        >
-                            <svg class="icon" viewBox="0 0 24 24">
-                                <path
-                                    d="M14 10H3V12H14V10M14 6H3V8H14V6M3 16H10V14H3V16M14.4 22L17 19.4L19.6 22L21 20.6L18.4 18L21 15.4L19.6 14L17 16.6L14.4 14L13 15.4L15.6 18L13 20.6L14.4 22Z"
-                                />
-                            </svg>
-                        </button>
-                    {/if}
+                <td class="pl-0">
+                    <button
+                        class="button"
+                        on:click|stopPropagation={(event) =>
+                            openContextmenu(
+                                track,
+                                index + 1,
+                                event.target.offsetLeft + event.target.offsetWidth - contextmenu.offsetWidth,
+                                event.target.offsetTop + event.target.offsetHeight
+                            )}
+                        title={t('options')}
+                    >
+                        <svg class="icon" viewBox="0 0 24 24" style="pointer-events: none;">
+                            <path
+                                d="M12,16A2,2 0 0,1 14,18A2,2 0 0,1 12,20A2,2 0 0,1 10,18A2,2 0 0,1 12,16M12,10A2,2 0 0,1 14,12A2,2 0 0,1 12,14A2,2 0 0,1 10,12A2,2 0 0,1 12,10M12,4A2,2 0 0,1 14,6A2,2 0 0,1 12,8A2,2 0 0,1 10,6A2,2 0 0,1 12,4Z"
+                            />
+                        </svg>
+                    </button>
                 </td>
             </tr>
         {/each}
     </tbody>
 </table>
+
+<!-- Tracks context menu -->
+<div
+    bind:this={contextmenu}
+    class="contextmenu dropdown-content"
+    class:hidden={!isContextmenuOpen}
+    style="position: absolute; z-index: 99999;"
+>
+    {#if contextmenuTrack != null}
+        {#if !isMusicQueue}
+            <!-- svelte-ignore a11y-invalid-attribute -->
+            <a
+                class="dropdown-item"
+                href="#"
+                on:click|preventDefault={() => $musicPlayer.addTrack(contextmenuTrack)}
+                title={t('add_queue')}
+            >
+                {t('add_queue')}
+            </a>
+        {:else}
+            <!-- svelte-ignore a11y-invalid-attribute -->
+            <a
+                class="dropdown-item"
+                href="#"
+                on:click|preventDefault={() => $musicPlayer.removeTrack(contextmenuTrack)}
+                disabled={$musicState.track != undefined && $musicState.track.id == contextmenuTrack.id}
+            >
+                {t('remove_queue')}
+            </a>
+        {/if}
+
+        <a class="dropdown-item" href="/albums/{contextmenuTrack.album.id}">
+            {t('go_to_album')}
+        </a>
+
+        {#if contextmenuTrack.artists.length > 1}
+            <div class="dropdown is-hoverable" style="width: 100%;">
+                <div class="dropdown-trigger dropdown-item" style="width: 100%;">
+                    {t('go_to_artist')}
+                    <svg class="icon is-inline is-pulled-right" viewBox="0 0 24 24">
+                        <path d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z" />
+                    </svg>
+                </div>
+                <div class="dropdown-menu" style="top: 0; left: 32px; width: 100%;">
+                    <div class="dropdown-content">
+                        {#each contextmenuTrack.artists as artist}
+                            <a class="dropdown-item ellipsis" href="/artists/{artist.id}">
+                                {artist.name}
+                            </a>
+                        {/each}
+                    </div>
+                </div>
+            </div>
+        {:else}
+            <a class="dropdown-item" href="/artists/{contextmenuTrack.artists[0].id}">
+                {t('go_to_artist')}
+            </a>
+        {/if}
+
+        <hr class="dropdown-divider" />
+
+        {#if !contextmenuTrack.liked}
+            <!-- svelte-ignore a11y-invalid-attribute -->
+            <a class="dropdown-item" href="#" on:click|preventDefault={() => likeTrack(contextmenuTrack)}>
+                {t('like')}
+            </a>
+        {:else}
+            <!-- svelte-ignore a11y-invalid-attribute -->
+            <a class="dropdown-item" href="#" on:click|preventDefault={() => likeTrack(contextmenuTrack)}>
+                {t('remove_like')}
+            </a>
+        {/if}
+
+        <div class="dropdown is-hoverable" style="width: 100%;">
+            <div class="dropdown-trigger dropdown-item" style="width: 100%;">
+                {t('add_to_playlist')}
+                <svg class="icon is-inline is-pulled-right" viewBox="0 0 24 24">
+                    <path d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z" />
+                </svg>
+            </div>
+            <div class="dropdown-menu" style="top: auto; bottom: 0; left: 32px; width: 100%;">
+                <div class="dropdown-content">
+                    {#each lastPlaylists as playlist}
+                        <!-- svelte-ignore a11y-invalid-attribute -->
+                        <a
+                            class="dropdown-item ellipsis"
+                            href="#"
+                            on:click|preventDefault={() => appendTrackToPlaylist(playlist, contextmenuTrack)}
+                        >
+                            {playlist.name}
+                        </a>
+                    {/each}
+                </div>
+            </div>
+        </div>
+
+        {#if inPlaylist != null && (authUser.role == 'admin' || inPlaylist.user.id == authUser.id)}
+            <!-- svelte-ignore a11y-invalid-attribute -->
+            <a
+                class="dropdown-item"
+                href="#"
+                on:click|preventDefault={() => removeTrackFromPlaylist(contextmenuPosition)}
+            >
+                {t('remove_from_playlist')}
+            </a>
+        {/if}
+    {/if}
+</div>
 
 <style>
     .track-title {

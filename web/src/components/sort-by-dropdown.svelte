@@ -18,7 +18,7 @@
     let open = false;
 </script>
 
-<svelte:window on:click={() => (open = false)} />
+<svelte:window on:click={() => (open = false)} on:resize={() => (open = false)} on:wheel={() => (open = false)} />
 
 <div class="dropdown is-pulled-right-tablet is-right-tablet" class:is-active={open}>
     <div class="dropdown-trigger">

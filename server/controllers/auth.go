@@ -110,27 +110,25 @@ func AuthValidate(c *fiber.Ctx) error {
 	// Get session agent
 	session := c.Locals("session").(*models.Session)
 	agent := utils.Agent{OS: *session.ClientOS, Name: *session.ClientName, Version: *session.ClientVersion}
-
-	// Get last played track and return it
-	lastTackPlay := models.TrackPlayModel().Where("user_id", authUser.ID).OrderByDesc("created_at").First()
-	if lastTackPlay != nil {
-		return c.JSON(fiber.Map{
-			"success":             true,
-			"user":                authUser,
-			"session_id":          session.ID,
-			"agent":               agent,
-			"last_track":          models.TrackModel(c).With("like", "artists", "album").Find(lastTackPlay.TrackID),
-			"last_track_position": lastTackPlay.Position,
-		})
-	}
-
-	// Return response
-	return c.JSON(fiber.Map{
+	response := fiber.Map{
 		"success":     true,
 		"user":        authUser,
 		"session_id	": session.ID,
 		"agent":       agent,
-	})
+	}
+
+	// Get last played track and return it
+	lastTackPlay := models.TrackPlayModel().Where("user_id", authUser.ID).OrderByDesc("created_at").First()
+	if lastTackPlay != nil {
+		response["last_track"] = models.TrackModel(c).With("like", "artists", "album").Find(lastTackPlay.TrackID)
+		response["last_track_position"] = lastTackPlay.Position
+	}
+
+	// Get last playlists
+	response["last_playlists"] = models.PlaylistModel(c).Where("user_id", authUser.ID).OrderByDesc("updated_at").Limit("10").Get()
+
+	// Return response
+	return c.JSON(response)
 }
 
 func AuthLogout(c *fiber.Ctx) error {
