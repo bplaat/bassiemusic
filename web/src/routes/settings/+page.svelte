@@ -1,5 +1,5 @@
 <script>
-    import DeleteAccountModal from '../../components/delete-account-modal.svelte';
+    import DeleteAccountModal from '../../components/modals/settings/account-delete-modal.svelte';
     import { lazyLoader } from '../../utils.js';
     import { language } from '../../stores.js';
 

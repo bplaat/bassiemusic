@@ -1,18 +1,19 @@
 <script>
-    import { language } from '../stores.js';
+    import { createEventDispatcher } from 'svelte';
+    import { language } from '../../../../stores.js';
 
     // Language strings
     const lang = {
         en: {
-            header: 'Delete your account',
-            text: "Do your really want to delete your account this can't be undone?",
-            delete: 'Delete account',
+            header: 'Delete user',
+            text: 'Do your really want to delete this user?',
+            delete: 'Delete user',
             cancel: 'Cancel',
         },
         nl: {
-            header: 'Verwijder jouw account',
-            text: 'Wil je echt je account verwijderen maar kan dit niet ongedaan worden gemaakt?',
-            delete: 'Verwijder account',
+            header: 'Verwijder gebruiker',
+            text: 'Weet je zeker dat je deze gebruiker wilt verwijderen?',
+            delete: 'Verwijder gebruiker',
             cancel: 'Annuleren',
         },
     };
@@ -20,7 +21,7 @@
 
     // Props
     export let token;
-    export let authUser;
+    export let user;
 
     // State
     let isOpen = false;
@@ -34,19 +35,22 @@
         isOpen = false;
     }
 
-    async function deleteAccount() {
-        await fetch(`${import.meta.env.VITE_API_URL}/users/${authUser.id}`, {
+    const dispatch = createEventDispatcher();
+    async function deleteUser() {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/users/${user.id}`, {
             method: 'DELETE',
             headers: {
                 Authorization: `Bearer ${token}`,
             },
         });
-        document.cookie = `token=; expires=${new Date(0).toUTCString()}`;
-        window.location = '/auth/login';
+        if (response.status == 200) {
+            close();
+            dispatch('deleteUser', { user });
+        }
     }
 </script>
 
-<form class="modal" class:is-active={isOpen} on:submit|preventDefault={deleteAccount} style="z-index: 99999;">
+<form class="modal" class:is-active={isOpen} on:submit|preventDefault={deleteUser} style="z-index: 99999;">
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div class="modal-background" on:click={close} />
     <div class="modal-card">

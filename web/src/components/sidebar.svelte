@@ -16,10 +16,18 @@
             tracks: 'Tracks',
             liked: 'Liked',
             history: 'History',
+
             playlists: 'Playlists',
+            playlists_your: 'Your playlists',
+            playlist_create: 'Create playlist',
+            playlist_image_alt: 'Image of playlist $1',
+            playlist_untitled: 'Untitled playlist',
+
             admin: 'Admin',
             users: 'Users',
             downloader: 'Downloader',
+
+            avatar_alt: 'Avatar of user $1',
             settings: 'Settings',
             logout: 'Logout',
             made_by: 'Made with $1 by $2',
@@ -36,10 +44,18 @@
             tracks: 'Tracks',
             liked: 'Geliked',
             history: 'Geschiedenis',
-            playlists: 'Playlists',
+
+            playlists: 'Afspeellijsten',
+            playlists_your: 'Jouw afspeellijsten',
+            playlist_create: 'Maak afspeellijst',
+            playlist_image_alt: 'Afbeelding van afspeellijst $1',
+            playlist_untitled: 'Naamloze afspeellijst',
+
             admin: 'Admin',
             users: 'Gebruikers',
             downloader: 'Downloader',
+
+            avatar_alt: 'Avatar van gebruiker $1',
             settings: 'Instellingen',
             logout: 'Log uit',
             made_by: 'Gemaakt met $1<br/> door $2',
@@ -51,6 +67,7 @@
     // Props
     export let token;
     export let authUser;
+    export let lastPlaylists;
 
     // State
     let isOpen = false;
@@ -63,8 +80,37 @@
         isOpen = false;
     }
 
+    export async function updateLastPlaylists() {
+        const response = await fetch(
+            `${import.meta.env.VITE_API_URL}/users/${authUser.id}/playlists?sort_by=updated_at_desc&limit=10`,
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            }
+        );
+        const { data } = await response.json();
+        lastPlaylists = data;
+    }
+
     function gotoLikedPage() {
-        goto('/liked/' + (localStorage.getItem('liked-tab') || 'tracks'));
+        goto(`/liked/${localStorage.getItem('liked-tab') || 'tracks'}`);
+    }
+
+    async function createPlaylist() {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/playlists`, {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+            body: new URLSearchParams({
+                name: t('playlist_untitled'),
+                public: false,
+            }),
+        });
+        const playlist = await response.json();
+        updateLastPlaylists();
+        goto(`/playlists/${playlist.id}`);
     }
 
     async function logout() {
@@ -149,8 +195,22 @@
                 </a>
             </li>
             <li>
+                <a href="/playlists" class:is-active={$page.url.pathname == '/playlists'}>
+                    <svg class="icon is-inline mr-2" viewBox="0 0 24 24">
+                        <path
+                            d="M15,6H3V8H15V6M15,10H3V12H15V10M3,16H11V14H3V16M17,6V14.18C16.69,14.07 16.35,14 16,14A3,3 0 0,0 13,17A3,3 0 0,0 16,20A3,3 0 0,0 19,17V8H22V6H17Z"
+                        />
+                    </svg>
+                    {t('playlists')}
+                </a>
+            </li>
+            <li>
                 <!-- svelte-ignore a11y-invalid-attribute -->
-                <a href="#" on:click={gotoLikedPage} class:is-active={$page.url.pathname.startsWith('/liked')}>
+                <a
+                    href="#"
+                    on:click|preventDefault={gotoLikedPage}
+                    class:is-active={$page.url.pathname.startsWith('/liked')}
+                >
                     <svg class="icon is-inline mr-2" viewBox="0 0 24 24">
                         <path
                             d="M13.5,20C6.9,13.9 3.5,10.8 3.5,7.1C3.5,4 5.9,1.6 9,1.6C10.7,1.6 12.4,2.4 13.5,3.7C14.6,2.4 16.3,1.6 18,1.6C21.1,1.6 23.5,4 23.5,7.1C23.5,10.9 20.1,14 13.5,20M12,21.1C5.4,15.2 1.5,11.7 1.5,7C1.5,6.8 1.5,6.6 1.5,6.4C0.9,7.3 0.5,8.4 0.5,9.6C0.5,13.4 3.9,16.5 10.5,22.4L12,21.1Z"
@@ -173,7 +233,42 @@
 
         <p class="menu-label">{t('playlists')}</p>
         <ul class="menu-list mb-5">
-            <li>Coming soon...</li>
+            <li>
+                <a href="/your_playlists" class:is-active={$page.url.pathname == '/your_playlists'}>
+                    <svg class="icon is-inline mr-2" viewBox="0 0 24 24">
+                        <path
+                            d="M15,6H3V8H15V6M15,10H3V12H15V10M3,16H11V14H3V16M17,6V14.18C16.69,14.07 16.35,14 16,14A3,3 0 0,0 13,17A3,3 0 0,0 16,20A3,3 0 0,0 19,17V8H22V6H17Z"
+                        />
+                    </svg>
+                    {t('playlists_your')}
+                </a>
+            </li>
+            <li>
+                <!-- svelte-ignore a11y-invalid-attribute -->
+                <a href="#" on:click|preventDefault={createPlaylist}>
+                    <svg class="icon is-inline mr-2" viewBox="0 0 24 24">
+                        <path d="M3 16H10V14H3M18 14V10H16V14H12V16H16V20H18V16H22V14M14 6H3V8H14M14 10H3V12H14V10Z" />
+                    </svg>
+                    {t('playlist_create')}
+                </a>
+            </li>
+            {#each lastPlaylists as playlist}
+                <li>
+                    <a
+                        href="/playlists/{playlist.id}"
+                        class="ellipsis"
+                        class:is-active={$page.url.pathname == `/playlists/${playlist.id}`}
+                    >
+                        <img
+                            class="icon is-inline mr-2"
+                            style="background-color: #ccc; border-radius: 3px; box-shadow: 0 .5em 1em -0.125em rgba(10,10,10,.1), 0 0px 0 1px rgba(10,10,10,.02);"
+                            src={playlist.small_image || '/images/album-default.svg'}
+                            alt={t('playlist_image_alt', playlist.name)}
+                        />
+                        {playlist.name}
+                    </a>
+                </li>
+            {/each}
         </ul>
 
         {#if authUser.role === 'admin'}

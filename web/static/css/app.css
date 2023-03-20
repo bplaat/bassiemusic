@@ -15,6 +15,10 @@ body {
     height: 100%;
 }
 
+.hidden {
+    display: none;
+}
+
 .disabled {
     opacity: 0.6;
     pointer-events: none;
@@ -30,10 +34,11 @@ a:focus {
 }
 
 a.card,
-.card .title > a,
+.card .title>a,
 .tabs a,
 .menu-list a,
-.dropdown a {
+.dropdown a,
+.contextmenu a {
     text-decoration: none !important;
 }
 
@@ -120,7 +125,12 @@ img {
     text-overflow: ellipsis;
 }
 
-body {
+.contextmenu .dropdown-item {
+    padding: .375rem 1rem !important;
+}
+
+.app,
+.sidebar {
     scrollbar-width: thin;
 }
 
@@ -133,7 +143,7 @@ body {
         float: right !important;
     }
 
-    .dropdown.is-right-tablet > .dropdown-menu {
+    .dropdown.is-right-tablet>.dropdown-menu {
         left: auto;
         right: 0;
     }
@@ -159,7 +169,8 @@ body {
     background-color: #ccc;
 }
 
-.app {
+.app,
+.sidebar {
     scrollbar-color: rgba(0, 0, 0, 0.3) transparent;
 }
 
@@ -168,12 +179,14 @@ body {
 }
 
 @media (prefers-color-scheme: dark) {
+
     .box.has-image,
     .card-image {
         background-color: #333;
     }
 
-    .app {
+    .app,
+    .sidebar {
         scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
     }
 
@@ -188,7 +201,8 @@ body {
     background-color: #ccc !important;
 }
 
-.app.is-light {
+.app.is-light,
+.app.is-light .sidebar {
     scrollbar-color: rgba(0, 0, 0, 0.3) transparent !important;
 }
 
@@ -198,6 +212,7 @@ body {
     background-color: #333 !important;
 }
 
-.app.is-dark {
+.app.is-dark,
+.app.is-dark .sidebar {
     scrollbar-color: rgba(255, 255, 255, 0.3) transparent !important;
 }

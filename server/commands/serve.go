@@ -108,8 +108,9 @@ func Serve() {
 	app.Delete("/playlists/:playlistID", controllers.PlaylistsDelete)
 	app.Post("/playlists/:playlistID/image", controllers.PlaylistsImage)
 	app.Delete("/playlists/:playlistID/image", controllers.PlaylistsImageDelete)
-	app.Put("/playlists/:playlistID/insert_track", controllers.PlaylistsInsertTrack)
-	app.Delete("/playlists/:playlistID/remove_track", controllers.PlaylistsRemoveTrack)
+	app.Post("/playlists/:playlistID/tracks", controllers.PlaylistsAppendTrack)
+	app.Put("/playlists/:playlistID/tracks/:position", controllers.PlaylistsInsertTrack)
+	app.Delete("/playlists/:playlistID/tracks/:position", controllers.PlaylistsRemoveTrack)
 	app.Put("/playlists/:playlistID/like", controllers.PlaylistsLike)
 	app.Delete("/playlists/:playlistID/like", controllers.PlaylistsLikeDelete)
 

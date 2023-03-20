@@ -20,6 +20,7 @@ type Playlist struct {
 	Public      bool      `column:"public,bool" json:"public"`
 	Liked       *bool     `json:"liked,omitempty"`
 	CreatedAt   time.Time `column:"created_at,timestamp" json:"created_at"`
+	UpdatedAt   time.Time `column:"updated_at,timestamp" json:"-"`
 	User        *User     `json:"user,omitempty"`
 	Tracks      *[]Track  `json:"tracks,omitempty"`
 }

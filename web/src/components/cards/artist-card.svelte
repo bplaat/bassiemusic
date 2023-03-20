@@ -1,6 +1,5 @@
 <script>
-    import { musicPlayer } from '../../stores.js';
-    import { language } from '../../stores.js';
+    import { musicPlayer, language } from '../../stores.js';
 
     // Language strings
     const lang = {

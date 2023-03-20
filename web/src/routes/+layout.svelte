@@ -1,12 +1,12 @@
 <script>
-    import { musicPlayer } from '../stores.js';
+    import { sidebar, musicPlayer } from '../stores.js';
     import { afterNavigate } from '$app/navigation';
     import Sidebar from '../components/sidebar.svelte';
     import MusicPlayer from '../components/music-player.svelte';
     import { language } from '../stores.js';
 
     export let data;
-    const { token, authUser, agent, lastTrack, lastTrackPosition } = data;
+    const { token, authUser, agent, lastTrack, lastTrackPosition, lastPlaylists } = data;
 
     // Language
     if (authUser) {
@@ -14,12 +14,12 @@
     }
 
     // Sidebar
-    let app, sidebar;
+    let app;
     afterNavigate(({ to }) => {
         if (to.url == undefined || to.url.hash == '') {
             app.scrollTop = 0;
         }
-        if (sidebar) sidebar.close();
+        if ($sidebar) $sidebar.close();
     });
 
     // App is-resizing
@@ -98,10 +98,10 @@
             </div>
         </nav>
 
-        <Sidebar bind:this={sidebar} {token} {authUser} />
+        <Sidebar bind:this={$sidebar} {token} {authUser} {lastPlaylists} />
     {/if}
 
-    <div class="section">
+    <div class="section" style="position: relative;">
         <slot />
     </div>
 
