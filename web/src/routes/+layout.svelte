@@ -46,7 +46,8 @@
         {#if authUser != undefined && authUser.theme == 'light'}
             <link rel="stylesheet" href="/css/bulma-light.min.css" />
             <style>
-                ::-webkit-scrollbar-thumb {
+                .app:hover::-webkit-scrollbar-thumb,
+                .sidebar:hover::-webkit-scrollbar-thumb {
                     background-color: rgba(0, 0, 0, 0.3) !important;
                 }
             </style>
@@ -54,7 +55,8 @@
         {#if authUser != undefined && authUser.theme == 'dark'}
             <link rel="stylesheet" href="/css/bulma-dark.min.css" />
             <style>
-                ::-webkit-scrollbar-thumb {
+                .app:hover::-webkit-scrollbar-thumb,
+                .sidebar:hover::-webkit-scrollbar-thumb {
                     background-color: rgba(255, 255, 255, 0.3) !important;
                 }
             </style>
@@ -62,7 +64,8 @@
     {:else if agent.name == 'BassieMusic App'}
         <link rel="stylesheet" href="/css/bulma-dark.min.css" />
         <style>
-            ::-webkit-scrollbar-thumb {
+            .app:hover::-webkit-scrollbar-thumb,
+            .sidebar:hover::-webkit-scrollbar-thumb {
                 background-color: rgba(255, 255, 255, 0.3) !important;
             }
         </style>

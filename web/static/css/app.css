@@ -3,7 +3,6 @@ html {
 }
 
 body {
-    overflow: auto;
     -webkit-user-select: none;
     -moz-user-select: none;
     user-select: none;
@@ -132,10 +131,17 @@ img {
 .app,
 .sidebar {
     scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
 }
 
-::-webkit-scrollbar {
-    width: 8px;
+.app::-webkit-scrollbar,
+.sidebar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.app::-webkit-scrollbar-thumb,
+.sidebar::-webkit-scrollbar-thumb {
+    background-color: transparent;
 }
 
 @media (min-width: 768px) {
@@ -169,12 +175,13 @@ img {
     background-color: #ccc;
 }
 
-.app,
-.sidebar {
+.app:hover,
+.sidebar:hover {
     scrollbar-color: rgba(0, 0, 0, 0.3) transparent;
 }
 
-::-webkit-scrollbar-thumb {
+.app:hover::-webkit-scrollbar-thumb,
+.sidebar:hover::-webkit-scrollbar-thumb {
     background-color: rgba(0, 0, 0, 0.3);
 }
 
@@ -185,12 +192,13 @@ img {
         background-color: #333;
     }
 
-    .app,
-    .sidebar {
+    .app:hover,
+    .sidebar:hover {
         scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
     }
 
-    ::-webkit-scrollbar-thumb {
+    .app:hover::-webkit-scrollbar-thumb,
+    .sidebar:hover::-webkit-scrollbar-thumb {
         background-color: rgba(255, 255, 255, 0.3);
     }
 }
@@ -201,8 +209,8 @@ img {
     background-color: #ccc !important;
 }
 
-.app.is-light,
-.app.is-light .sidebar {
+.app.is-light:hover,
+.app.is-light .sidebar:hover {
     scrollbar-color: rgba(0, 0, 0, 0.3) transparent !important;
 }
 
@@ -212,7 +220,7 @@ img {
     background-color: #333 !important;
 }
 
-.app.is-dark,
-.app.is-dark .sidebar {
+.app.is-dark:hover,
+.app.is-dark .sidebar:hover {
     scrollbar-color: rgba(255, 255, 255, 0.3) transparent !important;
 }
