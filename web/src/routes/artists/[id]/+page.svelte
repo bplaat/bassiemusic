@@ -47,13 +47,6 @@
     // State
     export let data;
     let topTracksTable;
-    let albumType = 'all';
-    $: filteredAlbums = data.artist.albums.filter((album) => {
-        if (albumType == 'all') return true;
-        if (albumType == 'album') return album.type == 'album';
-        if (albumType == 'ep') return album.type == 'ep';
-        if (albumType == 'single') return album.type == 'single';
-    });
 
     // Methods
     function likeArtist() {
@@ -150,28 +143,24 @@
 {#if data.artist.albums.length > 0}
     <div class="tabs is-toggle">
         <ul>
-            <li class:is-active={albumType == 'all'}>
-                <!-- svelte-ignore a11y-invalid-attribute -->
-                <a href="#" on:click|preventDefault={() => (albumType = 'all')}>{t('album_type_all')}</a>
+            <li class:is-active={data.filterAlbumsBy == 'all'}>
+                <a href="?albums_filter=all">{t('album_type_all')}</a>
             </li>
-            <li class:is-active={albumType == 'album'}>
-                <!-- svelte-ignore a11y-invalid-attribute -->
-                <a href="#" on:click|preventDefault={() => (albumType = 'album')}>{t('album_type_album')}</a>
+            <li class:is-active={data.filterAlbumsBy == 'album'}>
+                <a href="?albums_filter=album">{t('album_type_album')}</a>
             </li>
-            <li class:is-active={albumType == 'ep'}>
-                <!-- svelte-ignore a11y-invalid-attribute -->
-                <a href="#" on:click|preventDefault={() => (albumType = 'ep')}>{t('album_type_ep')}</a>
+            <li class:is-active={data.filterAlbumsBy == 'ep'}>
+                <a href="?albums_filter=ep">{t('album_type_ep')}</a>
             </li>
-            <li class:is-active={albumType == 'single'}>
-                <!-- svelte-ignore a11y-invalid-attribute -->
-                <a href="#" on:click|preventDefault={() => (albumType = 'single')}>{t('album_type_single')}</a>
+            <li class:is-active={data.filterAlbumsBy == 'single'}>
+                <a href="?albums_filter=single">{t('album_type_single')}</a>
             </li>
         </ul>
     </div>
 
-    {#if filteredAlbums.length > 0}
+    {#if data.filteredAlbums.length > 0}
         <div class="columns is-multiline is-mobile">
-            {#each filteredAlbums as album}
+            {#each data.filteredAlbums as album}
                 <div class="column is-half-mobile is-one-third-tablet is-one-quarter-desktop is-one-fifth-widescreen">
                     <AlbumCard {album} token={data.token} authUser={data.authUser} />
                 </div>

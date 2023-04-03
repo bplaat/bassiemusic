@@ -14,5 +14,13 @@ export async function load({ url, fetch, cookies, params }) {
     }
     const artist = await response.json();
 
-    return { token: cookies.get('token'), authUser, artist };
+    const filterAlbumsBy = url.searchParams.get('albums_filter') || 'all';
+    const filteredAlbums = artist.albums.filter((album) => {
+        if (filterAlbumsBy == 'all') return true;
+        if (filterAlbumsBy == 'album') return album.type == 'album';
+        if (filterAlbumsBy == 'ep') return album.type == 'ep';
+        if (filterAlbumsBy == 'single') return album.type == 'single';
+    });
+
+    return { token: cookies.get('token'), authUser, artist, filterAlbumsBy, filteredAlbums };
 }
