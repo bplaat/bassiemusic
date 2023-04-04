@@ -45,6 +45,7 @@ The BassieMusic <a href="/apps/macos/">macOS app</a> playing the album <a href="
 Some parts of the system are not well documented at this time, but we are working to improve this
 - [Installation documentation](docs/installation.md)
 - [REST API documentation](https://bassiemusic.plaatsoft.nl/api.html)
+- [Issue Board](https://github.com/users/bplaat/projects/1)
 
 ## License
 Copyright © 2022 - 2023 [PlaatSoft](https://www.plaatsoft.nl/)
