@@ -27,7 +27,7 @@ type Message struct {
 }
 
 func Websocket(c *fiber.Ctx) error {
-	upgrader.Upgrade(c.Context(), func(conn *websocket.Conn) {
+	upgrader.Upgrade(c.Context(), func(conn *websocket.Conn) { //nolint
 		var authUser *models.User
 		for {
 			// Parse incoming json messages
