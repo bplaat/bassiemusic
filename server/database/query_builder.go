@@ -16,8 +16,8 @@ type QueryBuilder[T any] struct {
 	WhereStr    string
 	WhereValues []any
 	OrderByStr  string
-	OffsetInt   *int
-	LimitInt    *int
+	OffsetInt   int
+	LimitInt    int
 }
 
 type QueryBuilderColumn struct {
@@ -148,12 +148,12 @@ func (qb *QueryBuilder[T]) OrderByRaw(orderByRaw string) *QueryBuilder[T] {
 }
 
 func (qb *QueryBuilder[T]) Offset(offset int) *QueryBuilder[T] {
-	qb.OffsetInt = &offset
+	qb.OffsetInt = offset
 	return qb
 }
 
 func (qb *QueryBuilder[T]) Limit(limit int) *QueryBuilder[T] {
-	qb.LimitInt = &limit
+	qb.LimitInt = limit
 	return qb
 }
 
@@ -164,6 +164,13 @@ func (qb *QueryBuilder[T]) Count() int64 {
 	}
 	if qb.WhereStr != "" {
 		countQuery += " WHERE " + qb.WhereStr
+	}
+	if qb.LimitInt != 0 {
+		if qb.OffsetInt != 0 {
+			countQuery += " LIMIT " + strconv.Itoa(qb.OffsetInt) + ", " + strconv.Itoa(qb.LimitInt)
+		} else {
+			countQuery += " LIMIT " + strconv.Itoa(qb.LimitInt)
+		}
 	}
 
 	query := Query(countQuery, qb.WhereValues...)
@@ -199,11 +206,11 @@ func (qb *QueryBuilder[T]) Get() []T {
 	if qb.OrderByStr != "" {
 		selectQuery += " ORDER BY " + qb.OrderByStr
 	}
-	if qb.LimitInt != nil {
-		if qb.OffsetInt != nil {
-			selectQuery += " LIMIT " + strconv.Itoa(*qb.OffsetInt) + ", " + strconv.Itoa(*qb.LimitInt)
+	if qb.LimitInt != 0 {
+		if qb.OffsetInt != 0 {
+			selectQuery += " LIMIT " + strconv.Itoa(qb.OffsetInt) + ", " + strconv.Itoa(qb.LimitInt)
 		} else {
-			selectQuery += " LIMIT " + strconv.Itoa(*qb.LimitInt)
+			selectQuery += " LIMIT " + strconv.Itoa(qb.LimitInt)
 		}
 	}
 
@@ -259,11 +266,11 @@ func (qb *QueryBuilder[T]) Update(values Map) {
 		updateQuery += " WHERE " + qb.WhereStr
 	}
 	queryValues = append(queryValues, qb.WhereValues...)
-	if qb.LimitInt != nil {
-		if qb.OffsetInt != nil {
-			updateQuery += " LIMIT " + strconv.Itoa(*qb.OffsetInt) + ", " + strconv.Itoa(*qb.LimitInt)
+	if qb.LimitInt != 0 {
+		if qb.OffsetInt != 0 {
+			updateQuery += " LIMIT " + strconv.Itoa(qb.OffsetInt) + ", " + strconv.Itoa(qb.LimitInt)
 		} else {
-			updateQuery += " LIMIT " + strconv.Itoa(*qb.LimitInt)
+			updateQuery += " LIMIT " + strconv.Itoa(qb.LimitInt)
 		}
 	}
 	Exec(updateQuery, queryValues...)
@@ -277,11 +284,11 @@ func (qb *QueryBuilder[T]) Delete() {
 	if qb.WhereStr != "" {
 		deleteQuery += " WHERE " + qb.WhereStr
 	}
-	if qb.LimitInt != nil {
-		if qb.OffsetInt != nil {
-			deleteQuery += " LIMIT " + strconv.Itoa(*qb.OffsetInt) + ", " + strconv.Itoa(*qb.LimitInt)
+	if qb.LimitInt != 0 {
+		if qb.OffsetInt != 0 {
+			deleteQuery += " LIMIT " + strconv.Itoa(qb.OffsetInt) + ", " + strconv.Itoa(qb.LimitInt)
 		} else {
-			deleteQuery += " LIMIT " + strconv.Itoa(*qb.LimitInt)
+			deleteQuery += " LIMIT " + strconv.Itoa(qb.LimitInt)
 		}
 	}
 	Exec(deleteQuery, qb.WhereValues...)
@@ -289,10 +296,10 @@ func (qb *QueryBuilder[T]) Delete() {
 
 func (qb *QueryBuilder[T]) Paginate(page int, limit int) QueryBuilderPaginated[T] {
 	paginated := QueryBuilderPaginated[T]{}
-	paginated.Data = qb.Offset((page - 1) * limit).Limit(limit).Get()
 	paginated.Pagination.Page = page
 	paginated.Pagination.Limit = limit
 	paginated.Pagination.Total = qb.Count()
+	paginated.Data = qb.Offset((page - 1) * limit).Limit(limit).Get()
 	return paginated
 }
 
