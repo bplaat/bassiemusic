@@ -135,7 +135,11 @@ func (m *Model[T]) OrderByRaw(orderByRaw string) *QueryBuilder[T] {
 	return m.query().OrderByRaw(orderByRaw)
 }
 
-func (m *Model[T]) Limit(limit string) *QueryBuilder[T] {
+func (m *Model[T]) Offset(offset int) *QueryBuilder[T] {
+	return m.query().Offset(offset)
+}
+
+func (m *Model[T]) Limit(limit int) *QueryBuilder[T] {
 	return m.query().Limit(limit)
 }
 

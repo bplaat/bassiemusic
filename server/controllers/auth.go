@@ -125,7 +125,7 @@ func AuthValidate(c *fiber.Ctx) error {
 	}
 
 	// Get last playlists
-	response["last_playlists"] = models.PlaylistModel(c).Where("user_id", authUser.ID).OrderByDesc("updated_at").Limit("10").Get()
+	response["last_playlists"] = models.PlaylistModel(c).Where("user_id", authUser.ID).OrderByDesc("updated_at").Limit(10).Get()
 
 	// Return response
 	return c.JSON(response)
