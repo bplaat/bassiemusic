@@ -7,8 +7,6 @@ import (
 	"strconv"
 )
 
-type QueryBuilderProcess[T any] func(model *T)
-
 type QueryBuilder[T any] struct {
 	Model       *Model[T]
 	JoinStr     string
@@ -18,12 +16,6 @@ type QueryBuilder[T any] struct {
 	OrderByStr  string
 	OffsetInt   int
 	LimitInt    int
-}
-
-type QueryBuilderColumn struct {
-	Name   string
-	Column string
-	Type   string
 }
 
 type QueryBuilderPaginated[T any] struct {

@@ -26,7 +26,7 @@ type Session struct {
 func SessionModel() *database.Model[Session] {
 	return (&database.Model[Session]{
 		TableName: "sessions",
-		Relationships: map[string]database.QueryBuilderProcess[Session]{
+		Relationships: map[string]database.ModelProcessFunc[Session]{
 			"user": func(session *Session) {
 				session.User = UserModel().Find(session.UserID)
 			},

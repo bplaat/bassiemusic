@@ -37,7 +37,7 @@ func ArtistModel(c *fiber.Ctx) *database.Model[Artist] {
 				artist.LargeImage = &largeImage
 			}
 		},
-		Relationships: map[string]database.QueryBuilderProcess[Artist]{
+		Relationships: map[string]database.ModelProcessFunc[Artist]{
 			"like": func(artist *Artist) {
 				if c != nil {
 					authUser := c.Locals("authUser").(*User)

@@ -38,7 +38,7 @@ func PlaylistModel(c *fiber.Ctx) *database.Model[Playlist] {
 				}
 			}
 		},
-		Relationships: map[string]database.QueryBuilderProcess[Playlist]{
+		Relationships: map[string]database.ModelProcessFunc[Playlist]{
 			"like": func(playlist *Playlist) {
 				if c != nil {
 					authUser := c.Locals("authUser").(*User)

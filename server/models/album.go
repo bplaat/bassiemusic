@@ -56,7 +56,7 @@ func AlbumModel(c *fiber.Ctx) *database.Model[Album] {
 				album.LargeCover = &largeCover
 			}
 		},
-		Relationships: map[string]database.QueryBuilderProcess[Album]{
+		Relationships: map[string]database.ModelProcessFunc[Album]{
 			"like": func(album *Album) {
 				if c != nil {
 					authUser := c.Locals("authUser").(*User)

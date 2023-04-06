@@ -37,7 +37,7 @@ func TrackModel(c *fiber.Ctx) *database.Model[Track] {
 				track.Music = &music
 			}
 		},
-		Relationships: map[string]database.QueryBuilderProcess[Track]{
+		Relationships: map[string]database.ModelProcessFunc[Track]{
 			"like": func(track *Track) {
 				if c != nil {
 					authUser := c.Locals("authUser").(*User)

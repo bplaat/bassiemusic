@@ -9,12 +9,20 @@ import (
 
 type Map map[string]any
 
+type ModelColumn struct {
+	Name   string
+	Column string
+	Type   string
+}
+
+type ModelProcessFunc[T any] func(model *T)
+
 type Model[T any] struct {
 	TableName     string
 	PrimaryKey    string
-	Process       QueryBuilderProcess[T]
-	Relationships map[string]QueryBuilderProcess[T]
-	Columns       []QueryBuilderColumn
+	Process       ModelProcessFunc[T]
+	Relationships map[string]ModelProcessFunc[T]
+	Columns       []ModelColumn
 }
 
 func (m *Model[T]) Init() *Model[T] {
@@ -30,7 +38,7 @@ func (m *Model[T]) Init() *Model[T] {
 		tag := field.Tag.Get("column")
 		if tag != "" {
 			parts := strings.Split(tag, ",")
-			m.Columns = append(m.Columns, QueryBuilderColumn{
+			m.Columns = append(m.Columns, ModelColumn{
 				Name:   field.Name,
 				Column: parts[0],
 				Type:   parts[1],
