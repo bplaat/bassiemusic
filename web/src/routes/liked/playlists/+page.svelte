@@ -122,5 +122,5 @@
         {/each}
     </div>
 {:else}
-    <p>{t('empty')}</p>
+    <p><i>{t('empty')}</i></p>
 {/if}
