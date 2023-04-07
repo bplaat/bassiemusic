@@ -23,7 +23,11 @@ func createMissingTracks() {
 
 			// Create missing album tracks
 			if len(*album.Tracks) != len(deezerAlbum.Tracks.Data) {
-				log.Printf("Fix album %s by %s\n", album.Title, (*album.Artists)[0].Name)
+				if len(*album.Artists) > 0 {
+					log.Printf("Fix album %s by %s\n", album.Title, (*album.Artists)[0].Name)
+				} else {
+					log.Printf("Fix album %s\n", album.Title)
+				}
 				for _, deezerTrack := range deezerAlbum.Tracks.Data {
 					track := models.TrackModel(nil).Where("album_id", album.ID).Where("title", deezerTrack.Title).First()
 					if track == nil {
