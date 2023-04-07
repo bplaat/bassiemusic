@@ -2,40 +2,39 @@ package database
 
 import (
 	"log"
-	"math"
 	"reflect"
 	"strconv"
 )
 
 type QueryBuilder[T any] struct {
-	Model       *Model[T]
-	JoinStr     string
-	Withs       []string
-	WhereStr    string
-	WhereValues []any
-	OrderByStr  string
-	OffsetInt   int
-	LimitInt    int
+	model          *Model[T]
+	joinQueryPart  string
+	withs          []string
+	whereQueryPart string
+	whereValues    []any
+	orderBy        string
+	offset         int64
+	limit          int64
 }
 
 type QueryBuilderPaginated[T any] struct {
 	Data       []T `json:"data"`
 	Pagination struct {
-		Page  int   `json:"page"`
-		Limit int   `json:"limit"`
+		Page  int64 `json:"page"`
+		Limit int64 `json:"limit"`
 		Total int64 `json:"total"`
 	} `json:"pagination"`
 }
 
 func (qb *QueryBuilder[T]) Join(join string) *QueryBuilder[T] {
-	qb.JoinStr = join
+	qb.joinQueryPart = join
 	return qb
 }
 
 func (qb *QueryBuilder[T]) With(relationships ...string) *QueryBuilder[T] {
 	for _, relationship := range relationships {
-		if _, ok := qb.Model.Relationships[relationship]; ok {
-			qb.Withs = append(qb.Withs, relationship)
+		if _, ok := qb.model.Relationships[relationship]; ok {
+			qb.withs = append(qb.withs, relationship)
 		} else {
 			log.Fatalln("QueryBuilder: relationship '" + relationship + "' doesn't exists")
 		}
@@ -44,28 +43,24 @@ func (qb *QueryBuilder[T]) With(relationships ...string) *QueryBuilder[T] {
 }
 
 func (qb *QueryBuilder[T]) FormatColumn(column string) string {
-	if qb.JoinStr != "" {
-		return "`" + qb.Model.TableName + "`.`" + column + "`"
+	if qb.joinQueryPart != "" {
+		return "`" + qb.model.TableName + "`.`" + column + "`"
 	} else {
 		return "`" + column + "`"
 	}
 }
 
 func (qb *QueryBuilder[T]) where(column string, value any, operator string) *QueryBuilder[T] {
-	for _, columnInfo := range qb.Model.Columns {
-		if columnInfo.Column == column {
-			if qb.WhereStr != "" {
-				qb.WhereStr += " " + operator + " "
-			}
-			if columnInfo.Type == "uuid" {
-				qb.WhereStr += qb.FormatColumn(column) + " = UUID_TO_BIN(?)"
-			} else {
-				qb.WhereStr += qb.FormatColumn(column) + " = ?"
-			}
-			qb.WhereValues = append(qb.WhereValues, value)
-			return qb
-		}
+	if qb.whereQueryPart != "" {
+		qb.whereQueryPart += " " + operator + " "
 	}
+	columnInfo := qb.model.ColumnsLookup[column]
+	if columnInfo.Type == "uuid" {
+		qb.whereQueryPart += qb.FormatColumn(column) + " = UUID_TO_BIN(?)"
+	} else {
+		qb.whereQueryPart += qb.FormatColumn(column) + " = ?"
+	}
+	qb.whereValues = append(qb.whereValues, value)
 	return qb
 }
 func (qb *QueryBuilder[T]) Where(column string, value any) *QueryBuilder[T] {
@@ -76,11 +71,11 @@ func (qb *QueryBuilder[T]) WhereOr(column string, value any) *QueryBuilder[T] {
 }
 
 func (qb *QueryBuilder[T]) whereRaw(whereRaw string, value any, operator string) *QueryBuilder[T] {
-	if qb.WhereStr != "" {
-		qb.WhereStr += " " + operator + " "
+	if qb.whereQueryPart != "" {
+		qb.whereQueryPart += " " + operator + " "
 	}
-	qb.WhereStr += whereRaw
-	qb.WhereValues = append(qb.WhereValues, value)
+	qb.whereQueryPart += whereRaw
+	qb.whereValues = append(qb.whereValues, value)
 	return qb
 }
 func (qb *QueryBuilder[T]) WhereRaw(whereRaw string, value any) *QueryBuilder[T] {
@@ -91,10 +86,10 @@ func (qb *QueryBuilder[T]) WhereOrRaw(whereRaw string, value any) *QueryBuilder[
 }
 
 func (qb *QueryBuilder[T]) whereNull(column string, operator string) *QueryBuilder[T] {
-	if qb.WhereStr != "" {
-		qb.WhereStr += " " + operator + " "
+	if qb.whereQueryPart != "" {
+		qb.whereQueryPart += " " + operator + " "
 	}
-	qb.WhereStr += qb.FormatColumn(column) + " IS NULL"
+	qb.whereQueryPart += qb.FormatColumn(column) + " IS NULL"
 	return qb
 }
 func (qb *QueryBuilder[T]) WhereNull(column string) *QueryBuilder[T] {
@@ -105,10 +100,10 @@ func (qb *QueryBuilder[T]) WhereOrNull(column string) *QueryBuilder[T] {
 }
 
 func (qb *QueryBuilder[T]) whereNotNull(column string, operator string) *QueryBuilder[T] {
-	if qb.WhereStr != "" {
-		qb.WhereStr += " " + operator + " "
+	if qb.whereQueryPart != "" {
+		qb.whereQueryPart += " " + operator + " "
 	}
-	qb.WhereStr += qb.FormatColumn(column) + " IS NOT NULL"
+	qb.whereQueryPart += qb.FormatColumn(column) + " IS NOT NULL"
 	return qb
 }
 func (qb *QueryBuilder[T]) WhereNotNull(column string) *QueryBuilder[T] {
@@ -119,53 +114,53 @@ func (qb *QueryBuilder[T]) WhereOrNotNull(column string) *QueryBuilder[T] {
 }
 
 func (qb *QueryBuilder[T]) WhereIn(pivotTableName string, pivotModelId string, pivotRelationshipId string, value any) *QueryBuilder[T] {
-	qb.WhereStr += "`" + qb.Model.PrimaryKey + "` IN (SELECT `" + pivotModelId + "` FROM `" + pivotTableName + "` WHERE `" + pivotRelationshipId + "` = UUID_TO_BIN(?))"
-	qb.WhereValues = append(qb.WhereValues, value)
+	qb.whereQueryPart += "`" + qb.model.PrimaryKey + "` IN (SELECT `" + pivotModelId + "` FROM `" + pivotTableName + "` WHERE `" + pivotRelationshipId + "` = UUID_TO_BIN(?))"
+	qb.whereValues = append(qb.whereValues, value)
 	return qb
 }
 
 func (qb *QueryBuilder[T]) OrderBy(column string) *QueryBuilder[T] {
-	qb.OrderByStr = qb.FormatColumn(column)
+	qb.orderBy = qb.FormatColumn(column)
 	return qb
 }
 
 func (qb *QueryBuilder[T]) OrderByDesc(column string) *QueryBuilder[T] {
-	qb.OrderByStr = qb.FormatColumn(column) + " DESC"
+	qb.orderBy = qb.FormatColumn(column) + " DESC"
 	return qb
 }
 
 func (qb *QueryBuilder[T]) OrderByRaw(orderByRaw string) *QueryBuilder[T] {
-	qb.OrderByStr = orderByRaw
+	qb.orderBy = orderByRaw
 	return qb
 }
 
-func (qb *QueryBuilder[T]) Offset(offset int) *QueryBuilder[T] {
-	qb.OffsetInt = offset
+func (qb *QueryBuilder[T]) Offset(offset int64) *QueryBuilder[T] {
+	qb.offset = offset
 	return qb
 }
 
-func (qb *QueryBuilder[T]) Limit(limit int) *QueryBuilder[T] {
-	qb.LimitInt = limit
+func (qb *QueryBuilder[T]) Limit(limit int64) *QueryBuilder[T] {
+	qb.limit = limit
 	return qb
 }
 
 func (qb *QueryBuilder[T]) Count() int64 {
-	countQuery := "SELECT COUNT(" + qb.FormatColumn(qb.Model.PrimaryKey) + ") FROM `" + qb.Model.TableName + "`"
-	if qb.JoinStr != "" {
-		countQuery += " " + qb.JoinStr
+	countQuery := "SELECT COUNT(" + qb.FormatColumn(qb.model.PrimaryKey) + ") FROM `" + qb.model.TableName + "`"
+	if qb.joinQueryPart != "" {
+		countQuery += " " + qb.joinQueryPart
 	}
-	if qb.WhereStr != "" {
-		countQuery += " WHERE " + qb.WhereStr
+	if qb.whereQueryPart != "" {
+		countQuery += " WHERE " + qb.whereQueryPart
 	}
-	if qb.LimitInt != 0 {
-		if qb.OffsetInt != 0 {
-			countQuery += " LIMIT " + strconv.Itoa(qb.OffsetInt) + ", " + strconv.Itoa(qb.LimitInt)
+	if qb.limit != 0 {
+		if qb.offset != 0 {
+			countQuery += " LIMIT " + strconv.FormatInt(qb.offset, 10) + ", " + strconv.FormatInt(qb.limit, 10)
 		} else {
-			countQuery += " LIMIT " + strconv.Itoa(qb.LimitInt)
+			countQuery += " LIMIT " + strconv.FormatInt(qb.limit, 10)
 		}
 	}
 
-	query := Query(countQuery, qb.WhereValues...)
+	query := Query(countQuery, qb.whereValues...)
 	defer query.Close()
 	query.Next()
 	var count int64
@@ -177,43 +172,43 @@ func (qb *QueryBuilder[T]) Get() []T {
 	// Build select query string
 	selectQuery := "SELECT "
 	index := 0
-	for _, column := range qb.Model.Columns {
+	for _, column := range qb.model.Columns {
 		if column.Type == "uuid" {
 			selectQuery += "BIN_TO_UUID(" + qb.FormatColumn(column.Column) + ")"
 		} else {
 			selectQuery += qb.FormatColumn(column.Column)
 		}
-		if index != len(qb.Model.Columns)-1 {
+		if index != len(qb.model.Columns)-1 {
 			selectQuery += ", "
 		}
 		index++
 	}
-	selectQuery += " FROM `" + qb.Model.TableName + "`"
-	if qb.JoinStr != "" {
-		selectQuery += " " + qb.JoinStr
+	selectQuery += " FROM `" + qb.model.TableName + "`"
+	if qb.joinQueryPart != "" {
+		selectQuery += " " + qb.joinQueryPart
 	}
-	if qb.WhereStr != "" {
-		selectQuery += " WHERE " + qb.WhereStr
+	if qb.whereQueryPart != "" {
+		selectQuery += " WHERE " + qb.whereQueryPart
 	}
-	if qb.OrderByStr != "" {
-		selectQuery += " ORDER BY " + qb.OrderByStr
+	if qb.orderBy != "" {
+		selectQuery += " ORDER BY " + qb.orderBy
 	}
-	if qb.LimitInt != 0 {
-		if qb.OffsetInt != 0 {
-			selectQuery += " LIMIT " + strconv.Itoa(qb.OffsetInt) + ", " + strconv.Itoa(qb.LimitInt)
+	if qb.limit != 0 {
+		if qb.offset != 0 {
+			selectQuery += " LIMIT " + strconv.FormatInt(qb.offset, 10) + ", " + strconv.FormatInt(qb.limit, 10)
 		} else {
-			selectQuery += " LIMIT " + strconv.Itoa(qb.LimitInt)
+			selectQuery += " LIMIT " + strconv.FormatInt(qb.limit, 10)
 		}
 	}
 
 	// Execute query and read models
-	query := Query(selectQuery, qb.WhereValues...)
+	query := Query(selectQuery, qb.whereValues...)
 	models := []T{}
 	for query.Next() {
 		var model T
 		modelValue := reflect.Indirect(reflect.ValueOf(&model))
 		ptrs := []any{}
-		for _, column := range qb.Model.Columns {
+		for _, column := range qb.model.Columns {
 			ptrs = append(ptrs, modelValue.FieldByName(column.Name).Addr().Interface())
 		}
 		_ = query.Scan(ptrs...)
@@ -223,70 +218,66 @@ func (qb *QueryBuilder[T]) Get() []T {
 
 	// Process models and run relationships
 	for i := 0; i < len(models); i++ {
-		if qb.Model.Process != nil {
-			qb.Model.Process(&models[i])
+		if qb.model.Process != nil {
+			qb.model.Process(&models[i])
 		}
-		for _, with := range qb.Withs {
-			qb.Model.Relationships[with](&models[i])
+		for _, with := range qb.withs {
+			qb.model.Relationships[with](&models[i])
 		}
 	}
 	return models
 }
 
 func (qb *QueryBuilder[T]) Update(values Map) {
-	updateQuery := "UPDATE `" + qb.Model.TableName + "` SET "
+	updateQuery := "UPDATE `" + qb.model.TableName + "` SET "
 	index := 0
 	queryValues := []any{}
 	for column, value := range values {
-		for _, columnInfo := range qb.Model.Columns {
-			if columnInfo.Column == column {
-				if columnInfo.Type == "uuid" {
-					updateQuery += qb.FormatColumn(column) + " = UUID_TO_BIN(?)"
-				} else {
-					updateQuery += qb.FormatColumn(column) + " = ?"
-				}
-				queryValues = append(queryValues, value)
-				break
-			}
+		columnInfo := qb.model.ColumnsLookup[column]
+		if columnInfo.Type == "uuid" {
+			updateQuery += qb.FormatColumn(column) + " = UUID_TO_BIN(?)"
+		} else {
+			updateQuery += qb.FormatColumn(column) + " = ?"
 		}
+		queryValues = append(queryValues, value)
 		if index != len(values)-1 {
 			updateQuery += ", "
 		}
 		index++
 	}
-	if qb.WhereStr != "" {
-		updateQuery += " WHERE " + qb.WhereStr
+	if qb.whereQueryPart != "" {
+		updateQuery += " WHERE " + qb.whereQueryPart
 	}
-	queryValues = append(queryValues, qb.WhereValues...)
-	if qb.LimitInt != 0 {
-		if qb.OffsetInt != 0 {
-			updateQuery += " LIMIT " + strconv.Itoa(qb.OffsetInt) + ", " + strconv.Itoa(qb.LimitInt)
+	queryValues = append(queryValues, qb.whereValues...)
+	if qb.limit != 0 {
+		if qb.offset != 0 {
+			updateQuery += " LIMIT " + strconv.FormatInt(qb.offset, 10) + ", " + strconv.FormatInt(qb.limit, 10)
 		} else {
-			updateQuery += " LIMIT " + strconv.Itoa(qb.LimitInt)
+			updateQuery += " LIMIT " + strconv.FormatInt(qb.limit, 10)
 		}
 	}
 	Exec(updateQuery, queryValues...)
 }
 
 func (qb *QueryBuilder[T]) Delete() {
-	deleteQuery := "DELETE FROM `" + qb.Model.TableName + "` "
-	if qb.JoinStr != "" {
-		deleteQuery += " " + qb.JoinStr
+	deleteQuery := "DELETE FROM `" + qb.model.TableName + "` "
+	if qb.joinQueryPart != "" {
+		deleteQuery += " " + qb.joinQueryPart
 	}
-	if qb.WhereStr != "" {
-		deleteQuery += " WHERE " + qb.WhereStr
+	if qb.whereQueryPart != "" {
+		deleteQuery += " WHERE " + qb.whereQueryPart
 	}
-	if qb.LimitInt != 0 {
-		if qb.OffsetInt != 0 {
-			deleteQuery += " LIMIT " + strconv.Itoa(qb.OffsetInt) + ", " + strconv.Itoa(qb.LimitInt)
+	if qb.limit != 0 {
+		if qb.offset != 0 {
+			deleteQuery += " LIMIT " + strconv.FormatInt(qb.offset, 10) + ", " + strconv.FormatInt(qb.limit, 10)
 		} else {
-			deleteQuery += " LIMIT " + strconv.Itoa(qb.LimitInt)
+			deleteQuery += " LIMIT " + strconv.FormatInt(qb.limit, 10)
 		}
 	}
-	Exec(deleteQuery, qb.WhereValues...)
+	Exec(deleteQuery, qb.whereValues...)
 }
 
-func (qb *QueryBuilder[T]) Paginate(page int, limit int) QueryBuilderPaginated[T] {
+func (qb *QueryBuilder[T]) Paginate(page int64, limit int64) QueryBuilderPaginated[T] {
 	paginated := QueryBuilderPaginated[T]{}
 	paginated.Pagination.Page = page
 	paginated.Pagination.Limit = limit
@@ -295,10 +286,10 @@ func (qb *QueryBuilder[T]) Paginate(page int, limit int) QueryBuilderPaginated[T
 	return paginated
 }
 
-func (qb *QueryBuilder[T]) Chunk(limit int, callback func(items []T)) {
+func (qb *QueryBuilder[T]) Chunk(limit int64, callback func(items []T)) {
 	total := qb.Count()
-	for page := 1; page <= int(math.Ceil(float64(total)/float64(limit))); page++ {
-		callback(qb.Offset((page - 1) * limit).Limit(limit).Get())
+	for offset := int64(0); offset < total; offset += limit {
+		callback(qb.Offset(offset).Limit(limit).Get())
 	}
 }
 
@@ -311,5 +302,5 @@ func (qb *QueryBuilder[T]) First() *T {
 }
 
 func (qb *QueryBuilder[T]) Find(primaryKey any) *T {
-	return qb.Where(qb.Model.PrimaryKey, primaryKey).First()
+	return qb.Where(qb.model.PrimaryKey, primaryKey).First()
 }

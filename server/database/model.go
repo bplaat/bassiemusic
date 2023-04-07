@@ -22,7 +22,8 @@ type Model[T any] struct {
 	PrimaryKey    string
 	Process       ModelProcessFunc[T]
 	Relationships map[string]ModelProcessFunc[T]
-	Columns       []ModelColumn
+	Columns       []*ModelColumn
+	ColumnsLookup map[string]*ModelColumn
 }
 
 func (m *Model[T]) Init() *Model[T] {
@@ -31,6 +32,7 @@ func (m *Model[T]) Init() *Model[T] {
 	}
 
 	// Get columns info from struct tags
+	m.ColumnsLookup = map[string]*ModelColumn{}
 	var model T
 	modelType := reflect.TypeOf(model)
 	for i := 0; i < modelType.NumField(); i++ {
@@ -38,14 +40,15 @@ func (m *Model[T]) Init() *Model[T] {
 		tag := field.Tag.Get("column")
 		if tag != "" {
 			parts := strings.Split(tag, ",")
-			m.Columns = append(m.Columns, ModelColumn{
+			columnInfo := ModelColumn{
 				Name:   field.Name,
 				Column: parts[0],
 				Type:   parts[1],
-			})
+			}
+			m.Columns = append(m.Columns, &columnInfo)
+			m.ColumnsLookup[columnInfo.Column] = &columnInfo
 		}
 	}
-
 	return m
 }
 
@@ -63,17 +66,14 @@ func (m *Model[T]) Create(values Map) *T {
 		if index != len(values)-1 {
 			insertQuery += ", "
 		}
-		for _, columnInfo := range m.Columns {
-			if columnInfo.Column == column {
-				if columnInfo.Type == "uuid" {
-					valuesStr += "UUID_TO_BIN(?)"
-				} else {
-					valuesStr += "?"
-				}
-				queryValues = append(queryValues, value)
-				break
-			}
+
+		columnInfo := m.ColumnsLookup[column]
+		if columnInfo.Type == "uuid" {
+			valuesStr += "UUID_TO_BIN(?)"
+		} else {
+			valuesStr += "?"
 		}
+		queryValues = append(queryValues, value)
 		if index != len(values)-1 {
 			valuesStr += ", "
 		}
@@ -86,9 +86,7 @@ func (m *Model[T]) Create(values Map) *T {
 }
 
 func (m *Model[T]) query() *QueryBuilder[T] {
-	return &QueryBuilder[T]{
-		Model: m,
-	}
+	return &QueryBuilder[T]{model: m}
 }
 
 func (m *Model[T]) Join(join string) *QueryBuilder[T] {
@@ -143,11 +141,11 @@ func (m *Model[T]) OrderByRaw(orderByRaw string) *QueryBuilder[T] {
 	return m.query().OrderByRaw(orderByRaw)
 }
 
-func (m *Model[T]) Offset(offset int) *QueryBuilder[T] {
+func (m *Model[T]) Offset(offset int64) *QueryBuilder[T] {
 	return m.query().Offset(offset)
 }
 
-func (m *Model[T]) Limit(limit int) *QueryBuilder[T] {
+func (m *Model[T]) Limit(limit int64) *QueryBuilder[T] {
 	return m.query().Limit(limit)
 }
 
@@ -167,11 +165,11 @@ func (m *Model[T]) Delete() {
 	m.query().Delete()
 }
 
-func (m *Model[T]) Paginate(page int, limit int) QueryBuilderPaginated[T] {
+func (m *Model[T]) Paginate(page int64, limit int64) QueryBuilderPaginated[T] {
 	return m.query().Paginate(page, limit)
 }
 
-func (m *Model[T]) Chunk(limit int, callback func(items []T)) {
+func (m *Model[T]) Chunk(limit int64, callback func(items []T)) {
 	m.query().Chunk(limit, callback)
 }
 

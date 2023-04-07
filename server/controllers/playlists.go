@@ -364,8 +364,8 @@ func PlaylistsInsertTrack(c *fiber.Ctx) error {
 
 	// Parse position
 	var position int64
-	if positionInt, err := strconv.Atoi(c.Params("position")); err == nil {
-		position = int64(positionInt)
+	if positionInt, err := strconv.ParseInt(c.Params("position"), 10, 64); err == nil {
+		position = positionInt
 		if position < 0 {
 			position = 0
 		}
@@ -412,8 +412,8 @@ func PlaylistsRemoveTrack(c *fiber.Ctx) error {
 
 	// Parse position
 	var position int64
-	if positionInt, err := strconv.Atoi(c.Params("position")); err == nil {
-		position = int64(positionInt)
+	if positionInt, err := strconv.ParseInt(c.Params("position"), 10, 64); err == nil {
+		position = positionInt
 		if position < 0 {
 			position = 0
 		}

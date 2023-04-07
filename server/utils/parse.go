@@ -15,19 +15,19 @@ func ParseTokenVar(c *fiber.Ctx) string {
 	return ""
 }
 
-func ParseIndexVars(c *fiber.Ctx) (string, int, int) {
+func ParseIndexVars(c *fiber.Ctx) (string, int64, int64) {
 	query := c.Query("q")
 
-	page := 1
-	if pageInt, err := strconv.Atoi(c.Query("page")); err == nil {
+	page := int64(1)
+	if pageInt, err := strconv.ParseInt(c.Query("page"), 10, 64); err == nil {
 		page = pageInt
 		if page < 1 {
 			page = 1
 		}
 	}
 
-	limit := 20
-	if limitInt, err := strconv.Atoi(c.Query("limit")); err == nil {
+	limit := int64(20)
+	if limitInt, err := strconv.ParseInt(c.Query("limit"), 10, 64); err == nil {
 		limit = limitInt
 		if limit < 1 {
 			limit = 1
