@@ -295,10 +295,10 @@ func (qb *QueryBuilder[T]) Chunk(limit int64, callback func(items []T)) {
 
 func (qb *QueryBuilder[T]) First() *T {
 	models := qb.Limit(1).Get()
-	if len(models) == 0 {
-		return nil
+	if len(models) > 0 {
+		return &models[0]
 	}
-	return &models[0]
+	return nil
 }
 
 func (qb *QueryBuilder[T]) Find(primaryKey any) *T {

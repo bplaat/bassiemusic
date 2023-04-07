@@ -113,7 +113,13 @@ func CreateTrack(albumID string, deezerID int) {
 
 func SearchAndDownloadTrackMusic(track *models.Track) error {
 	// Search for youtube video
-	searchCommand := exec.Command("yt-dlp", "--dump-json", fmt.Sprintf("ytsearch25:%s - %s - %s", (*track.Artists)[0].Name, track.Album.Title, track.Title))
+	var searchQuery string
+	if len(*track.Artists) > 0 {
+		searchQuery = fmt.Sprintf("%s - %s - %s", (*track.Artists)[0].Name, track.Album.Title, track.Title)
+	} else {
+		searchQuery = fmt.Sprintf("%s - %s", track.Album.Title, track.Title)
+	}
+	searchCommand := exec.Command("yt-dlp", "--dump-json", "ytsearch25:"+searchQuery)
 	log.Println(searchCommand.String())
 	stdout, err := searchCommand.StdoutPipe()
 	if err != nil {
