@@ -1,6 +1,9 @@
 package controllers
 
 import (
+	"fmt"
+	"os"
+
 	"github.com/bplaat/bassiemusic/database"
 	"github.com/bplaat/bassiemusic/models"
 	"github.com/bplaat/bassiemusic/utils"
@@ -32,6 +35,25 @@ func ArtistsShow(c *fiber.Ctx) error {
 		return fiber.ErrNotFound
 	}
 	return c.JSON(artist)
+}
+
+func ArtistsDelete(c *fiber.Ctx) error {
+	// Check if artist exists
+	artist := models.ArtistModel(c).Find(c.Params("artistID"))
+	if artist == nil {
+		return fiber.ErrNotFound
+	}
+
+	// Delete artist image if exists
+	if _, err := os.Stat(fmt.Sprintf("storage/artists/small/%s.jpg", artist.ID)); err == nil {
+		_ = os.Remove(fmt.Sprintf("storage/artists/small/%s.jpg", artist.ID))
+		_ = os.Remove(fmt.Sprintf("storage/artists/medium/%s.jpg", artist.ID))
+		_ = os.Remove(fmt.Sprintf("storage/artists/large/%s.jpg", artist.ID))
+	}
+
+	// Delete artist
+	models.ArtistModel(c).Where("id", artist.ID).Delete()
+	return c.JSON(fiber.Map{"success": true})
 }
 
 func ArtistsLike(c *fiber.Ctx) error {

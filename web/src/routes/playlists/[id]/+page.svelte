@@ -1,7 +1,7 @@
 <script>
     import { goto } from '$app/navigation';
     import EditModal from '../../../components/modals/playlists/edit-modal.svelte';
-    import DeleteModal from '../../../components/modals/playlists/delete-modal.svelte';
+    import DeleteModal from '../../../components/modals/delete-modal.svelte';
     import TracksTable from '../../../components/tracks-table.svelte';
     import { sidebar, language } from '../../../stores.js';
 
@@ -18,6 +18,7 @@
             remove_like: 'Remove playlist like',
             edit: 'Edit playlist',
             delete: 'Delete playlist',
+            playlist: 'playlist',
             tracks: 'Tracks',
             tracks_empty: "This playlist doesn't have any tracks",
         },
@@ -32,6 +33,7 @@
             remove_like: 'Verwijder afspeellijst like',
             edit: 'Verander afspeellijst',
             delete: 'Verwijder afspeellijst',
+            playlist: 'afspeellijst',
             tracks: 'Tracks',
             tracks_empty: 'Deze afspeellijst heeft geen enkele track',
         },
@@ -165,8 +167,10 @@
 <DeleteModal
     bind:this={deleteModal}
     token={data.token}
-    playlist={data.playlist}
-    on:deletePlaylist={() => {
+    item={data.playlist}
+    itemRoute="playlists"
+    itemLabel={t('playlist')}
+    on:delete={() => {
         $sidebar.updateLastPlaylists();
         goto('/your_playlists');
     }}

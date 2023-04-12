@@ -1,6 +1,9 @@
 package controllers
 
 import (
+	"fmt"
+	"os"
+
 	"github.com/bplaat/bassiemusic/database"
 	"github.com/bplaat/bassiemusic/models"
 	"github.com/bplaat/bassiemusic/utils"
@@ -32,6 +35,32 @@ func AlbumsShow(c *fiber.Ctx) error {
 		return fiber.ErrNotFound
 	}
 	return c.JSON(album)
+}
+
+func AlbumsDelete(c *fiber.Ctx) error {
+	// Check if album exists
+	album := models.AlbumModel(c).With("tracks").Find(c.Params("albumID"))
+	if album == nil {
+		return fiber.ErrNotFound
+	}
+
+	// Delete album cover if exists
+	if _, err := os.Stat(fmt.Sprintf("storage/albums/small/%s.jpg", album.ID)); err == nil {
+		_ = os.Remove(fmt.Sprintf("storage/albums/small/%s.jpg", album.ID))
+		_ = os.Remove(fmt.Sprintf("storage/albums/medium/%s.jpg", album.ID))
+		_ = os.Remove(fmt.Sprintf("storage/albums/large/%s.jpg", album.ID))
+	}
+
+	// Delete album tracks music if exists (the models will be delete with album delete)
+	for _, track := range *album.Tracks {
+		if _, err := os.Stat(fmt.Sprintf("storage/tracks/%s.m4a", track.ID)); err == nil {
+			_ = os.Remove(fmt.Sprintf("storage/tracks/%s.m4a", track.ID))
+		}
+	}
+
+	// Delete album
+	models.AlbumModel(c).Where("id", album.ID).Delete()
+	return c.JSON(fiber.Map{"success": true})
 }
 
 func AlbumsLike(c *fiber.Ctx) error {

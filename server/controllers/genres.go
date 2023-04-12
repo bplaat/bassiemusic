@@ -1,6 +1,9 @@
 package controllers
 
 import (
+	"fmt"
+	"os"
+
 	"github.com/bplaat/bassiemusic/models"
 	"github.com/bplaat/bassiemusic/utils"
 	"github.com/gofiber/fiber/v2"
@@ -27,6 +30,25 @@ func GenresShow(c *fiber.Ctx) error {
 		return fiber.ErrNotFound
 	}
 	return c.JSON(genre)
+}
+
+func GenresDelete(c *fiber.Ctx) error {
+	// Check if genre exists
+	genre := models.GenreModel(c).Find(c.Params("genreID"))
+	if genre == nil {
+		return fiber.ErrNotFound
+	}
+
+	// Delete genre image if exists
+	if _, err := os.Stat(fmt.Sprintf("storage/genres/small/%s.jpg", genre.ID)); err == nil {
+		_ = os.Remove(fmt.Sprintf("storage/genres/small/%s.jpg", genre.ID))
+		_ = os.Remove(fmt.Sprintf("storage/genres/medium/%s.jpg", genre.ID))
+		_ = os.Remove(fmt.Sprintf("storage/genres/large/%s.jpg", genre.ID))
+	}
+
+	// Delete genre
+	models.GenreModel(c).Where("id", genre.ID).Delete()
+	return c.JSON(fiber.Map{"success": true})
 }
 
 func GenresAlbums(c *fiber.Ctx) error {

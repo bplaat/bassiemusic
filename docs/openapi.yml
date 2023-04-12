@@ -269,6 +269,20 @@ paths:
           description: Authorization error
         "404":
           description: Artist not found
+    delete:
+      tags: [Artists]
+      description: Delete artist
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ArtistID"
+      responses:
+        "200":
+          description: Successfull response
+        "401":
+          description: Authorization error
+        "404":
+          description: User not found
   /artists/{id}/like:
     put:
       tags: [Artists]
@@ -337,6 +351,20 @@ paths:
           description: Authorization error
         "404":
           description: Album not found
+    delete:
+      tags: [Albums]
+      description: Delete album
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/AlbumID"
+      responses:
+        "200":
+          description: Successfull response
+        "401":
+          description: Authorization error
+        "404":
+          description: User not found
   /albums/{id}/like:
     put:
       tags: [Albums]
@@ -405,6 +433,20 @@ paths:
           description: Authorization error
         "404":
           description: Genre not found
+    delete:
+      tags: [Genres]
+      description: Delete genre
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/GenreID"
+      responses:
+        "200":
+          description: Successfull response
+        "401":
+          description: Authorization error
+        "404":
+          description: User not found
   /genres/{id}/albums:
     get:
       tags: [Genres]
@@ -459,6 +501,20 @@ paths:
           description: Authorization error
         "404":
           description: Track not found
+    delete:
+      tags: [Tracks]
+      description: Delete track
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/TrackID"
+      responses:
+        "200":
+          description: Successfull response
+        "401":
+          description: Authorization error
+        "404":
+          description: User not found
   /tracks/{id}/like:
     put:
       tags: [Tracks]

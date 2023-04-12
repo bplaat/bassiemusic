@@ -1,5 +1,5 @@
 <script>
-    import DeleteAccountModal from '../../components/modals/settings/account-delete-modal.svelte';
+    import DeleteModal from '../../components/modals/delete-modal.svelte';
     import { lazyLoader } from '../../utils.js';
     import { language } from '../../stores.js';
 
@@ -73,7 +73,7 @@
     // State
     export let data;
     let { token, authUser, currentSessionId, sessions } = data;
-    let deleteAccountModal;
+    let deleteModal;
 
     // Change details
     let newPassword = '';
@@ -159,6 +159,11 @@
         }
     );
 
+    function logout() {
+        document.cookie = `token=; expires=${new Date(0).toUTCString()}`;
+        window.location = '/auth/login';
+    }
+
     async function revokeSession(session) {
         await fetch(`${import.meta.env.VITE_API_URL}/sessions/${session.id}/revoke`, {
             method: 'PUT',
@@ -167,8 +172,7 @@
             },
         });
         if (currentSessionId == session.id) {
-            document.cookie = `token=; expires=${new Date(0).toUTCString()}`;
-            window.location = '/auth/login';
+            logout();
         } else {
             sessions = sessions.filter((otherSession) => otherSession.id != session.id);
         }
@@ -292,7 +296,7 @@
             <h3 class="title is-4">{t('delete_account')}</h3>
 
             <div class="buttons">
-                <button class="button is-danger" on:click={() => deleteAccountModal.open()}>
+                <button class="button is-danger" on:click={() => deleteModal.open()}>
                     {t('delete_account')}
                 </button>
             </div>
@@ -344,4 +348,12 @@
     </div>
 </div>
 
-<DeleteAccountModal bind:this={deleteAccountModal} {token} {authUser} />
+<DeleteModal
+    bind:this={deleteModal}
+    {token}
+    {authUser}
+    item={authUser}
+    itemRoute="users"
+    itemLabel="account"
+    on:delete={logout}
+/>

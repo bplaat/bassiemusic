@@ -2,7 +2,7 @@
     import { onMount } from 'svelte';
     import CreateModal from '../../../components/modals/admin/users/create-modal.svelte';
     import EditModal from '../../../components/modals/admin/users/edit-modal.svelte';
-    import DeleteModal from '../../../components/modals/admin/users/delete-modal.svelte';
+    import DeleteModal from '../../../components/modals/delete-modal.svelte';
     import { language } from '../../../stores.js';
 
     // Language strings
@@ -19,6 +19,7 @@
             actions: 'Actions',
             edit: 'Edit',
             delete: 'Delete',
+            user: 'user',
         },
         nl: {
             title: 'Gebruikers - Admin - BassieMusic',
@@ -32,6 +33,7 @@
             actions: 'Acties',
             edit: 'Verander',
             delete: 'Verwijder',
+            user: 'gebruiker',
         },
     };
     const t = (key) => lang[$language][key];
@@ -131,4 +133,11 @@
 
 <EditModal bind:this={editModal} {token} user={selectedUser} on:updateUser={updateUsers} />
 
-<DeleteModal bind:this={deleteModal} {token} user={selectedUser} on:deleteUser={updateUsers} />
+<DeleteModal
+    bind:this={deleteModal}
+    {token}
+    item={selectedUser}
+    itemRoute="users"
+    itemLabel={t('user')}
+    on:delete={updateUsers}
+/>

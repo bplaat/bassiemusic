@@ -1,5 +1,7 @@
 <script>
+    import { goto } from '$app/navigation';
     import TracksTable from '../../../components/tracks-table.svelte';
+    import DeleteModal from '../../../components/modals/delete-modal.svelte';
     import AlbumCard from '../../../components/cards/album-card.svelte';
     import { language } from '../../../stores.js';
 
@@ -13,6 +15,8 @@
             play: 'Play artist top tracks',
             like: 'Like artist',
             remove_like: 'Remove artist like',
+            delete: 'Delete artist',
+            artist: 'artist',
             top_tracks: 'Top Tracks',
             top_tracks_empty: "This artist doesn't have any top tracks",
             albums: 'Albums',
@@ -31,6 +35,8 @@
             play: 'Speel artist top tracks',
             like: 'Like artist',
             remove_like: 'Verwijder artist like',
+            delete: 'Verwijder artist',
+            artist: 'artist',
             top_tracks: 'Top Tracks',
             top_tracks_empty: 'Deze artiest heeft geen topnummers',
             albums: 'Albums',
@@ -47,6 +53,7 @@
     // State
     export let data;
     let topTracksTable;
+    let deleteModal;
 
     // Methods
     function likeArtist() {
@@ -123,6 +130,14 @@
                     </svg>
                 </button>
             {/if}
+
+            {#if data.authUser.role == 'admin'}
+                <button class="button is-large" on:click={() => deleteModal.open()} title={t('delete')}>
+                    <svg class="icon" viewBox="0 0 24 24">
+                        <path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z" />
+                    </svg>
+                </button>
+            {/if}
         </div>
     </div>
 </div>
@@ -171,4 +186,17 @@
     {/if}
 {:else}
     <p><i>{t('albums_empty')}</i></p>
+{/if}
+
+{#if data.authUser.role == 'admin'}
+    <DeleteModal
+        bind:this={deleteModal}
+        token={data.token}
+        item={data.artist}
+        itemRoute="artists"
+        itemLabel={t('artist')}
+        on:delete={() => {
+            goto('/artists');
+        }}
+    />
 {/if}

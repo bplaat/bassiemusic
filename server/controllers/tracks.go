@@ -1,6 +1,8 @@
 package controllers
 
 import (
+	"fmt"
+	"os"
 	"strconv"
 
 	"github.com/bplaat/bassiemusic/database"
@@ -34,6 +36,23 @@ func TracksShow(c *fiber.Ctx) error {
 		return fiber.ErrNotFound
 	}
 	return c.JSON(track)
+}
+
+func TracksDelete(c *fiber.Ctx) error {
+	// Check if track exists
+	track := models.TrackModel(c).Find(c.Params("trackID"))
+	if track == nil {
+		return fiber.ErrNotFound
+	}
+
+	// Delete track music if exists
+	if _, err := os.Stat(fmt.Sprintf("storage/tracks/%s.m4a", track.ID)); err == nil {
+		_ = os.Remove(fmt.Sprintf("storage/tracks/%s.m4a", track.ID))
+	}
+
+	// Delete track
+	models.TrackModel(c).Where("id", track.ID).Delete()
+	return c.JSON(fiber.Map{"success": true})
 }
 
 func TracksLike(c *fiber.Ctx) error {

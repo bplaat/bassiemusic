@@ -33,7 +33,7 @@ a:focus {
 }
 
 a.card,
-.card .title>a,
+.card .title > a,
 .tabs a,
 .menu-list a,
 .dropdown a,
@@ -125,7 +125,7 @@ img {
 }
 
 .contextmenu .dropdown-item {
-    padding: .375rem 1rem !important;
+    padding: 0.375rem 1rem !important;
 }
 
 .app,
@@ -149,7 +149,7 @@ img {
         float: right !important;
     }
 
-    .dropdown.is-right-tablet>.dropdown-menu {
+    .dropdown.is-right-tablet > .dropdown-menu {
         left: auto;
         right: 0;
     }
@@ -186,7 +186,6 @@ img {
 }
 
 @media (prefers-color-scheme: dark) {
-
     .box.has-image,
     .card-image {
         background-color: #333;

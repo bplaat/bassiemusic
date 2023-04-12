@@ -16,7 +16,7 @@
     // Sidebar
     let app;
     afterNavigate(({ to }) => {
-        if (to.url == undefined || to.url.hash == '') {
+        if ((to.url == undefined || to.url.hash == '') && !to.url.searchParams.has('albums_filter')) {
             app.scrollTop = 0;
         }
         if ($sidebar) $sidebar.close();

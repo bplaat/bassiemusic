@@ -1,6 +1,7 @@
 <script>
     import { page } from '$app/stores';
     import { tick, onMount } from 'svelte';
+    import DeleteModal from './modals/delete-modal.svelte';
     import { sidebar, musicPlayer, musicState, language } from '../stores.js';
     import { formatDuration } from '../filters.js';
 
@@ -25,7 +26,10 @@
             go_to_album: 'Go to album',
             go_to_artist: 'Go to artist',
             add_to_playlist: 'Add to playlist',
+            playlists_empty: 'You have no playlists',
             remove_from_playlist: 'Remove from playlist',
+            delete: 'Delete track',
+            track: 'track',
         },
         nl: {
             index: '#',
@@ -46,8 +50,11 @@
             go_to_album: 'Ga naar album',
             go_to_artist: 'Ga naar artiest',
             context_menu: 'Open context menu',
-            add_to_playlist: 'Voeg toe aan playlist',
-            remove_from_playlist: 'Verwijder van playlist',
+            add_to_playlist: 'Voeg toe aan afspeellijst',
+            playlists_empty: 'Je hebt geen afspeellijsten',
+            remove_from_playlist: 'Verwijder van afspeellijst',
+            delete: 'Verwijder track',
+            track: 'track',
         },
     };
     const t = (key, p1) => lang[$language][key].replace('$1', p1);
@@ -67,6 +74,7 @@
     let contextmenuTrack;
     let contextmenuPosition;
     let lastPlaylists = [];
+    let deleteModal;
 
     // On mount
     if (isAlbum) {
@@ -350,9 +358,9 @@
             <!-- svelte-ignore a11y-invalid-attribute -->
             <a
                 class="dropdown-item"
+                class:disabled={$musicState.track != undefined && $musicState.track.id == contextmenuTrack.id}
                 href="#"
                 on:click|preventDefault={() => $musicPlayer.removeTrack(contextmenuTrack)}
-                disabled={$musicState.track != undefined && $musicState.track.id == contextmenuTrack.id}
             >
                 {t('remove_queue')}
             </a>
@@ -419,6 +427,9 @@
                             {playlist.name}
                         </a>
                     {/each}
+                    {#if lastPlaylists.length == 0}
+                        <p class="dropdown-item"><i>{t('playlists_empty')}</i></p>
+                    {/if}
                 </div>
             </div>
         </div>
@@ -433,8 +444,28 @@
                 {t('remove_from_playlist')}
             </a>
         {/if}
+
+        {#if authUser.role == 'admin'}
+            <!-- svelte-ignore a11y-invalid-attribute -->
+            <a class="dropdown-item" href="#" on:click|preventDefault={() => deleteModal.open()}>
+                {t('delete')}
+            </a>
+        {/if}
     {/if}
 </div>
+
+{#if authUser.role == 'admin'}
+    <DeleteModal
+        bind:this={deleteModal}
+        {token}
+        item={contextmenuTrack}
+        itemRoute="tracks"
+        itemLabel={t('track')}
+        on:delete={() => {
+            tracks = tracks.filter((track) => track.id != contextmenuTrack.id);
+        }}
+    />
+{/if}
 
 <style>
     .track-title {

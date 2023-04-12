@@ -73,6 +73,7 @@ func Serve() {
 
 	app.Post("/auth/login", controllers.AuthLogin)
 
+	// Authed routes
 	app.Use(middlewares.IsAuthed)
 
 	app.Get("/auth/validate", controllers.AuthValidate)
@@ -128,6 +129,7 @@ func Serve() {
 	app.Get("/users/:userID/active_sessions", controllers.UsersActiveSessions)
 	app.Get("/users/:userID/playlists", controllers.UsersPlaylists)
 
+	// Admin routes
 	app.Use(middlewares.IsAdmin)
 
 	app.Get("/storage_size", func(c *fiber.Ctx) error {
@@ -144,6 +146,14 @@ func Serve() {
 	app.Post("/download/artist", controllers.DownloadArtist)
 	app.Post("/download/album", controllers.DownloadAlbum)
 
+	app.Delete("/artists/:artistID", controllers.ArtistsDelete)
+
+	app.Delete("/albums/:albumID", controllers.AlbumsDelete)
+
+	app.Delete("/genres/:genreID", controllers.GenresDelete)
+
+	app.Delete("/tracks/:trackID", controllers.TracksDelete)
+
 	app.Get("/users", controllers.UsersIndex)
 	app.Post("/users", controllers.UsersCreate)
 
@@ -151,5 +161,6 @@ func Serve() {
 	app.Get("/sessions/:sessionID", controllers.SessionsShow)
 	app.Put("/sessions/:sessionID/revoke", controllers.SessionsRevoke)
 
+	// Start server
 	log.Fatal(app.Listen(":" + os.Getenv("SERVER_PORT")))
 }

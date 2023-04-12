@@ -1,4 +1,6 @@
 <script>
+    import { goto } from '$app/navigation';
+    import DeleteModal from '../../../components/modals/delete-modal.svelte';
     import TracksTable from '../../../components/tracks-table.svelte';
     import { language } from '../../../stores.js';
 
@@ -12,6 +14,8 @@
             play: 'Play album',
             like: 'Like album',
             remove_like: 'Remove album like',
+            delete: 'Delete album',
+            album: 'album',
             tracks: 'Tracks',
             tracks_empty: "This album doesn't have any tracks",
         },
@@ -23,6 +27,8 @@
             play: 'Speel album',
             like: 'Like album',
             remove_like: 'Verwijder album like',
+            delete: 'Verwijder album',
+            album: 'album',
             tracks: 'Tracks',
             tracks_empty: 'Dit album heeft geen enkele track',
         },
@@ -32,6 +38,7 @@
     // State
     export let data;
     let tracksTable;
+    let deleteModal;
 
     // Methods
     function likeAlbum() {
@@ -124,6 +131,14 @@
                     </svg>
                 </button>
             {/if}
+
+            {#if data.authUser.role == 'admin'}
+                <button class="button is-large" on:click={() => deleteModal.open()} title={t('delete')}>
+                    <svg class="icon" viewBox="0 0 24 24">
+                        <path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z" />
+                    </svg>
+                </button>
+            {/if}
         </div>
     </div>
 </div>
@@ -139,4 +154,17 @@
     />
 {:else}
     <p><i>{t('tracks_empty')}</i></p>
+{/if}
+
+{#if data.authUser.role == 'admin'}
+    <DeleteModal
+        bind:this={deleteModal}
+        token={data.token}
+        item={data.album}
+        itemRoute="albums"
+        itemLabel={t('album')}
+        on:delete={() => {
+            goto('/albums');
+        }}
+    />
 {/if}
