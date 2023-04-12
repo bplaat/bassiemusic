@@ -28,7 +28,7 @@ func SearchIndex(c *fiber.Ctx) error {
 
 	// Get Playlists
 	playlistsQuery := models.PlaylistModel(c).With("like", "user").WhereRaw("`name` LIKE ?", "%"+query+"%").OrderByRaw("LOWER(`name`)")
-	if authUser.Role != "admin" {
+	if authUser.Role != models.UserRoleAdmin {
 		playlistsQuery = playlistsQuery.Where("public", true)
 	}
 	playlists := playlistsQuery.Limit(10).Get()

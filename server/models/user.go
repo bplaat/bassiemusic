@@ -16,11 +16,11 @@ type User struct {
 	SmallAvatar   *string   `json:"small_avatar"`
 	MediumAvatar  *string   `json:"medium_avatar"`
 	AllowExplicit bool      `column:"allow_explicit,bool" json:"allow_explicit"`
-	RoleInt       UserRole  `column:"role,int" json:"-"`
-	Role          string    `json:"role"`
+	Role          UserRole  `column:"role,int" json:"-"`
+	RoleString    string    `json:"role"`
 	Language      string    `column:"language,string" json:"language"`
-	ThemeInt      UserTheme `column:"theme,int" json:"-"`
-	Theme         string    `json:"theme"`
+	Theme         UserTheme `column:"theme,int" json:"-"`
+	ThemeString   string    `json:"theme"`
 	CreatedAt     string    `column:"created_at,timestamp" json:"created_at"`
 }
 
@@ -39,21 +39,21 @@ func UserModel() *database.Model[User] {
 	return (&database.Model[User]{
 		TableName: "users",
 		Process: func(user *User) {
-			if user.RoleInt == UserRoleNormal {
-				user.Role = "normal"
+			if user.Role == UserRoleNormal {
+				user.RoleString = "normal"
 			}
-			if user.RoleInt == UserRoleAdmin {
-				user.Role = "admin"
+			if user.Role == UserRoleAdmin {
+				user.RoleString = "admin"
 			}
 
-			if user.ThemeInt == UserThemeSystem {
-				user.Theme = "system"
+			if user.Theme == UserThemeSystem {
+				user.ThemeString = "system"
 			}
-			if user.ThemeInt == UserThemeLight {
-				user.Theme = "light"
+			if user.Theme == UserThemeLight {
+				user.ThemeString = "light"
 			}
-			if user.ThemeInt == UserThemeDark {
-				user.Theme = "dark"
+			if user.Theme == UserThemeDark {
+				user.ThemeString = "dark"
 			}
 
 			if user.AvatarID != nil && *user.AvatarID != "" {

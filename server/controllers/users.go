@@ -116,7 +116,7 @@ func UsersEdit(c *fiber.Ctx) error {
 
 	// Check auth
 	authUser := c.Locals("authUser").(*models.User)
-	if authUser.Role != "admin" && authUser.ID != user.ID {
+	if authUser.Role != models.UserRoleAdmin && authUser.ID != user.ID {
 		return fiber.ErrUnauthorized
 	}
 
@@ -200,7 +200,7 @@ func UsersEdit(c *fiber.Ctx) error {
 	if params.Password != "" {
 		updates["password"] = utils.HashPassword(params.Password)
 	}
-	if authUser.Role == "admin" && params.Role != "" {
+	if authUser.Role == models.UserRoleAdmin && params.Role != "" {
 		updates["role"] = userRole
 	}
 	models.UserModel().Where("id", user.ID).Update(updates)
@@ -218,7 +218,7 @@ func UsersDelete(c *fiber.Ctx) error {
 
 	// Check auth
 	authUser := c.Locals("authUser").(*models.User)
-	if authUser.Role != "admin" && authUser.ID != user.ID {
+	if authUser.Role != models.UserRoleAdmin && authUser.ID != user.ID {
 		return fiber.ErrUnauthorized
 	}
 
@@ -236,7 +236,7 @@ func UsersAvatar(c *fiber.Ctx) error {
 
 	// Check auth
 	authUser := c.Locals("authUser").(*models.User)
-	if authUser.Role != "admin" && authUser.ID != user.ID {
+	if authUser.Role != models.UserRoleAdmin && authUser.ID != user.ID {
 		return fiber.ErrUnauthorized
 	}
 
@@ -315,7 +315,7 @@ func UsersAvatarDelete(c *fiber.Ctx) error {
 
 	// Check auth
 	authUser := c.Locals("authUser").(*models.User)
-	if authUser.Role != "admin" && authUser.ID != user.ID {
+	if authUser.Role != models.UserRoleAdmin && authUser.ID != user.ID {
 		return fiber.ErrUnauthorized
 	}
 
@@ -345,7 +345,7 @@ func UsersLikedArtists(c *fiber.Ctx) error {
 
 	// Check auth
 	authUser := c.Locals("authUser").(*models.User)
-	if authUser.Role != "admin" && authUser.ID != user.ID {
+	if authUser.Role != models.UserRoleAdmin && authUser.ID != user.ID {
 		return fiber.ErrUnauthorized
 	}
 
@@ -383,7 +383,7 @@ func UsersLikedAlbums(c *fiber.Ctx) error {
 
 	// Check auth
 	authUser := c.Locals("authUser").(*models.User)
-	if authUser.Role != "admin" && authUser.ID != user.ID {
+	if authUser.Role != models.UserRoleAdmin && authUser.ID != user.ID {
 		return fiber.ErrUnauthorized
 	}
 
@@ -422,7 +422,7 @@ func UsersLikedTracks(c *fiber.Ctx) error {
 
 	// Check auth
 	authUser := c.Locals("authUser").(*models.User)
-	if authUser.Role != "admin" && authUser.ID != user.ID {
+	if authUser.Role != models.UserRoleAdmin && authUser.ID != user.ID {
 		return fiber.ErrUnauthorized
 	}
 
@@ -461,7 +461,7 @@ func UsersLikedPlaylists(c *fiber.Ctx) error {
 
 	// Check auth
 	authUser := c.Locals("authUser").(*models.User)
-	if authUser.Role != "admin" && authUser.ID != user.ID {
+	if authUser.Role != models.UserRoleAdmin && authUser.ID != user.ID {
 		return fiber.ErrUnauthorized
 	}
 
@@ -504,7 +504,7 @@ func UsersPlayedTracks(c *fiber.Ctx) error {
 
 	// Check auth
 	authUser := c.Locals("authUser").(*models.User)
-	if authUser.Role != "admin" && authUser.ID != user.ID {
+	if authUser.Role != models.UserRoleAdmin && authUser.ID != user.ID {
 		return fiber.ErrUnauthorized
 	}
 
@@ -526,7 +526,7 @@ func UsersSessions(c *fiber.Ctx) error {
 
 	// Check auth
 	authUser := c.Locals("authUser").(*models.User)
-	if authUser.Role != "admin" && authUser.ID != user.ID {
+	if authUser.Role != models.UserRoleAdmin && authUser.ID != user.ID {
 		return fiber.ErrUnauthorized
 	}
 
@@ -546,7 +546,7 @@ func UsersActiveSessions(c *fiber.Ctx) error {
 
 	// Check auth
 	authUser := c.Locals("authUser").(*models.User)
-	if authUser.Role != "admin" && authUser.ID != user.ID {
+	if authUser.Role != models.UserRoleAdmin && authUser.ID != user.ID {
 		return fiber.ErrUnauthorized
 	}
 
@@ -567,7 +567,7 @@ func UsersPlaylists(c *fiber.Ctx) error {
 
 	// Check auth
 	authUser := c.Locals("authUser").(*models.User)
-	if authUser.Role != "admin" && authUser.ID != user.ID {
+	if authUser.Role != models.UserRoleAdmin && authUser.ID != user.ID {
 		return fiber.ErrUnauthorized
 	}
 

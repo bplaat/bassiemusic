@@ -241,7 +241,7 @@ func DownloadTask() {
 		}
 
 		// Do download task
-		if downloadTask.Type == "deezer_artist" {
+		if downloadTask.Type == models.DownloadTaskTypeDeezerArtist {
 			// Create artist
 			var deezerArtist structs.DeezerArtist
 			if err := utils.FetchJson(fmt.Sprintf("https://api.deezer.com/artist/%d", downloadTask.DeezerID), &deezerArtist); err != nil {
@@ -261,7 +261,7 @@ func DownloadTask() {
 				DownloadAlbum(album.ID)
 			}
 		}
-		if downloadTask.Type == "deezer_album" {
+		if downloadTask.Type == models.DownloadTaskTypeDeezerAlbum {
 			DownloadAlbum(int(downloadTask.DeezerID))
 		}
 

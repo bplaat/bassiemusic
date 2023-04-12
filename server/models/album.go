@@ -11,8 +11,8 @@ import (
 
 type Album struct {
 	ID          string    `column:"id,uuid" json:"id"`
-	TypeInt     AlbumType `column:"type,int" json:"-"`
-	Type        string    `json:"type"`
+	Type        AlbumType `column:"type,int" json:"-"`
+	TypeString  string    `json:"type"`
 	Title       string    `column:"title,string" json:"title"`
 	ReleasedAt  time.Time `column:"released_at,date" json:"released_at"`
 	Explicit    bool      `column:"explicit,bool" json:"explicit"`
@@ -37,14 +37,14 @@ func AlbumModel(c *fiber.Ctx) *database.Model[Album] {
 	return (&database.Model[Album]{
 		TableName: "albums",
 		Process: func(album *Album) {
-			if album.TypeInt == AlbumTypeAlbum {
-				album.Type = "album"
+			if album.Type == AlbumTypeAlbum {
+				album.TypeString = "album"
 			}
-			if album.TypeInt == AlbumTypeEP {
-				album.Type = "ep"
+			if album.Type == AlbumTypeEP {
+				album.TypeString = "ep"
 			}
-			if album.TypeInt == AlbumTypeSingle {
-				album.Type = "single"
+			if album.Type == AlbumTypeSingle {
+				album.TypeString = "single"
 			}
 
 			if _, err := os.Stat(fmt.Sprintf("storage/albums/small/%s.jpg", album.ID)); err == nil {

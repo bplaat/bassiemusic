@@ -58,7 +58,7 @@ func (m *Model[T]) Create(values Map) *T {
 	}
 
 	insertQuery := "INSERT INTO `" + m.TableName + "` ("
-	valuesStr := ""
+	valuesQueryPart := ""
 	queryValues := []any{}
 	index := 0
 	for column, value := range values {
@@ -69,17 +69,17 @@ func (m *Model[T]) Create(values Map) *T {
 
 		columnInfo := m.ColumnsLookup[column]
 		if columnInfo.Type == "uuid" {
-			valuesStr += "UUID_TO_BIN(?)"
+			valuesQueryPart += "UUID_TO_BIN(?)"
 		} else {
-			valuesStr += "?"
+			valuesQueryPart += "?"
 		}
 		queryValues = append(queryValues, value)
 		if index != len(values)-1 {
-			valuesStr += ", "
+			valuesQueryPart += ", "
 		}
 		index++
 	}
-	insertQuery += ") VALUES (" + valuesStr + ")"
+	insertQuery += ") VALUES (" + valuesQueryPart + ")"
 
 	Exec(insertQuery, queryValues...)
 	return m.Find(values[m.PrimaryKey])

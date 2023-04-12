@@ -22,7 +22,7 @@ func PlaylistsIndex(c *fiber.Ctx) error {
 	authUser := c.Locals("authUser").(*models.User)
 	query, page, limit := utils.ParseIndexVars(c)
 	q := models.PlaylistModel(c).With("like", "user").WhereRaw("`name` LIKE ?", "%"+query+"%")
-	if authUser.Role != "admin" {
+	if authUser.Role != models.UserRoleAdmin {
 		q = q.Where("public", true)
 	}
 	if c.Query("sort_by") == "public" {
@@ -90,7 +90,7 @@ func PlaylistsShow(c *fiber.Ctx) error {
 
 	// Check auth
 	authUser := c.Locals("authUser").(*models.User)
-	if !(playlist.Public || authUser.Role == "admin" || playlist.UserID == authUser.ID) {
+	if !(playlist.Public || authUser.Role == models.UserRoleAdmin || playlist.UserID == authUser.ID) {
 		return fiber.ErrUnauthorized
 	}
 
@@ -111,7 +111,7 @@ func PlaylistsEdit(c *fiber.Ctx) error {
 
 	// Check auth
 	authUser := c.Locals("authUser").(*models.User)
-	if !(authUser.Role == "admin" || playlist.UserID == authUser.ID) {
+	if !(authUser.Role == models.UserRoleAdmin || playlist.UserID == authUser.ID) {
 		return fiber.ErrUnauthorized
 	}
 
@@ -154,7 +154,7 @@ func PlaylistsDelete(c *fiber.Ctx) error {
 
 	// Check auth
 	authUser := c.Locals("authUser").(*models.User)
-	if !(authUser.Role == "admin" || playlist.UserID == authUser.ID) {
+	if !(authUser.Role == models.UserRoleAdmin || playlist.UserID == authUser.ID) {
 		return fiber.ErrUnauthorized
 	}
 
@@ -172,7 +172,7 @@ func PlaylistsImage(c *fiber.Ctx) error {
 
 	// Check auth
 	authUser := c.Locals("authUser").(*models.User)
-	if !(authUser.Role == "admin" || playlist.UserID == authUser.ID) {
+	if !(authUser.Role == models.UserRoleAdmin || playlist.UserID == authUser.ID) {
 		return fiber.ErrUnauthorized
 	}
 
@@ -251,7 +251,7 @@ func PlaylistsImageDelete(c *fiber.Ctx) error {
 
 	// Check auth
 	authUser := c.Locals("authUser").(*models.User)
-	if !(authUser.Role == "admin" || playlist.UserID == authUser.ID) {
+	if !(authUser.Role == models.UserRoleAdmin || playlist.UserID == authUser.ID) {
 		return fiber.ErrUnauthorized
 	}
 
@@ -283,7 +283,7 @@ func PlaylistsAppendTrack(c *fiber.Ctx) error {
 
 	// Check auth
 	authUser := c.Locals("authUser").(*models.User)
-	if !(authUser.Role == "admin" || playlist.UserID == authUser.ID) {
+	if !(authUser.Role == models.UserRoleAdmin || playlist.UserID == authUser.ID) {
 		return fiber.ErrUnauthorized
 	}
 
@@ -338,7 +338,7 @@ func PlaylistsInsertTrack(c *fiber.Ctx) error {
 
 	// Check auth
 	authUser := c.Locals("authUser").(*models.User)
-	if !(authUser.Role == "admin" || playlist.UserID == authUser.ID) {
+	if !(authUser.Role == models.UserRoleAdmin || playlist.UserID == authUser.ID) {
 		return fiber.ErrUnauthorized
 	}
 
@@ -406,7 +406,7 @@ func PlaylistsRemoveTrack(c *fiber.Ctx) error {
 
 	// Check auth
 	authUser := c.Locals("authUser").(*models.User)
-	if !(authUser.Role == "admin" || playlist.UserID == authUser.ID) {
+	if !(authUser.Role == models.UserRoleAdmin || playlist.UserID == authUser.ID) {
 		return fiber.ErrUnauthorized
 	}
 
@@ -450,7 +450,7 @@ func PlaylistsLike(c *fiber.Ctx) error {
 
 	// Check auth
 	authUser := c.Locals("authUser").(*models.User)
-	if !(playlist.Public || authUser.Role == "admin" || playlist.UserID == authUser.ID) {
+	if !(playlist.Public || authUser.Role == models.UserRoleAdmin || playlist.UserID == authUser.ID) {
 		return fiber.ErrUnauthorized
 	}
 
@@ -478,7 +478,7 @@ func PlaylistsLikeDelete(c *fiber.Ctx) error {
 
 	// Check auth
 	authUser := c.Locals("authUser").(*models.User)
-	if !(playlist.Public || authUser.Role == "admin" || playlist.UserID == authUser.ID) {
+	if !(playlist.Public || authUser.Role == models.UserRoleAdmin || playlist.UserID == authUser.ID) {
 		return fiber.ErrUnauthorized
 	}
 

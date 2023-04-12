@@ -26,7 +26,7 @@ func IsAuthed(c *fiber.Ctx) error {
 
 func IsAdmin(c *fiber.Ctx) error {
 	authUser := c.Locals("authUser").(*models.User)
-	if authUser.Role != "admin" {
+	if authUser.Role != models.UserRoleAdmin {
 		return fiber.ErrUnauthorized
 	}
 	return c.Next()
