@@ -12,7 +12,7 @@ import (
 
 func ArtistsIndex(c *fiber.Ctx) error {
 	query, page, limit := utils.ParseIndexVars(c)
-	q := models.ArtistModel(c).With("like").WhereRaw("`name` LIKE ?", "%"+query+"%")
+	q := models.ArtistModel(c).With("liked").WhereRaw("`name` LIKE ?", "%"+query+"%")
 	if c.Query("sort_by") == "sync" {
 		q = q.OrderByRaw("`sync` DESC, LOWER(`name`)")
 	} else if c.Query("sort_by") == "sync_desc" {
@@ -30,7 +30,7 @@ func ArtistsIndex(c *fiber.Ctx) error {
 }
 
 func ArtistsShow(c *fiber.Ctx) error {
-	artist := models.ArtistModel(c).With("like", "albums", "top_tracks").Find(c.Params("artistID"))
+	artist := models.ArtistModel(c).With("liked", "albums", "top_tracks").Find(c.Params("artistID"))
 	if artist == nil {
 		return fiber.ErrNotFound
 	}

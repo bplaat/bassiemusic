@@ -313,6 +313,103 @@ paths:
         "404":
           description: Artist not found
 
+  # Genres
+  /genres:
+    get:
+      tags: [Genres]
+      description: Get a list of genres
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Query"
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+        - name: sort_by
+          in: query
+          description: Sort items by
+          required: false
+          schema:
+            type: string
+            enum: ['name', 'name_desc', 'created_at', 'created_at_desc']
+      responses:
+        "200":
+          description: Successfull response
+        "401":
+          description: Authorization error
+  /genres/{id}:
+    get:
+      tags: [Genres]
+      description: Get a genre
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/GenreID"
+      responses:
+        "200":
+          description: Successfull response
+        "401":
+          description: Authorization error
+        "404":
+          description: Genre not found
+    delete:
+      tags: [Genres]
+      description: Delete genre
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/GenreID"
+      responses:
+        "200":
+          description: Successfull response
+        "401":
+          description: Authorization error
+        "404":
+          description: User not found
+  /genres/{id}/albums:
+    get:
+      tags: [Genres]
+      description: Get a list of albums that have genre
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/GenreID"
+      responses:
+        "200":
+          description: Successfull response
+        "401":
+          description: Authorization error
+        "404":
+          description: Genre not found
+  /genres/{id}/like:
+    put:
+      tags: [Genres]
+      description: Like an genre with authed user
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/GenreID"
+      responses:
+        "200":
+          description: Successfull response
+        "401":
+          description: Authorization error
+        "404":
+          description: Genre not found
+    delete:
+      tags: [Genres]
+      description: Delete a liked to an genre
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/GenreID"
+      responses:
+        "200":
+          description: Successfull response
+        "401":
+          description: Authorization error
+        "404":
+          description: Genre not found
+
   # Albums
   /albums:
     get:
@@ -395,74 +492,6 @@ paths:
         "404":
           description: Album not found
 
-  # Genres
-  /genres:
-    get:
-      tags: [Genres]
-      description: Get a list of genres
-      security:
-        - TokenAuth: []
-      parameters:
-        - $ref: "#/components/parameters/Query"
-        - $ref: "#/components/parameters/Page"
-        - $ref: "#/components/parameters/Limit"
-        - name: sort_by
-          in: query
-          description: Sort items by
-          required: false
-          schema:
-            type: string
-            enum: ['name', 'name_desc', 'created_at', 'created_at_desc']
-      responses:
-        "200":
-          description: Successfull response
-        "401":
-          description: Authorization error
-  /genres/{id}:
-    get:
-      tags: [Genres]
-      description: Get a genre
-      security:
-        - TokenAuth: []
-      parameters:
-        - $ref: "#/components/parameters/GenreID"
-      responses:
-        "200":
-          description: Successfull response
-        "401":
-          description: Authorization error
-        "404":
-          description: Genre not found
-    delete:
-      tags: [Genres]
-      description: Delete genre
-      security:
-        - TokenAuth: []
-      parameters:
-        - $ref: "#/components/parameters/GenreID"
-      responses:
-        "200":
-          description: Successfull response
-        "401":
-          description: Authorization error
-        "404":
-          description: User not found
-  /genres/{id}/albums:
-    get:
-      tags: [Genres]
-      description: Get a list of albums that have genre
-      security:
-        - TokenAuth: []
-      parameters:
-        - $ref: "#/components/parameters/GenreID"
-      responses:
-        "200":
-          description: Successfull response
-        "401":
-          description: Authorization error
-        "404":
-          description: Genre not found
-
   # Tracks
   /tracks:
     get:
@@ -515,6 +544,21 @@ paths:
           description: Authorization error
         "404":
           description: User not found
+  /tracks/{id}/play:
+    put:
+      tags: [Tracks]
+      description: Play a track
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/TrackID"
+      responses:
+        "200":
+          description: Successfull response
+        "401":
+          description: Authorization error
+        "404":
+          description: Track not found
   /tracks/{id}/like:
     put:
       tags: [Tracks]
@@ -533,21 +577,6 @@ paths:
     delete:
       tags: [Tracks]
       description: Delete a liked to a track
-      security:
-        - TokenAuth: []
-      parameters:
-        - $ref: "#/components/parameters/TrackID"
-      responses:
-        "200":
-          description: Successfull response
-        "401":
-          description: Authorization error
-        "404":
-          description: Track not found
-  /tracks/{id}/play:
-    put:
-      tags: [Tracks]
-      description: Play a track
       security:
         - TokenAuth: []
       parameters:
@@ -1034,6 +1063,31 @@ paths:
           schema:
             type: string
             enum: ['liked_at', 'liked_at_desc', 'title', 'title_desc', 'released_at', 'released_at_desc', 'created_at', 'created_at_desc']
+      responses:
+        "200":
+          description: Successfull response
+        "401":
+          description: Authorization error
+        "404":
+          description: User not found
+  /users/{id}/liked_genres:
+    get:
+      tags: [Users]
+      description: Get a list of liked genres of user
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/UserID"
+        - $ref: "#/components/parameters/Query"
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+        - name: sort_by
+          in: query
+          description: Sort items by
+          required: false
+          schema:
+            type: string
+            enum: ['liked_at', 'liked_at_desc', 'name', 'name_desc', 'created_at', 'created_at_desc']
       responses:
         "200":
           description: Successfull response

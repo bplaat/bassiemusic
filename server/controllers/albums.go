@@ -12,7 +12,7 @@ import (
 
 func AlbumsIndex(c *fiber.Ctx) error {
 	query, page, limit := utils.ParseIndexVars(c)
-	q := models.AlbumModel(c).With("like", "artists", "genres").WhereRaw("`title` LIKE ?", "%"+query+"%")
+	q := models.AlbumModel(c).With("liked", "artists", "genres").WhereRaw("`title` LIKE ?", "%"+query+"%")
 	if c.Query("sort_by") == "released_at" {
 		q = q.OrderBy("released_at")
 	} else if c.Query("sort_by") == "released_at_desc" {
@@ -30,7 +30,7 @@ func AlbumsIndex(c *fiber.Ctx) error {
 }
 
 func AlbumsShow(c *fiber.Ctx) error {
-	album := models.AlbumModel(c).With("like", "artists", "genres", "tracks").Find(c.Params("albumID"))
+	album := models.AlbumModel(c).With("liked", "artists", "genres", "tracks").Find(c.Params("albumID"))
 	if album == nil {
 		return fiber.ErrNotFound
 	}

@@ -1,6 +1,7 @@
 <script>
     import { goto } from '$app/navigation';
     import TracksTable from '../../../components/tracks-table.svelte';
+    import LikeButton from '../../../components/like-button.svelte';
     import DeleteModal from '../../../components/modals/delete-modal.svelte';
     import AlbumCard from '../../../components/cards/album-card.svelte';
     import { language } from '../../../stores.js';
@@ -13,10 +14,8 @@
             image_alt: 'Image of artist $1',
             sync: 'This aritist is synced, we will download automatic new albums',
             play: 'Play artist top tracks',
-            like: 'Like artist',
-            remove_like: 'Remove artist like',
-            delete: 'Delete artist',
             artist: 'artist',
+            delete: 'Delete artist',
             top_tracks: 'Top Tracks',
             top_tracks_empty: "This artist doesn't have any top tracks",
             albums: 'Albums',
@@ -33,10 +32,8 @@
             image_alt: 'Afbeelding van artist $1',
             sync: 'Deze artiest is gesynchroniseerd, we zullen automatisch nieuwe albums downloaden',
             play: 'Speel artist top tracks',
-            like: 'Like artist',
-            remove_like: 'Verwijder artist like',
-            delete: 'Verwijder artist',
             artist: 'artist',
+            delete: 'Verwijder artist',
             top_tracks: 'Top Tracks',
             top_tracks_empty: 'Deze artiest heeft geen topnummers',
             albums: 'Albums',
@@ -54,17 +51,6 @@
     export let data;
     let topTracksTable;
     let deleteModal;
-
-    // Methods
-    function likeArtist() {
-        fetch(`${import.meta.env.VITE_API_URL}/artists/${data.artist.id}/like`, {
-            method: data.artist.liked ? 'DELETE' : 'PUT',
-            headers: {
-                Authorization: `Bearer ${data.token}`,
-            },
-        });
-        data.artist.liked = !data.artist.liked;
-    }
 </script>
 
 <svelte:head>
@@ -112,24 +98,7 @@
                 </svg>
             </button>
 
-            {#if !data.artist.liked}
-                <button class="button is-large" on:click={likeArtist} title={t('like')}>
-                    <svg class="icon" viewBox="0 0 24 24">
-                        <path
-                            d="M12.1,18.55L12,18.65L11.89,18.55C7.14,14.24 4,11.39 4,8.5C4,6.5 5.5,5 7.5,5C9.04,5 10.54,6 11.07,7.36H12.93C13.46,6 14.96,5 16.5,5C18.5,5 20,6.5 20,8.5C20,11.39 16.86,14.24 12.1,18.55M16.5,3C14.76,3 13.09,3.81 12,5.08C10.91,3.81 9.24,3 7.5,3C4.42,3 2,5.41 2,8.5C2,12.27 5.4,15.36 10.55,20.03L12,21.35L13.45,20.03C18.6,15.36 22,12.27 22,8.5C22,5.41 19.58,3 16.5,3Z"
-                        />
-                    </svg>
-                </button>
-            {:else}
-                <button class="button is-large" on:click={likeArtist} title={t('remove_like')}>
-                    <svg class="icon is-colored" viewBox="0 0 24 24">
-                        <path
-                            fill="#f14668"
-                            d="M12,21.35L10.55,20.03C5.4,15.36 2,12.27 2,8.5C2,5.41 4.42,3 7.5,3C9.24,3 10.91,3.81 12,5.08C13.09,3.81 14.76,3 16.5,3C19.58,3 22,5.41 22,8.5C22,12.27 18.6,15.36 13.45,20.03L12,21.35Z"
-                        />
-                    </svg>
-                </button>
-            {/if}
+            <LikeButton token={data.token} item={data.artist} itemRoute="artists" itemLabel={t('artist')} isLarge={true} />
 
             {#if data.authUser.role == 'admin'}
                 <button class="button is-large" on:click={() => deleteModal.open()} title={t('delete')}>

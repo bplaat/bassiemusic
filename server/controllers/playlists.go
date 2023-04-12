@@ -21,7 +21,7 @@ import (
 func PlaylistsIndex(c *fiber.Ctx) error {
 	authUser := c.Locals("authUser").(*models.User)
 	query, page, limit := utils.ParseIndexVars(c)
-	q := models.PlaylistModel(c).With("like", "user").WhereRaw("`name` LIKE ?", "%"+query+"%")
+	q := models.PlaylistModel(c).With("liked", "user").WhereRaw("`name` LIKE ?", "%"+query+"%")
 	if authUser.Role != models.UserRoleAdmin {
 		q = q.Where("public", true)
 	}
@@ -83,7 +83,7 @@ func PlaylistsCreate(c *fiber.Ctx) error {
 
 func PlaylistsShow(c *fiber.Ctx) error {
 	// Check if playlist exists
-	playlist := models.PlaylistModel(c).With("like", "user", "tracks").Find(c.Params("playlistID"))
+	playlist := models.PlaylistModel(c).With("liked", "user", "tracks").Find(c.Params("playlistID"))
 	if playlist == nil {
 		return fiber.ErrNotFound
 	}

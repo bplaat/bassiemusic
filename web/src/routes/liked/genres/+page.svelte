@@ -1,47 +1,43 @@
 <script>
     import { onMount } from 'svelte';
     import SortByDropdown from '../../../components/sort-by-dropdown.svelte';
-    import ArtistCard from '../../../components/cards/artist-card.svelte';
+    import GenreCard from '../../../components/cards/genre-card.svelte';
     import { lazyLoader } from '../../../utils.js';
     import { language } from '../../../stores.js';
 
     // Language strings
     const lang = {
         en: {
-            title: 'Artists - Liked - BassieMusic',
+            title: 'Genres - Liked - BassieMusic',
             artists: 'Artists',
             genres: 'Genres',
             albums: 'Albums',
             tracks: 'Tracks',
             playlists: 'Playlists',
-            header: 'Liked Artists',
+            header: 'Liked Genres',
             sort_by_liked_at_desc: 'Liked at (new - old)',
             sort_by_liked_at: 'Liked at (old - new)',
             sort_by_name: 'Name (A - Z)',
             sort_by_name_desc: 'Name (Z - A)',
-            sort_by_sync: 'Sync (synced - not synced)',
-            sort_by_sync_desc: 'Sync (not synced - synced)',
             sort_by_created_at_desc: 'Downloaded at (new - old)',
             sort_by_created_at: 'Downloaded at (old - new)',
-            empty: 'You have not liked any artists',
+            empty: 'You have not liked any genres',
         },
         nl: {
-            title: 'Artisten - Geliked - BassieMusic',
-            artists: 'Artisten',
+            title: 'Genres - Geliked - BassieMusic',
+            artists: 'Artists',
             genres: 'Genres',
             albums: 'Albums',
             tracks: 'Tracks',
             playlists: 'Afspeellijsten',
-            header: 'Gelikede Artisten',
+            header: 'Gelikede Genres',
             sort_by_liked_at_desc: 'Geliked op (nieuw - oud)',
             sort_by_liked_at: 'Geliked op (oud - nieuw)',
             sort_by_name: 'Naam (A - Z)',
             sort_by_name_desc: 'Naam (Z - A)',
-            sort_by_sync: 'Gesynced (gesynced - niet gesynced)',
-            sort_by_sync_desc: 'Gesynced (niet gesynced - gesynced)',
             sort_by_created_at_desc: 'Gedownload op (nieuw - oud)',
             sort_by_created_at: 'Gedownload op (oud - nieuw)',
-            empty: 'Je hebt geen artist geliked',
+            empty: 'Je hebt geen genre geliked',
         },
     };
     const t = (key) => lang[$language][key];
@@ -50,16 +46,16 @@
     export let data;
 
     onMount(() => {
-        localStorage.setItem('liked-tab', 'artists');
+        localStorage.setItem('liked-tab', 'genres');
     });
 
     // Lazy loader
     lazyLoader(
         data.total,
-        () => data.artists.length,
+        () => data.genres.length,
         async (page) => {
             const response = await fetch(
-                `${import.meta.env.VITE_API_URL}/users/${data.authUser.id}/liked_artists?${new URLSearchParams({
+                `${import.meta.env.VITE_API_URL}/users/${data.authUser.id}/liked_genres?${new URLSearchParams({
                     page,
                     sort_by: data.sortBy,
                 })}`,
@@ -69,8 +65,8 @@
                     },
                 }
             );
-            const { data: newArtists } = await response.json();
-            data.artists = [...data.artists, ...newArtists];
+            const { data: newGenres } = await response.json();
+            data.genres = [...data.genres, ...newGenres];
         }
     );
 </script>
@@ -81,8 +77,8 @@
 
 <div class="tabs is-toggle">
     <ul>
-        <li class="is-active"><a href="/liked/artists">{t('artists')}</a></li>
-        <li><a href="/liked/genres">{t('genres')}</a></li>
+        <li><a href="/liked/artists">{t('artists')}</a></li>
+        <li class="is-active"><a href="/liked/genres">{t('genres')}</a></li>
         <li><a href="/liked/albums">{t('albums')}</a></li>
         <li><a href="/liked/tracks">{t('tracks')}</a></li>
         <li><a href="/liked/playlists">{t('playlists')}</a></li>
@@ -101,8 +97,6 @@
                 liked_at: t('sort_by_liked_at'),
                 name: t('sort_by_name'),
                 name_desc: t('sort_by_name_desc'),
-                sync: t('sort_by_sync'),
-                sync_desc: t('sort_by_sync_desc'),
                 created_at_desc: t('sort_by_created_at_desc'),
                 created_at: t('sort_by_created_at'),
             }}
@@ -110,11 +104,11 @@
     </div>
 </div>
 
-{#if data.artists.length > 0}
+{#if data.genres.length > 0}
     <div class="columns is-multiline is-mobile">
-        {#each data.artists as artist}
+        {#each data.genres as genre}
             <div class="column is-half-mobile is-one-third-tablet is-one-quarter-desktop is-one-fifth-widescreen">
-                <ArtistCard {artist} token={data.token} authUser={data.authUser} />
+                <GenreCard {genre} token={data.token} authUser={data.authUser} />
             </div>
         {/each}
     </div>

@@ -15,7 +15,7 @@ func SearchIndex(c *fiber.Ctx) error {
 	query, _, _ := utils.ParseIndexVars(c)
 
 	// Get tracks
-	tracks := models.TrackModel(c).With("like", "artists", "album").WhereRaw("`title` LIKE ?", "%"+query+"%").OrderByRaw("`plays` DESC, LOWER(`title`)").Limit(10).Get()
+	tracks := models.TrackModel(c).With("liked", "artists", "album").WhereRaw("`title` LIKE ?", "%"+query+"%").OrderByRaw("`plays` DESC, LOWER(`title`)").Limit(10).Get()
 
 	// Get albums
 	albums := models.AlbumModel(c).With("artists", "genres").WhereRaw("`title` LIKE ?", "%"+query+"%").OrderByRaw("LOWER(`title`)").Limit(10).Get()
@@ -27,7 +27,7 @@ func SearchIndex(c *fiber.Ctx) error {
 	genres := models.GenreModel(c).WhereRaw("`name` LIKE ?", "%"+query+"%").OrderByRaw("LOWER(`name`)").Limit(10).Get()
 
 	// Get Playlists
-	playlistsQuery := models.PlaylistModel(c).With("like", "user").WhereRaw("`name` LIKE ?", "%"+query+"%").OrderByRaw("LOWER(`name`)")
+	playlistsQuery := models.PlaylistModel(c).With("liked", "user").WhereRaw("`name` LIKE ?", "%"+query+"%").OrderByRaw("LOWER(`name`)")
 	if authUser.Role != models.UserRoleAdmin {
 		playlistsQuery = playlistsQuery.Where("public", true)
 	}

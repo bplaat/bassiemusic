@@ -39,7 +39,7 @@ func PlaylistModel(c *fiber.Ctx) *database.Model[Playlist] {
 			}
 		},
 		Relationships: map[string]database.ModelProcessFunc[Playlist]{
-			"like": func(playlist *Playlist) {
+			"liked": func(playlist *Playlist) {
 				if c != nil {
 					authUser := c.Locals("authUser").(*User)
 					liked := PlaylistLikeModel().Where("playlist_id", playlist.ID).Where("user_id", authUser.ID).First() != nil
@@ -51,7 +51,7 @@ func PlaylistModel(c *fiber.Ctx) *database.Model[Playlist] {
 			},
 			"tracks": func(playlist *Playlist) {
 				tracks := TrackModel(c).Join("INNER JOIN `playlist_track` ON `tracks`.`id` = `playlist_track`.`track_id`").
-					With("like", "artists", "album").WhereRaw("`playlist_track`.`playlist_id` = UUID_TO_BIN(?)", playlist.ID).
+					With("liked", "artists", "album").WhereRaw("`playlist_track`.`playlist_id` = UUID_TO_BIN(?)", playlist.ID).
 					OrderByRaw("`playlist_track`.`position`").Get()
 				playlist.Tracks = &tracks
 			},

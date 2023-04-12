@@ -87,20 +87,22 @@ func Serve() {
 	app.Put("/artists/:artistID/like", controllers.ArtistsLike)
 	app.Delete("/artists/:artistID/like", controllers.ArtistsLikeDelete)
 
+	app.Get("/genres", controllers.GenresIndex)
+	app.Get("/genres/:genreID", controllers.GenresShow)
+	app.Get("/genres/:genreID/albums", controllers.GenresAlbums)
+	app.Put("/genres/:genreID/like", controllers.GenresLike)
+	app.Delete("/genres/:genreID/like", controllers.GenresLikeDelete)
+
 	app.Get("/albums", controllers.AlbumsIndex)
 	app.Get("/albums/:albumID", controllers.AlbumsShow)
 	app.Put("/albums/:albumID/like", controllers.AlbumsLike)
 	app.Delete("/albums/:albumID/like", controllers.AlbumsLikeDelete)
 
-	app.Get("/genres", controllers.GenresIndex)
-	app.Get("/genres/:genreID", controllers.GenresShow)
-	app.Get("/genres/:genreID/albums", controllers.GenresAlbums)
-
 	app.Get("/tracks", controllers.TracksIndex)
 	app.Get("/tracks/:trackID", controllers.TracksShow)
+	app.Put("/tracks/:trackID/play", controllers.TracksPlay)
 	app.Put("/tracks/:trackID/like", controllers.TracksLike)
 	app.Delete("/tracks/:trackID/like", controllers.TracksLikeDelete)
-	app.Put("/tracks/:trackID/play", controllers.TracksPlay)
 
 	app.Get("/playlists", controllers.PlaylistsIndex)
 	app.Post("/playlists", controllers.PlaylistsCreate)
@@ -121,6 +123,7 @@ func Serve() {
 	app.Post("/users/:userID/avatar", controllers.UsersAvatar)
 	app.Delete("/users/:userID/avatar", controllers.UsersAvatarDelete)
 	app.Get("/users/:userID/liked_artists", controllers.UsersLikedArtists)
+	app.Get("/users/:userID/liked_genres", controllers.UsersLikedGenres)
 	app.Get("/users/:userID/liked_albums", controllers.UsersLikedAlbums)
 	app.Get("/users/:userID/liked_tracks", controllers.UsersLikedTracks)
 	app.Get("/users/:userID/liked_playlists", controllers.UsersLikedPlaylists)
@@ -148,9 +151,9 @@ func Serve() {
 
 	app.Delete("/artists/:artistID", controllers.ArtistsDelete)
 
-	app.Delete("/albums/:albumID", controllers.AlbumsDelete)
-
 	app.Delete("/genres/:genreID", controllers.GenresDelete)
+
+	app.Delete("/albums/:albumID", controllers.AlbumsDelete)
 
 	app.Delete("/tracks/:trackID", controllers.TracksDelete)
 

@@ -1,5 +1,6 @@
 <script>
     import { goto } from '$app/navigation';
+    import LikeButton from '../../../components/like-button.svelte';
     import EditModal from '../../../components/modals/playlists/edit-modal.svelte';
     import DeleteModal from '../../../components/modals/delete-modal.svelte';
     import TracksTable from '../../../components/tracks-table.svelte';
@@ -14,11 +15,9 @@
             public: 'Public playlist',
             made_by: 'Made by $1',
             play: 'Play playlist tracks',
-            like: 'Like playlist',
-            remove_like: 'Remove playlist like',
+            playlist: 'playlist',
             edit: 'Edit playlist',
             delete: 'Delete playlist',
-            playlist: 'playlist',
             tracks: 'Tracks',
             tracks_empty: "This playlist doesn't have any tracks",
         },
@@ -29,11 +28,9 @@
             public: 'Publieke afspeellijst',
             made_by: 'Gemaakt door $1',
             play: 'Speel afspeellijst tracks',
-            like: 'Like afspeellijst',
-            remove_like: 'Verwijder afspeellijst like',
+            playlist: 'afspeellijst',
             edit: 'Verander afspeellijst',
             delete: 'Verwijder afspeellijst',
-            playlist: 'afspeellijst',
             tracks: 'Tracks',
             tracks_empty: 'Deze afspeellijst heeft geen enkele track',
         },
@@ -45,17 +42,6 @@
     let tracksTable;
     let editModal;
     let deleteModal;
-
-    // Methods
-    function likePlaylist() {
-        fetch(`${import.meta.env.VITE_API_URL}/playlists/${data.playlist.id}/like`, {
-            method: data.playlist.liked ? 'DELETE' : 'PUT',
-            headers: {
-                Authorization: `Bearer ${data.token}`,
-            },
-        });
-        data.playlist.liked = !data.playlist.liked;
-    }
 </script>
 
 <svelte:head>
@@ -104,24 +90,7 @@
                 </svg>
             </button>
 
-            {#if !data.playlist.liked}
-                <button class="button is-large" on:click={likePlaylist} title={t('like')}>
-                    <svg class="icon" viewBox="0 0 24 24">
-                        <path
-                            d="M12.1,18.55L12,18.65L11.89,18.55C7.14,14.24 4,11.39 4,8.5C4,6.5 5.5,5 7.5,5C9.04,5 10.54,6 11.07,7.36H12.93C13.46,6 14.96,5 16.5,5C18.5,5 20,6.5 20,8.5C20,11.39 16.86,14.24 12.1,18.55M16.5,3C14.76,3 13.09,3.81 12,5.08C10.91,3.81 9.24,3 7.5,3C4.42,3 2,5.41 2,8.5C2,12.27 5.4,15.36 10.55,20.03L12,21.35L13.45,20.03C18.6,15.36 22,12.27 22,8.5C22,5.41 19.58,3 16.5,3Z"
-                        />
-                    </svg>
-                </button>
-            {:else}
-                <button class="button is-large" on:click={likePlaylist} title={t('remove_like')}>
-                    <svg class="icon is-colored" viewBox="0 0 24 24">
-                        <path
-                            fill="#f14668"
-                            d="M12,21.35L10.55,20.03C5.4,15.36 2,12.27 2,8.5C2,5.41 4.42,3 7.5,3C9.24,3 10.91,3.81 12,5.08C13.09,3.81 14.76,3 16.5,3C19.58,3 22,5.41 22,8.5C22,12.27 18.6,15.36 13.45,20.03L12,21.35Z"
-                        />
-                    </svg>
-                </button>
-            {/if}
+            <LikeButton token={data.token} item={data.playlist} itemRoute="playlists" itemLabel={t('playlist')} isLarge={true} />
 
             {#if data.playlist.user.id == data.authUser.id || data.authUser.role == 'admin'}
                 <button class="button is-large" on:click={() => editModal.open()} title={t('edit')}>

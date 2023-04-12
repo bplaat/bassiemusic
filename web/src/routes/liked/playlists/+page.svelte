@@ -10,6 +10,7 @@
         en: {
             title: 'Playlists - Liked - BassieMusic',
             artists: 'Artists',
+            genres: 'Genres',
             albums: 'Albums',
             tracks: 'Tracks',
             playlists: 'Playlists',
@@ -29,6 +30,7 @@
         nl: {
             title: 'Afspeellijsten - Geliked - BassieMusic',
             artists: 'Artisten',
+            genres: 'Genres',
             albums: 'Albums',
             tracks: 'Tracks',
             playlists: 'Afspeellijsten',
@@ -84,6 +86,7 @@
 <div class="tabs is-toggle">
     <ul>
         <li><a href="/liked/artists">{t('artists')}</a></li>
+        <li><a href="/liked/genres">{t('genres')}</a></li>
         <li><a href="/liked/albums">{t('albums')}</a></li>
         <li><a href="/liked/tracks">{t('tracks')}</a></li>
         <li class="is-active"><a href="/liked/playlists">{t('playlists')}</a></li>

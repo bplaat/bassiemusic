@@ -13,7 +13,7 @@ import (
 
 func TracksIndex(c *fiber.Ctx) error {
 	query, page, limit := utils.ParseIndexVars(c)
-	q := models.TrackModel(c).With("like", "artists", "album").WhereRaw("`title` LIKE ?", "%"+query+"%")
+	q := models.TrackModel(c).With("liked", "artists", "album").WhereRaw("`title` LIKE ?", "%"+query+"%")
 	if c.Query("sort_by") == "title" {
 		q = q.OrderByRaw("LOWER(`title`)")
 	} else if c.Query("sort_by") == "title_desc" {
@@ -31,7 +31,7 @@ func TracksIndex(c *fiber.Ctx) error {
 }
 
 func TracksShow(c *fiber.Ctx) error {
-	track := models.TrackModel(c).With("like", "artists", "album").Find(c.Params("trackID"))
+	track := models.TrackModel(c).With("liked", "artists", "album").Find(c.Params("trackID"))
 	if track == nil {
 		return fiber.ErrNotFound
 	}
@@ -52,6 +52,20 @@ func TracksDelete(c *fiber.Ctx) error {
 
 	// Delete track
 	models.TrackModel(c).Where("id", track.ID).Delete()
+	return c.JSON(fiber.Map{"success": true})
+}
+
+func TracksPlay(c *fiber.Ctx) error {
+	authUser := c.Locals("authUser").(*models.User)
+
+	// Get position query variable
+	var position float32
+	if positionFloat, err := strconv.ParseFloat(c.Query("position", "0"), 32); err == nil {
+		position = float32(positionFloat)
+	}
+
+	// Handle track play
+	models.HandleTrackPlay(authUser, c.Params("trackID"), position)
 	return c.JSON(fiber.Map{"success": true})
 }
 
@@ -96,19 +110,5 @@ func TracksLikeDelete(c *fiber.Ctx) error {
 
 	// Delete like
 	models.TrackLikeModel().Where("track_id", c.Params("trackID")).Where("user_id", authUser.ID).Delete()
-	return c.JSON(fiber.Map{"success": true})
-}
-
-func TracksPlay(c *fiber.Ctx) error {
-	authUser := c.Locals("authUser").(*models.User)
-
-	// Get position query variable
-	var position float32
-	if positionFloat, err := strconv.ParseFloat(c.Query("position", "0"), 32); err == nil {
-		position = float32(positionFloat)
-	}
-
-	// Handle track play
-	models.HandleTrackPlay(authUser, c.Params("trackID"), position)
 	return c.JSON(fiber.Map{"success": true})
 }

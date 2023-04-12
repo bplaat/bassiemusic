@@ -57,7 +57,7 @@ func AlbumModel(c *fiber.Ctx) *database.Model[Album] {
 			}
 		},
 		Relationships: map[string]database.ModelProcessFunc[Album]{
-			"like": func(album *Album) {
+			"liked": func(album *Album) {
 				if c != nil {
 					authUser := c.Locals("authUser").(*User)
 					liked := AlbumLikeModel().Where("album_id", album.ID).Where("user_id", authUser.ID).First() != nil
@@ -73,7 +73,7 @@ func AlbumModel(c *fiber.Ctx) *database.Model[Album] {
 				album.Genres = &genres
 			},
 			"tracks": func(album *Album) {
-				tracks := TrackModel(c).With("like", "artists").Where("album_id", album.ID).OrderByRaw("`disk`, `position`").Get()
+				tracks := TrackModel(c).With("liked", "artists").Where("album_id", album.ID).OrderByRaw("`disk`, `position`").Get()
 				album.Tracks = &tracks
 			},
 		},

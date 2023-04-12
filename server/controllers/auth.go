@@ -120,7 +120,7 @@ func AuthValidate(c *fiber.Ctx) error {
 	// Get last played track and return it
 	lastTackPlay := models.TrackPlayModel().Where("user_id", authUser.ID).OrderByDesc("created_at").First()
 	if lastTackPlay != nil {
-		response["last_track"] = models.TrackModel(c).With("like", "artists", "album").Find(lastTackPlay.TrackID)
+		response["last_track"] = models.TrackModel(c).With("liked", "artists", "album").Find(lastTackPlay.TrackID)
 		response["last_track_position"] = lastTackPlay.Position
 	}
 

@@ -1,6 +1,7 @@
 <script>
     import { page } from '$app/stores';
     import { tick, onMount } from 'svelte';
+    import LikeButton from './like-button.svelte';
     import DeleteModal from './modals/delete-modal.svelte';
     import { sidebar, musicPlayer, musicState, language } from '../stores.js';
     import { formatDuration } from '../filters.js';
@@ -19,6 +20,7 @@
             explicit: 'Explicit lyrics',
             like: 'Like track',
             remove_like: 'Remove track like',
+            track: 'track',
             options: 'Track options',
 
             add_queue: 'Add track to play queue',
@@ -29,7 +31,6 @@
             playlists_empty: 'You have no playlists',
             remove_from_playlist: 'Remove from playlist',
             delete: 'Delete track',
-            track: 'track',
         },
         nl: {
             index: '#',
@@ -43,6 +44,7 @@
             explicit: 'Expliciete songtekst',
             like: 'Like track',
             remove_like: 'Verwijder track like',
+            track: 'track',
             options: 'Track opties',
 
             add_queue: 'Voeg track toe aan wachtrij',
@@ -54,7 +56,6 @@
             playlists_empty: 'Je hebt geen afspeellijsten',
             remove_from_playlist: 'Verwijder van afspeellijst',
             delete: 'Verwijder track',
-            track: 'track',
         },
     };
     const t = (key, p1) => lang[$language][key].replace('$1', p1);
@@ -293,24 +294,7 @@
                 <td>{formatDuration(track.duration)}</td>
                 <td class="is-hidden-mobile">{track.plays}</td>
                 <td class="px-0 is-hidden-mobile">
-                    {#if !track.liked}
-                        <button class="button" on:click={() => likeTrack(track)} title={t('like')}>
-                            <svg class="icon" viewBox="0 0 24 24">
-                                <path
-                                    d="M12.1,18.55L12,18.65L11.89,18.55C7.14,14.24 4,11.39 4,8.5C4,6.5 5.5,5 7.5,5C9.04,5 10.54,6 11.07,7.36H12.93C13.46,6 14.96,5 16.5,5C18.5,5 20,6.5 20,8.5C20,11.39 16.86,14.24 12.1,18.55M16.5,3C14.76,3 13.09,3.81 12,5.08C10.91,3.81 9.24,3 7.5,3C4.42,3 2,5.41 2,8.5C2,12.27 5.4,15.36 10.55,20.03L12,21.35L13.45,20.03C18.6,15.36 22,12.27 22,8.5C22,5.41 19.58,3 16.5,3Z"
-                                />
-                            </svg>
-                        </button>
-                    {:else}
-                        <button class="button" on:click={() => likeTrack(track)} title={t('remove_like')}>
-                            <svg class="icon is-colored" viewBox="0 0 24 24">
-                                <path
-                                    fill="#f14668"
-                                    d="M12,21.35L10.55,20.03C5.4,15.36 2,12.27 2,8.5C2,5.41 4.42,3 7.5,3C9.24,3 10.91,3.81 12,5.08C13.09,3.81 14.76,3 16.5,3C19.58,3 22,5.41 22,8.5C22,12.27 18.6,15.36 13.45,20.03L12,21.35Z"
-                                />
-                            </svg>
-                        </button>
-                    {/if}
+                    <LikeButton token={token} item={track} itemRoute="tracks" itemLabel={t('track')} />
                 </td>
                 <td class="pl-0">
                     <button

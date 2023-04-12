@@ -38,7 +38,7 @@ func ArtistModel(c *fiber.Ctx) *database.Model[Artist] {
 			}
 		},
 		Relationships: map[string]database.ModelProcessFunc[Artist]{
-			"like": func(artist *Artist) {
+			"liked": func(artist *Artist) {
 				if c != nil {
 					authUser := c.Locals("authUser").(*User)
 					liked := ArtistLikeModel().Where("artist_id", artist.ID).Where("user_id", authUser.ID).First() != nil
@@ -50,7 +50,7 @@ func ArtistModel(c *fiber.Ctx) *database.Model[Artist] {
 				artist.Albums = &albums
 			},
 			"top_tracks": func(artist *Artist) {
-				topTracks := TrackModel(c).With("like", "artists", "album").WhereIn("track_artist", "track_id", "artist_id", artist.ID).OrderByDesc("plays").Limit(5).Get()
+				topTracks := TrackModel(c).With("liked", "artists", "album").WhereIn("track_artist", "track_id", "artist_id", artist.ID).OrderByDesc("plays").Limit(5).Get()
 				artist.TopTracks = &topTracks
 			},
 		},

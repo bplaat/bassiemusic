@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/bplaat/bassiemusic/database"
 	"github.com/bplaat/bassiemusic/models"
 	"github.com/bplaat/bassiemusic/utils"
 	"github.com/gofiber/fiber/v2"
@@ -11,7 +12,7 @@ import (
 
 func GenresIndex(c *fiber.Ctx) error {
 	query, page, limit := utils.ParseIndexVars(c)
-	q := models.GenreModel(c).WhereRaw("`name` LIKE ?", "%"+query+"%")
+	q := models.GenreModel(c).With("liked").WhereRaw("`name` LIKE ?", "%"+query+"%")
 	if c.Query("sort_by") == "created_at" {
 		q = q.OrderBy("created_at")
 	} else if c.Query("sort_by") == "created_at_desc" {
@@ -25,7 +26,7 @@ func GenresIndex(c *fiber.Ctx) error {
 }
 
 func GenresShow(c *fiber.Ctx) error {
-	genre := models.GenreModel(c).Find(c.Params("genreID"))
+	genre := models.GenreModel(c).With("liked").Find(c.Params("genreID"))
 	if genre == nil {
 		return fiber.ErrNotFound
 	}
@@ -60,4 +61,48 @@ func GenresAlbums(c *fiber.Ctx) error {
 	query, page, limit := utils.ParseIndexVars(c)
 	return c.JSON(models.AlbumModel(c).With("artists", "genres").WhereIn("album_genre", "album_id", "genre_id", genre.ID).
 		WhereRaw("`title` LIKE ?", "%"+query+"%").OrderByDesc("released_at").Paginate(page, limit))
+}
+
+func GenresLike(c *fiber.Ctx) error {
+	authUser := c.Locals("authUser").(*models.User)
+
+	// Check if genre exists
+	genre := models.GenreModel(c).Find(c.Params("genreID"))
+	if genre == nil {
+		return fiber.ErrNotFound
+	}
+
+	// Check if genre already liked
+	genreLike := models.GenreLikeModel().Where("genre_id", c.Params("genreID")).Where("user_id", authUser.ID).First()
+	if genreLike != nil {
+		return c.JSON(fiber.Map{"success": true})
+	}
+
+	// Like genre
+	models.GenreLikeModel().Create(database.Map{
+		"genre_id": c.Params("genreID"),
+		"user_id":  authUser.ID,
+	})
+
+	return c.JSON(fiber.Map{"success": true})
+}
+
+func GenresLikeDelete(c *fiber.Ctx) error {
+	authUser := c.Locals("authUser").(*models.User)
+
+	// Check if genre exists
+	genre := models.GenreModel(c).Find(c.Params("genreID"))
+	if genre == nil {
+		return fiber.ErrNotFound
+	}
+
+	// Check if genre not liked
+	genreLike := models.GenreLikeModel().Where("genre_id", c.Params("genreID")).Where("user_id", authUser.ID).First()
+	if genreLike == nil {
+		return c.JSON(fiber.Map{"success": true})
+	}
+
+	// Delete like
+	models.GenreLikeModel().Where("genre_id", c.Params("genreID")).Where("user_id", authUser.ID).Delete()
+	return c.JSON(fiber.Map{"success": true})
 }
