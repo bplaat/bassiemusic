@@ -97,7 +97,7 @@ func UsersShow(c *fiber.Ctx) error {
 	return c.JSON(user)
 }
 
-type UsersEditParams struct {
+type UsersUpdateParams struct {
 	Username      string `form:"username" validate:"required,min=2"`
 	Email         string `form:"email" validate:"required,email"`
 	Password      string `form:"password" validate:"omitempty,min=6"`
@@ -107,7 +107,7 @@ type UsersEditParams struct {
 	Theme         string `form:"theme" validate:"required"`
 }
 
-func UsersEdit(c *fiber.Ctx) error {
+func UsersUpdate(c *fiber.Ctx) error {
 	// Check if user exists
 	user := models.UserModel().Find(c.Params("userID"))
 	if user == nil {
@@ -121,7 +121,7 @@ func UsersEdit(c *fiber.Ctx) error {
 	}
 
 	// Parse body
-	var params UsersEditParams
+	var params UsersUpdateParams
 	if err := c.BodyParser(&params); err != nil {
 		log.Println(err)
 		return fiber.ErrBadRequest

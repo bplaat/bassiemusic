@@ -107,7 +107,7 @@ func Serve() {
 	app.Get("/playlists", controllers.PlaylistsIndex)
 	app.Post("/playlists", controllers.PlaylistsCreate)
 	app.Get("/playlists/:playlistID", controllers.PlaylistsShow)
-	app.Put("/playlists/:playlistID", controllers.PlaylistsEdit)
+	app.Put("/playlists/:playlistID", controllers.PlaylistsUpdate)
 	app.Delete("/playlists/:playlistID", controllers.PlaylistsDelete)
 	app.Post("/playlists/:playlistID/image", controllers.PlaylistsImage)
 	app.Delete("/playlists/:playlistID/image", controllers.PlaylistsImageDelete)
@@ -118,7 +118,7 @@ func Serve() {
 	app.Delete("/playlists/:playlistID/like", controllers.PlaylistsLikeDelete)
 
 	app.Get("/users/:userID", controllers.UsersShow)
-	app.Put("/users/:userID", controllers.UsersEdit)
+	app.Put("/users/:userID", controllers.UsersUpdate)
 	app.Delete("/users/:userID", controllers.UsersDelete)
 	app.Post("/users/:userID/avatar", controllers.UsersAvatar)
 	app.Delete("/users/:userID/avatar", controllers.UsersAvatarDelete)
@@ -149,6 +149,7 @@ func Serve() {
 	app.Post("/download/artist", controllers.DownloadArtist)
 	app.Post("/download/album", controllers.DownloadAlbum)
 
+	app.Put("/artists/:artistID", controllers.ArtistsUpdate)
 	app.Delete("/artists/:artistID", controllers.ArtistsDelete)
 
 	app.Delete("/genres/:genreID", controllers.GenresDelete)

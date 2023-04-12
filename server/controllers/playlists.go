@@ -97,12 +97,12 @@ func PlaylistsShow(c *fiber.Ctx) error {
 	return c.JSON(playlist)
 }
 
-type PlaylistsEditParams struct {
+type PlaylistsUpdateParams struct {
 	Name   string `form:"name" validate:"required,min=2"`
 	Public string `form:"public" validate:"required"`
 }
 
-func PlaylistsEdit(c *fiber.Ctx) error {
+func PlaylistsUpdate(c *fiber.Ctx) error {
 	// Check if playlist exists
 	playlist := models.PlaylistModel(c).Find(c.Params("playlistID"))
 	if playlist == nil {
@@ -116,7 +116,7 @@ func PlaylistsEdit(c *fiber.Ctx) error {
 	}
 
 	// Parse body
-	var params PlaylistsEditParams
+	var params PlaylistsUpdateParams
 	if err := c.BodyParser(&params); err != nil {
 		log.Println(err)
 		return fiber.ErrBadRequest

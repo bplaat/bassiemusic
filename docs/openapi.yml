@@ -257,7 +257,7 @@ paths:
   /artists/{id}:
     get:
       tags: [Artists]
-      description: Get an artist
+      description: Get artist
       security:
         - TokenAuth: []
       parameters:
@@ -265,6 +265,50 @@ paths:
       responses:
         "200":
           description: Successfull response
+        "401":
+          description: Authorization error
+        "404":
+          description: Artist not found
+    put:
+      tags: [Artists]
+      description: Update artist
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ArtistID"
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                sync:
+                  type: boolean
+                deezer_id:
+                  type: integer
+                  format: int64
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                sync:
+                  type: boolean
+                deezer_id:
+                  type: integer
+                  format: int64
+                image:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: Successfull response
+        "400":
+          description: Bad Request
         "401":
           description: Authorization error
         "404":
@@ -339,7 +383,7 @@ paths:
   /genres/{id}:
     get:
       tags: [Genres]
-      description: Get a genre
+      description: Get genre
       security:
         - TokenAuth: []
       parameters:
@@ -383,7 +427,7 @@ paths:
   /genres/{id}/like:
     put:
       tags: [Genres]
-      description: Like an genre with authed user
+      description: Like a genre with authed user
       security:
         - TokenAuth: []
       parameters:
@@ -397,7 +441,7 @@ paths:
           description: Genre not found
     delete:
       tags: [Genres]
-      description: Delete a liked to an genre
+      description: Delete a liked to a genre
       security:
         - TokenAuth: []
       parameters:
@@ -436,7 +480,7 @@ paths:
   /albums/{id}:
     get:
       tags: [Albums]
-      description: Get an album
+      description: Get album
       security:
         - TokenAuth: []
       parameters:
@@ -518,7 +562,7 @@ paths:
   /tracks/{id}:
     get:
       tags: [Tracks]
-      description: Get a track
+      description: Get track
       security:
         - TokenAuth: []
       parameters:
@@ -641,7 +685,7 @@ paths:
   /playlists/{id}:
     get:
       tags: [Playlists]
-      description: Get an playlist
+      description: Get playlist
       security:
         - TokenAuth: []
       parameters:
@@ -655,7 +699,7 @@ paths:
           description: Playlist not found
     put:
       tags: [Playlists]
-      description: Update an existing playlist
+      description: Update playlist
       security:
         - TokenAuth: []
       parameters:
@@ -827,7 +871,7 @@ paths:
   /playlists/{id}/like:
     put:
       tags: [Playlists]
-      description: Like an playlist with authed user
+      description: Like a playlist with authed user
       security:
         - TokenAuth: []
       parameters:
@@ -841,7 +885,7 @@ paths:
           description: Playlist not found
     delete:
       tags: [Playlists]
-      description: Delete a liked to an playlist
+      description: Delete a liked to a playlist
       security:
         - TokenAuth: []
       parameters:
@@ -912,7 +956,7 @@ paths:
   /users/{id}:
     get:
       tags: [Users]
-      description: Get an user
+      description: Get user
       security:
         - TokenAuth: []
       parameters:
@@ -926,7 +970,7 @@ paths:
           description: User not found
     put:
       tags: [Users]
-      description: Update an existing user
+      description: Update user
       security:
         - TokenAuth: []
       parameters:
@@ -1271,7 +1315,7 @@ paths:
   /download/artist:
     post:
       tags: [Downloader]
-      description: Add a queue item to download an Deezer artist
+      description: Add a queue item to download a Deezer artist
       security:
         - TokenAuth: []
       parameters:
@@ -1290,7 +1334,7 @@ paths:
   /download/album:
     post:
       tags: [Downloader]
-      description: Add a queue item to download an Deezer album
+      description: Add a queue item to download a Deezer album
       security:
         - TokenAuth: []
       parameters:

@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/bplaat/bassiemusic/database"
@@ -35,6 +36,32 @@ func ArtistsShow(c *fiber.Ctx) error {
 		return fiber.ErrNotFound
 	}
 	return c.JSON(artist)
+}
+
+type ArtistsUpdateParams struct {
+	Name     string `form:"name"`
+	Synced   string `form:"synced"`
+	DeezerID string `form:"deezer_id"`
+}
+
+func ArtistsUpdate(c *fiber.Ctx) error {
+	// Check if artist exists
+	artist := models.ArtistModel(c).Find(c.Params("artistID"))
+	if artist == nil {
+		return fiber.ErrNotFound
+	}
+
+	// Parse body
+	var params ArtistsUpdateParams
+	if err := c.BodyParser(&params); err != nil {
+		log.Println(err)
+		return fiber.ErrBadRequest
+	}
+
+	// TODO
+
+	// Get updated artist
+	return c.JSON(models.ArtistModel(c).Find(artist.ID))
 }
 
 func ArtistsDelete(c *fiber.Ctx) error {
