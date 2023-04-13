@@ -2,12 +2,13 @@ package controllers
 
 import (
 	"fmt"
-	"log"
 	"os"
+	"strconv"
 
 	"github.com/bplaat/bassiemusic/database"
 	"github.com/bplaat/bassiemusic/models"
 	"github.com/bplaat/bassiemusic/utils"
+	"github.com/bplaat/bassiemusic/validation"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -38,10 +39,10 @@ func ArtistsShow(c *fiber.Ctx) error {
 	return c.JSON(artist)
 }
 
-type ArtistsUpdateParams struct {
-	Name     string `form:"name"`
-	Synced   string `form:"synced"`
-	DeezerID string `form:"deezer_id"`
+type ArtistsUpdateBody struct {
+	Name     *string `form:"name" validate:"min:2"`
+	Sync     *string `form:"sync" validate:"boolean"`
+	DeezerID *string `form:"deezer_id" validate:"integer"`
 }
 
 func ArtistsUpdate(c *fiber.Ctx) error {
@@ -52,13 +53,29 @@ func ArtistsUpdate(c *fiber.Ctx) error {
 	}
 
 	// Parse body
-	var params ArtistsUpdateParams
-	if err := c.BodyParser(&params); err != nil {
-		log.Println(err)
+	var body ArtistsUpdateBody
+	if err := c.BodyParser(&body); err != nil {
 		return fiber.ErrBadRequest
 	}
 
-	// TODO
+	// Validate body
+	if err := validation.Validate(c, &body); err != nil {
+		return err
+	}
+
+	// Run updates
+	updates := database.Map{}
+	if body.Name != nil {
+		updates["name"] = *body.Name
+	}
+	if body.Sync != nil {
+		updates["sync"] = *body.Sync == "true"
+	}
+	if body.DeezerID != nil {
+		deezerID, _ := strconv.ParseInt(*body.DeezerID, 10, 64)
+		updates["deezer_id"] = deezerID
+	}
+	models.ArtistModel(c).Where("id", artist.ID).Update(updates)
 
 	// Get updated artist
 	return c.JSON(models.ArtistModel(c).Find(artist.ID))

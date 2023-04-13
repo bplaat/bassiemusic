@@ -3,10 +3,12 @@ package controllers
 import (
 	"fmt"
 	"os"
+	"strconv"
 
 	"github.com/bplaat/bassiemusic/database"
 	"github.com/bplaat/bassiemusic/models"
 	"github.com/bplaat/bassiemusic/utils"
+	"github.com/bplaat/bassiemusic/validation"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -35,6 +37,64 @@ func AlbumsShow(c *fiber.Ctx) error {
 		return fiber.ErrNotFound
 	}
 	return c.JSON(album)
+}
+
+type AlbumsUpdateBody struct {
+	Title      *string `form:"title" validate:"min:2"`
+	Type       *string `form:"type" validate:"enum:album,ep,single"`
+	ReleasedAt *string `form:"released_at" validate:"date"`
+	Explicit   *string `form:"explicit" validate:"boolean"`
+	DeezerID   *string `form:"deezer_id" validate:"integer"`
+}
+
+func AlbumsUpdate(c *fiber.Ctx) error {
+	// Check if album exists
+	album := models.AlbumModel(c).Find(c.Params("albumID"))
+	if album == nil {
+		return fiber.ErrNotFound
+	}
+
+	// Parse body
+	var body AlbumsUpdateBody
+	if err := c.BodyParser(&body); err != nil {
+		return fiber.ErrBadRequest
+	}
+
+	// Validate body
+	if err := validation.Validate(c, &body); err != nil {
+		return err
+	}
+
+	// Run updates
+	updates := database.Map{}
+	if body.Title != nil {
+		updates["title"] = *body.Title
+	}
+	if body.Type != nil {
+		if *body.Type == "album" {
+			updates["type"] = models.AlbumTypeAlbum
+		}
+		if *body.Type == "ep" {
+			updates["type"] = models.AlbumTypeEP
+		}
+		if *body.Type == "single" {
+			updates["type"] = models.AlbumTypeSingle
+		}
+	}
+	if body.ReleasedAt != nil {
+		updates["name"] = *body.ReleasedAt
+	}
+	if body.Explicit != nil {
+		updates["explicit"] = *body.Explicit == "true"
+	}
+	if body.DeezerID != nil {
+		deezerID, _ := strconv.ParseInt(*body.DeezerID, 10, 64)
+		updates["deezer_id"] = deezerID
+	}
+	models.AlbumModel(c).Where("id", album.ID).Update(updates)
+
+	// Get updated album
+	return c.JSON(models.AlbumModel(c).Find(album.ID))
 }
 
 func AlbumsDelete(c *fiber.Ctx) error {

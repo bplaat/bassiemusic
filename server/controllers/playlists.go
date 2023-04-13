@@ -13,7 +13,7 @@ import (
 	"github.com/bplaat/bassiemusic/models"
 	"github.com/bplaat/bassiemusic/utils"
 	"github.com/bplaat/bassiemusic/utils/uuid"
-	"github.com/go-playground/validator/v10"
+	"github.com/bplaat/bassiemusic/validation"
 	"github.com/gofiber/fiber/v2"
 	"github.com/nfnt/resize"
 )
@@ -45,39 +45,30 @@ func PlaylistsIndex(c *fiber.Ctx) error {
 	return c.JSON(q.Paginate(page, limit))
 }
 
-type PlaylistsCreateParams struct {
-	Name   string `form:"name" validate:"required,min=2"`
-	Public string `form:"public" validate:"required"`
+type PlaylistsCreateBody struct {
+	Name   string `form:"name" validate:"required|min:2"`
+	Public string `form:"public" validate:"required|boolean"`
 }
 
 func PlaylistsCreate(c *fiber.Ctx) error {
 	authUser := c.Locals("authUser").(*models.User)
 
 	// Parse body
-	var params PlaylistsCreateParams
-	if err := c.BodyParser(&params); err != nil {
-		log.Println(err)
+	var body PlaylistsCreateBody
+	if err := c.BodyParser(&body); err != nil {
 		return fiber.ErrBadRequest
 	}
 
-	// Validate values
-	validate := validator.New()
-	if err := validate.Struct(params); err != nil {
-		log.Println(err)
-		return fiber.ErrBadRequest
-	}
-
-	// Validate public is correct
-	if params.Public != "true" && params.Public != "false" {
-		log.Println("public not valid")
-		return fiber.ErrBadRequest
+	// Validate body
+	if err := validation.Validate(c, &body); err != nil {
+		return err
 	}
 
 	// Create playlist
 	return c.JSON(models.PlaylistModel(c).Create(database.Map{
 		"user_id": authUser.ID,
-		"name":    params.Name,
-		"public":  params.Public == "true",
+		"name":    body.Name,
+		"public":  body.Public == "true",
 	}))
 }
 
@@ -97,9 +88,9 @@ func PlaylistsShow(c *fiber.Ctx) error {
 	return c.JSON(playlist)
 }
 
-type PlaylistsUpdateParams struct {
-	Name   string `form:"name" validate:"required,min=2"`
-	Public string `form:"public" validate:"required"`
+type PlaylistsUpdateBody struct {
+	Name   *string `form:"name" validate:"min:2"`
+	Public *string `form:"public" validate:"boolean"`
 }
 
 func PlaylistsUpdate(c *fiber.Ctx) error {
@@ -116,30 +107,25 @@ func PlaylistsUpdate(c *fiber.Ctx) error {
 	}
 
 	// Parse body
-	var params PlaylistsUpdateParams
-	if err := c.BodyParser(&params); err != nil {
-		log.Println(err)
+	var body PlaylistsUpdateBody
+	if err := c.BodyParser(&body); err != nil {
 		return fiber.ErrBadRequest
 	}
 
-	// Validate values
-	validate := validator.New()
-	if err := validate.Struct(params); err != nil {
-		log.Println(err)
-		return fiber.ErrBadRequest
-	}
-
-	// Validate public is correct
-	if params.Public != "true" && params.Public != "false" {
-		log.Println("public not valid")
-		return fiber.ErrBadRequest
+	// Validate body
+	if err := validation.Validate(c, &body); err != nil {
+		return err
 	}
 
 	// Update playlist
-	models.PlaylistModel(c).Where("id", playlist.ID).Update(database.Map{
-		"name":   params.Name,
-		"public": params.Public == "true",
-	})
+	updates := database.Map{}
+	if body.Name != nil {
+		updates["name"] = *body.Name
+	}
+	if body.Public != nil {
+		updates["public"] = *body.Public == "true"
+	}
+	models.PlaylistModel(c).Where("id", playlist.ID).Update(updates)
 
 	// Get updated playlist
 	return c.JSON(models.PlaylistModel(c).Find(playlist.ID))
@@ -270,8 +256,8 @@ func PlaylistsImageDelete(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"success": true})
 }
 
-type PlaylistsAppendTrackParams struct {
-	TrackID string `form:"track_id" validate:"required"`
+type PlaylistsAppendTrackBody struct {
+	TrackID string `form:"track_id" validate:"required|uuid|exists:tracks,id"`
 }
 
 func PlaylistsAppendTrack(c *fiber.Ctx) error {
@@ -288,23 +274,14 @@ func PlaylistsAppendTrack(c *fiber.Ctx) error {
 	}
 
 	// Parse body
-	var params PlaylistsInsertTrackParams
-	if err := c.BodyParser(&params); err != nil {
-		log.Println(err)
+	var body PlaylistsAppendTrackBody
+	if err := c.BodyParser(&body); err != nil {
 		return fiber.ErrBadRequest
 	}
 
-	// Validate values
-	validate := validator.New()
-	if err := validate.Struct(params); err != nil {
-		log.Println(err)
-		return fiber.ErrBadRequest
-	}
-
-	// Validate track id exists
-	if models.TrackModel(c).Find(params.TrackID) == nil {
-		log.Println("track_id not valid")
-		return fiber.ErrBadRequest
+	// Validate body
+	if err := validation.Validate(c, &body); err != nil {
+		return err
 	}
 
 	// Trigger playlist update
@@ -319,14 +296,14 @@ func PlaylistsAppendTrack(c *fiber.Ctx) error {
 	// Create playlist track
 	models.PlaylistTrackModel().Create(database.Map{
 		"playlist_id": playlist.ID,
-		"track_id":    params.TrackID,
+		"track_id":    body.TrackID,
 		"position":    models.PlaylistTrackModel().Where("playlist_id", playlist.ID).Count() + 1,
 	})
 	return c.JSON(fiber.Map{"success": true})
 }
 
-type PlaylistsInsertTrackParams struct {
-	TrackID string `form:"track_id" validate:"required"`
+type PlaylistsInsertTrackBody struct {
+	TrackID string `form:"track_id" validate:"required|uuid|exists:tracks,id"`
 }
 
 func PlaylistsInsertTrack(c *fiber.Ctx) error {
@@ -343,23 +320,14 @@ func PlaylistsInsertTrack(c *fiber.Ctx) error {
 	}
 
 	// Parse body
-	var params PlaylistsInsertTrackParams
-	if err := c.BodyParser(&params); err != nil {
-		log.Println(err)
+	var body PlaylistsInsertTrackBody
+	if err := c.BodyParser(&body); err != nil {
 		return fiber.ErrBadRequest
 	}
 
-	// Validate values
-	validate := validator.New()
-	if err := validate.Struct(params); err != nil {
-		log.Println(err)
-		return fiber.ErrBadRequest
-	}
-
-	// Validate track id exists
-	if models.TrackModel(c).Find(params.TrackID) == nil {
-		log.Println("track_id not valid")
-		return fiber.ErrBadRequest
+	// Validate body
+	if err := validation.Validate(c, &body); err != nil {
+		return err
 	}
 
 	// Parse position
@@ -391,7 +359,7 @@ func PlaylistsInsertTrack(c *fiber.Ctx) error {
 	// Create playlist track
 	models.PlaylistTrackModel().Create(database.Map{
 		"playlist_id": playlist.ID,
-		"track_id":    params.TrackID,
+		"track_id":    body.TrackID,
 		"position":    position,
 	})
 	return c.JSON(fiber.Map{"success": true})

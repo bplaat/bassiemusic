@@ -290,20 +290,6 @@ paths:
                 deezer_id:
                   type: integer
                   format: int64
-          multipart/form-data:
-            schema:
-              type: object
-              properties:
-                name:
-                  type: string
-                sync:
-                  type: boolean
-                deezer_id:
-                  type: integer
-                  format: int64
-                image:
-                  type: string
-                  format: binary
       responses:
         "200":
           description: Successfull response
@@ -391,6 +377,34 @@ paths:
       responses:
         "200":
           description: Successfull response
+        "401":
+          description: Authorization error
+        "404":
+          description: Genre not found
+    put:
+      tags: [Genres]
+      description: Update genre
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/GenreID"
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                deezer_id:
+                  type: integer
+                  format: int64
+      responses:
+        "200":
+          description: Successfull response
+        "400":
+          description: Bad Request
         "401":
           description: Authorization error
         "404":
@@ -492,6 +506,42 @@ paths:
           description: Authorization error
         "404":
           description: Album not found
+    put:
+      tags: [Albums]
+      description: Update album
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/AlbumID"
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                type:
+                  type: string
+                  enum: [album, ep, single]
+                released_at:
+                  type: string
+                  format: date
+                explicit:
+                  type: boolean
+                deezer_id:
+                  type: integer
+                  format: int64
+      responses:
+        "200":
+          description: Successfull response
+        "400":
+          description: Bad Request
+        "401":
+          description: Authorization error
+        "404":
+          description: Album not found
     delete:
       tags: [Albums]
       description: Delete album
@@ -574,6 +624,47 @@ paths:
           description: Authorization error
         "404":
           description: Track not found
+    put:
+      tags: [Tracks]
+      description: Update track
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/TrackID"
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                album_id:
+                  type: string
+                  format: uuid
+                disk:
+                  type: integer
+                  format: int32
+                position:
+                  type: integer
+                  format: int32
+                explicit:
+                  type: boolean
+                deezer_id:
+                  type: integer
+                  format: int64
+                youtube_id:
+                  type: string
+      responses:
+        "200":
+          description: Successfull response
+        "400":
+          description: Bad Request
+        "401":
+          description: Authorization error
+        "404":
+          description: Album not found
     delete:
       tags: [Tracks]
       description: Delete track
@@ -715,9 +806,6 @@ paths:
                   type: string
                 public:
                   type: boolean
-              required:
-                - name
-                - public
       responses:
         "200":
           description: Successfull response
@@ -1318,17 +1406,23 @@ paths:
       description: Add a queue item to download a Deezer artist
       security:
         - TokenAuth: []
-      parameters:
-        - name: deezer_id
-          in: query
-          description: Deezer Artist ID
-          required: true
-          schema:
-            type: integer
-            format: int64
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                deezer_id:
+                  type: integer
+                  format: int64
+              required:
+                - deezer_id
       responses:
         "200":
           description: Successfull response
+        "400":
+          description: Bad Request
         "401":
           description: Authorization error
   /download/album:
@@ -1337,16 +1431,22 @@ paths:
       description: Add a queue item to download a Deezer album
       security:
         - TokenAuth: []
-      parameters:
-        - name: deezer_id
-          in: query
-          description: Deezer Album ID
-          required: true
-          schema:
-            type: integer
-            format: int64
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                deezer_id:
+                  type: integer
+                  format: int64
+              required:
+                - deezer_id
       responses:
         "200":
           description: Successfull response
+        "400":
+          description: Bad Request
         "401":
           description: Authorization error

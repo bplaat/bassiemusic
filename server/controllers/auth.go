@@ -36,19 +36,20 @@ func getIP(c *fiber.Ctx) string {
 	return c.IP()
 }
 
-type AuthLoginParams struct {
+type AuthLoginBody struct {
 	Logon    string `form:"logon"`
 	Password string `form:"password"`
 }
 
 func AuthLogin(c *fiber.Ctx) error {
-	var params AuthLoginParams
-	if err := c.BodyParser(&params); err != nil {
+	// Parse body
+	var body AuthLoginBody
+	if err := c.BodyParser(&body); err != nil {
 		return fiber.ErrBadRequest
 	}
 
 	// Get user by username or email
-	user := models.UserModel().Where("username", params.Logon).WhereOr("email", params.Logon).First()
+	user := models.UserModel().Where("username", body.Logon).WhereOr("email", body.Logon).First()
 	if user == nil {
 		return c.JSON(fiber.Map{
 			"success": false,
@@ -57,7 +58,7 @@ func AuthLogin(c *fiber.Ctx) error {
 	}
 
 	// Verify user password
-	if !utils.VerifyPassword(params.Password, user.Password) {
+	if !utils.VerifyPassword(body.Password, user.Password) {
 		return c.JSON(fiber.Map{
 			"success": false,
 			"message": "Wrong email or password",

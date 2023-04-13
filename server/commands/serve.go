@@ -152,10 +152,13 @@ func Serve() {
 	app.Put("/artists/:artistID", controllers.ArtistsUpdate)
 	app.Delete("/artists/:artistID", controllers.ArtistsDelete)
 
+	app.Put("/genres/:genreID", controllers.GenresUpdate)
 	app.Delete("/genres/:genreID", controllers.GenresDelete)
 
+	app.Put("/albums/:albumID", controllers.AlbumsUpdate)
 	app.Delete("/albums/:albumID", controllers.AlbumsDelete)
 
+	app.Put("/tracks/:trackID", controllers.TracksUpdate)
 	app.Delete("/tracks/:trackID", controllers.TracksDelete)
 
 	app.Get("/users", controllers.UsersIndex)

@@ -13,7 +13,7 @@ import (
 	"github.com/bplaat/bassiemusic/models"
 	"github.com/bplaat/bassiemusic/utils"
 	"github.com/bplaat/bassiemusic/utils/uuid"
-	"github.com/go-playground/validator/v10"
+	"github.com/bplaat/bassiemusic/validation"
 	"github.com/gofiber/fiber/v2"
 	"github.com/nfnt/resize"
 )
@@ -23,66 +23,39 @@ func UsersIndex(c *fiber.Ctx) error {
 	return c.JSON(models.UserModel().WhereRaw("`username` LIKE ?", "%"+query+"%").WhereOrRaw("`email` LIKE ?", "%"+query+"%").OrderByRaw("LOWER(`username`)").Paginate(page, limit))
 }
 
-type UsersCreateParams struct {
-	Username      string `form:"username" validate:"required,min=2"`
-	Email         string `form:"email" validate:"required,email"`
-	Password      string `form:"password" validate:"required,min=6"`
-	AllowExplicit string `form:"allow_explicit" validate:"required"`
-	Role          string `form:"role" validate:"required"`
+type UsersCreateBody struct {
+	Username      string `form:"username" validate:"required|min:2|unique:users,username"`
+	Email         string `form:"email" validate:"required|email|unique:users,email"`
+	Password      string `form:"password" validate:"required|min:6"`
+	AllowExplicit string `form:"allow_explicit" validate:"required|boolean"`
+	Role          string `form:"role" validate:"required|enum:normal,admin"`
 }
 
 func UsersCreate(c *fiber.Ctx) error {
 	// Parse body
-	var params UsersCreateParams
-	if err := c.BodyParser(&params); err != nil {
-		log.Println(err)
+	var body UsersCreateBody
+	if err := c.BodyParser(&body); err != nil {
 		return fiber.ErrBadRequest
 	}
 
-	// Validate values
-	validate := validator.New()
-	if err := validate.Struct(params); err != nil {
-		log.Println(err)
-		return fiber.ErrBadRequest
-	}
-
-	// Validate username is unique
-	if models.UserModel().Where("username", params.Username).First() != nil {
-		log.Println("username not unique")
-		return fiber.ErrBadRequest
-	}
-
-	// Validate email is unique
-	if models.UserModel().Where("email", params.Email).First() != nil {
-		log.Println("email not unique")
-		return fiber.ErrBadRequest
-	}
-
-	// Validate role is correct
-	if params.Role != "normal" && params.Role != "admin" {
-		log.Println("role not valid")
-		return fiber.ErrBadRequest
-	}
-	var userRole models.UserRole
-	if params.Role == "normal" {
-		userRole = models.UserRoleNormal
-	}
-	if params.Role == "admin" {
-		userRole = models.UserRoleAdmin
-	}
-
-	// Validate allow_explicit is correct
-	if params.AllowExplicit != "true" && params.AllowExplicit != "false" {
-		log.Println("allow_explicit not valid")
-		return fiber.ErrBadRequest
+	// Validate body
+	if err := validation.Validate(c, &body); err != nil {
+		return err
 	}
 
 	// Create user
+	var userRole models.UserRole
+	if body.Role == "normal" {
+		userRole = models.UserRoleNormal
+	}
+	if body.Role == "admin" {
+		userRole = models.UserRoleAdmin
+	}
 	return c.JSON(models.UserModel().Create(database.Map{
-		"username":       params.Username,
-		"email":          params.Email,
-		"password":       utils.HashPassword(params.Password),
-		"allow_explicit": params.AllowExplicit == "true",
+		"username":       body.Username,
+		"email":          body.Email,
+		"password":       utils.HashPassword(body.Password),
+		"allow_explicit": body.AllowExplicit == "true",
 		"role":           userRole,
 		"language":       "en",
 		"theme":          models.UserThemeSystem,
@@ -97,14 +70,14 @@ func UsersShow(c *fiber.Ctx) error {
 	return c.JSON(user)
 }
 
-type UsersUpdateParams struct {
-	Username      string `form:"username" validate:"required,min=2"`
-	Email         string `form:"email" validate:"required,email"`
-	Password      string `form:"password" validate:"omitempty,min=6"`
-	AllowExplicit string `form:"allow_explicit" validate:"omitempty,required"`
-	Role          string `form:"role" validate:"omitempty,required"`
-	Language      string `form:"language" validate:"required"`
-	Theme         string `form:"theme" validate:"required"`
+type UsersUpdateBody struct {
+	Username      *string `form:"username" validate:"min=2|unique:users,username"`
+	Email         *string `form:"email" validate:"email|unique:users,email"`
+	Password      *string `form:"password" validate:"min:6"`
+	AllowExplicit *string `form:"allow_explicit" validate:"boolean"`
+	Role          *string `form:"role" validate:"enum:normal,admin"`
+	Language      *string `form:"language" validate:"enum:en,nl"`
+	Theme         *string `form:"theme" validate:"enum:system,light,dark"`
 }
 
 func UsersUpdate(c *fiber.Ctx) error {
@@ -121,87 +94,51 @@ func UsersUpdate(c *fiber.Ctx) error {
 	}
 
 	// Parse body
-	var params UsersUpdateParams
-	if err := c.BodyParser(&params); err != nil {
-		log.Println(err)
+	var body UsersUpdateBody
+	if err := c.BodyParser(&body); err != nil {
 		return fiber.ErrBadRequest
 	}
 
-	// Validate values
-	validate := validator.New()
-	if err := validate.Struct(params); err != nil {
-		log.Println(err)
-		return fiber.ErrBadRequest
+	// Validate body
+	if err := validation.Validate(c, &body); err != nil {
+		return err
 	}
 
-	// Validate username is unique when diffrent
-	if user.Username != params.Username && models.UserModel().Where("username", params.Username).First() != nil {
-		log.Println("username not unique")
-		return fiber.ErrBadRequest
+	// Run updates
+	updates := database.Map{}
+	if body.Username != nil {
+		updates["username"] = *body.Username
 	}
-
-	// Validate email is unique
-	if user.Email != params.Email && models.UserModel().Where("email", params.Email).First() != nil {
-		log.Println("email not unique")
-		return fiber.ErrBadRequest
+	if body.Email != nil {
+		updates["email"] = *body.Email
 	}
-
-	// Validate allow_explicit is correct
-	if params.AllowExplicit != "" && params.AllowExplicit != "true" && params.AllowExplicit != "false" {
-		log.Println("allow_explicit not valid")
-		return fiber.ErrBadRequest
+	if body.Password != nil {
+		updates["password"] = utils.HashPassword(*body.Password)
 	}
-
-	// Validate role is correct
-	if params.Role != "" && params.Role != "normal" && params.Role != "admin" {
-		log.Println("role not valid")
-		return fiber.ErrBadRequest
+	if body.AllowExplicit != nil {
+		updates["allow_explicit"] = *body.AllowExplicit == "true"
 	}
-
-	// Validate lang is correct
-	if params.Language != "en" && params.Language != "nl" {
-		log.Println("lang not valid")
-		return fiber.ErrBadRequest
+	if body.Role != nil {
+		if *body.Role == "normal" {
+			updates["role"] = models.UserRoleNormal
+		}
+		if *body.Role == "admin" {
+			updates["role"] = models.UserRoleAdmin
+		}
 	}
-
-	// Validate theme is correct
-	if params.Theme != "system" && params.Theme != "light" && params.Theme != "dark" {
-		log.Println("theme not valid")
-		return fiber.ErrBadRequest
+	if body.Language != nil {
+		updates["language"] = *body.Language
 	}
-
-	// Update user
-	var userRole models.UserRole
-	if params.Role == "normal" {
-		userRole = models.UserRoleNormal
-	}
-	if params.Role == "admin" {
-		userRole = models.UserRoleAdmin
-	}
-
-	var userTheme models.UserTheme
-	if params.Theme == "system" {
-		userTheme = models.UserThemeSystem
-	}
-	if params.Theme == "light" {
-		userTheme = models.UserThemeLight
-	}
-	if params.Theme == "dark" {
-		userTheme = models.UserThemeDark
-	}
-
-	updates := database.Map{
-		"username":       params.Username,
-		"email":          params.Email,
-		"allow_explicit": params.AllowExplicit == "true",
-		"language":       params.Language,
-		"theme":          userTheme,
-	}
-	if params.Password != "" {
-		updates["password"] = utils.HashPassword(params.Password)
-	}
-	if authUser.Role == models.UserRoleAdmin && params.Role != "" {
-		updates["role"] = userRole
+	if body.Theme != nil {
+		if *body.Theme == "system" {
+			updates["theme"] = models.UserThemeSystem
+		}
+		if *body.Theme == "light" {
+			updates["theme"] = models.UserThemeLight
+		}
+		if *body.Theme == "dark" {
+			updates["theme"] = models.UserThemeDark
+		}
 	}
 	models.UserModel().Where("id", user.ID).Update(updates)
 

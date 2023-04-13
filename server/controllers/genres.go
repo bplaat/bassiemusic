@@ -3,10 +3,12 @@ package controllers
 import (
 	"fmt"
 	"os"
+	"strconv"
 
 	"github.com/bplaat/bassiemusic/database"
 	"github.com/bplaat/bassiemusic/models"
 	"github.com/bplaat/bassiemusic/utils"
+	"github.com/bplaat/bassiemusic/validation"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -31,6 +33,44 @@ func GenresShow(c *fiber.Ctx) error {
 		return fiber.ErrNotFound
 	}
 	return c.JSON(genre)
+}
+
+type GenresUpdateBody struct {
+	Name     *string `form:"name" validate:"min:2"`
+	DeezerID *string `form:"deezer_id" validate:"integer"`
+}
+
+func GenresUpdate(c *fiber.Ctx) error {
+	// Check if genre exists
+	genre := models.GenreModel(c).Find(c.Params("genreID"))
+	if genre == nil {
+		return fiber.ErrNotFound
+	}
+
+	// Parse body
+	var body GenresUpdateBody
+	if err := c.BodyParser(&body); err != nil {
+		return fiber.ErrBadRequest
+	}
+
+	// Validate body
+	if err := validation.Validate(c, &body); err != nil {
+		return err
+	}
+
+	// Run updates
+	updates := database.Map{}
+	if body.Name != nil {
+		updates["name"] = *body.Name
+	}
+	if body.DeezerID != nil {
+		deezerID, _ := strconv.ParseInt(*body.DeezerID, 10, 64)
+		updates["deezer_id"] = deezerID
+	}
+	models.GenreModel(c).Where("id", genre.ID).Update(updates)
+
+	// Get updated genre
+	return c.JSON(models.GenreModel(c).Find(genre.ID))
 }
 
 func GenresDelete(c *fiber.Ctx) error {

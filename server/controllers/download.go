@@ -1,64 +1,60 @@
 package controllers
 
 import (
-	"log"
+	"strconv"
 
 	"github.com/bplaat/bassiemusic/database"
 	"github.com/bplaat/bassiemusic/models"
-	"github.com/go-playground/validator/v10"
+	"github.com/bplaat/bassiemusic/validation"
 	"github.com/gofiber/fiber/v2"
 )
 
-type DownloadArtistParams struct {
-	DeezerID string `form:"deezer_id" validate:"required,numeric"`
+type DownloadArtistBody struct {
+	DeezerID string `form:"deezer_id" validate:"required|integer"`
 }
 
 func DownloadArtist(c *fiber.Ctx) error {
 	// Parse body
-	var params DownloadArtistParams
-	if err := c.BodyParser(&params); err != nil {
-		log.Println(err)
+	var body DownloadArtistBody
+	if err := c.BodyParser(&body); err != nil {
 		return fiber.ErrBadRequest
 	}
 
-	// Validate values
-	validate := validator.New()
-	if err := validate.Struct(params); err != nil {
-		log.Println(err)
-		return fiber.ErrBadRequest
+	// Validate body
+	if err := validation.Validate(c, &body); err != nil {
+		return err
 	}
 
 	// Create download task
+	deezerID, _ := strconv.ParseInt(body.DeezerID, 10, 64)
 	models.DownloadTaskModel().Create(database.Map{
 		"type":      models.DownloadTaskTypeDeezerArtist,
-		"deezer_id": params.DeezerID,
+		"deezer_id": deezerID,
 	})
 	return c.JSON(fiber.Map{"success": true})
 }
 
-type DownloadAlbumParams struct {
-	DeezerID string `form:"deezer_id" validate:"required,numeric"`
+type DownloadAlbumBody struct {
+	DeezerID string `form:"deezer_id" validate:"required|integer"`
 }
 
 func DownloadAlbum(c *fiber.Ctx) error {
 	// Parse body
-	var params DownloadAlbumParams
-	if err := c.BodyParser(&params); err != nil {
-		log.Println(err)
+	var body DownloadAlbumBody
+	if err := c.BodyParser(&body); err != nil {
 		return fiber.ErrBadRequest
 	}
 
-	// Validate values
-	validate := validator.New()
-	if err := validate.Struct(params); err != nil {
-		log.Println(err)
-		return fiber.ErrBadRequest
+	// Validate body
+	if err := validation.Validate(c, &body); err != nil {
+		return err
 	}
 
 	// Create download task
+	deezerID, _ := strconv.ParseInt(body.DeezerID, 10, 64)
 	models.DownloadTaskModel().Create(database.Map{
 		"type":      models.DownloadTaskTypeDeezerAlbum,
-		"deezer_id": params.DeezerID,
+		"deezer_id": deezerID,
 	})
 	return c.JSON(fiber.Map{"success": true})
 }

@@ -206,7 +206,7 @@ func (qb *QueryBuilder[T]) Get() []T {
 	models := []T{}
 	for query.Next() {
 		var model T
-		modelValue := reflect.Indirect(reflect.ValueOf(&model))
+		modelValue := reflect.ValueOf(&model).Elem()
 		ptrs := []any{}
 		for _, column := range qb.model.Columns {
 			ptrs = append(ptrs, modelValue.FieldByName(column.Name).Addr().Interface())
