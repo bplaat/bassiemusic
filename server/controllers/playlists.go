@@ -60,8 +60,8 @@ func PlaylistsCreate(c *fiber.Ctx) error {
 	}
 
 	// Validate body
-	if err := validation.Validate(c, &body); err != nil {
-		return err
+	if err := validation.ValidateStruct(c, &body); err != nil {
+		return nil
 	}
 
 	// Create playlist
@@ -114,8 +114,8 @@ func PlaylistsUpdate(c *fiber.Ctx) error {
 	}
 
 	// Validate body
-	if err := validation.Validate(c, &body); err != nil {
-		return err
+	if err := validation.ValidateStructUpdates(c, playlist, &body); err != nil {
+		return nil
 	}
 
 	// Update playlist
@@ -281,8 +281,8 @@ func PlaylistsAppendTrack(c *fiber.Ctx) error {
 	}
 
 	// Validate body
-	if err := validation.Validate(c, &body); err != nil {
-		return err
+	if err := validation.ValidateStruct(c, &body); err != nil {
+		return nil
 	}
 
 	// Trigger playlist update
@@ -327,8 +327,8 @@ func PlaylistsInsertTrack(c *fiber.Ctx) error {
 	}
 
 	// Validate body
-	if err := validation.Validate(c, &body); err != nil {
-		return err
+	if err := validation.ValidateStruct(c, &body); err != nil {
+		return nil
 	}
 
 	// Parse position

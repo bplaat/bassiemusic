@@ -60,8 +60,8 @@ func ArtistsUpdate(c *fiber.Ctx) error {
 	}
 
 	// Validate body
-	if err := validation.Validate(c, &body); err != nil {
-		return err
+	if err := validation.ValidateStructUpdates(c, artist, &body); err != nil {
+		return nil
 	}
 
 	// Run updates

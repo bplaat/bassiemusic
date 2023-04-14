@@ -6,9 +6,9 @@ import (
 	"strconv"
 
 	"github.com/bplaat/bassiemusic/core/database"
+	"github.com/bplaat/bassiemusic/core/validation"
 	"github.com/bplaat/bassiemusic/models"
 	"github.com/bplaat/bassiemusic/utils"
-	"github.com/bplaat/bassiemusic/core/validation"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -54,8 +54,8 @@ func GenresUpdate(c *fiber.Ctx) error {
 	}
 
 	// Validate body
-	if err := validation.Validate(c, &body); err != nil {
-		return err
+	if err := validation.ValidateStructUpdates(c, genre, &body); err != nil {
+		return nil
 	}
 
 	// Run updates

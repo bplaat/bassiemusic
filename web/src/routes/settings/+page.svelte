@@ -79,24 +79,25 @@
     let newPassword = '';
 
     async function changeDetails() {
+        const body = new URLSearchParams({
+            username: authUser.username,
+            email: authUser.email,
+            language: authUser.language,
+            theme: authUser.theme,
+            allow_explicit: authUser.allow_explicit,
+        });
+        if (newPassword != '') body.append('password', newPassword);
         const response = await fetch(`${import.meta.env.VITE_API_URL}/users/${authUser.id}`, {
             method: 'PUT',
             headers: {
                 Authorization: `Bearer ${token}`,
             },
-            body: new URLSearchParams({
-                username: authUser.username,
-                email: authUser.email,
-                password: newPassword,
-                language: authUser.language,
-                theme: authUser.theme,
-                allow_explicit: authUser.allow_explicit,
-            }),
+            body,
         });
         if (response.status == 200) {
             window.location = '/settings';
         } else {
-            alert('Error!');
+            alert(`Error: ${JSON.stringify(await response.json())}`);
         }
     }
 
@@ -120,8 +121,6 @@
         });
         if (response.status == 200) {
             window.location = '/settings';
-        } else {
-            alert('Error!');
         }
     }
 
@@ -134,8 +133,6 @@
         });
         if (response.status == 200) {
             window.location = '/settings';
-        } else {
-            alert('Error!');
         }
     }
 

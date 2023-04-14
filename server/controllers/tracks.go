@@ -63,8 +63,8 @@ func TracksUpdate(c *fiber.Ctx) error {
 	}
 
 	// Validate body
-	if err := validation.Validate(c, &body); err != nil {
-		return err
+	if err := validation.ValidateStructUpdates(c, track, &body); err != nil {
+		return nil
 	}
 
 	// Run updates

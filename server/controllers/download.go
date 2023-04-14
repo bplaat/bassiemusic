@@ -21,8 +21,8 @@ func DownloadArtist(c *fiber.Ctx) error {
 	}
 
 	// Validate body
-	if err := validation.Validate(c, &body); err != nil {
-		return err
+	if err := validation.ValidateStruct(c, &body); err != nil {
+		return nil
 	}
 
 	// Create download task
@@ -46,8 +46,8 @@ func DownloadAlbum(c *fiber.Ctx) error {
 	}
 
 	// Validate body
-	if err := validation.Validate(c, &body); err != nil {
-		return err
+	if err := validation.ValidateStruct(c, &body); err != nil {
+		return nil
 	}
 
 	// Create download task

@@ -74,11 +74,14 @@
         });
         if (response.status == 200) {
             const updatedPlaylist = await response.json();
+            updatedPlaylist.liked = playlist.liked;
             updatedPlaylist.user = playlist.user;
             updatedPlaylist.tracks = playlist.tracks;
             close();
             imageInput.value = '';
             dispatch('updatePlaylist', { playlist: updatedPlaylist });
+        } else {
+            alert(`Error: ${JSON.stringify(await response.json())}`);
         }
     }
 

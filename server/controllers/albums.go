@@ -63,8 +63,8 @@ func AlbumsUpdate(c *fiber.Ctx) error {
 	}
 
 	// Validate body
-	if err := validation.Validate(c, &body); err != nil {
-		return err
+	if err := validation.ValidateStructUpdates(c, album, &body); err != nil {
+		return nil
 	}
 
 	// Run updates

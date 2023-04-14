@@ -62,25 +62,28 @@
 
     const dispatch = createEventDispatcher();
     async function editUser() {
+        const body = new URLSearchParams({
+            username: user.username,
+            email: user.email,
+            role: user.role,
+            language: user.language,
+            theme: user.theme,
+            allow_explicit: user.allow_explicit,
+        });
+        if (newPassword != '') body.append('password', newPassword);
         const response = await fetch(`${import.meta.env.VITE_API_URL}/users/${user.id}`, {
             method: 'PUT',
             headers: {
                 Authorization: `Bearer ${token}`,
             },
-            body: new URLSearchParams({
-                username: user.username,
-                email: user.email,
-                password: newPassword,
-                role: user.role,
-                language: user.language,
-                theme: user.theme,
-                allow_explicit: user.allow_explicit,
-            }),
+            body,
         });
         if (response.status == 200) {
             const updatedUser = await response.json();
             close();
             dispatch('updateUser', { user: updatedUser });
+        } else {
+            alert(`Error: ${JSON.stringify(await response.json())}`);
         }
     }
 </script>

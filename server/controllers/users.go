@@ -39,8 +39,8 @@ func UsersCreate(c *fiber.Ctx) error {
 	}
 
 	// Validate body
-	if err := validation.Validate(c, &body); err != nil {
-		return err
+	if err := validation.ValidateStruct(c, &body); err != nil {
+		return nil
 	}
 
 	// Create user
@@ -71,8 +71,8 @@ func UsersShow(c *fiber.Ctx) error {
 }
 
 type UsersUpdateBody struct {
-	Username      *string `form:"username" validate:"min=2|unique:users,username"`
-	Email         *string `form:"email" validate:"email|unique:users,email"`
+	Username      *string `form:"username" validate:"min:2|unique:users,username,Username"`
+	Email         *string `form:"email" validate:"email|unique:users,email,Email"`
 	Password      *string `form:"password" validate:"min:6"`
 	AllowExplicit *string `form:"allow_explicit" validate:"boolean"`
 	Role          *string `form:"role" validate:"enum:normal,admin"`
@@ -100,8 +100,8 @@ func UsersUpdate(c *fiber.Ctx) error {
 	}
 
 	// Validate body
-	if err := validation.Validate(c, &body); err != nil {
-		return err
+	if err := validation.ValidateStructUpdates(c, user, &body); err != nil {
+		return nil
 	}
 
 	// Run updates
