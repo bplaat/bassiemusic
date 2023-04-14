@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/bplaat/bassiemusic/utils/uuid"
+	"github.com/bplaat/bassiemusic/core/uuid"
 )
 
 type Map map[string]any

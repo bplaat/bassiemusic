@@ -5,10 +5,10 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/bplaat/bassiemusic/database"
+	"github.com/bplaat/bassiemusic/core/database"
 	"github.com/bplaat/bassiemusic/models"
 	"github.com/bplaat/bassiemusic/utils"
-	"github.com/bplaat/bassiemusic/validation"
+	"github.com/bplaat/bassiemusic/core/validation"
 	"github.com/gofiber/fiber/v2"
 )
 

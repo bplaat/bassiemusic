@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/bplaat/bassiemusic/database"
+	"github.com/bplaat/bassiemusic/core/database"
 )
 
 type User struct {

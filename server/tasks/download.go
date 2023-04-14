@@ -10,11 +10,11 @@ import (
 	"time"
 
 	"github.com/bplaat/bassiemusic/consts"
-	"github.com/bplaat/bassiemusic/database"
+	"github.com/bplaat/bassiemusic/core/database"
+	"github.com/bplaat/bassiemusic/core/uuid"
 	"github.com/bplaat/bassiemusic/models"
 	"github.com/bplaat/bassiemusic/structs"
 	"github.com/bplaat/bassiemusic/utils"
-	"github.com/bplaat/bassiemusic/utils/uuid"
 )
 
 func createArtist(deezerID int, name string, sync bool) string {

@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/bplaat/bassiemusic/consts"
-	"github.com/bplaat/bassiemusic/database"
+	"github.com/bplaat/bassiemusic/core/database"
 	"github.com/bplaat/bassiemusic/models"
 	"github.com/bplaat/bassiemusic/utils"
 	"github.com/gofiber/fiber/v2"

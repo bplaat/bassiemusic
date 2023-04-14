@@ -6,8 +6,8 @@ import (
 	"os"
 
 	"github.com/bplaat/bassiemusic/commands"
-	"github.com/bplaat/bassiemusic/database"
-	"github.com/bplaat/bassiemusic/utils/dotenv"
+	"github.com/bplaat/bassiemusic/core/database"
+	"github.com/bplaat/bassiemusic/core/dotenv"
 	_ "github.com/go-sql-driver/mysql"
 )
 

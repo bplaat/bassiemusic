@@ -5,7 +5,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/bplaat/bassiemusic/database"
+	"github.com/bplaat/bassiemusic/core/database"
 )
 
 // Artist

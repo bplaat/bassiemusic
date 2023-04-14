@@ -3,7 +3,7 @@ package models
 import (
 	"time"
 
-	"github.com/bplaat/bassiemusic/database"
+	"github.com/bplaat/bassiemusic/core/database"
 )
 
 type DownloadTask struct {
