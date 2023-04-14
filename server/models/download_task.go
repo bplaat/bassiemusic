@@ -19,16 +19,14 @@ type DownloadTaskType int
 const DownloadTaskTypeDeezerArtist DownloadTaskType = 0
 const DownloadTaskTypeDeezerAlbum DownloadTaskType = 1
 
-func DownloadTaskModel() *database.Model[DownloadTask] {
-	return (&database.Model[DownloadTask]{
-		TableName: "download_tasks",
-		Process: func(downloadTask *DownloadTask) {
-			if downloadTask.Type == DownloadTaskTypeDeezerArtist {
-				downloadTask.TypeString = "deezer_artist"
-			}
-			if downloadTask.Type == DownloadTaskTypeDeezerAlbum {
-				downloadTask.TypeString = "deezer_album"
-			}
-		},
-	}).Init()
-}
+var DownloadTaskModel *database.Model[DownloadTask] = (&database.Model[DownloadTask]{
+	TableName: "download_tasks",
+	Process: func(downloadTask *DownloadTask) {
+		if downloadTask.Type == DownloadTaskTypeDeezerArtist {
+			downloadTask.TypeString = "deezer_artist"
+		}
+		if downloadTask.Type == DownloadTaskTypeDeezerAlbum {
+			downloadTask.TypeString = "deezer_album"
+		}
+	},
+}).Init()

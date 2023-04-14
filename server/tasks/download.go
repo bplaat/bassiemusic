@@ -19,10 +19,10 @@ import (
 
 func createArtist(deezerID int, name string, sync bool) string {
 	// Check if artist already exists
-	artist := models.ArtistModel(nil).Where("name", name).First()
+	artist := models.ArtistModel.Where("name", name).First()
 	if artist != nil {
 		if sync {
-			models.ArtistModel(nil).Where("id", artist.ID).Update(database.Map{
+			models.ArtistModel.Where("id", artist.ID).Update(database.Map{
 				"sync": true,
 			})
 		}
@@ -37,7 +37,7 @@ func createArtist(deezerID int, name string, sync bool) string {
 
 	// Create artist
 	artistID := uuid.New()
-	models.ArtistModel(nil).Create(database.Map{
+	models.ArtistModel.Create(database.Map{
 		"id":        artistID.String(),
 		"name":      name,
 		"deezer_id": deezerID,
@@ -53,7 +53,7 @@ func createArtist(deezerID int, name string, sync bool) string {
 
 func createGenre(deezerID int, name string) string {
 	// Check if genre already exists
-	genre := models.GenreModel(nil).Where("name", name).First()
+	genre := models.GenreModel.Where("name", name).First()
 	if genre != nil {
 		return genre.ID
 	}
@@ -66,7 +66,7 @@ func createGenre(deezerID int, name string) string {
 
 	// Create genre
 	genreID := uuid.New()
-	models.GenreModel(nil).Create(database.Map{
+	models.GenreModel.Create(database.Map{
 		"id":        genreID.String(),
 		"name":      name,
 		"deezer_id": deezerID,
@@ -88,7 +88,7 @@ func CreateTrack(albumID string, deezerID int) {
 
 	// Create track
 	trackID := uuid.New()
-	models.TrackModel(nil).Create(database.Map{
+	models.TrackModel.Create(database.Map{
 		"id":         trackID.String(),
 		"album_id":   albumID,
 		"title":      deezerTrack.Title,
@@ -104,7 +104,7 @@ func CreateTrack(albumID string, deezerID int) {
 	// Create track artists bindings
 	for _, artist := range deezerTrack.Contributors {
 		artistID := createArtist(artist.ID, artist.Name, false)
-		models.TrackArtistModel().Create(database.Map{
+		models.TrackArtistModel.Create(database.Map{
 			"track_id":  trackID.String(),
 			"artist_id": artistID,
 		})
@@ -151,7 +151,7 @@ func SearchAndDownloadTrackMusic(track *models.Track) error {
 			}
 
 			// Update track
-			models.TrackModel(nil).Where("id", track.ID).Update(database.Map{
+			models.TrackModel.Where("id", track.ID).Update(database.Map{
 				"duration":   youtubeVideo.Duration,
 				"youtube_id": youtubeVideo.ID,
 			})
@@ -168,7 +168,7 @@ func DownloadAlbum(deezerID int) {
 	}
 
 	// Check if album already exists
-	if models.AlbumModel(nil).Where("title", deezerAlbum.Title).First() != nil {
+	if models.AlbumModel.Where("title", deezerAlbum.Title).First() != nil {
 		return
 	}
 
@@ -182,7 +182,7 @@ func DownloadAlbum(deezerID int) {
 		albumType = models.AlbumTypeSingle
 	}
 	albumID := uuid.New()
-	models.AlbumModel(nil).Create(database.Map{
+	models.AlbumModel.Create(database.Map{
 		"id":          albumID.String(),
 		"type":        albumType,
 		"title":       deezerAlbum.Title,
@@ -197,7 +197,7 @@ func DownloadAlbum(deezerID int) {
 	// Create album genre bindings
 	for _, genre := range deezerAlbum.Genres.Data {
 		genreID := createGenre(genre.ID, genre.Name)
-		models.AlbumGenreModel().Create(database.Map{
+		models.AlbumGenreModel.Create(database.Map{
 			"album_id": albumID.String(),
 			"genre_id": genreID,
 		})
@@ -206,7 +206,7 @@ func DownloadAlbum(deezerID int) {
 	// Create album artist bindings
 	for _, artist := range deezerAlbum.Contributors {
 		artistID := createArtist(artist.ID, artist.Name, false)
-		models.AlbumArtistModel().Create(database.Map{
+		models.AlbumArtistModel.Create(database.Map{
 			"album_id":  albumID.String(),
 			"artist_id": artistID,
 		})
@@ -219,7 +219,7 @@ func DownloadAlbum(deezerID int) {
 
 	// Download album tracks music
 	for _, deezerTrack := range deezerAlbum.Tracks.Data {
-		track := models.TrackModel(nil).With("album", "artists").Where("album_id", albumID.String()).Where("title", deezerTrack.Title).First()
+		track := models.TrackModel.With("album", "artists").Where("album_id", albumID.String()).Where("title", deezerTrack.Title).First()
 		if err := SearchAndDownloadTrackMusic(track); err != nil && err != io.EOF {
 			log.Fatalln(err)
 		}
@@ -235,7 +235,7 @@ func DownloadTask() {
 		time.Sleep(5 * time.Second)
 
 		// Get first download task
-		downloadTask := models.DownloadTaskModel().First()
+		downloadTask := models.DownloadTaskModel.First()
 		if downloadTask == nil {
 			continue
 		}
@@ -266,6 +266,6 @@ func DownloadTask() {
 		}
 
 		// Delete download task when done
-		models.DownloadTaskModel().Where("id", downloadTask.ID).Delete()
+		models.DownloadTaskModel.Where("id", downloadTask.ID).Delete()
 	}
 }

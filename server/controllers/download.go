@@ -27,7 +27,7 @@ func DownloadArtist(c *fiber.Ctx) error {
 
 	// Create download task
 	deezerID, _ := strconv.ParseInt(body.DeezerID, 10, 64)
-	models.DownloadTaskModel().Create(database.Map{
+	models.DownloadTaskModel.Create(database.Map{
 		"type":      models.DownloadTaskTypeDeezerArtist,
 		"deezer_id": deezerID,
 	})
@@ -52,7 +52,7 @@ func DownloadAlbum(c *fiber.Ctx) error {
 
 	// Create download task
 	deezerID, _ := strconv.ParseInt(body.DeezerID, 10, 64)
-	models.DownloadTaskModel().Create(database.Map{
+	models.DownloadTaskModel.Create(database.Map{
 		"type":      models.DownloadTaskTypeDeezerAlbum,
 		"deezer_id": deezerID,
 	})

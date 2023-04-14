@@ -13,12 +13,12 @@ import (
 )
 
 func removeOldUserAvatarIDs() {
-	total := models.UserModel().WhereNotNull("avatar").Count()
+	total := models.UserModel.WhereNotNull("avatar").Count()
 	index := 0
-	models.UserModel().WhereNotNull("avatar").Chunk(50, func(users []models.User) {
+	models.UserModel.WhereNotNull("avatar").Chunk(50, func(users []models.User) {
 		for _, user := range users {
 			if _, err := os.Stat(fmt.Sprintf("storage/avatars/original/%s", *user.AvatarID)); os.IsNotExist(err) {
-				models.UserModel().Where("id", user.ID).Update(database.Map{
+				models.UserModel.Where("id", user.ID).Update(database.Map{
 					"avatar": nil,
 				})
 			}
@@ -29,12 +29,12 @@ func removeOldUserAvatarIDs() {
 }
 
 func removeOldPlaylistImageIDs() {
-	total := models.PlaylistModel(nil).WhereNotNull("image").Count()
+	total := models.PlaylistModel.WhereNotNull("image").Count()
 	index := 0
-	models.PlaylistModel(nil).WhereNotNull("image").Chunk(50, func(playlists []models.Playlist) {
+	models.PlaylistModel.WhereNotNull("image").Chunk(50, func(playlists []models.Playlist) {
 		for _, playlist := range playlists {
 			if _, err := os.Stat(fmt.Sprintf("storage/playlists/original/%s", *playlist.ImageID)); os.IsNotExist(err) {
-				models.PlaylistModel(nil).Where("id", playlist.ID).Update(database.Map{
+				models.PlaylistModel.Where("id", playlist.ID).Update(database.Map{
 					"image": nil,
 				})
 			}
@@ -45,9 +45,9 @@ func removeOldPlaylistImageIDs() {
 }
 
 func restoreArtistImages() {
-	total := models.ArtistModel(nil).Count()
+	total := models.ArtistModel.Count()
 	index := 0
-	models.ArtistModel(nil).Chunk(50, func(artists []models.Artist) {
+	models.ArtistModel.Chunk(50, func(artists []models.Artist) {
 		for _, artist := range artists {
 			if _, err := os.Stat(fmt.Sprintf("storage/artists/small/%s.jpg", artist.ID)); os.IsNotExist(err) {
 				var deezerArtist structs.DeezerArtist
@@ -67,9 +67,9 @@ func restoreArtistImages() {
 }
 
 func restoreGenreImages() {
-	total := models.GenreModel(nil).Count()
+	total := models.GenreModel.Count()
 	index := 0
-	models.GenreModel(nil).Chunk(50, func(genres []models.Genre) {
+	models.GenreModel.Chunk(50, func(genres []models.Genre) {
 		for _, genre := range genres {
 			if _, err := os.Stat(fmt.Sprintf("storage/genres/small/%s.jpg", genre.ID)); os.IsNotExist(err) {
 				var deezerGenre structs.DeezerGenre
@@ -89,9 +89,9 @@ func restoreGenreImages() {
 }
 
 func restoresAlbumCovers() {
-	total := models.AlbumModel(nil).Count()
+	total := models.AlbumModel.Count()
 	index := 0
-	models.AlbumModel(nil).Chunk(50, func(albums []models.Album) {
+	models.AlbumModel.Chunk(50, func(albums []models.Album) {
 		for _, album := range albums {
 			if _, err := os.Stat(fmt.Sprintf("storage/albums/small/%s.jpg", album.ID)); os.IsNotExist(err) {
 				var deezerAlbum structs.DeezerAlbum
@@ -109,9 +109,9 @@ func restoresAlbumCovers() {
 }
 
 func restoreTrackMusic() {
-	total := models.TrackModel(nil).WhereNotNull("youtube_id").Count()
+	total := models.TrackModel.WhereNotNull("youtube_id").Count()
 	index := 0
-	models.TrackModel(nil).WhereNotNull("youtube_id").Chunk(50, func(tracks []models.Track) {
+	models.TrackModel.WhereNotNull("youtube_id").Chunk(50, func(tracks []models.Track) {
 		for _, track := range tracks {
 			if _, err := os.Stat(fmt.Sprintf("storage/tracks/%s.m4a", track.ID)); os.IsNotExist(err) {
 				downloadCommand := exec.Command("yt-dlp", "-f", "bestaudio[ext=m4a]", fmt.Sprintf("https://www.youtube.com/watch?v=%s", *track.YoutubeID),

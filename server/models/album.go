@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/bplaat/bassiemusic/database"
-	"github.com/gofiber/fiber/v2"
 )
 
 type Album struct {
@@ -33,8 +32,10 @@ const AlbumTypeAlbum AlbumType = 0
 const AlbumTypeEP AlbumType = 1
 const AlbumTypeSingle AlbumType = 2
 
-func AlbumModel(c *fiber.Ctx) *database.Model[Album] {
-	return (&database.Model[Album]{
+var AlbumModel *database.Model[Album]
+
+func init() {
+	AlbumModel = (&database.Model[Album]{
 		TableName: "albums",
 		Process: func(album *Album) {
 			if album.Type == AlbumTypeAlbum {
@@ -56,24 +57,29 @@ func AlbumModel(c *fiber.Ctx) *database.Model[Album] {
 				album.LargeCover = &largeCover
 			}
 		},
-		Relationships: map[string]database.ModelProcessFunc[Album]{
-			"liked": func(album *Album) {
-				if c != nil {
-					authUser := c.Locals("authUser").(*User)
-					liked := AlbumLikeModel().Where("album_id", album.ID).Where("user_id", authUser.ID).First() != nil
+		Relationships: map[string]database.ModelRelationshipFunc[Album]{
+			"liked": func(album *Album, args []any) {
+				if len(args) > 0 {
+					authUser := args[0].(*User)
+					liked := AlbumLikeModel.Where("album_id", album.ID).Where("user_id", authUser.ID).First() != nil
 					album.Liked = &liked
 				}
 			},
-			"artists": func(album *Album) {
-				artists := ArtistModel(c).WhereIn("album_artist", "artist_id", "album_id", album.ID).OrderByRaw("LOWER(`name`)").Get()
+			"artists": func(album *Album, args []any) {
+				artists := ArtistModel.WhereIn("album_artist", "artist_id", "album_id", album.ID).OrderByRaw("LOWER(`name`)").Get()
 				album.Artists = &artists
 			},
-			"genres": func(album *Album) {
-				genres := GenreModel(c).WhereIn("album_genre", "genre_id", "album_id", album.ID).OrderByRaw("LOWER(`name`)").Get()
+			"genres": func(album *Album, args []any) {
+				genres := GenreModel.WhereIn("album_genre", "genre_id", "album_id", album.ID).OrderByRaw("LOWER(`name`)").Get()
 				album.Genres = &genres
 			},
-			"tracks": func(album *Album) {
-				tracks := TrackModel(c).With("liked", "artists").Where("album_id", album.ID).OrderByRaw("`disk`, `position`").Get()
+			"tracks": func(album *Album, args []any) {
+				tracksQuery := TrackModel.With("artists")
+				if len(args) > 0 {
+					authUser := args[0].(*User)
+					tracksQuery = tracksQuery.WithArgs("liked", authUser)
+				}
+				tracks := tracksQuery.Where("album_id", album.ID).OrderByRaw("`disk`, `position`").Get()
 				album.Tracks = &tracks
 			},
 		},
@@ -87,11 +93,9 @@ type AlbumArtist struct {
 	ArtistID string `column:"artist_id,uuid"`
 }
 
-func AlbumArtistModel() *database.Model[AlbumArtist] {
-	return (&database.Model[AlbumArtist]{
-		TableName: "album_artist",
-	}).Init()
-}
+var AlbumArtistModel *database.Model[AlbumArtist] = (&database.Model[AlbumArtist]{
+	TableName: "album_artist",
+}).Init()
 
 // Album genre
 type AlbumGenre struct {
@@ -100,11 +104,9 @@ type AlbumGenre struct {
 	GenreID string `column:"genre_id,uuid"`
 }
 
-func AlbumGenreModel() *database.Model[AlbumGenre] {
-	return (&database.Model[AlbumGenre]{
-		TableName: "album_genre",
-	}).Init()
-}
+var AlbumGenreModel *database.Model[AlbumGenre] = (&database.Model[AlbumGenre]{
+	TableName: "album_genre",
+}).Init()
 
 // Album Like
 type AlbumLike struct {
@@ -114,8 +116,6 @@ type AlbumLike struct {
 	CreatedAt time.Time `column:"created_at,timestamp"`
 }
 
-func AlbumLikeModel() *database.Model[AlbumLike] {
-	return (&database.Model[AlbumLike]{
-		TableName: "album_likes",
-	}).Init()
-}
+var AlbumLikeModel *database.Model[AlbumLike] = (&database.Model[AlbumLike]{
+	TableName: "album_likes",
+}).Init()

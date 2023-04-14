@@ -49,7 +49,7 @@ func AuthLogin(c *fiber.Ctx) error {
 	}
 
 	// Get user by username or email
-	user := models.UserModel().Where("username", body.Logon).WhereOr("email", body.Logon).First()
+	user := models.UserModel.Where("username", body.Logon).WhereOr("email", body.Logon).First()
 	if user == nil {
 		return c.JSON(fiber.Map{
 			"success": false,
@@ -95,7 +95,7 @@ func AuthLogin(c *fiber.Ctx) error {
 		session["ip_country"] = strings.ToLower(ipInfo.Country)
 		session["ip_city"] = ipInfo.City
 	}
-	models.SessionModel().Create(session)
+	models.SessionModel.Create(session)
 
 	// Return response
 	return c.JSON(fiber.Map{
@@ -119,14 +119,15 @@ func AuthValidate(c *fiber.Ctx) error {
 	}
 
 	// Get last played track and return it
-	lastTackPlay := models.TrackPlayModel().Where("user_id", authUser.ID).OrderByDesc("created_at").First()
+	lastTackPlay := models.TrackPlayModel.Where("user_id", authUser.ID).OrderByDesc("created_at").First()
 	if lastTackPlay != nil {
-		response["last_track"] = models.TrackModel(c).With("liked", "artists", "album").Find(lastTackPlay.TrackID)
+		response["last_track"] = models.TrackModel.WithArgs("liked", c.Locals("authUser")).
+			With("artists", "album").Find(lastTackPlay.TrackID)
 		response["last_track_position"] = lastTackPlay.Position
 	}
 
 	// Get last playlists
-	response["last_playlists"] = models.PlaylistModel(c).Where("user_id", authUser.ID).OrderByDesc("updated_at").Limit(10).Get()
+	response["last_playlists"] = models.PlaylistModel.Where("user_id", authUser.ID).OrderByDesc("updated_at").Limit(10).Get()
 
 	// Return response
 	return c.JSON(response)
@@ -136,13 +137,13 @@ func AuthLogout(c *fiber.Ctx) error {
 	token := utils.ParseTokenVar(c)
 
 	// Get session
-	session := models.SessionModel().Where("token", token).First()
+	session := models.SessionModel.Where("token", token).First()
 	if session == nil {
 		return c.JSON(fiber.Map{"success": false})
 	}
 
 	// Revoke session
-	models.SessionModel().Where("id", session.ID).Update(database.Map{
+	models.SessionModel.Where("id", session.ID).Update(database.Map{
 		"expires_at": time.Now(),
 	})
 	return c.JSON(fiber.Map{"success": true})

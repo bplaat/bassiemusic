@@ -23,13 +23,11 @@ type Session struct {
 	User          *User     `json:"user,omitempty"`
 }
 
-func SessionModel() *database.Model[Session] {
-	return (&database.Model[Session]{
-		TableName: "sessions",
-		Relationships: map[string]database.ModelProcessFunc[Session]{
-			"user": func(session *Session) {
-				session.User = UserModel().Find(session.UserID)
-			},
+var SessionModel *database.Model[Session] = (&database.Model[Session]{
+	TableName: "sessions",
+	Relationships: map[string]database.ModelRelationshipFunc[Session]{
+		"user": func(session *Session, args []any) {
+			session.User = UserModel.Find(session.UserID)
 		},
-	}).Init()
-}
+	},
+}).Init()

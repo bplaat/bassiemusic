@@ -14,7 +14,7 @@ import (
 
 func TracksIndex(c *fiber.Ctx) error {
 	query, page, limit := utils.ParseIndexVars(c)
-	q := models.TrackModel(c).With("liked", "artists", "album").WhereRaw("`title` LIKE ?", "%"+query+"%")
+	q := models.TrackModel.WithArgs("liked", c.Locals("authUser")).With("artists", "album").WhereRaw("`title` LIKE ?", "%"+query+"%")
 	if c.Query("sort_by") == "title" {
 		q = q.OrderByRaw("LOWER(`title`)")
 	} else if c.Query("sort_by") == "title_desc" {
@@ -32,7 +32,7 @@ func TracksIndex(c *fiber.Ctx) error {
 }
 
 func TracksShow(c *fiber.Ctx) error {
-	track := models.TrackModel(c).With("liked", "artists", "album").Find(c.Params("trackID"))
+	track := models.TrackModel.WithArgs("liked", c.Locals("authUser")).With("artists", "album").Find(c.Params("trackID"))
 	if track == nil {
 		return fiber.ErrNotFound
 	}
@@ -51,7 +51,7 @@ type TracksUpdateBody struct {
 
 func TracksUpdate(c *fiber.Ctx) error {
 	// Check if track exists
-	track := models.TrackModel(c).Find(c.Params("trackID"))
+	track := models.TrackModel.Find(c.Params("trackID"))
 	if track == nil {
 		return fiber.ErrNotFound
 	}
@@ -93,15 +93,15 @@ func TracksUpdate(c *fiber.Ctx) error {
 	if body.YoutubeID != nil {
 		updates["youtube_id"] = *body.YoutubeID
 	}
-	models.TrackModel(c).Where("id", track.ID).Update(updates)
+	models.TrackModel.Where("id", track.ID).Update(updates)
 
 	// Get updated track
-	return c.JSON(models.TrackModel(c).Find(track.ID))
+	return c.JSON(models.TrackModel.Find(track.ID))
 }
 
 func TracksDelete(c *fiber.Ctx) error {
 	// Check if track exists
-	track := models.TrackModel(c).Find(c.Params("trackID"))
+	track := models.TrackModel.Find(c.Params("trackID"))
 	if track == nil {
 		return fiber.ErrNotFound
 	}
@@ -112,7 +112,7 @@ func TracksDelete(c *fiber.Ctx) error {
 	}
 
 	// Delete track
-	models.TrackModel(c).Where("id", track.ID).Delete()
+	models.TrackModel.Where("id", track.ID).Delete()
 	return c.JSON(fiber.Map{"success": true})
 }
 
@@ -134,19 +134,19 @@ func TracksLike(c *fiber.Ctx) error {
 	authUser := c.Locals("authUser").(*models.User)
 
 	// Check if track exists
-	track := models.TrackModel(c).Find(c.Params("trackID"))
+	track := models.TrackModel.Find(c.Params("trackID"))
 	if track == nil {
 		return fiber.ErrNotFound
 	}
 
 	// Check if track already liked
-	trackLike := models.TrackLikeModel().Where("track_id", c.Params("trackID")).Where("user_id", authUser.ID).First()
+	trackLike := models.TrackLikeModel.Where("track_id", c.Params("trackID")).Where("user_id", authUser.ID).First()
 	if trackLike != nil {
 		return c.JSON(fiber.Map{"success": true})
 	}
 
 	// Like track
-	models.TrackLikeModel().Create(database.Map{
+	models.TrackLikeModel.Create(database.Map{
 		"track_id": c.Params("trackID"),
 		"user_id":  authUser.ID,
 	})
@@ -158,18 +158,18 @@ func TracksLikeDelete(c *fiber.Ctx) error {
 	authUser := c.Locals("authUser").(*models.User)
 
 	// Check if track exists
-	track := models.TrackModel(c).Find(c.Params("trackID"))
+	track := models.TrackModel.Find(c.Params("trackID"))
 	if track == nil {
 		return fiber.ErrNotFound
 	}
 
 	// Check if track not liked
-	trackLike := models.TrackLikeModel().Where("track_id", c.Params("trackID")).Where("user_id", authUser.ID).First()
+	trackLike := models.TrackLikeModel.Where("track_id", c.Params("trackID")).Where("user_id", authUser.ID).First()
 	if trackLike == nil {
 		return c.JSON(fiber.Map{"success": true})
 	}
 
 	// Delete like
-	models.TrackLikeModel().Where("track_id", c.Params("trackID")).Where("user_id", authUser.ID).Delete()
+	models.TrackLikeModel.Where("track_id", c.Params("trackID")).Where("user_id", authUser.ID).Delete()
 	return c.JSON(fiber.Map{"success": true})
 }

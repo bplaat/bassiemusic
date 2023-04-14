@@ -20,7 +20,7 @@ import (
 
 func UsersIndex(c *fiber.Ctx) error {
 	query, page, limit := utils.ParseIndexVars(c)
-	return c.JSON(models.UserModel().WhereRaw("`username` LIKE ?", "%"+query+"%").WhereOrRaw("`email` LIKE ?", "%"+query+"%").OrderByRaw("LOWER(`username`)").Paginate(page, limit))
+	return c.JSON(models.UserModel.WhereRaw("`username` LIKE ?", "%"+query+"%").WhereOrRaw("`email` LIKE ?", "%"+query+"%").OrderByRaw("LOWER(`username`)").Paginate(page, limit))
 }
 
 type UsersCreateBody struct {
@@ -51,7 +51,7 @@ func UsersCreate(c *fiber.Ctx) error {
 	if body.Role == "admin" {
 		userRole = models.UserRoleAdmin
 	}
-	return c.JSON(models.UserModel().Create(database.Map{
+	return c.JSON(models.UserModel.Create(database.Map{
 		"username":       body.Username,
 		"email":          body.Email,
 		"password":       utils.HashPassword(body.Password),
@@ -63,7 +63,7 @@ func UsersCreate(c *fiber.Ctx) error {
 }
 
 func UsersShow(c *fiber.Ctx) error {
-	user := models.UserModel().Find(c.Params("userID"))
+	user := models.UserModel.Find(c.Params("userID"))
 	if user == nil {
 		return fiber.ErrNotFound
 	}
@@ -82,7 +82,7 @@ type UsersUpdateBody struct {
 
 func UsersUpdate(c *fiber.Ctx) error {
 	// Check if user exists
-	user := models.UserModel().Find(c.Params("userID"))
+	user := models.UserModel.Find(c.Params("userID"))
 	if user == nil {
 		return fiber.ErrNotFound
 	}
@@ -140,15 +140,15 @@ func UsersUpdate(c *fiber.Ctx) error {
 			updates["theme"] = models.UserThemeDark
 		}
 	}
-	models.UserModel().Where("id", user.ID).Update(updates)
+	models.UserModel.Where("id", user.ID).Update(updates)
 
 	// Get updated user
-	return c.JSON(models.UserModel().Find(user.ID))
+	return c.JSON(models.UserModel.Find(user.ID))
 }
 
 func UsersDelete(c *fiber.Ctx) error {
 	// Check if user exists
-	user := models.UserModel().Find(c.Params("userID"))
+	user := models.UserModel.Find(c.Params("userID"))
 	if user == nil {
 		return fiber.ErrNotFound
 	}
@@ -160,13 +160,13 @@ func UsersDelete(c *fiber.Ctx) error {
 	}
 
 	// Delete user
-	models.UserModel().Where("id", user.ID).Delete()
+	models.UserModel.Where("id", user.ID).Delete()
 	return c.JSON(fiber.Map{"success": true})
 }
 
 func UsersAvatar(c *fiber.Ctx) error {
 	// Check if user exists
-	user := models.UserModel().Find(c.Params("userID"))
+	user := models.UserModel.Find(c.Params("userID"))
 	if user == nil {
 		return fiber.ErrNotFound
 	}
@@ -237,7 +237,7 @@ func UsersAvatar(c *fiber.Ctx) error {
 	}
 
 	// Save avatar id for user
-	models.UserModel().Where("id", user.ID).Update(database.Map{
+	models.UserModel.Where("id", user.ID).Update(database.Map{
 		"avatar": avatarID.String(),
 	})
 	return c.JSON(fiber.Map{"success": true})
@@ -245,7 +245,7 @@ func UsersAvatar(c *fiber.Ctx) error {
 
 func UsersAvatarDelete(c *fiber.Ctx) error {
 	// Check if user exists
-	user := models.UserModel().Find(c.Params("userID"))
+	user := models.UserModel.Find(c.Params("userID"))
 	if user == nil {
 		return fiber.ErrNotFound
 	}
@@ -264,7 +264,7 @@ func UsersAvatarDelete(c *fiber.Ctx) error {
 		_ = os.Remove(fmt.Sprintf("storage/avatars/medium/%s.jpg", *user.AvatarID))
 
 		// Clear avatar id for user
-		models.UserModel().Where("id", user.ID).Update(database.Map{
+		models.UserModel.Where("id", user.ID).Update(database.Map{
 			"avatar": nil,
 		})
 	}
@@ -275,7 +275,7 @@ func UsersLikedArtists(c *fiber.Ctx) error {
 	query, page, limit := utils.ParseIndexVars(c)
 
 	// Check if user exists
-	user := models.UserModel().Find(c.Params("userID"))
+	user := models.UserModel.Find(c.Params("userID"))
 	if user == nil {
 		return fiber.ErrNotFound
 	}
@@ -287,7 +287,7 @@ func UsersLikedArtists(c *fiber.Ctx) error {
 	}
 
 	// Get liked artists
-	q := models.ArtistModel(c).Join("INNER JOIN `artist_likes` ON `artists`.`id` = `artist_likes`.`artist_id`").
+	q := models.ArtistModel.Join("INNER JOIN `artist_likes` ON `artists`.`id` = `artist_likes`.`artist_id`").
 		WhereRaw("`artist_likes`.`user_id` = UUID_TO_BIN(?)", authUser.ID).WhereRaw("`artists`.`name` LIKE ?", "%"+query+"%")
 	if c.Query("sort_by") == "name" {
 		q = q.OrderByRaw("LOWER(`artists`.`name`)")
@@ -313,7 +313,7 @@ func UsersLikedGenres(c *fiber.Ctx) error {
 	query, page, limit := utils.ParseIndexVars(c)
 
 	// Check if user exists
-	user := models.UserModel().Find(c.Params("userID"))
+	user := models.UserModel.Find(c.Params("userID"))
 	if user == nil {
 		return fiber.ErrNotFound
 	}
@@ -325,7 +325,7 @@ func UsersLikedGenres(c *fiber.Ctx) error {
 	}
 
 	// Get liked genres
-	q := models.GenreModel(c).Join("INNER JOIN `genre_likes` ON `genres`.`id` = `genre_likes`.`genre_id`").
+	q := models.GenreModel.Join("INNER JOIN `genre_likes` ON `genres`.`id` = `genre_likes`.`genre_id`").
 		WhereRaw("`genre_likes`.`user_id` = UUID_TO_BIN(?)", authUser.ID).WhereRaw("`genres`.`name` LIKE ?", "%"+query+"%")
 	if c.Query("sort_by") == "name" {
 		q = q.OrderByRaw("LOWER(`genres`.`name`)")
@@ -347,7 +347,7 @@ func UsersLikedAlbums(c *fiber.Ctx) error {
 	query, page, limit := utils.ParseIndexVars(c)
 
 	// Check if user exists
-	user := models.UserModel().Find(c.Params("userID"))
+	user := models.UserModel.Find(c.Params("userID"))
 	if user == nil {
 		return fiber.ErrNotFound
 	}
@@ -359,7 +359,7 @@ func UsersLikedAlbums(c *fiber.Ctx) error {
 	}
 
 	// Get liked albums
-	q := models.AlbumModel(c).Join("INNER JOIN `album_likes` ON `albums`.`id` = `album_likes`.`album_id`").
+	q := models.AlbumModel.Join("INNER JOIN `album_likes` ON `albums`.`id` = `album_likes`.`album_id`").
 		With("artists", "genres").WhereRaw("`album_likes`.`user_id` = UUID_TO_BIN(?)", authUser.ID).
 		WhereRaw("`albums`.`title` LIKE ?", "%"+query+"%")
 	if c.Query("sort_by") == "title" {
@@ -386,7 +386,7 @@ func UsersLikedTracks(c *fiber.Ctx) error {
 	query, page, limit := utils.ParseIndexVars(c)
 
 	// Check if user exists
-	user := models.UserModel().Find(c.Params("userID"))
+	user := models.UserModel.Find(c.Params("userID"))
 	if user == nil {
 		return fiber.ErrNotFound
 	}
@@ -398,7 +398,7 @@ func UsersLikedTracks(c *fiber.Ctx) error {
 	}
 
 	// Get liked tracks
-	q := models.TrackModel(c).Join("INNER JOIN `track_likes` ON `tracks`.`id` = `track_likes`.`track_id`").
+	q := models.TrackModel.Join("INNER JOIN `track_likes` ON `tracks`.`id` = `track_likes`.`track_id`").
 		With("liked_true", "artists", "album").WhereRaw("`track_likes`.`user_id` = UUID_TO_BIN(?)", authUser.ID).
 		WhereRaw("`tracks`.`title` LIKE ?", "%"+query+"%")
 	if c.Query("sort_by") == "title" {
@@ -425,7 +425,7 @@ func UsersLikedPlaylists(c *fiber.Ctx) error {
 	query, page, limit := utils.ParseIndexVars(c)
 
 	// Check if user exists
-	user := models.UserModel().Find(c.Params("userID"))
+	user := models.UserModel.Find(c.Params("userID"))
 	if user == nil {
 		return fiber.ErrNotFound
 	}
@@ -437,7 +437,7 @@ func UsersLikedPlaylists(c *fiber.Ctx) error {
 	}
 
 	// Get liked playlists
-	q := models.PlaylistModel(c).Join("INNER JOIN `playlist_likes` ON `playlists`.`id` = `playlist_likes`.`playlist_id`").
+	q := models.PlaylistModel.Join("INNER JOIN `playlist_likes` ON `playlists`.`id` = `playlist_likes`.`playlist_id`").
 		WhereRaw("`playlist_likes`.`user_id` = UUID_TO_BIN(?)", authUser.ID).
 		WhereRaw("`playlists`.`name` LIKE ?", "%"+query+"%")
 	if c.Query("sort_by") == "name" {
@@ -468,7 +468,7 @@ func UsersPlayedTracks(c *fiber.Ctx) error {
 	query, page, limit := utils.ParseIndexVars(c)
 
 	// Check if user exists
-	user := models.UserModel().Find(c.Params("userID"))
+	user := models.UserModel.Find(c.Params("userID"))
 	if user == nil {
 		return fiber.ErrNotFound
 	}
@@ -480,8 +480,8 @@ func UsersPlayedTracks(c *fiber.Ctx) error {
 	}
 
 	// Get played tracks
-	playedTracks := models.TrackModel(c).Join("INNER JOIN `track_plays` ON `tracks`.`id` = `track_plays`.`track_id`").
-		With("liked", "artists", "album").WhereRaw("`track_plays`.`user_id` = UUID_TO_BIN(?)", authUser.ID).
+	playedTracks := models.TrackModel.Join("INNER JOIN `track_plays` ON `tracks`.`id` = `track_plays`.`track_id`").
+		WithArgs("liked", c.Locals("authUser")).With("artists", "album").WhereRaw("`track_plays`.`user_id` = UUID_TO_BIN(?)", authUser.ID).
 		WhereRaw("`tracks`.`title` LIKE ?", "%"+query+"%").OrderByRaw("`track_plays`.`updated_at` DESC").Paginate(page, limit)
 	return c.JSON(playedTracks)
 }
@@ -490,7 +490,7 @@ func UsersSessions(c *fiber.Ctx) error {
 	_, page, limit := utils.ParseIndexVars(c)
 
 	// Check if user exists
-	user := models.UserModel().Find(c.Params("userID"))
+	user := models.UserModel.Find(c.Params("userID"))
 	if user == nil {
 		return fiber.ErrNotFound
 	}
@@ -502,7 +502,7 @@ func UsersSessions(c *fiber.Ctx) error {
 	}
 
 	// Get user sessions
-	userSessions := models.SessionModel().Where("user_id", user.ID).OrderByDesc("created_at").Paginate(page, limit)
+	userSessions := models.SessionModel.Where("user_id", user.ID).OrderByDesc("created_at").Paginate(page, limit)
 	return c.JSON(userSessions)
 }
 
@@ -510,7 +510,7 @@ func UsersActiveSessions(c *fiber.Ctx) error {
 	_, page, limit := utils.ParseIndexVars(c)
 
 	// Check if user exists
-	user := models.UserModel().Find(c.Params("userID"))
+	user := models.UserModel.Find(c.Params("userID"))
 	if user == nil {
 		return fiber.ErrNotFound
 	}
@@ -522,7 +522,7 @@ func UsersActiveSessions(c *fiber.Ctx) error {
 	}
 
 	// Get user sessions
-	userSessions := models.SessionModel().Where("user_id", user.ID).WhereRaw("`expires_at` > ?", time.Now()).
+	userSessions := models.SessionModel.Where("user_id", user.ID).WhereRaw("`expires_at` > ?", time.Now()).
 		OrderByDesc("created_at").Paginate(page, limit)
 	return c.JSON(userSessions)
 }
@@ -531,7 +531,7 @@ func UsersPlaylists(c *fiber.Ctx) error {
 	_, page, limit := utils.ParseIndexVars(c)
 
 	// Check if user exists
-	user := models.UserModel().Find(c.Params("userID"))
+	user := models.UserModel.Find(c.Params("userID"))
 	if user == nil {
 		return fiber.ErrNotFound
 	}
@@ -543,7 +543,7 @@ func UsersPlaylists(c *fiber.Ctx) error {
 	}
 
 	// Get user playlists
-	q := models.PlaylistModel(c).With("liked").Where("user_id", user.ID)
+	q := models.PlaylistModel.WithArgs("liked", c.Locals("authUser")).Where("user_id", user.ID)
 	if c.Query("sort_by") == "public" {
 		q = q.OrderByRaw("`public` DESC, LOWER(`name`)")
 	} else if c.Query("sort_by") == "public_desc" {

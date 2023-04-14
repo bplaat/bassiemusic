@@ -15,7 +15,7 @@ func IsAuthed(c *fiber.Ctx) error {
 	}
 
 	// Get active session by token
-	session := models.SessionModel().With("user").Where("token", token).WhereRaw("`expires_at` > ?", time.Now()).First()
+	session := models.SessionModel.With("user").Where("token", token).WhereRaw("`expires_at` > ?", time.Now()).First()
 	if session == nil {
 		return fiber.ErrUnauthorized
 	}

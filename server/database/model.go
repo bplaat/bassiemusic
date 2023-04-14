@@ -16,12 +16,13 @@ type ModelColumn struct {
 }
 
 type ModelProcessFunc[T any] func(model *T)
+type ModelRelationshipFunc[T any] func(model *T, args []any)
 
 type Model[T any] struct {
 	TableName     string
 	PrimaryKey    string
 	Process       ModelProcessFunc[T]
-	Relationships map[string]ModelProcessFunc[T]
+	Relationships map[string]ModelRelationshipFunc[T]
 	Columns       []*ModelColumn
 	ColumnsLookup map[string]*ModelColumn
 }
@@ -86,7 +87,7 @@ func (m *Model[T]) Create(values Map) *T {
 }
 
 func (m *Model[T]) query() *QueryBuilder[T] {
-	return &QueryBuilder[T]{model: m}
+	return &QueryBuilder[T]{model: m, withs: map[string][]any{}}
 }
 
 func (m *Model[T]) Join(join string) *QueryBuilder[T] {
@@ -95,6 +96,10 @@ func (m *Model[T]) Join(join string) *QueryBuilder[T] {
 
 func (m *Model[T]) With(relationships ...string) *QueryBuilder[T] {
 	return m.query().With(relationships...)
+}
+
+func (m *Model[T]) WithArgs(relationship string, args ...any) *QueryBuilder[T] {
+	return m.query().WithArgs(relationship, args...)
 }
 
 func (m *Model[T]) Where(column string, value any) *QueryBuilder[T] {

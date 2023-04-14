@@ -9,7 +9,7 @@ import (
 type QueryBuilder[T any] struct {
 	model          *Model[T]
 	joinQueryPart  string
-	withs          []string
+	withs          map[string][]any
 	whereQueryPart string
 	whereValues    []any
 	orderBy        string
@@ -34,10 +34,21 @@ func (qb *QueryBuilder[T]) Join(join string) *QueryBuilder[T] {
 func (qb *QueryBuilder[T]) With(relationships ...string) *QueryBuilder[T] {
 	for _, relationship := range relationships {
 		if _, ok := qb.model.Relationships[relationship]; ok {
-			qb.withs = append(qb.withs, relationship)
+			qb.withs[relationship] = []any{}
 		} else {
 			log.Fatalln("QueryBuilder: relationship '" + relationship + "' doesn't exists")
 		}
+	}
+	return qb
+}
+
+func (qb *QueryBuilder[T]) WithArgs(relationship string, args ...any) *QueryBuilder[T] {
+	if _, ok := qb.model.Relationships[relationship]; ok {
+		for _, arg := range args {
+			qb.withs[relationship] = append(qb.withs[relationship], arg)
+		}
+	} else {
+		log.Fatalln("QueryBuilder: relationship '" + relationship + "' doesn't exists")
 	}
 	return qb
 }
@@ -221,8 +232,8 @@ func (qb *QueryBuilder[T]) Get() []T {
 		if qb.model.Process != nil {
 			qb.model.Process(&models[i])
 		}
-		for _, with := range qb.withs {
-			qb.model.Relationships[with](&models[i])
+		for relationship, args := range qb.withs {
+			qb.model.Relationships[relationship](&models[i], args)
 		}
 	}
 	return models

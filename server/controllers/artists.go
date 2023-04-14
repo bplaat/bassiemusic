@@ -14,7 +14,7 @@ import (
 
 func ArtistsIndex(c *fiber.Ctx) error {
 	query, page, limit := utils.ParseIndexVars(c)
-	q := models.ArtistModel(c).With("liked").WhereRaw("`name` LIKE ?", "%"+query+"%")
+	q := models.ArtistModel.WithArgs("liked", c.Locals("authUser")).WhereRaw("`name` LIKE ?", "%"+query+"%")
 	if c.Query("sort_by") == "sync" {
 		q = q.OrderByRaw("`sync` DESC, LOWER(`name`)")
 	} else if c.Query("sort_by") == "sync_desc" {
@@ -32,7 +32,8 @@ func ArtistsIndex(c *fiber.Ctx) error {
 }
 
 func ArtistsShow(c *fiber.Ctx) error {
-	artist := models.ArtistModel(c).With("liked", "albums", "top_tracks").Find(c.Params("artistID"))
+	artist := models.ArtistModel.WithArgs("liked", c.Locals("authUser")).With("albums").
+		WithArgs("top_tracks", c.Locals("authUser")).Find(c.Params("artistID"))
 	if artist == nil {
 		return fiber.ErrNotFound
 	}
@@ -47,7 +48,7 @@ type ArtistsUpdateBody struct {
 
 func ArtistsUpdate(c *fiber.Ctx) error {
 	// Check if artist exists
-	artist := models.ArtistModel(c).Find(c.Params("artistID"))
+	artist := models.ArtistModel.Find(c.Params("artistID"))
 	if artist == nil {
 		return fiber.ErrNotFound
 	}
@@ -75,15 +76,15 @@ func ArtistsUpdate(c *fiber.Ctx) error {
 		deezerID, _ := strconv.ParseInt(*body.DeezerID, 10, 64)
 		updates["deezer_id"] = deezerID
 	}
-	models.ArtistModel(c).Where("id", artist.ID).Update(updates)
+	models.ArtistModel.Where("id", artist.ID).Update(updates)
 
 	// Get updated artist
-	return c.JSON(models.ArtistModel(c).Find(artist.ID))
+	return c.JSON(models.ArtistModel.Find(artist.ID))
 }
 
 func ArtistsDelete(c *fiber.Ctx) error {
 	// Check if artist exists
-	artist := models.ArtistModel(c).Find(c.Params("artistID"))
+	artist := models.ArtistModel.Find(c.Params("artistID"))
 	if artist == nil {
 		return fiber.ErrNotFound
 	}
@@ -96,7 +97,7 @@ func ArtistsDelete(c *fiber.Ctx) error {
 	}
 
 	// Delete artist
-	models.ArtistModel(c).Where("id", artist.ID).Delete()
+	models.ArtistModel.Where("id", artist.ID).Delete()
 	return c.JSON(fiber.Map{"success": true})
 }
 
@@ -104,19 +105,19 @@ func ArtistsLike(c *fiber.Ctx) error {
 	authUser := c.Locals("authUser").(*models.User)
 
 	// Check if artist exists
-	artist := models.ArtistModel(c).Find(c.Params("artistID"))
+	artist := models.ArtistModel.Find(c.Params("artistID"))
 	if artist == nil {
 		return fiber.ErrNotFound
 	}
 
 	// Check if artist already liked
-	artistLike := models.ArtistLikeModel().Where("artist_id", c.Params("artistID")).Where("user_id", authUser.ID).First()
+	artistLike := models.ArtistLikeModel.Where("artist_id", c.Params("artistID")).Where("user_id", authUser.ID).First()
 	if artistLike != nil {
 		return c.JSON(fiber.Map{"success": true})
 	}
 
 	// Like artist
-	models.ArtistLikeModel().Create(database.Map{
+	models.ArtistLikeModel.Create(database.Map{
 		"artist_id": c.Params("artistID"),
 		"user_id":   authUser.ID,
 	})
@@ -128,18 +129,18 @@ func ArtistsLikeDelete(c *fiber.Ctx) error {
 	authUser := c.Locals("authUser").(*models.User)
 
 	// Check if artist exists
-	artist := models.ArtistModel(c).Find(c.Params("artistID"))
+	artist := models.ArtistModel.Find(c.Params("artistID"))
 	if artist == nil {
 		return fiber.ErrNotFound
 	}
 
 	// Check if artist not liked
-	artistLike := models.ArtistLikeModel().Where("artist_id", c.Params("artistID")).Where("user_id", authUser.ID).First()
+	artistLike := models.ArtistLikeModel.Where("artist_id", c.Params("artistID")).Where("user_id", authUser.ID).First()
 	if artistLike == nil {
 		return c.JSON(fiber.Map{"success": true})
 	}
 
 	// Delete like
-	models.ArtistLikeModel().Where("artist_id", c.Params("artistID")).Where("user_id", authUser.ID).Delete()
+	models.ArtistLikeModel.Where("artist_id", c.Params("artistID")).Where("user_id", authUser.ID).Delete()
 	return c.JSON(fiber.Map{"success": true})
 }

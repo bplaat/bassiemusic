@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/bplaat/bassiemusic/database"
-	"github.com/gofiber/fiber/v2"
 )
 
 // Playlist
@@ -25,8 +24,10 @@ type Playlist struct {
 	Tracks      *[]Track  `json:"tracks,omitempty"`
 }
 
-func PlaylistModel(c *fiber.Ctx) *database.Model[Playlist] {
-	return (&database.Model[Playlist]{
+var PlaylistModel *database.Model[Playlist]
+
+func init() {
+	PlaylistModel = (&database.Model[Playlist]{
 		TableName: "playlists",
 		Process: func(playlist *Playlist) {
 			if playlist.ImageID != nil && *playlist.ImageID != "" {
@@ -38,20 +39,24 @@ func PlaylistModel(c *fiber.Ctx) *database.Model[Playlist] {
 				}
 			}
 		},
-		Relationships: map[string]database.ModelProcessFunc[Playlist]{
-			"liked": func(playlist *Playlist) {
-				if c != nil {
-					authUser := c.Locals("authUser").(*User)
-					liked := PlaylistLikeModel().Where("playlist_id", playlist.ID).Where("user_id", authUser.ID).First() != nil
+		Relationships: map[string]database.ModelRelationshipFunc[Playlist]{
+			"liked": func(playlist *Playlist, args []any) {
+				if len(args) > 0 {
+					authUser := args[0].(*User)
+					liked := PlaylistLikeModel.Where("playlist_id", playlist.ID).Where("user_id", authUser.ID).First() != nil
 					playlist.Liked = &liked
 				}
 			},
-			"user": func(playlist *Playlist) {
-				playlist.User = UserModel().Find(playlist.UserID)
+			"user": func(playlist *Playlist, args []any) {
+				playlist.User = UserModel.Find(playlist.UserID)
 			},
-			"tracks": func(playlist *Playlist) {
-				tracks := TrackModel(c).Join("INNER JOIN `playlist_track` ON `tracks`.`id` = `playlist_track`.`track_id`").
-					With("liked", "artists", "album").WhereRaw("`playlist_track`.`playlist_id` = UUID_TO_BIN(?)", playlist.ID).
+			"tracks": func(playlist *Playlist, args []any) {
+				tracksQuery := TrackModel.Join("INNER JOIN `playlist_track` ON `tracks`.`id` = `playlist_track`.`track_id`")
+				if len(args) > 0 {
+					authUser := args[0].(*User)
+					tracksQuery = tracksQuery.WithArgs("liked", authUser)
+				}
+				tracks := tracksQuery.With("artists", "album").WhereRaw("`playlist_track`.`playlist_id` = UUID_TO_BIN(?)", playlist.ID).
 					OrderByRaw("`playlist_track`.`position`").Get()
 				playlist.Tracks = &tracks
 			},
@@ -68,11 +73,9 @@ type PlaylistTrack struct {
 	CreatedAt  time.Time `column:"created_at,timestamp"`
 }
 
-func PlaylistTrackModel() *database.Model[PlaylistTrack] {
-	return (&database.Model[PlaylistTrack]{
-		TableName: "playlist_track",
-	}).Init()
-}
+var PlaylistTrackModel *database.Model[PlaylistTrack] = (&database.Model[PlaylistTrack]{
+	TableName: "playlist_track",
+}).Init()
 
 // Playlist Like
 type PlaylistLike struct {
@@ -82,8 +85,6 @@ type PlaylistLike struct {
 	CreatedAt  time.Time `column:"created_at,timestamp"`
 }
 
-func PlaylistLikeModel() *database.Model[PlaylistLike] {
-	return (&database.Model[PlaylistLike]{
-		TableName: "playlist_likes",
-	}).Init()
-}
+var PlaylistLikeModel *database.Model[PlaylistLike] = (&database.Model[PlaylistLike]{
+	TableName: "playlist_likes",
+}).Init()

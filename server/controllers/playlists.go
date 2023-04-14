@@ -21,7 +21,7 @@ import (
 func PlaylistsIndex(c *fiber.Ctx) error {
 	authUser := c.Locals("authUser").(*models.User)
 	query, page, limit := utils.ParseIndexVars(c)
-	q := models.PlaylistModel(c).With("liked", "user").WhereRaw("`name` LIKE ?", "%"+query+"%")
+	q := models.PlaylistModel.WithArgs("liked", c.Locals("authUser")).With("user").WhereRaw("`name` LIKE ?", "%"+query+"%")
 	if authUser.Role != models.UserRoleAdmin {
 		q = q.Where("public", true)
 	}
@@ -65,7 +65,7 @@ func PlaylistsCreate(c *fiber.Ctx) error {
 	}
 
 	// Create playlist
-	return c.JSON(models.PlaylistModel(c).Create(database.Map{
+	return c.JSON(models.PlaylistModel.Create(database.Map{
 		"user_id": authUser.ID,
 		"name":    body.Name,
 		"public":  body.Public == "true",
@@ -74,7 +74,8 @@ func PlaylistsCreate(c *fiber.Ctx) error {
 
 func PlaylistsShow(c *fiber.Ctx) error {
 	// Check if playlist exists
-	playlist := models.PlaylistModel(c).With("liked", "user", "tracks").Find(c.Params("playlistID"))
+	playlist := models.PlaylistModel.WithArgs("liked", c.Locals("authUser")).With("user").
+		WithArgs("tracks", c.Locals("authUser")).Find(c.Params("playlistID"))
 	if playlist == nil {
 		return fiber.ErrNotFound
 	}
@@ -95,7 +96,7 @@ type PlaylistsUpdateBody struct {
 
 func PlaylistsUpdate(c *fiber.Ctx) error {
 	// Check if playlist exists
-	playlist := models.PlaylistModel(c).Find(c.Params("playlistID"))
+	playlist := models.PlaylistModel.Find(c.Params("playlistID"))
 	if playlist == nil {
 		return fiber.ErrNotFound
 	}
@@ -125,15 +126,15 @@ func PlaylistsUpdate(c *fiber.Ctx) error {
 	if body.Public != nil {
 		updates["public"] = *body.Public == "true"
 	}
-	models.PlaylistModel(c).Where("id", playlist.ID).Update(updates)
+	models.PlaylistModel.Where("id", playlist.ID).Update(updates)
 
 	// Get updated playlist
-	return c.JSON(models.PlaylistModel(c).Find(playlist.ID))
+	return c.JSON(models.PlaylistModel.Find(playlist.ID))
 }
 
 func PlaylistsDelete(c *fiber.Ctx) error {
 	// Check if playlist exists
-	playlist := models.PlaylistModel(c).Find(c.Params("playlistID"))
+	playlist := models.PlaylistModel.Find(c.Params("playlistID"))
 	if playlist == nil {
 		return fiber.ErrNotFound
 	}
@@ -145,13 +146,13 @@ func PlaylistsDelete(c *fiber.Ctx) error {
 	}
 
 	// Delete playlist
-	models.PlaylistModel(c).Where("id", playlist.ID).Delete()
+	models.PlaylistModel.Where("id", playlist.ID).Delete()
 	return c.JSON(fiber.Map{"success": true})
 }
 
 func PlaylistsImage(c *fiber.Ctx) error {
 	// Check if playlist exists
-	playlist := models.PlaylistModel(c).Find(c.Params("playlistID"))
+	playlist := models.PlaylistModel.Find(c.Params("playlistID"))
 	if playlist == nil {
 		return fiber.ErrNotFound
 	}
@@ -222,7 +223,7 @@ func PlaylistsImage(c *fiber.Ctx) error {
 	}
 
 	// Save image id for playlist
-	models.PlaylistModel(c).Where("id", playlist.ID).Update(database.Map{
+	models.PlaylistModel.Where("id", playlist.ID).Update(database.Map{
 		"image": imageID.String(),
 	})
 	return c.JSON(fiber.Map{"success": true})
@@ -230,7 +231,7 @@ func PlaylistsImage(c *fiber.Ctx) error {
 
 func PlaylistsImageDelete(c *fiber.Ctx) error {
 	// Check if playlist exists
-	playlist := models.PlaylistModel(c).Find(c.Params("playlistID"))
+	playlist := models.PlaylistModel.Find(c.Params("playlistID"))
 	if playlist == nil {
 		return fiber.ErrNotFound
 	}
@@ -249,7 +250,7 @@ func PlaylistsImageDelete(c *fiber.Ctx) error {
 		_ = os.Remove(fmt.Sprintf("storage/playlists/medium/%s.jpg", *playlist.ImageID))
 
 		// Clear image id for playlist
-		models.PlaylistModel(c).Where("id", playlist.ID).Update(database.Map{
+		models.PlaylistModel.Where("id", playlist.ID).Update(database.Map{
 			"image": nil,
 		})
 	}
@@ -262,7 +263,7 @@ type PlaylistsAppendTrackBody struct {
 
 func PlaylistsAppendTrack(c *fiber.Ctx) error {
 	// Check if playlist exists
-	playlist := models.PlaylistModel(c).Find(c.Params("playlistID"))
+	playlist := models.PlaylistModel.Find(c.Params("playlistID"))
 	if playlist == nil {
 		return fiber.ErrNotFound
 	}
@@ -286,18 +287,18 @@ func PlaylistsAppendTrack(c *fiber.Ctx) error {
 
 	// Trigger playlist update
 	oldName := playlist.Name
-	models.PlaylistModel(c).Where("id", playlist.ID).Update(database.Map{
+	models.PlaylistModel.Where("id", playlist.ID).Update(database.Map{
 		"name": "~" + oldName,
 	})
-	models.PlaylistModel(c).Where("id", playlist.ID).Update(database.Map{
+	models.PlaylistModel.Where("id", playlist.ID).Update(database.Map{
 		"name": oldName,
 	})
 
 	// Create playlist track
-	models.PlaylistTrackModel().Create(database.Map{
+	models.PlaylistTrackModel.Create(database.Map{
 		"playlist_id": playlist.ID,
 		"track_id":    body.TrackID,
-		"position":    models.PlaylistTrackModel().Where("playlist_id", playlist.ID).Count() + 1,
+		"position":    models.PlaylistTrackModel.Where("playlist_id", playlist.ID).Count() + 1,
 	})
 	return c.JSON(fiber.Map{"success": true})
 }
@@ -308,7 +309,7 @@ type PlaylistsInsertTrackBody struct {
 
 func PlaylistsInsertTrack(c *fiber.Ctx) error {
 	// Check if playlist exists
-	playlist := models.PlaylistModel(c).Find(c.Params("playlistID"))
+	playlist := models.PlaylistModel.Find(c.Params("playlistID"))
 	if playlist == nil {
 		return fiber.ErrNotFound
 	}
@@ -341,23 +342,23 @@ func PlaylistsInsertTrack(c *fiber.Ctx) error {
 
 	// Trigger playlist update
 	oldName := playlist.Name
-	models.PlaylistModel(c).Where("id", playlist.ID).Update(database.Map{
+	models.PlaylistModel.Where("id", playlist.ID).Update(database.Map{
 		"name": "~" + oldName,
 	})
-	models.PlaylistModel(c).Where("id", playlist.ID).Update(database.Map{
+	models.PlaylistModel.Where("id", playlist.ID).Update(database.Map{
 		"name": oldName,
 	})
 
 	// Move all existing track ids to the left
-	playlistTracks := models.PlaylistTrackModel().Where("playlist_id", playlist.ID).WhereRaw("`position` >= ?", position).Get()
+	playlistTracks := models.PlaylistTrackModel.Where("playlist_id", playlist.ID).WhereRaw("`position` >= ?", position).Get()
 	for _, playlistTrack := range playlistTracks {
-		models.PlaylistTrackModel().Where("id", playlistTrack.ID).Update(database.Map{
+		models.PlaylistTrackModel.Where("id", playlistTrack.ID).Update(database.Map{
 			"position": playlistTrack.Position + 1,
 		})
 	}
 
 	// Create playlist track
-	models.PlaylistTrackModel().Create(database.Map{
+	models.PlaylistTrackModel.Create(database.Map{
 		"playlist_id": playlist.ID,
 		"track_id":    body.TrackID,
 		"position":    position,
@@ -367,7 +368,7 @@ func PlaylistsInsertTrack(c *fiber.Ctx) error {
 
 func PlaylistsRemoveTrack(c *fiber.Ctx) error {
 	// Check if playlist exists
-	playlist := models.PlaylistModel(c).Find(c.Params("playlistID"))
+	playlist := models.PlaylistModel.Find(c.Params("playlistID"))
 	if playlist == nil {
 		return fiber.ErrNotFound
 	}
@@ -389,20 +390,20 @@ func PlaylistsRemoveTrack(c *fiber.Ctx) error {
 
 	// Trigger playlist update
 	oldName := playlist.Name
-	models.PlaylistModel(c).Where("id", playlist.ID).Update(database.Map{
+	models.PlaylistModel.Where("id", playlist.ID).Update(database.Map{
 		"name": "~" + oldName,
 	})
-	models.PlaylistModel(c).Where("id", playlist.ID).Update(database.Map{
+	models.PlaylistModel.Where("id", playlist.ID).Update(database.Map{
 		"name": oldName,
 	})
 
 	// Remove playlist track
-	models.PlaylistTrackModel().Where("playlist_id", playlist.ID).Where("position", position).Delete()
+	models.PlaylistTrackModel.Where("playlist_id", playlist.ID).Where("position", position).Delete()
 
 	// Move all existing track ids to the right
-	playlistTracks := models.PlaylistTrackModel().Where("playlist_id", playlist.ID).WhereRaw("`position` > ?", position).Get()
+	playlistTracks := models.PlaylistTrackModel.Where("playlist_id", playlist.ID).WhereRaw("`position` > ?", position).Get()
 	for _, playlistTrack := range playlistTracks {
-		models.PlaylistTrackModel().Where("id", playlistTrack.ID).Update(database.Map{
+		models.PlaylistTrackModel.Where("id", playlistTrack.ID).Update(database.Map{
 			"position": playlistTrack.Position - 1,
 		})
 	}
@@ -411,7 +412,7 @@ func PlaylistsRemoveTrack(c *fiber.Ctx) error {
 
 func PlaylistsLike(c *fiber.Ctx) error {
 	// Check if playlist exists
-	playlist := models.PlaylistModel(c).Find(c.Params("playlistID"))
+	playlist := models.PlaylistModel.Find(c.Params("playlistID"))
 	if playlist == nil {
 		return fiber.ErrNotFound
 	}
@@ -423,13 +424,13 @@ func PlaylistsLike(c *fiber.Ctx) error {
 	}
 
 	// Check if playlist already liked
-	playlistLike := models.PlaylistLikeModel().Where("playlist_id", c.Params("playlistID")).Where("user_id", authUser.ID).First()
+	playlistLike := models.PlaylistLikeModel.Where("playlist_id", c.Params("playlistID")).Where("user_id", authUser.ID).First()
 	if playlistLike != nil {
 		return c.JSON(fiber.Map{"success": true})
 	}
 
 	// Like playlist
-	models.PlaylistLikeModel().Create(database.Map{
+	models.PlaylistLikeModel.Create(database.Map{
 		"playlist_id": c.Params("playlistID"),
 		"user_id":     authUser.ID,
 	})
@@ -439,7 +440,7 @@ func PlaylistsLike(c *fiber.Ctx) error {
 
 func PlaylistsLikeDelete(c *fiber.Ctx) error {
 	// Check if playlist exists
-	playlist := models.PlaylistModel(c).Find(c.Params("playlistID"))
+	playlist := models.PlaylistModel.Find(c.Params("playlistID"))
 	if playlist == nil {
 		return fiber.ErrNotFound
 	}
@@ -451,12 +452,12 @@ func PlaylistsLikeDelete(c *fiber.Ctx) error {
 	}
 
 	// Check if playlist not liked
-	playlistLike := models.PlaylistLikeModel().Where("playlist_id", c.Params("playlistID")).Where("user_id", authUser.ID).First()
+	playlistLike := models.PlaylistLikeModel.Where("playlist_id", c.Params("playlistID")).Where("user_id", authUser.ID).First()
 	if playlistLike == nil {
 		return c.JSON(fiber.Map{"success": true})
 	}
 
 	// Delete like
-	models.PlaylistLikeModel().Where("playlist_id", c.Params("playlistID")).Where("user_id", authUser.ID).Delete()
+	models.PlaylistLikeModel.Where("playlist_id", c.Params("playlistID")).Where("user_id", authUser.ID).Delete()
 	return c.JSON(fiber.Map{"success": true})
 }

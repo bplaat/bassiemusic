@@ -14,7 +14,8 @@ import (
 
 func AlbumsIndex(c *fiber.Ctx) error {
 	query, page, limit := utils.ParseIndexVars(c)
-	q := models.AlbumModel(c).With("liked", "artists", "genres").WhereRaw("`title` LIKE ?", "%"+query+"%")
+	q := models.AlbumModel.WithArgs("liked", c.Locals("authUser")).
+		With("artists", "genres").WhereRaw("`title` LIKE ?", "%"+query+"%")
 	if c.Query("sort_by") == "released_at" {
 		q = q.OrderBy("released_at")
 	} else if c.Query("sort_by") == "released_at_desc" {
@@ -32,7 +33,8 @@ func AlbumsIndex(c *fiber.Ctx) error {
 }
 
 func AlbumsShow(c *fiber.Ctx) error {
-	album := models.AlbumModel(c).With("liked", "artists", "genres", "tracks").Find(c.Params("albumID"))
+	album := models.AlbumModel.WithArgs("liked", c.Locals("authUser")).With("artists", "genres").
+		WithArgs("tracks", c.Locals("authUser")).Find(c.Params("albumID"))
 	if album == nil {
 		return fiber.ErrNotFound
 	}
@@ -49,7 +51,7 @@ type AlbumsUpdateBody struct {
 
 func AlbumsUpdate(c *fiber.Ctx) error {
 	// Check if album exists
-	album := models.AlbumModel(c).Find(c.Params("albumID"))
+	album := models.AlbumModel.Find(c.Params("albumID"))
 	if album == nil {
 		return fiber.ErrNotFound
 	}
@@ -91,15 +93,15 @@ func AlbumsUpdate(c *fiber.Ctx) error {
 		deezerID, _ := strconv.ParseInt(*body.DeezerID, 10, 64)
 		updates["deezer_id"] = deezerID
 	}
-	models.AlbumModel(c).Where("id", album.ID).Update(updates)
+	models.AlbumModel.Where("id", album.ID).Update(updates)
 
 	// Get updated album
-	return c.JSON(models.AlbumModel(c).Find(album.ID))
+	return c.JSON(models.AlbumModel.Find(album.ID))
 }
 
 func AlbumsDelete(c *fiber.Ctx) error {
 	// Check if album exists
-	album := models.AlbumModel(c).With("tracks").Find(c.Params("albumID"))
+	album := models.AlbumModel.With("tracks").Find(c.Params("albumID"))
 	if album == nil {
 		return fiber.ErrNotFound
 	}
@@ -119,7 +121,7 @@ func AlbumsDelete(c *fiber.Ctx) error {
 	}
 
 	// Delete album
-	models.AlbumModel(c).Where("id", album.ID).Delete()
+	models.AlbumModel.Where("id", album.ID).Delete()
 	return c.JSON(fiber.Map{"success": true})
 }
 
@@ -127,19 +129,19 @@ func AlbumsLike(c *fiber.Ctx) error {
 	authUser := c.Locals("authUser").(*models.User)
 
 	// Check if album exists
-	album := models.AlbumModel(c).Find(c.Params("albumID"))
+	album := models.AlbumModel.Find(c.Params("albumID"))
 	if album == nil {
 		return fiber.ErrNotFound
 	}
 
 	// Check if album already liked
-	albumLike := models.AlbumLikeModel().Where("album_id", c.Params("albumID")).Where("user_id", authUser.ID).First()
+	albumLike := models.AlbumLikeModel.Where("album_id", c.Params("albumID")).Where("user_id", authUser.ID).First()
 	if albumLike != nil {
 		return c.JSON(fiber.Map{"success": true})
 	}
 
 	// Like album
-	models.AlbumLikeModel().Create(database.Map{
+	models.AlbumLikeModel.Create(database.Map{
 		"album_id": c.Params("albumID"),
 		"user_id":  authUser.ID,
 	})
@@ -151,18 +153,18 @@ func AlbumsLikeDelete(c *fiber.Ctx) error {
 	authUser := c.Locals("authUser").(*models.User)
 
 	// Check if album exists
-	album := models.AlbumModel(c).Find(c.Params("albumID"))
+	album := models.AlbumModel.Find(c.Params("albumID"))
 	if album == nil {
 		return fiber.ErrNotFound
 	}
 
 	// Check if album not liked
-	albumLike := models.AlbumLikeModel().Where("album_id", c.Params("albumID")).Where("user_id", authUser.ID).First()
+	albumLike := models.AlbumLikeModel.Where("album_id", c.Params("albumID")).Where("user_id", authUser.ID).First()
 	if albumLike == nil {
 		return c.JSON(fiber.Map{"success": true})
 	}
 
 	// Delete like
-	models.AlbumLikeModel().Where("album_id", c.Params("albumID")).Where("user_id", authUser.ID).Delete()
+	models.AlbumLikeModel.Where("album_id", c.Params("albumID")).Where("user_id", authUser.ID).Delete()
 	return c.JSON(fiber.Map{"success": true})
 }
