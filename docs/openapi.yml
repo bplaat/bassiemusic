@@ -1095,6 +1095,7 @@ paths:
         - TokenAuth: []
       parameters:
         - $ref: "#/components/parameters/UserID"
+        - $ref: "#/components/parameters/Query"
         - $ref: "#/components/parameters/Page"
         - $ref: "#/components/parameters/Limit"
         - name: sort_by
