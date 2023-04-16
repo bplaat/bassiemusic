@@ -1,8 +1,10 @@
 <script>
     import { goto } from '$app/navigation';
+    import ImageEditButton from '../../../components/buttons/image-edit-button.svelte';
+    import LikeButton from '../../../components/buttons/like-button.svelte';
+    import EditModal from '../../../components/modals/albums/edit-modal.svelte';
     import DeleteModal from '../../../components/modals/delete-modal.svelte';
     import TracksTable from '../../../components/tracks-table.svelte';
-    import LikeButton from '../../../components/like-button.svelte';
     import { language } from '../../../stores.js';
 
     // Language strings
@@ -10,9 +12,8 @@
         en: {
             title: '$1 - Albums - BassieMusic',
             back: 'Go back one page',
-            cover_alt: 'Cover of album $1',
-            explicit: 'Explicit lyrics',
             play: 'Play album',
+            edit: 'Edit album',
             album: 'album',
             delete: 'Delete album',
             tracks: 'Tracks',
@@ -21,9 +22,8 @@
         nl: {
             title: '$1 - Albums - BassieMusic',
             back: 'Ga een pagina terug',
-            cover_alt: 'Hoes van album $1',
-            explicit: 'Expliciete songtekst',
             play: 'Speel album',
+            edit: 'Verander album',
             album: 'album',
             delete: 'Verwijder album',
             tracks: 'Tracks',
@@ -35,6 +35,7 @@
     // State
     export let data;
     let tracksTable;
+    let editModal;
     let deleteModal;
 </script>
 
@@ -52,28 +53,12 @@
 
 <div class="columns">
     <div class="column is-one-quarter mr-5 mr-0-mobile">
-        <div class="box has-image p-0 has-image-tags">
-            <figure class="image is-1by1">
-                <img
-                    src={data.album.large_cover || '/images/album-default.svg'}
-                    alt={t('cover_alt', data.album.title)}
-                />
-            </figure>
-            <div class="image-tags">
-                {#if data.album.type == 'album'}
-                    <span class="tag">ALBUM</span>
-                {/if}
-                {#if data.album.type == 'ep'}
-                    <span class="tag">EP</span>
-                {/if}
-                {#if data.album.type == 'single'}
-                    <span class="tag">SINGLE</span>
-                {/if}
-                {#if data.album.explicit}
-                    <span class="tag is-danger" title={t('explicit')}>E</span>
-                {/if}
-            </div>
-        </div>
+        <ImageEditButton
+            token={data.token}
+            item={data.album}
+            itemRoute="albums"
+            editable={data.authUser.role == 'admin'}
+        />
     </div>
 
     <div class="column" style="display: flex; flex-direction: column; justify-content: center;">
@@ -102,6 +87,14 @@
             <LikeButton token={data.token} item={data.album} itemRoute="albums" itemLabel={t('album')} isLarge={true} />
 
             {#if data.authUser.role == 'admin'}
+                <button class="button is-large" on:click={() => editModal.open()} title={t('edit')}>
+                    <svg class="icon" viewBox="0 0 24 24">
+                        <path
+                            d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z"
+                        />
+                    </svg>
+                </button>
+
                 <button class="button is-large" on:click={() => deleteModal.open()} title={t('delete')}>
                     <svg class="icon" viewBox="0 0 24 24">
                         <path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z" />
@@ -126,6 +119,15 @@
 {/if}
 
 {#if data.authUser.role == 'admin'}
+    <EditModal
+        bind:this={editModal}
+        token={data.token}
+        album={data.album}
+        on:update={(event) => {
+            data.album = event.detail.album;
+        }}
+    />
+
     <DeleteModal
         bind:this={deleteModal}
         token={data.token}

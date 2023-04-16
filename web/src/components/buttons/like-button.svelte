@@ -1,5 +1,5 @@
 <script>
-    import { language } from '../stores.js';
+    import { language } from '../../stores.js';
 
     // Language strings
     const lang = {

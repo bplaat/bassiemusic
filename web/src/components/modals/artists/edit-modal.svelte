@@ -5,19 +5,21 @@
     // Language strings
     const lang = {
         en: {
-            header: 'Edit playlist',
+            header: 'Edit artist',
             name: 'Name',
-            public: 'Public playlist',
-            public_description: 'Make this playlist public',
-            edit: 'Edit playlist',
+            sync: 'Sync artist',
+            sync_description: 'Automatic download new albums from this artist',
+            deezer_id: 'Deezer ID',
+            edit: 'Edit artist',
             cancel: 'Cancel',
         },
         nl: {
-            header: 'Verander afspeellijst',
+            header: 'Verander artiest',
             name: 'Naam',
-            public: 'Publieke afspeellijst',
-            public_description: 'Maak deze afspeellijst publiekelijk',
-            edit: 'Verander afspeellijst',
+            sync: 'Sync artiest',
+            sync_description: 'Download automatisch nieuwe albums van deze artiest',
+            deezer_id: 'Deezer ID',
+            edit: 'Verander artiest',
             cancel: 'Annuleren',
         },
     };
@@ -25,7 +27,7 @@
 
     // Props
     export let token;
-    export let playlist;
+    export let artist;
     let errors = {};
 
     // State
@@ -41,25 +43,27 @@
     }
 
     const dispatch = createEventDispatcher();
-    async function editPlaylist() {
-        // Edit playlist
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/playlists/${playlist.id}`, {
+    async function editArtist() {
+        // Edit artist
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/artists/${artist.id}`, {
             method: 'PUT',
             headers: {
                 Authorization: `Bearer ${token}`,
             },
             body: new URLSearchParams({
-                name: playlist.name,
-                public: playlist.public
+                name: artist.name,
+                sync: artist.sync,
+                deezer_id: artist.deezer_id,
             }),
         });
 
         if (response.status == 200) {
-            const updatedPlaylist = await response.json();
-            playlist.name = updatedPlaylist.name;
-            playlist.public = updatedPlaylist.public;
+            const updatedArtist = await response.json();
+            artist.name = updatedArtist.name;
+            artist.sync = updatedArtist.sync;
+            artist.deezer_id = updatedArtist.deezer_id;
             close();
-            dispatch('update', { playlist });
+            dispatch('update', { artist });
         } else {
             const data = await response.json();
             errors = data.errors;
@@ -67,7 +71,7 @@
     }
 </script>
 
-<form class="modal" class:is-active={isOpen} on:submit|preventDefault={editPlaylist}>
+<form class="modal" class:is-active={isOpen} on:submit|preventDefault={editArtist}>
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div class="modal-background" on:click={close} />
     <div class="modal-card">
@@ -77,25 +81,39 @@
         </header>
         <section class="modal-card-body">
             <div class="field">
-                <label class="label" for="playlists_edit_name">{t('name')}</label>
+                <label class="label" for="artists_edit_name">{t('name')}</label>
                 <div class="control">
                     <input
                         class="input"
                         class:is-danger={'name' in errors}
                         type="text"
-                        id="playlists_edit_name"
-                        bind:value={playlist.name}
+                        id="artists_edit_name"
+                        bind:value={artist.name}
                         required
                     />
                 </div>
             </div>
 
             <div class="field">
-                <label class="label" for="playlists_edit_public">{t('public')}</label>
-                <label class="checkbox" for="playlists_edit_public">
-                    <input type="checkbox" id="playlists_edit_public" bind:checked={playlist.public} />
-                    {t('public_description')}
+                <label class="label" for="artists_edit_sync">{t('sync')}</label>
+                <label class="checkbox" for="artists_edit_sync">
+                    <input type="checkbox" id="artists_edit_sync" bind:checked={artist.sync} />
+                    {t('sync_description')}
                 </label>
+            </div>
+
+            <div class="field">
+                <label class="label" for="artists_edit_deezer_id">{t('deezer_id')}</label>
+                <div class="control">
+                    <input
+                        class="input"
+                        class:is-danger={'deezer_id' in errors}
+                        type="number"
+                        id="artists_edit_deezer_id"
+                        bind:value={artist.deezer_id}
+                        required
+                    />
+                </div>
             </div>
         </section>
         <footer class="modal-card-foot">

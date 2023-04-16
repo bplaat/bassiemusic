@@ -1,7 +1,9 @@
 <script>
     import { goto } from '$app/navigation';
     import TracksTable from '../../../components/tracks-table.svelte';
-    import LikeButton from '../../../components/like-button.svelte';
+    import ImageEditButton from '../../../components/buttons/image-edit-button.svelte';
+    import LikeButton from '../../../components/buttons/like-button.svelte';
+    import EditModal from '../../../components/modals/artists/edit-modal.svelte';
     import DeleteModal from '../../../components/modals/delete-modal.svelte';
     import AlbumCard from '../../../components/cards/album-card.svelte';
     import { language } from '../../../stores.js';
@@ -11,9 +13,8 @@
         en: {
             title: '$1 - Artists - BassieMusic',
             back: 'Go back one page',
-            image_alt: 'Image of artist $1',
-            sync: 'This aritist is synced, we will download automatic new albums',
             play: 'Play artist top tracks',
+            edit: 'Edit artist',
             artist: 'artist',
             delete: 'Delete artist',
             top_tracks: 'Top Tracks',
@@ -27,13 +28,12 @@
             albums_empty: 'This artist has no albums',
         },
         nl: {
-            title: '$1 - Artisten - BassieMusic',
+            title: '$1 - Artiesten - BassieMusic',
             back: 'Ga een pagina terug',
-            image_alt: 'Afbeelding van artist $1',
-            sync: 'Deze artiest is gesynchroniseerd, we zullen automatisch nieuwe albums downloaden',
-            play: 'Speel artist top tracks',
-            artist: 'artist',
-            delete: 'Verwijder artist',
+            play: 'Speel artiest top tracks',
+            edit: 'Verander artiest',
+            artist: 'artiest',
+            delete: 'Verwijder artiest',
             top_tracks: 'Top Tracks',
             top_tracks_empty: 'Deze artiest heeft geen topnummers',
             albums: 'Albums',
@@ -50,6 +50,7 @@
     // State
     export let data;
     let topTracksTable;
+    let editModal;
     let deleteModal;
 </script>
 
@@ -67,25 +68,12 @@
 
 <div class="columns">
     <div class="column is-one-quarter mr-5 mr-0-mobile">
-        <div class="box has-image has-image-tags p-0">
-            <figure class="image is-1by1">
-                <img
-                    src={data.artist.large_image || '/images/avatar-default.svg'}
-                    alt={t('image_alt', data.artist.name)}
-                />
-            </figure>
-            <div class="image-tags">
-                {#if data.artist.sync}
-                    <span class="tag px-2 py-1" style="height: auto;" title={t('sync')}>
-                        <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                            <path
-                                d="M12,18A6,6 0 0,1 6,12C6,11 6.25,10.03 6.7,9.2L5.24,7.74C4.46,8.97 4,10.43 4,12A8,8 0 0,0 12,20V23L16,19L12,15M12,4V1L8,5L12,9V6A6,6 0 0,1 18,12C18,13 17.75,13.97 17.3,14.8L18.76,16.26C19.54,15.03 20,13.57 20,12A8,8 0 0,0 12,4Z"
-                            />
-                        </svg>
-                    </span>
-                {/if}
-            </div>
-        </div>
+        <ImageEditButton
+            token={data.token}
+            item={data.artist}
+            itemRoute="artists"
+            editable={data.authUser.role == 'admin'}
+        />
     </div>
 
     <div class="column" style="display: flex; flex-direction: column; justify-content: center;">
@@ -98,9 +86,23 @@
                 </svg>
             </button>
 
-            <LikeButton token={data.token} item={data.artist} itemRoute="artists" itemLabel={t('artist')} isLarge={true} />
+            <LikeButton
+                token={data.token}
+                item={data.artist}
+                itemRoute="artists"
+                itemLabel={t('artist')}
+                isLarge={true}
+            />
 
             {#if data.authUser.role == 'admin'}
+                <button class="button is-large" on:click={() => editModal.open()} title={t('edit')}>
+                    <svg class="icon" viewBox="0 0 24 24">
+                        <path
+                            d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z"
+                        />
+                    </svg>
+                </button>
+
                 <button class="button is-large" on:click={() => deleteModal.open()} title={t('delete')}>
                     <svg class="icon" viewBox="0 0 24 24">
                         <path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z" />
@@ -158,6 +160,15 @@
 {/if}
 
 {#if data.authUser.role == 'admin'}
+    <EditModal
+        bind:this={editModal}
+        token={data.token}
+        artist={data.artist}
+        on:update={(event) => {
+            data.artist = event.detail.artist;
+        }}
+    />
+
     <DeleteModal
         bind:this={deleteModal}
         token={data.token}

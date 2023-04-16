@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/bplaat/bassiemusic/core/database"
 	"github.com/bplaat/bassiemusic/core/validation"
@@ -85,7 +86,8 @@ func AlbumsUpdate(c *fiber.Ctx) error {
 		}
 	}
 	if body.ReleasedAt != nil {
-		updates["name"] = *body.ReleasedAt
+		releasedAt, _ := time.Parse("2006-01-02T15:04:05Z", *body.ReleasedAt)
+		updates["released_at"] = releasedAt.Format("2006-01-02 15:04:05")
 	}
 	if body.Explicit != nil {
 		updates["explicit"] = *body.Explicit == "true"

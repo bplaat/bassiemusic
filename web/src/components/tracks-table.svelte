@@ -1,7 +1,7 @@
 <script>
     import { page } from '$app/stores';
     import { tick, onMount } from 'svelte';
-    import LikeButton from './like-button.svelte';
+    import LikeButton from './buttons/like-button.svelte';
     import DeleteModal from './modals/delete-modal.svelte';
     import { sidebar, musicPlayer, musicState, language } from '../stores.js';
     import { formatDuration } from '../filters.js';

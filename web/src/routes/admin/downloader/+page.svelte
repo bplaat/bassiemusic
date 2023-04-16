@@ -39,7 +39,7 @@
             cover_alt: 'Hoes van album $1',
             add_album: 'Voeg album toe aan BassieMusic',
             albums_empty: 'Kan geen albums vinden op Deezer',
-            artists: 'Artisten',
+            artists: 'Artiesten',
             image_alt: 'Afbeelding van artist $1',
             add_artist: 'Voeg artist toe aan BassieMusic',
             artists_empty: 'Kan geen artisten vinden op Deezer',

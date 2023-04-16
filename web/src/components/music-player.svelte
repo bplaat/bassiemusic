@@ -1,7 +1,7 @@
 <script>
     import { page } from '$app/stores';
     import { onMount, onDestroy } from 'svelte';
-    import LikeButton from './like-button.svelte';
+    import LikeButton from './buttons/like-button.svelte';
     import { musicState, language } from '../stores.js';
     import {
         WEBSOCKET_RECONNECT_TIMEOUT,

@@ -56,7 +56,7 @@ func init() {
 			return true
 		},
 		"date": func(args []string, target any, value string) bool {
-			re := regexp.MustCompile(`^(\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$`)
+			re := regexp.MustCompile(`^20\d\d-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\dZ$`)
 			return re.MatchString(value)
 		},
 		"uuid": func(args []string, target any, value string) bool {

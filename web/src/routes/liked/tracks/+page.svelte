@@ -1,6 +1,6 @@
 <script>
     import { onMount } from 'svelte';
-    import SortByDropdown from '../../../components/sort-by-dropdown.svelte';
+    import SortByDropdown from '../../../components/buttons/sort-by-dropdown.svelte';
     import TracksTable from '../../../components/tracks-table.svelte';
     import { lazyLoader } from '../../../utils.js';
     import { language } from '../../../stores.js';
@@ -27,7 +27,7 @@
         },
         nl: {
             title: 'Tracks - Geliked - BassieMusic',
-            artists: 'Artisten',
+            artists: 'Artiesten',
             genres: 'Genres',
             albums: 'Albums',
             tracks: 'Tracks',

@@ -124,6 +124,10 @@ img {
     text-overflow: ellipsis;
 }
 
+.modal {
+    z-index: 99999;
+}
+
 .contextmenu .dropdown-item {
     padding: 0.375rem 1rem !important;
 }

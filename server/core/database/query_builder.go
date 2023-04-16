@@ -44,9 +44,7 @@ func (qb *QueryBuilder[T]) With(relationships ...string) *QueryBuilder[T] {
 
 func (qb *QueryBuilder[T]) WithArgs(relationship string, args ...any) *QueryBuilder[T] {
 	if _, ok := qb.model.Relationships[relationship]; ok {
-		for _, arg := range args {
-			qb.withs[relationship] = append(qb.withs[relationship], arg)
-		}
+		qb.withs[relationship] = append(qb.withs[relationship], args...)
 	} else {
 		log.Fatalln("QueryBuilder: relationship '" + relationship + "' doesn't exists")
 	}
@@ -240,6 +238,9 @@ func (qb *QueryBuilder[T]) Get() []T {
 }
 
 func (qb *QueryBuilder[T]) Update(values Map) {
+	if len(values) == 0 {
+		return
+	}
 	updateQuery := "UPDATE `" + qb.model.TableName + "` SET "
 	index := 0
 	queryValues := []any{}

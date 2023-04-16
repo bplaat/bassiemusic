@@ -88,7 +88,7 @@
     }
 </script>
 
-<form class="modal" class:is-active={isOpen} on:submit|preventDefault={editUser} style="z-index: 99999;">
+<form class="modal" class:is-active={isOpen} on:submit|preventDefault={editUser}>
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div class="modal-background" on:click={close} />
     <div class="modal-card">

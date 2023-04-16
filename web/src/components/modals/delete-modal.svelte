@@ -52,7 +52,7 @@
     }
 </script>
 
-<form class="modal" class:is-active={isOpen} on:submit|preventDefault={deleteItem} style="z-index: 99999;">
+<form class="modal" class:is-active={isOpen} on:submit|preventDefault={deleteItem}>
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div class="modal-background" on:click={close} />
     <div class="modal-card">

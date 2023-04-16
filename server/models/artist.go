@@ -13,7 +13,7 @@ type Artist struct {
 	ID          string    `column:"id,uuid" json:"id"`
 	Name        string    `column:"name,string" json:"name"`
 	Sync        bool      `column:"sync,bool" json:"sync"`
-	DeezerID    int64     `column:"deezer_id,bigint" json:"-"`
+	DeezerID    int64     `column:"deezer_id,bigint" json:"deezer_id"`
 	SmallImage  *string   `json:"small_image"`
 	MediumImage *string   `json:"medium_image"`
 	LargeImage  *string   `json:"large_image"`

@@ -12,7 +12,7 @@ import (
 type Genre struct {
 	ID          string    `column:"id,uuid" json:"id"`
 	Name        string    `column:"name,string" json:"name"`
-	DeezerID    int64     `column:"deezer_id,bigint" json:"-"`
+	DeezerID    int64     `column:"deezer_id,bigint" json:"deezer_id"`
 	SmallImage  *string   `json:"small_image,omitempty"`
 	MediumImage *string   `json:"medium_image,omitempty"`
 	LargeImage  *string   `json:"large_image,omitempty"`
