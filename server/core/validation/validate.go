@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/bplaat/bassiemusic/core/database"
+	"github.com/bplaat/bassiemusic/core/uuid"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -60,8 +61,7 @@ func init() {
 			return re.MatchString(value)
 		},
 		"uuid": func(args []string, target any, value string) bool {
-			re := regexp.MustCompile("^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$")
-			return re.MatchString(value)
+			return uuid.IsValid(value)
 		},
 		"email": func(args []string, target any, value string) bool {
 			re := regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)

@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/bplaat/bassiemusic/core/database"
+	"github.com/bplaat/bassiemusic/core/uuid"
 	"github.com/bplaat/bassiemusic/models"
 	"github.com/bplaat/bassiemusic/utils"
 	"github.com/gofiber/fiber/v2"
@@ -15,15 +16,27 @@ func SessionsIndex(c *fiber.Ctx) error {
 }
 
 func SessionsShow(c *fiber.Ctx) error {
+	// Check if session id is valid uuid
+	if !uuid.IsValid(c.Params("sessionID")) {
+		return fiber.ErrBadRequest
+	}
+
+	// Check if session exists
 	session := models.SessionModel.With("user").Find(c.Params("sessionID"))
 	if session == nil {
 		return fiber.ErrNotFound
 	}
+
 	return c.JSON(session)
 }
 
 func SessionsRevoke(c *fiber.Ctx) error {
-	// Get session
+	// Check if session id is valid uuid
+	if !uuid.IsValid(c.Params("sessionID")) {
+		return fiber.ErrBadRequest
+	}
+
+	// Check if session exists
 	session := models.SessionModel.Find(c.Params("sessionID"))
 	if session == nil {
 		return fiber.ErrNotFound

@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/bplaat/bassiemusic/core/database"
+	"github.com/bplaat/bassiemusic/core/uuid"
 	"github.com/bplaat/bassiemusic/core/validation"
 	"github.com/bplaat/bassiemusic/models"
 	"github.com/bplaat/bassiemusic/utils"
@@ -32,11 +33,18 @@ func ArtistsIndex(c *fiber.Ctx) error {
 }
 
 func ArtistsShow(c *fiber.Ctx) error {
+	// Check if artist id is valid uuid
+	if !uuid.IsValid(c.Params("artistID")) {
+		return fiber.ErrBadRequest
+	}
+
+	// Check if artist exists
 	artist := models.ArtistModel.WithArgs("liked", c.Locals("authUser")).With("albums").
 		WithArgs("top_tracks", c.Locals("authUser")).Find(c.Params("artistID"))
 	if artist == nil {
 		return fiber.ErrNotFound
 	}
+
 	return c.JSON(artist)
 }
 
@@ -48,6 +56,11 @@ type ArtistsUpdateBody struct {
 }
 
 func ArtistsUpdate(c *fiber.Ctx) error {
+	// Check if artist id is valid uuid
+	if !uuid.IsValid(c.Params("artistID")) {
+		return fiber.ErrBadRequest
+	}
+
 	// Check if artist exists
 	artist := models.ArtistModel.Find(c.Params("artistID"))
 	if artist == nil {
@@ -107,6 +120,11 @@ func ArtistsUpdate(c *fiber.Ctx) error {
 }
 
 func ArtistsDelete(c *fiber.Ctx) error {
+	// Check if artist id is valid uuid
+	if !uuid.IsValid(c.Params("artistID")) {
+		return fiber.ErrBadRequest
+	}
+
 	// Check if artist exists
 	artist := models.ArtistModel.Find(c.Params("artistID"))
 	if artist == nil {
@@ -128,6 +146,11 @@ func ArtistsDelete(c *fiber.Ctx) error {
 func ArtistsLike(c *fiber.Ctx) error {
 	authUser := c.Locals("authUser").(*models.User)
 
+	// Check if artist id is valid uuid
+	if !uuid.IsValid(c.Params("artistID")) {
+		return fiber.ErrBadRequest
+	}
+
 	// Check if artist exists
 	artist := models.ArtistModel.Find(c.Params("artistID"))
 	if artist == nil {
@@ -135,14 +158,14 @@ func ArtistsLike(c *fiber.Ctx) error {
 	}
 
 	// Check if artist already liked
-	artistLike := models.ArtistLikeModel.Where("artist_id", c.Params("artistID")).Where("user_id", authUser.ID).First()
+	artistLike := models.ArtistLikeModel.Where("artist_id", artist.ID).Where("user_id", authUser.ID).First()
 	if artistLike != nil {
 		return c.JSON(fiber.Map{"success": true})
 	}
 
 	// Like artist
 	models.ArtistLikeModel.Create(database.Map{
-		"artist_id": c.Params("artistID"),
+		"artist_id": artist.ID,
 		"user_id":   authUser.ID,
 	})
 
@@ -152,6 +175,11 @@ func ArtistsLike(c *fiber.Ctx) error {
 func ArtistsLikeDelete(c *fiber.Ctx) error {
 	authUser := c.Locals("authUser").(*models.User)
 
+	// Check if artist id is valid uuid
+	if !uuid.IsValid(c.Params("artistID")) {
+		return fiber.ErrBadRequest
+	}
+
 	// Check if artist exists
 	artist := models.ArtistModel.Find(c.Params("artistID"))
 	if artist == nil {
@@ -159,12 +187,12 @@ func ArtistsLikeDelete(c *fiber.Ctx) error {
 	}
 
 	// Check if artist not liked
-	artistLike := models.ArtistLikeModel.Where("artist_id", c.Params("artistID")).Where("user_id", authUser.ID).First()
+	artistLike := models.ArtistLikeModel.Where("artist_id", artist.ID).Where("user_id", authUser.ID).First()
 	if artistLike == nil {
 		return c.JSON(fiber.Map{"success": true})
 	}
 
 	// Delete like
-	models.ArtistLikeModel.Where("artist_id", c.Params("artistID")).Where("user_id", authUser.ID).Delete()
+	models.ArtistLikeModel.Where("artist_id", artist.ID).Where("user_id", authUser.ID).Delete()
 	return c.JSON(fiber.Map{"success": true})
 }
