@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"encoding/json"
 	"log"
 
 	"github.com/bplaat/bassiemusic/database"
@@ -29,10 +30,23 @@ func DownloadArtist(c *fiber.Ctx) error {
 	}
 
 	// Create download task
-	models.DownloadTaskModel().Create(database.Map{
+	newTask := database.Map{
 		"type":      models.DownloadTaskTypeDeezerArtist,
 		"deezer_id": params.DeezerID,
+	}
+
+	models.DownloadTaskModel().Create(newTask)
+
+	// Send new task to all admins
+	data, _ := json.Marshal(fiber.Map{
+		"success":      true,
+		"type":         "newTask",
+		"status":       0,
+		"downloadTask": newTask,
 	})
+
+	SendMessageToAll(data)
+
 	return c.JSON(fiber.Map{"success": true})
 }
 
@@ -56,9 +70,22 @@ func DownloadAlbum(c *fiber.Ctx) error {
 	}
 
 	// Create download task
-	models.DownloadTaskModel().Create(database.Map{
+	newTask := database.Map{
 		"type":      models.DownloadTaskTypeDeezerAlbum,
 		"deezer_id": params.DeezerID,
+	}
+
+	models.DownloadTaskModel().Create(newTask)
+
+	// Send tasks to all admins
+	data, _ := json.Marshal(fiber.Map{
+		"success":      true,
+		"type":         "newTask",
+		"status":       0,
+		"downloadTask": newTask,
 	})
+
+	SendMessageToAll(data)
+
 	return c.JSON(fiber.Map{"success": true})
 }

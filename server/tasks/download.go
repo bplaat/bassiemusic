@@ -5,16 +5,19 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math"
 	"os/exec"
 	"strings"
 	"time"
 
 	"github.com/bplaat/bassiemusic/consts"
+	"github.com/bplaat/bassiemusic/controllers"
 	"github.com/bplaat/bassiemusic/database"
 	"github.com/bplaat/bassiemusic/models"
 	"github.com/bplaat/bassiemusic/structs"
 	"github.com/bplaat/bassiemusic/utils"
 	"github.com/bplaat/bassiemusic/utils/uuid"
+	"github.com/gofiber/fiber/v2"
 )
 
 func createArtist(deezerID int, name string, sync bool) string {
@@ -229,6 +232,26 @@ func DownloadAlbum(deezerID int) {
 	log.Printf("[DOWNLOAD] Done downloading album\n")
 }
 
+func fetchAlbums(DeezerID int64) []structs.DeezerArtistAlbum {
+	nextUrl := fmt.Sprintf("https://api.deezer.com/artist/%d/albums", DeezerID)
+	var albums []structs.DeezerArtistAlbum
+	for {
+		log.Println(nextUrl)
+		var artistAlbums structs.DeezerArtistAlbums
+		if err := utils.FetchJson(nextUrl, &artistAlbums); err != nil {
+			log.Fatalln(err)
+		}
+		albums = append(albums, artistAlbums.Data...)
+		if artistAlbums.Next == "" {
+			break
+		} else {
+			time.Sleep(2 * time.Second)
+			nextUrl = artistAlbums.Next
+		}
+	}
+	return albums
+}
+
 func DownloadTask() {
 	for {
 		// Wait a little while
@@ -242,6 +265,19 @@ func DownloadTask() {
 
 		// Do download task
 		if downloadTask.Type == models.DownloadTaskTypeDeezerArtist {
+			// Report progress
+			downloadTask.Status = 1
+			data, _ := json.Marshal(fiber.Map{
+				"success": true,
+				"type":    "taskUpdate",
+				"data":    downloadTask,
+			})
+			controllers.SendMessageToAll(data)
+
+			models.DownloadTaskModel().Where("id", downloadTask.ID).Update(database.Map{
+				"status": 1,
+			})
+
 			// Create artist
 			var deezerArtist structs.DeezerArtist
 			if err := utils.FetchJson(fmt.Sprintf("https://api.deezer.com/artist/%d", downloadTask.DeezerID), &deezerArtist); err != nil {
@@ -250,22 +286,54 @@ func DownloadTask() {
 			createArtist(deezerArtist.ID, deezerArtist.Name, true)
 
 			// Download artist albums
-			var artistAlbums structs.DeezerArtistAlbums
-			if err := utils.FetchJson(fmt.Sprintf("https://api.deezer.com/artist/%d/albums", downloadTask.DeezerID), &artistAlbums); err != nil {
-				log.Fatalln(err)
-			}
-			for _, album := range artistAlbums.Data {
+			artistAlbums := fetchAlbums(downloadTask.DeezerID)
+			for index, album := range artistAlbums {
 				if strings.Contains(album.Title, "Deezer") {
 					continue
 				}
 				DownloadAlbum(album.ID)
+
+				// Report progress
+				progress := int(math.Round((float64(index) / float64(len(artistAlbums))) * 100))
+
+				downloadTask.Progress = progress
+				data, _ := json.Marshal(fiber.Map{
+					"success": true,
+					"type":    "taskUpdate",
+					"data":    downloadTask,
+				})
+				controllers.SendMessageToAll(data)
+
+				models.DownloadTaskModel().Where("id", downloadTask.ID).Update(database.Map{
+					"progress": progress,
+				})
 			}
 		}
 		if downloadTask.Type == models.DownloadTaskTypeDeezerAlbum {
+			// Report progress
+			downloadTask.Status = 1
+			data, _ := json.Marshal(fiber.Map{
+				"success": true,
+				"type":    "taskUpdate",
+				"data":    downloadTask,
+			})
+			controllers.SendMessageToAll(data)
+
+			models.DownloadTaskModel().Where("id", downloadTask.ID).Update(database.Map{
+				"status": 1,
+			})
+
 			DownloadAlbum(int(downloadTask.DeezerID))
 		}
 
 		// Delete download task when done
+		data, _ := json.Marshal(fiber.Map{
+			"success": true,
+			"type":    "taskDelete",
+			"data":    downloadTask,
+		})
+		controllers.SendMessageToAll(data)
+
 		models.DownloadTaskModel().Where("id", downloadTask.ID).Delete()
 	}
 }

@@ -111,7 +111,7 @@ type YoutubeVideo struct {
 	HasDrm               interface{} `json:"_has_drm"`
 	RequestedFormats     []struct {
 		Asr                interface{} `json:"asr"`
-		Filesize           int         `json:"filesize"`
+		Filesize           int64       `json:"filesize"`
 		FormatID           string      `json:"format_id"`
 		FormatNote         string      `json:"format_note"`
 		SourcePreference   int         `json:"source_preference"`

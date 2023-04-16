@@ -26,9 +26,14 @@ type Message struct {
 	Position float32 `json:"position"`
 }
 
+// Maintain a list of WebSocket connections
+var connections []*websocket.Conn
+
 func Websocket(c *fiber.Ctx) error {
 	upgrader.Upgrade(c.Context(), func(conn *websocket.Conn) { //nolint
 		var authUser *models.User
+		var addedConnection = false
+
 		for {
 			// Parse incoming json messages
 			_, messageBytes, err := conn.ReadMessage()
@@ -36,6 +41,15 @@ func Websocket(c *fiber.Ctx) error {
 				if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
 					log.Println(err)
 				}
+
+				// Remove the connection from the connections list
+				for i, c := range connections {
+					if c == conn {
+						connections = append(connections[:i], connections[i+1:]...)
+						break
+					}
+				}
+
 				return
 			}
 			var message Message
@@ -56,6 +70,28 @@ func Websocket(c *fiber.Ctx) error {
 					continue
 				}
 				authUser = session.User
+
+				if !addedConnection && authUser.Role == 1 {
+					// Append new admin connection to the connections list
+					connections = append(connections, conn)
+					addedConnection = true
+
+					// Send current active download tasks
+					downloadTasks := models.DownloadTaskModel().Get()
+
+					if len(downloadTasks) > 0 {
+						response, _ := json.Marshal(fiber.Map{
+							"success":       true,
+							"type":          "allTasks",
+							"downloadTasks": downloadTasks,
+						})
+						if err := conn.WriteMessage(websocket.TextMessage, response); err != nil {
+							log.Println(err)
+							return
+						}
+					}
+				}
+
 				continue
 			}
 
@@ -76,4 +112,14 @@ func Websocket(c *fiber.Ctx) error {
 		}
 	})
 	return c.SendString("")
+}
+
+// Send a message to all connected admin WebSocket devices
+func SendMessageToAll(message []byte) error {
+	for _, conn := range connections {
+		if err := conn.WriteMessage(websocket.TextMessage, message); err != nil {
+			return err
+		}
+	}
+	return nil
 }
