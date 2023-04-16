@@ -38,7 +38,7 @@
 
             library: 'Bibliotheek',
             search: 'Zoeken',
-            artists: 'Artisten',
+            artists: 'Artiesten',
             genres: 'Genres',
             albums: 'Albums',
             tracks: 'Tracks',

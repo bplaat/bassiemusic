@@ -1,5 +1,5 @@
 <script>
-    import DeleteAccountModal from '../../components/modals/settings/account-delete-modal.svelte';
+    import DeleteModal from '../../components/modals/delete-modal.svelte';
     import { lazyLoader } from '../../utils.js';
     import { language } from '../../stores.js';
 
@@ -29,7 +29,7 @@
             delete_account: 'Delete account',
 
             sessions: 'Sessions management',
-            current: 'CURRENT',
+            current: 'Current',
             location: 'With $1 at $2',
             unknown_location: 'Unknown location',
             logged_in_at: 'Logged in at: $1',
@@ -60,7 +60,7 @@
             delete_account: 'Verwijder account',
 
             sessions: 'Sessie beheer',
-            current: 'HUIDIGE',
+            current: 'Huidige',
             location: 'Met $1 in $2',
             unknown_location: 'Onbekende locatie',
             logged_in_at: 'Ingelogt op: $1',
@@ -73,30 +73,33 @@
     // State
     export let data;
     let { token, authUser, currentSessionId, sessions } = data;
-    let deleteAccountModal;
+    let deleteModal;
 
     // Change details
     let newPassword = '';
+    let changeErrors = {};
 
     async function changeDetails() {
+        const body = new URLSearchParams({
+            username: authUser.username,
+            email: authUser.email,
+            language: authUser.language,
+            theme: authUser.theme,
+            allow_explicit: authUser.allow_explicit,
+        });
+        if (newPassword != '') body.set('password', newPassword);
         const response = await fetch(`${import.meta.env.VITE_API_URL}/users/${authUser.id}`, {
             method: 'PUT',
             headers: {
                 Authorization: `Bearer ${token}`,
             },
-            body: new URLSearchParams({
-                username: authUser.username,
-                email: authUser.email,
-                password: newPassword,
-                language: authUser.language,
-                theme: authUser.theme,
-                allow_explicit: authUser.allow_explicit,
-            }),
+            body,
         });
         if (response.status == 200) {
             window.location = '/settings';
         } else {
-            alert('Error!');
+            const data = await response.json();
+            changeErrors = data.errors;
         }
     }
 
@@ -108,34 +111,30 @@
             return;
         }
 
-        const formData = new FormData();
-        formData.append('avatar', avatarInput.files[0], avatarInput.files[0].name);
-
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/users/${authUser.id}/avatar`, {
-            method: 'POST',
+        const body = new FormData();
+        body.set('avatar', avatarInput.files[0], avatarInput.files[0].name);
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/users/${authUser.id}`, {
+            method: 'PUT',
             headers: {
                 Authorization: `Bearer ${token}`,
             },
-            body: formData,
+            body,
         });
         if (response.status == 200) {
             window.location = '/settings';
-        } else {
-            alert('Error!');
         }
     }
 
     async function deleteAvatar() {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/users/${authUser.id}/avatar`, {
-            method: 'DELETE',
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/users/${authUser.id}`, {
+            method: 'PUT',
             headers: {
                 Authorization: `Bearer ${token}`,
             },
+            body: new URLSearchParams({ avatar: '' }),
         });
         if (response.status == 200) {
             window.location = '/settings';
-        } else {
-            alert('Error!');
         }
     }
 
@@ -159,6 +158,11 @@
         }
     );
 
+    function logout() {
+        document.cookie = `token=; expires=${new Date(0).toUTCString()}`;
+        window.location = '/auth/login';
+    }
+
     async function revokeSession(session) {
         await fetch(`${import.meta.env.VITE_API_URL}/sessions/${session.id}/revoke`, {
             method: 'PUT',
@@ -167,8 +171,7 @@
             },
         });
         if (currentSessionId == session.id) {
-            document.cookie = `token=; expires=${new Date(0).toUTCString()}`;
-            window.location = '/auth/login';
+            logout();
         } else {
             sessions = sessions.filter((otherSession) => otherSession.id != session.id);
         }
@@ -192,7 +195,14 @@
                     <div class="field">
                         <label class="label" for="username">{t('username')}</label>
                         <div class="control">
-                            <input class="input" type="text" id="username" bind:value={authUser.username} required />
+                            <input
+                                class="input"
+                                class:is-danger={'username' in changeErrors}
+                                type="text"
+                                id="username"
+                                bind:value={authUser.username}
+                                required
+                            />
                         </div>
                     </div>
                 </div>
@@ -201,7 +211,14 @@
                     <div class="field">
                         <label class="label" for="email">{t('email')}</label>
                         <div class="control">
-                            <input class="input" type="email" id="email" bind:value={authUser.email} required />
+                            <input
+                                class="input"
+                                class:is-danger={'email' in changeErrors}
+                                type="email"
+                                id="email"
+                                bind:value={authUser.email}
+                                required
+                            />
                         </div>
                     </div>
                 </div>
@@ -210,7 +227,13 @@
             <div class="field">
                 <label class="label" for="password">{t('password')}</label>
                 <div class="control">
-                    <input class="input" type="password" id="password" bind:value={newPassword} />
+                    <input
+                        class="input"
+                        class:is-danger={'password' in changeErrors}
+                        type="password"
+                        id="password"
+                        bind:value={newPassword}
+                    />
                 </div>
             </div>
 
@@ -292,7 +315,7 @@
             <h3 class="title is-4">{t('delete_account')}</h3>
 
             <div class="buttons">
-                <button class="button is-danger" on:click={() => deleteAccountModal.open()}>
+                <button class="button is-danger" on:click={() => deleteModal.open()}>
                     {t('delete_account')}
                 </button>
             </div>
@@ -311,7 +334,9 @@
                     <h3 class="title is-4">
                         {session.client_name} on {session.client_os}
                         {#if currentSessionId == session.id}
-                            <span class="tag is-link is-pulled-right">{t('current')}</span>
+                            <span class="tag is-link is-pulled-right" style="text-transform: uppercase;"
+                                >{t('current')}</span
+                            >
                         {/if}
                     </h3>
                     <p>
@@ -344,4 +369,4 @@
     </div>
 </div>
 
-<DeleteAccountModal bind:this={deleteAccountModal} {token} {authUser} />
+<DeleteModal bind:this={deleteModal} {token} item={authUser} itemRoute="users" itemLabel="account" on:delete={logout} />

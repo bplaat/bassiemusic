@@ -27,7 +27,7 @@ export async function load({ url, fetch, cookies, request }) {
             agent,
             last_track: lastTrack,
             last_track_position: lastTrackPosition,
-            last_playlists: lastPlaylists
+            last_playlists: lastPlaylists,
         } = await response.json();
         return {
             token: cookies.get('token'),
@@ -35,7 +35,7 @@ export async function load({ url, fetch, cookies, request }) {
             agent,
             lastTrack,
             lastTrackPosition,
-            lastPlaylists
+            lastPlaylists,
         };
     }
 

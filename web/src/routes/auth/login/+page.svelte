@@ -1,12 +1,15 @@
 <script>
     import { AUTH_TOKEN_EXPIRES_TIMEOUT } from '../../../consts.js';
 
+    // Props
     export let data;
 
+    // State
     let logon = '';
     let password = '';
     let errors = {};
 
+    // Methods
     async function login() {
         const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/login`, {
             method: 'POST',

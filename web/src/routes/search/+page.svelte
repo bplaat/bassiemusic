@@ -31,7 +31,7 @@
             empty: 'Kan niets vinden met je zoekopdracht',
             tracks: 'Tracks',
             albums: 'Albums',
-            artists: 'Artisten',
+            artists: 'Artiesten',
             playlists: 'Afspeellijsten',
             genres: 'Genres',
             genres_empty: 'Je hebt nog geen enkele genre toegevoegd',

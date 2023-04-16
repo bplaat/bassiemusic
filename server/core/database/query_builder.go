@@ -9,7 +9,7 @@ import (
 type QueryBuilder[T any] struct {
 	model          *Model[T]
 	joinQueryPart  string
-	withs          []string
+	withs          map[string][]any
 	whereQueryPart string
 	whereValues    []any
 	orderBy        string
@@ -34,10 +34,19 @@ func (qb *QueryBuilder[T]) Join(join string) *QueryBuilder[T] {
 func (qb *QueryBuilder[T]) With(relationships ...string) *QueryBuilder[T] {
 	for _, relationship := range relationships {
 		if _, ok := qb.model.Relationships[relationship]; ok {
-			qb.withs = append(qb.withs, relationship)
+			qb.withs[relationship] = []any{}
 		} else {
 			log.Fatalln("QueryBuilder: relationship '" + relationship + "' doesn't exists")
 		}
+	}
+	return qb
+}
+
+func (qb *QueryBuilder[T]) WithArgs(relationship string, args ...any) *QueryBuilder[T] {
+	if _, ok := qb.model.Relationships[relationship]; ok {
+		qb.withs[relationship] = append(qb.withs[relationship], args...)
+	} else {
+		log.Fatalln("QueryBuilder: relationship '" + relationship + "' doesn't exists")
 	}
 	return qb
 }
@@ -206,7 +215,7 @@ func (qb *QueryBuilder[T]) Get() []T {
 	models := []T{}
 	for query.Next() {
 		var model T
-		modelValue := reflect.Indirect(reflect.ValueOf(&model))
+		modelValue := reflect.ValueOf(&model).Elem()
 		ptrs := []any{}
 		for _, column := range qb.model.Columns {
 			ptrs = append(ptrs, modelValue.FieldByName(column.Name).Addr().Interface())
@@ -221,14 +230,17 @@ func (qb *QueryBuilder[T]) Get() []T {
 		if qb.model.Process != nil {
 			qb.model.Process(&models[i])
 		}
-		for _, with := range qb.withs {
-			qb.model.Relationships[with](&models[i])
+		for relationship, args := range qb.withs {
+			qb.model.Relationships[relationship](&models[i], args)
 		}
 	}
 	return models
 }
 
 func (qb *QueryBuilder[T]) Update(values Map) {
+	if len(values) == 0 {
+		return
+	}
 	updateQuery := "UPDATE `" + qb.model.TableName + "` SET "
 	index := 0
 	queryValues := []any{}

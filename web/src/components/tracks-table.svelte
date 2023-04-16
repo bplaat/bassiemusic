@@ -1,6 +1,9 @@
 <script>
     import { page } from '$app/stores';
     import { tick, onMount } from 'svelte';
+    import LikeButton from './buttons/like-button.svelte';
+    import EditModal from './modals/tracks/edit-modal.svelte';
+    import DeleteModal from './modals/delete-modal.svelte';
     import { sidebar, musicPlayer, musicState, language } from '../stores.js';
     import { formatDuration } from '../filters.js';
 
@@ -18,16 +21,20 @@
             explicit: 'Explicit lyrics',
             like: 'Like track',
             remove_like: 'Remove track like',
+            track: 'track',
             options: 'Track options',
 
             add_queue: 'Add track to play queue',
             remove_queue: 'Remove track from play queue',
             go_to_album: 'Go to album',
             go_to_artist: 'Go to artist',
+
             add_to_playlist: 'Add to playlist',
             remove_from_playlist: 'Remove from playlist',
             playlist_placeholder: 'Find a playlist',
-            playlist_search_empty: "Can't find anything with your search query"
+            playlist_search_empty: "Can't find anything with your search query",
+            edit: 'Edit track',
+            delete: 'Delete track',
         },
         nl: {
             index: '#',
@@ -41,17 +48,20 @@
             explicit: 'Expliciete songtekst',
             like: 'Like track',
             remove_like: 'Verwijder track like',
+            track: 'track',
             options: 'Track opties',
 
             add_queue: 'Voeg track toe aan wachtrij',
             remove_queue: 'Verwijder track van wachtrij',
             go_to_album: 'Ga naar album',
             go_to_artist: 'Ga naar artiest',
-            context_menu: 'Open context menu',
-            add_to_playlist: 'Voeg toe aan playlist',
-            remove_from_playlist: 'Verwijder van playlist',
+
+            add_to_playlist: 'Voeg toe aan afspeellijst',
+            remove_from_playlist: 'Verwijder van afspeellijst',
             playlist_placeholder: 'Vind de playlist',
-            playlist_search_empty: 'Kan niets vinden met je zoekopdracht'
+            playlist_search_empty: 'Kan niets vinden met je zoekopdracht',
+            edit: 'Verander track',
+            delete: 'Verwijder track',
         },
     };
     const t = (key, p1) => lang[$language][key].replace('$1', p1);
@@ -71,6 +81,8 @@
     let contextmenuTrack;
     let contextmenuPosition;
     let lastPlaylists = [];
+    let editModal;
+    let deleteModal;
     let playlistQuery = '';
     let noPlaylists = false;
 
@@ -306,24 +318,7 @@
                 <td>{formatDuration(track.duration)}</td>
                 <td class="is-hidden-mobile">{track.plays}</td>
                 <td class="px-0 is-hidden-mobile">
-                    {#if !track.liked}
-                        <button class="button" on:click={() => likeTrack(track)} title={t('like')}>
-                            <svg class="icon" viewBox="0 0 24 24">
-                                <path
-                                    d="M12.1,18.55L12,18.65L11.89,18.55C7.14,14.24 4,11.39 4,8.5C4,6.5 5.5,5 7.5,5C9.04,5 10.54,6 11.07,7.36H12.93C13.46,6 14.96,5 16.5,5C18.5,5 20,6.5 20,8.5C20,11.39 16.86,14.24 12.1,18.55M16.5,3C14.76,3 13.09,3.81 12,5.08C10.91,3.81 9.24,3 7.5,3C4.42,3 2,5.41 2,8.5C2,12.27 5.4,15.36 10.55,20.03L12,21.35L13.45,20.03C18.6,15.36 22,12.27 22,8.5C22,5.41 19.58,3 16.5,3Z"
-                                />
-                            </svg>
-                        </button>
-                    {:else}
-                        <button class="button" on:click={() => likeTrack(track)} title={t('remove_like')}>
-                            <svg class="icon is-colored" viewBox="0 0 24 24">
-                                <path
-                                    fill="#f14668"
-                                    d="M12,21.35L10.55,20.03C5.4,15.36 2,12.27 2,8.5C2,5.41 4.42,3 7.5,3C9.24,3 10.91,3.81 12,5.08C13.09,3.81 14.76,3 16.5,3C19.58,3 22,5.41 22,8.5C22,12.27 18.6,15.36 13.45,20.03L12,21.35Z"
-                                />
-                            </svg>
-                        </button>
-                    {/if}
+                    <LikeButton {token} item={track} itemRoute="tracks" itemLabel={t('track')} />
                 </td>
                 <td class="pl-0">
                     <button
@@ -371,9 +366,9 @@
             <!-- svelte-ignore a11y-invalid-attribute -->
             <a
                 class="dropdown-item"
+                class:disabled={$musicState.track != undefined && $musicState.track.id == contextmenuTrack.id}
                 href="#"
                 on:click|preventDefault={() => $musicPlayer.removeTrack(contextmenuTrack)}
-                class:disabled={$musicState.track != undefined && $musicState.track.id == contextmenuTrack.id}
             >
                 {t('remove_queue')}
             </a>
@@ -422,7 +417,7 @@
         {/if}
 
         <div class="dropdown is-hoverable" style="width: 100%;">
-            <div 
+            <div
                 class="dropdown-trigger dropdown-item" style="width: 100%;"
                 class:disabled = {noPlaylists}
                 >
@@ -449,9 +444,9 @@
                             <p><i>{t('playlist_search_empty')}</i></p>
                         {/if}
 
-                        <div 
+                        <div
                             on:wheel|stopPropagation
-                            class="app" 
+                            class="app"
                             style="overflow-x: hidden; overflow-y: scroll; max-height: 200px"
                             >
                             {#each lastPlaylists as playlist}
@@ -480,8 +475,45 @@
                 {t('remove_from_playlist')}
             </a>
         {/if}
+
+        {#if authUser.role == 'admin'}
+            <!-- svelte-ignore a11y-invalid-attribute -->
+            <a class="dropdown-item" href="#" on:click|preventDefault={() => editModal.open()}>
+                {t('edit')}
+            </a>
+
+            <!-- svelte-ignore a11y-invalid-attribute -->
+            <a class="dropdown-item" href="#" on:click|preventDefault={() => deleteModal.open()}>
+                {t('delete')}
+            </a>
+        {/if}
     {/if}
 </div>
+
+{#if authUser.role == 'admin' && contextmenuTrack != null}
+    <EditModal
+        bind:this={editModal}
+        {token}
+        track={contextmenuTrack}
+        on:update={(event) => {
+            tracks = tracks.map((track) => {
+                if (track.id == event.detail.track.id) return event.detail.track;
+                return track;
+            });
+        }}
+    />
+
+    <DeleteModal
+        bind:this={deleteModal}
+        {token}
+        item={contextmenuTrack}
+        itemRoute="tracks"
+        itemLabel={t('track')}
+        on:delete={() => {
+            tracks = tracks.filter((track) => track.id != contextmenuTrack.id);
+        }}
+    />
+{/if}
 
 <style>
     .track-title {

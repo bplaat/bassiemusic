@@ -49,6 +49,7 @@
 
     // State
     let newPassword = '';
+    let errors = {};
     let isOpen = false;
 
     // Methods
@@ -62,30 +63,34 @@
 
     const dispatch = createEventDispatcher();
     async function editUser() {
+        const body = new URLSearchParams({
+            username: user.username,
+            email: user.email,
+            role: user.role,
+            language: user.language,
+            theme: user.theme,
+            allow_explicit: user.allow_explicit,
+        });
+        if (newPassword != '') body.set('password', newPassword);
         const response = await fetch(`${import.meta.env.VITE_API_URL}/users/${user.id}`, {
             method: 'PUT',
             headers: {
                 Authorization: `Bearer ${token}`,
             },
-            body: new URLSearchParams({
-                username: user.username,
-                email: user.email,
-                password: newPassword,
-                role: user.role,
-                language: user.language,
-                theme: user.theme,
-                allow_explicit: user.allow_explicit,
-            }),
+            body,
         });
         if (response.status == 200) {
             const updatedUser = await response.json();
             close();
-            dispatch('updateUser', { user: updatedUser });
+            dispatch('update', { user: updatedUser });
+        } else {
+            const data = await response.json();
+            errors = data.errors;
         }
     }
 </script>
 
-<form class="modal" class:is-active={isOpen} on:submit|preventDefault={editUser} style="z-index: 99999;">
+<form class="modal" class:is-active={isOpen} on:submit|preventDefault={editUser}>
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div class="modal-background" on:click={close} />
     <div class="modal-card">
@@ -99,7 +104,14 @@
                     <div class="field">
                         <label class="label" for="edit-username">{t('username')}</label>
                         <div class="control">
-                            <input class="input" type="text" id="edit-username" bind:value={user.username} required />
+                            <input
+                                class="input"
+                                class:is-danger={'username' in errors}
+                                type="text"
+                                id="edit-username"
+                                bind:value={user.username}
+                                required
+                            />
                         </div>
                     </div>
                 </div>
@@ -108,7 +120,14 @@
                     <div class="field">
                         <label class="label" for="edit-email">{t('email')}</label>
                         <div class="control">
-                            <input class="input" type="email" id="edit-email" bind:value={user.email} required />
+                            <input
+                                class="input"
+                                class:is-danger={'email' in errors}
+                                type="email"
+                                id="edit-email"
+                                bind:value={user.email}
+                                required
+                            />
                         </div>
                     </div>
                 </div>
@@ -117,7 +136,13 @@
             <div class="field">
                 <label class="label" for="edit-password">{t('password')}</label>
                 <div class="control">
-                    <input class="input" type="password" id="edit-password" bind:value={newPassword} />
+                    <input
+                        class="input"
+                        class:is-danger={'password' in errors}
+                        type="password"
+                        id="edit-password"
+                        bind:value={newPassword}
+                    />
                 </div>
             </div>
 

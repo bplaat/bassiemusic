@@ -6,8 +6,8 @@ import (
 	"os"
 
 	"github.com/bplaat/bassiemusic/commands"
-	"github.com/bplaat/bassiemusic/database"
-	"github.com/bplaat/bassiemusic/utils/dotenv"
+	"github.com/bplaat/bassiemusic/core/database"
+	"github.com/bplaat/bassiemusic/core/dotenv"
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -30,14 +30,17 @@ func createStorageDirs() {
 	createDirIfNotExists("storage/playlists/small")
 	createDirIfNotExists("storage/playlists/medium")
 	createDirIfNotExists("storage/artists")
+	createDirIfNotExists("storage/artists/original")
 	createDirIfNotExists("storage/artists/small")
 	createDirIfNotExists("storage/artists/medium")
 	createDirIfNotExists("storage/artists/large")
 	createDirIfNotExists("storage/albums")
+	createDirIfNotExists("storage/albums/original")
 	createDirIfNotExists("storage/albums/small")
 	createDirIfNotExists("storage/albums/medium")
 	createDirIfNotExists("storage/albums/large")
 	createDirIfNotExists("storage/genres")
+	createDirIfNotExists("storage/genres/original")
 	createDirIfNotExists("storage/genres/small")
 	createDirIfNotExists("storage/genres/medium")
 	createDirIfNotExists("storage/genres/large")

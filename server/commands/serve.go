@@ -73,6 +73,7 @@ func Serve() {
 
 	app.Post("/auth/login", controllers.AuthLogin)
 
+	// Authed routes
 	app.Use(middlewares.IsAuthed)
 
 	app.Get("/auth/validate", controllers.AuthValidate)
@@ -86,28 +87,28 @@ func Serve() {
 	app.Put("/artists/:artistID/like", controllers.ArtistsLike)
 	app.Delete("/artists/:artistID/like", controllers.ArtistsLikeDelete)
 
+	app.Get("/genres", controllers.GenresIndex)
+	app.Get("/genres/:genreID", controllers.GenresShow)
+	app.Get("/genres/:genreID/albums", controllers.GenresAlbums)
+	app.Put("/genres/:genreID/like", controllers.GenresLike)
+	app.Delete("/genres/:genreID/like", controllers.GenresLikeDelete)
+
 	app.Get("/albums", controllers.AlbumsIndex)
 	app.Get("/albums/:albumID", controllers.AlbumsShow)
 	app.Put("/albums/:albumID/like", controllers.AlbumsLike)
 	app.Delete("/albums/:albumID/like", controllers.AlbumsLikeDelete)
 
-	app.Get("/genres", controllers.GenresIndex)
-	app.Get("/genres/:genreID", controllers.GenresShow)
-	app.Get("/genres/:genreID/albums", controllers.GenresAlbums)
-
 	app.Get("/tracks", controllers.TracksIndex)
 	app.Get("/tracks/:trackID", controllers.TracksShow)
+	app.Put("/tracks/:trackID/play", controllers.TracksPlay)
 	app.Put("/tracks/:trackID/like", controllers.TracksLike)
 	app.Delete("/tracks/:trackID/like", controllers.TracksLikeDelete)
-	app.Put("/tracks/:trackID/play", controllers.TracksPlay)
 
 	app.Get("/playlists", controllers.PlaylistsIndex)
 	app.Post("/playlists", controllers.PlaylistsCreate)
 	app.Get("/playlists/:playlistID", controllers.PlaylistsShow)
-	app.Put("/playlists/:playlistID", controllers.PlaylistsEdit)
+	app.Put("/playlists/:playlistID", controllers.PlaylistsUpdate)
 	app.Delete("/playlists/:playlistID", controllers.PlaylistsDelete)
-	app.Post("/playlists/:playlistID/image", controllers.PlaylistsImage)
-	app.Delete("/playlists/:playlistID/image", controllers.PlaylistsImageDelete)
 	app.Post("/playlists/:playlistID/tracks", controllers.PlaylistsAppendTrack)
 	app.Put("/playlists/:playlistID/tracks/:position", controllers.PlaylistsInsertTrack)
 	app.Delete("/playlists/:playlistID/tracks/:position", controllers.PlaylistsRemoveTrack)
@@ -115,11 +116,10 @@ func Serve() {
 	app.Delete("/playlists/:playlistID/like", controllers.PlaylistsLikeDelete)
 
 	app.Get("/users/:userID", controllers.UsersShow)
-	app.Put("/users/:userID", controllers.UsersEdit)
+	app.Put("/users/:userID", controllers.UsersUpdate)
 	app.Delete("/users/:userID", controllers.UsersDelete)
-	app.Post("/users/:userID/avatar", controllers.UsersAvatar)
-	app.Delete("/users/:userID/avatar", controllers.UsersAvatarDelete)
 	app.Get("/users/:userID/liked_artists", controllers.UsersLikedArtists)
+	app.Get("/users/:userID/liked_genres", controllers.UsersLikedGenres)
 	app.Get("/users/:userID/liked_albums", controllers.UsersLikedAlbums)
 	app.Get("/users/:userID/liked_tracks", controllers.UsersLikedTracks)
 	app.Get("/users/:userID/liked_playlists", controllers.UsersLikedPlaylists)
@@ -128,6 +128,7 @@ func Serve() {
 	app.Get("/users/:userID/active_sessions", controllers.UsersActiveSessions)
 	app.Get("/users/:userID/playlists", controllers.UsersPlaylists)
 
+	// Admin routes
 	app.Use(middlewares.IsAdmin)
 
 	app.Get("/storage_size", func(c *fiber.Ctx) error {
@@ -144,6 +145,18 @@ func Serve() {
 	app.Post("/download/artist", controllers.DownloadArtist)
 	app.Post("/download/album", controllers.DownloadAlbum)
 
+	app.Put("/artists/:artistID", controllers.ArtistsUpdate)
+	app.Delete("/artists/:artistID", controllers.ArtistsDelete)
+
+	app.Put("/genres/:genreID", controllers.GenresUpdate)
+	app.Delete("/genres/:genreID", controllers.GenresDelete)
+
+	app.Put("/albums/:albumID", controllers.AlbumsUpdate)
+	app.Delete("/albums/:albumID", controllers.AlbumsDelete)
+
+	app.Put("/tracks/:trackID", controllers.TracksUpdate)
+	app.Delete("/tracks/:trackID", controllers.TracksDelete)
+
 	app.Get("/users", controllers.UsersIndex)
 	app.Post("/users", controllers.UsersCreate)
 
@@ -151,5 +164,6 @@ func Serve() {
 	app.Get("/sessions/:sessionID", controllers.SessionsShow)
 	app.Put("/sessions/:sessionID/revoke", controllers.SessionsRevoke)
 
+	// Start server
 	log.Fatal(app.Listen(":" + os.Getenv("SERVER_PORT")))
 }

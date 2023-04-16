@@ -1,6 +1,6 @@
 <script>
     import { onMount } from 'svelte';
-    import SortByDropdown from '../../../components/sort-by-dropdown.svelte';
+    import SortByDropdown from '../../../components/buttons/sort-by-dropdown.svelte';
     import ArtistCard from '../../../components/cards/artist-card.svelte';
     import { lazyLoader } from '../../../utils.js';
     import { language } from '../../../stores.js';
@@ -10,6 +10,7 @@
         en: {
             title: 'Artists - Liked - BassieMusic',
             artists: 'Artists',
+            genres: 'Genres',
             albums: 'Albums',
             tracks: 'Tracks',
             playlists: 'Playlists',
@@ -25,12 +26,13 @@
             empty: 'You have not liked any artists',
         },
         nl: {
-            title: 'Artisten - Geliked - BassieMusic',
-            artists: 'Artisten',
+            title: 'Artiesten - Geliked - BassieMusic',
+            artists: 'Artiesten',
+            genres: 'Genres',
             albums: 'Albums',
             tracks: 'Tracks',
             playlists: 'Afspeellijsten',
-            header: 'Gelikede Artisten',
+            header: 'Gelikede Artiesten',
             sort_by_liked_at_desc: 'Geliked op (nieuw - oud)',
             sort_by_liked_at: 'Geliked op (oud - nieuw)',
             sort_by_name: 'Naam (A - Z)',
@@ -39,7 +41,7 @@
             sort_by_sync_desc: 'Gesynced (niet gesynced - gesynced)',
             sort_by_created_at_desc: 'Gedownload op (nieuw - oud)',
             sort_by_created_at: 'Gedownload op (oud - nieuw)',
-            empty: 'Je hebt geen artist geliked',
+            empty: 'Je hebt geen artiest geliked',
         },
     };
     const t = (key) => lang[$language][key];
@@ -80,6 +82,7 @@
 <div class="tabs is-toggle">
     <ul>
         <li class="is-active"><a href="/liked/artists">{t('artists')}</a></li>
+        <li><a href="/liked/genres">{t('genres')}</a></li>
         <li><a href="/liked/albums">{t('albums')}</a></li>
         <li><a href="/liked/tracks">{t('tracks')}</a></li>
         <li><a href="/liked/playlists">{t('playlists')}</a></li>

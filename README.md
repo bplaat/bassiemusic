@@ -24,14 +24,12 @@
 Right now BassieMusic is in active developement, you can track the progress at our [Issue Board](https://github.com/users/bplaat/projects/1)
 
 ## Platforms
-The BassieMusic player supports a lot of different platforms:
-- [Web](web/): This is for now the main music player and library management tool
+The BassieMusic player runs a lot of different platforms:
+- [Web](web/): This is the main music player and library management tool
 - [macOS](apps/macos/): This native macOS app runs the web player in a `WKWebview` with nice inset window controls
 - [Windows](apps/windows/): This native Windows app runs the web player in a `Webview2` with nice custom window controls
 - [Linux](apps/linux/): This basic GTK app runs the web player in a `Webkit2GTK` widget
 - [Android & iOS (Flutter)](apps/flutter/): This mobile flutter player app is in development
-
-Pre build macOS and Windows binaries are coming soon...
 
 ## Screenshot
 ![The BassieMusic macOS app playing the album Life from Knower](docs/screenshot.png)

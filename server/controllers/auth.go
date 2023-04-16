@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/bplaat/bassiemusic/consts"
-	"github.com/bplaat/bassiemusic/database"
+	"github.com/bplaat/bassiemusic/core/database"
 	"github.com/bplaat/bassiemusic/models"
 	"github.com/bplaat/bassiemusic/utils"
 	"github.com/gofiber/fiber/v2"
@@ -36,19 +36,20 @@ func getIP(c *fiber.Ctx) string {
 	return c.IP()
 }
 
-type AuthLoginParams struct {
+type AuthLoginBody struct {
 	Logon    string `form:"logon"`
 	Password string `form:"password"`
 }
 
 func AuthLogin(c *fiber.Ctx) error {
-	var params AuthLoginParams
-	if err := c.BodyParser(&params); err != nil {
+	// Parse body
+	var body AuthLoginBody
+	if err := c.BodyParser(&body); err != nil {
 		return fiber.ErrBadRequest
 	}
 
 	// Get user by username or email
-	user := models.UserModel().Where("username", params.Logon).WhereOr("email", params.Logon).First()
+	user := models.UserModel.Where("username", body.Logon).WhereOr("email", body.Logon).First()
 	if user == nil {
 		return c.JSON(fiber.Map{
 			"success": false,
@@ -57,7 +58,7 @@ func AuthLogin(c *fiber.Ctx) error {
 	}
 
 	// Verify user password
-	if !utils.VerifyPassword(params.Password, user.Password) {
+	if !utils.VerifyPassword(body.Password, user.Password) {
 		return c.JSON(fiber.Map{
 			"success": false,
 			"message": "Wrong email or password",
@@ -94,7 +95,7 @@ func AuthLogin(c *fiber.Ctx) error {
 		session["ip_country"] = strings.ToLower(ipInfo.Country)
 		session["ip_city"] = ipInfo.City
 	}
-	models.SessionModel().Create(session)
+	models.SessionModel.Create(session)
 
 	// Return response
 	return c.JSON(fiber.Map{
@@ -111,21 +112,22 @@ func AuthValidate(c *fiber.Ctx) error {
 	session := c.Locals("session").(*models.Session)
 	agent := utils.Agent{OS: *session.ClientOS, Name: *session.ClientName, Version: *session.ClientVersion}
 	response := fiber.Map{
-		"success":     true,
-		"user":        authUser,
-		"session_id	": session.ID,
-		"agent":       agent,
+		"success":    true,
+		"user":       authUser,
+		"session_id": session.ID,
+		"agent":      agent,
 	}
 
 	// Get last played track and return it
-	lastTackPlay := models.TrackPlayModel().Where("user_id", authUser.ID).OrderByDesc("created_at").First()
+	lastTackPlay := models.TrackPlayModel.Where("user_id", authUser.ID).OrderByDesc("created_at").First()
 	if lastTackPlay != nil {
-		response["last_track"] = models.TrackModel(c).With("like", "artists", "album").Find(lastTackPlay.TrackID)
+		response["last_track"] = models.TrackModel.WithArgs("liked", c.Locals("authUser")).
+			With("artists", "album").Find(lastTackPlay.TrackID)
 		response["last_track_position"] = lastTackPlay.Position
 	}
 
 	// Get last playlists
-	response["last_playlists"] = models.PlaylistModel(c).Where("user_id", authUser.ID).OrderByDesc("updated_at").Limit(10).Get()
+	response["last_playlists"] = models.PlaylistModel.Where("user_id", authUser.ID).OrderByDesc("updated_at").Limit(10).Get()
 
 	// Return response
 	return c.JSON(response)
@@ -135,13 +137,13 @@ func AuthLogout(c *fiber.Ctx) error {
 	token := utils.ParseTokenVar(c)
 
 	// Get session
-	session := models.SessionModel().Where("token", token).First()
+	session := models.SessionModel.Where("token", token).First()
 	if session == nil {
 		return c.JSON(fiber.Map{"success": false})
 	}
 
 	// Revoke session
-	models.SessionModel().Where("id", session.ID).Update(database.Map{
+	models.SessionModel.Where("id", session.ID).Update(database.Map{
 		"expires_at": time.Now(),
 	})
 	return c.JSON(fiber.Map{"success": true})
