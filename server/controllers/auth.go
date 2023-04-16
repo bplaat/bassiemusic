@@ -112,10 +112,10 @@ func AuthValidate(c *fiber.Ctx) error {
 	session := c.Locals("session").(*models.Session)
 	agent := utils.Agent{OS: *session.ClientOS, Name: *session.ClientName, Version: *session.ClientVersion}
 	response := fiber.Map{
-		"success":     true,
-		"user":        authUser,
-		"session_id	": session.ID,
-		"agent":       agent,
+		"success":    true,
+		"user":       authUser,
+		"session_id": session.ID,
+		"agent":      agent,
 	}
 
 	// Get last played track and return it

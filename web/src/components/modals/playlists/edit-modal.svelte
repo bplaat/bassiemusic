@@ -50,14 +50,14 @@
     async function editPlaylist() {
         // Change playlist image
         if (imageInput.files[0]) {
-            const formData = new FormData();
-            formData.append('image', imageInput.files[0], imageInput.files[0].name);
-            await fetch(`${import.meta.env.VITE_API_URL}/playlists/${playlist.id}/image`, {
-                method: 'POST',
+            const body = new FormData();
+            body.set('image', imageInput.files[0], imageInput.files[0].name);
+            await fetch(`${import.meta.env.VITE_API_URL}/playlists/${playlist.id}`, {
+                method: 'PUT',
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
-                body: formData,
+                body,
             });
         }
 
@@ -86,11 +86,12 @@
     }
 
     async function deleteImage() {
-        await fetch(`${import.meta.env.VITE_API_URL}/playlists/${playlist.id}/image`, {
-            method: 'DELETE',
+        await fetch(`${import.meta.env.VITE_API_URL}/playlists/${playlist.id}`, {
+            method: 'PUT',
             headers: {
                 Authorization: `Bearer ${token}`,
             },
+            body: new URLSearchParams({ image: '' }),
         });
         playlist.small_image = null;
         playlist.medium_image = null;

@@ -86,7 +86,7 @@
             theme: authUser.theme,
             allow_explicit: authUser.allow_explicit,
         });
-        if (newPassword != '') body.append('password', newPassword);
+        if (newPassword != '') body.set('password', newPassword);
         const response = await fetch(`${import.meta.env.VITE_API_URL}/users/${authUser.id}`, {
             method: 'PUT',
             headers: {
@@ -109,15 +109,14 @@
             return;
         }
 
-        const formData = new FormData();
-        formData.append('avatar', avatarInput.files[0], avatarInput.files[0].name);
-
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/users/${authUser.id}/avatar`, {
-            method: 'POST',
+        const body = new FormData();
+        body.set('avatar', avatarInput.files[0], avatarInput.files[0].name);
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/users/${authUser.id}`, {
+            method: 'PUT',
             headers: {
                 Authorization: `Bearer ${token}`,
             },
-            body: formData,
+            body,
         });
         if (response.status == 200) {
             window.location = '/settings';
@@ -125,11 +124,12 @@
     }
 
     async function deleteAvatar() {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/users/${authUser.id}/avatar`, {
-            method: 'DELETE',
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/users/${authUser.id}`, {
+            method: 'PUT',
             headers: {
                 Authorization: `Bearer ${token}`,
             },
+            body: new URLSearchParams({ avatar: '' }),
         });
         if (response.status == 200) {
             window.location = '/settings';
@@ -348,7 +348,6 @@
 <DeleteModal
     bind:this={deleteModal}
     {token}
-    {authUser}
     item={authUser}
     itemRoute="users"
     itemLabel="account"

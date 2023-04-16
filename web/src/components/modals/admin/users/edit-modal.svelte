@@ -70,7 +70,7 @@
             theme: user.theme,
             allow_explicit: user.allow_explicit,
         });
-        if (newPassword != '') body.append('password', newPassword);
+        if (newPassword != '') body.set('password', newPassword);
         const response = await fetch(`${import.meta.env.VITE_API_URL}/users/${user.id}`, {
             method: 'PUT',
             headers: {
