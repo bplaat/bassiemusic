@@ -2,10 +2,7 @@ package controllers
 
 import (
 	"fmt"
-	"image"
-	"image/jpeg"
 	_ "image/png"
-	"log"
 	"os"
 	"time"
 
@@ -15,7 +12,6 @@ import (
 	"github.com/bplaat/bassiemusic/models"
 	"github.com/bplaat/bassiemusic/utils"
 	"github.com/gofiber/fiber/v2"
-	"github.com/nfnt/resize"
 )
 
 func UsersIndex(c *fiber.Ctx) error {
@@ -44,22 +40,29 @@ func UsersCreate(c *fiber.Ctx) error {
 	}
 
 	// Create user
-	var userRole models.UserRole
-	if body.Role == "normal" {
-		userRole = models.UserRoleNormal
-	}
-	if body.Role == "admin" {
-		userRole = models.UserRoleAdmin
-	}
-	return c.JSON(models.UserModel.Create(database.Map{
+	fields := database.Map{
 		"username":       body.Username,
 		"email":          body.Email,
 		"password":       utils.HashPassword(body.Password),
 		"allow_explicit": body.AllowExplicit == "true",
-		"role":           userRole,
 		"language":       "en",
 		"theme":          models.UserThemeSystem,
-	}))
+	}
+	if body.Role == "normal" {
+		fields["role"] = models.UserRoleNormal
+	}
+	if body.Role == "admin" {
+		fields["role"] = models.UserRoleAdmin
+	}
+	if avatarFile, err := c.FormFile("avatar"); err == nil {
+		// Store avatar when given
+		avatarID := uuid.New()
+		if err := utils.StoreUploadedImage(c, "avatars", avatarID, avatarFile, false); err != nil {
+			return err
+		}
+		fields["avatar"] = avatarID.String()
+	}
+	return c.JSON(models.UserModel.Create(fields))
 }
 
 func UsersShow(c *fiber.Ctx) error {
@@ -78,6 +81,7 @@ type UsersUpdateBody struct {
 	Role          *string `form:"role" validate:"enum:normal,admin"`
 	Language      *string `form:"language" validate:"enum:en,nl"`
 	Theme         *string `form:"theme" validate:"enum:system,light,dark"`
+	Avatar        *string `form:"avatar" validate:"nullable"`
 }
 
 func UsersUpdate(c *fiber.Ctx) error {
@@ -140,6 +144,31 @@ func UsersUpdate(c *fiber.Ctx) error {
 			updates["theme"] = models.UserThemeDark
 		}
 	}
+	if avatarFile, err := c.FormFile("avatar"); err == nil {
+		// Remove old avatar file
+		if user.AvatarID != nil && *user.AvatarID != "" {
+			_ = os.Remove(fmt.Sprintf("storage/avatars/original/%s", *user.AvatarID))
+			_ = os.Remove(fmt.Sprintf("storage/avatars/small/%s.jpg", *user.AvatarID))
+			_ = os.Remove(fmt.Sprintf("storage/avatars/medium/%s.jpg", *user.AvatarID))
+		}
+
+		// Store new avatar
+		avatarID := uuid.New()
+		if err := utils.StoreUploadedImage(c, "avatars", avatarID, avatarFile, false); err != nil {
+			return err
+		}
+		updates["avatar"] = avatarID.String()
+	}
+	if body.Avatar != nil && *body.Avatar == "" {
+		if user.AvatarID != nil && *user.AvatarID != "" {
+			// Remove old avatar file
+			_ = os.Remove(fmt.Sprintf("storage/avatars/original/%s", *user.AvatarID))
+			_ = os.Remove(fmt.Sprintf("storage/avatars/small/%s.jpg", *user.AvatarID))
+			_ = os.Remove(fmt.Sprintf("storage/avatars/medium/%s.jpg", *user.AvatarID))
+
+			updates["avatar"] = nil
+		}
+	}
 	models.UserModel.Where("id", user.ID).Update(updates)
 
 	// Get updated user
@@ -161,113 +190,6 @@ func UsersDelete(c *fiber.Ctx) error {
 
 	// Delete user
 	models.UserModel.Where("id", user.ID).Delete()
-	return c.JSON(fiber.Map{"success": true})
-}
-
-func UsersAvatar(c *fiber.Ctx) error {
-	// Check if user exists
-	user := models.UserModel.Find(c.Params("userID"))
-	if user == nil {
-		return fiber.ErrNotFound
-	}
-
-	// Check auth
-	authUser := c.Locals("authUser").(*models.User)
-	if authUser.Role != models.UserRoleAdmin && authUser.ID != user.ID {
-		return fiber.ErrUnauthorized
-	}
-
-	// Remove old avatar file
-	if user.AvatarID != nil && *user.AvatarID != "" {
-		_ = os.Remove(fmt.Sprintf("storage/avatars/original/%s", *user.AvatarID))
-		_ = os.Remove(fmt.Sprintf("storage/avatars/small/%s.jpg", *user.AvatarID))
-		_ = os.Remove(fmt.Sprintf("storage/avatars/medium/%s.jpg", *user.AvatarID))
-	}
-
-	// Save uploaded avatar file
-	avatarID := uuid.New()
-	avatar, err := c.FormFile("avatar")
-	if err != nil {
-		return fiber.ErrBadRequest
-	}
-	if err = c.SaveFile(avatar, fmt.Sprintf("storage/avatars/original/%s", avatarID.String())); err != nil {
-		log.Fatalln(err)
-	}
-
-	// Open uploaded image
-	originalFile, err := os.Open(fmt.Sprintf("storage/avatars/original/%s", avatarID.String()))
-	if err != nil {
-		log.Fatalln(err)
-	}
-	defer originalFile.Close()
-	if err != nil {
-		log.Fatalln(err)
-	}
-	var originalImage image.Image
-	originalImage, _, err = image.Decode(originalFile)
-	if err != nil {
-		if err := os.Remove(fmt.Sprintf("storage/avatars/original/%s", avatarID.String())); err != nil {
-			log.Fatalln(err)
-		}
-		return c.JSON(fiber.Map{"success": false})
-	}
-
-	// Save small resize
-	smallFile, err := os.Create(fmt.Sprintf("storage/avatars/small/%s.jpg", avatarID.String()))
-	if err != nil {
-		log.Fatalln(err)
-	}
-	defer smallFile.Close()
-	smallImage := resize.Resize(250, 250, originalImage, resize.Lanczos3)
-	err = jpeg.Encode(smallFile, smallImage, nil)
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	// Save small resize
-	mediumFile, err := os.Create(fmt.Sprintf("storage/avatars/medium/%s.jpg", avatarID.String()))
-	if err != nil {
-		log.Fatalln(err)
-	}
-	defer mediumFile.Close()
-	mediumImage := resize.Resize(500, 500, originalImage, resize.Lanczos3)
-	err = jpeg.Encode(mediumFile, mediumImage, nil)
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	// Save avatar id for user
-	models.UserModel.Where("id", user.ID).Update(database.Map{
-		"avatar": avatarID.String(),
-	})
-	return c.JSON(fiber.Map{"success": true})
-}
-
-func UsersAvatarDelete(c *fiber.Ctx) error {
-	// Check if user exists
-	user := models.UserModel.Find(c.Params("userID"))
-	if user == nil {
-		return fiber.ErrNotFound
-	}
-
-	// Check auth
-	authUser := c.Locals("authUser").(*models.User)
-	if authUser.Role != models.UserRoleAdmin && authUser.ID != user.ID {
-		return fiber.ErrUnauthorized
-	}
-
-	// Check if user has avatar
-	if user.AvatarID != nil && *user.AvatarID != "" {
-		// Remove old avatar file
-		_ = os.Remove(fmt.Sprintf("storage/avatars/original/%s", *user.AvatarID))
-		_ = os.Remove(fmt.Sprintf("storage/avatars/small/%s.jpg", *user.AvatarID))
-		_ = os.Remove(fmt.Sprintf("storage/avatars/medium/%s.jpg", *user.AvatarID))
-
-		// Clear avatar id for user
-		models.UserModel.Where("id", user.ID).Update(database.Map{
-			"avatar": nil,
-		})
-	}
 	return c.JSON(fiber.Map{"success": true})
 }
 

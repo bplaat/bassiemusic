@@ -56,7 +56,7 @@ func init() {
 			return true
 		},
 		"date": func(args []string, target any, value string) bool {
-			re := regexp.MustCompile("^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])$")
+			re := regexp.MustCompile(`^(\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$`)
 			return re.MatchString(value)
 		},
 		"uuid": func(args []string, target any, value string) bool {
@@ -64,7 +64,7 @@ func init() {
 			return re.MatchString(value)
 		},
 		"email": func(args []string, target any, value string) bool {
-			re := regexp.MustCompile("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$")
+			re := regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
 			return re.MatchString(value)
 		},
 		"enum": func(args []string, target any, value string) bool {
@@ -156,8 +156,11 @@ func ValidateStructUpdates(c *fiber.Ctx, target any, data any) error {
 						errors[formName] = append(errors[formName], ruleName)
 					}
 				} else if value != nil {
+					if ruleName == "nullable" && *value == "" {
+						return nil
+					}
 					if !Rules[ruleName](ruleArgs, target, *value) {
-						errors[formName] = append(errors[formName], ruleName)
+						errors[formName] = append(errors[formName], rule)
 					}
 				}
 			}

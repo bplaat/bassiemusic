@@ -46,7 +46,7 @@ type TracksUpdateBody struct {
 	Position  *string `form:"position" validate:"integer"`
 	Explicit  *string `form:"explicit" validate:"boolean"`
 	DeezerID  *string `form:"deezer_id" validate:"integer"`
-	YoutubeID *string `form:"youtube_id" validate:"min:11"`
+	YoutubeID *string `form:"youtube_id" validate:"nullable|min:11"`
 }
 
 func TracksUpdate(c *fiber.Ctx) error {
@@ -91,7 +91,11 @@ func TracksUpdate(c *fiber.Ctx) error {
 		updates["deezer_id"] = deezerID
 	}
 	if body.YoutubeID != nil {
-		updates["youtube_id"] = *body.YoutubeID
+		if *body.YoutubeID != "" {
+			updates["youtube_id"] = *body.YoutubeID
+		} else {
+			updates["youtube_id"] = nil
+		}
 	}
 	models.TrackModel.Where("id", track.ID).Update(updates)
 

@@ -766,6 +766,20 @@ paths:
               required:
                 - name
                 - public
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                public:
+                  type: boolean
+                image:
+                  type: string
+                  format: binary
+              required:
+                - name
+                - public
       responses:
         "200":
           description: Successfull response
@@ -806,6 +820,17 @@ paths:
                   type: string
                 public:
                   type: boolean
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                public:
+                  type: boolean
+                image:
+                  type: string
+                  format: binary
       responses:
         "200":
           description: Successfull response
@@ -818,47 +843,6 @@ paths:
     delete:
       tags: [Playlists]
       description: Delete playlist
-      security:
-        - TokenAuth: []
-      parameters:
-        - $ref: "#/components/parameters/PlaylistID"
-      responses:
-        "200":
-          description: Successfull response
-        "401":
-          description: Authorization error
-        "404":
-          description: Playlist not found
-  /playlists/{id}/image:
-    post:
-      tags: [Playlists]
-      description: Upload new playlist image
-      security:
-        - TokenAuth: []
-      parameters:
-        - $ref: "#/components/parameters/PlaylistID"
-      requestBody:
-        required: true
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              properties:
-                image:
-                  type: string
-                  format: binary
-              required:
-                - image
-      responses:
-        "200":
-          description: Successfull response
-        "401":
-          description: Authorization error
-        "404":
-          description: Playlist not found
-    delete:
-      tags: [Playlists]
-      description: Delete playlist image
       security:
         - TokenAuth: []
       parameters:
@@ -1034,6 +1018,31 @@ paths:
                 - password
                 - allow_explicit
                 - role
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                allow_explicit:
+                  type: boolean
+                role:
+                  type: string
+                  enum: [normal, admin]
+                avatar:
+                  type: string
+                  format: binary
+              required:
+                - username
+                - email
+                - password
+                - allow_explicit
+                - role
       responses:
         "200":
           description: Successfull response
@@ -1088,6 +1097,31 @@ paths:
                 theme:
                   type: string
                   enum: [system, light, dark]
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                allow_explicit:
+                  type: boolean
+                role:
+                  type: string
+                  enum: [normal, admin]
+                language:
+                  type: string
+                  enum: [en, nl]
+                theme:
+                  type: string
+                  enum: [system, light, dark]
+                avatar:
+                  type: string
+                  format: binary
       responses:
         "200":
           description: Successfull response
@@ -1100,47 +1134,6 @@ paths:
     delete:
       tags: [Users]
       description: Delete user
-      security:
-        - TokenAuth: []
-      parameters:
-        - $ref: "#/components/parameters/UserID"
-      responses:
-        "200":
-          description: Successfull response
-        "401":
-          description: Authorization error
-        "404":
-          description: User not found
-  /users/{id}/avatar:
-    post:
-      tags: [Users]
-      description: Upload new user avatar
-      security:
-        - TokenAuth: []
-      parameters:
-        - $ref: "#/components/parameters/UserID"
-      requestBody:
-        required: true
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              properties:
-                avatar:
-                  type: string
-                  format: binary
-              required:
-                - avatar
-      responses:
-        "200":
-          description: Successfull response
-        "401":
-          description: Authorization error
-        "404":
-          description: User not found
-    delete:
-      tags: [Users]
-      description: Delete user avatar
       security:
         - TokenAuth: []
       parameters:

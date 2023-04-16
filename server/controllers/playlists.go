@@ -2,10 +2,7 @@ package controllers
 
 import (
 	"fmt"
-	"image"
-	"image/jpeg"
 	_ "image/png"
-	"log"
 	"os"
 	"strconv"
 
@@ -15,7 +12,6 @@ import (
 	"github.com/bplaat/bassiemusic/models"
 	"github.com/bplaat/bassiemusic/utils"
 	"github.com/gofiber/fiber/v2"
-	"github.com/nfnt/resize"
 )
 
 func PlaylistsIndex(c *fiber.Ctx) error {
@@ -65,11 +61,20 @@ func PlaylistsCreate(c *fiber.Ctx) error {
 	}
 
 	// Create playlist
-	return c.JSON(models.PlaylistModel.Create(database.Map{
+	fields := database.Map{
 		"user_id": authUser.ID,
 		"name":    body.Name,
 		"public":  body.Public == "true",
-	}))
+	}
+	if imageFile, err := c.FormFile("image"); err == nil {
+		// Store image when given
+		imageID := uuid.New()
+		if err := utils.StoreUploadedImage(c, "playlists", imageID, imageFile, false); err != nil {
+			return err
+		}
+		fields["image"] = imageID.String()
+	}
+	return c.JSON(models.PlaylistModel.Create(fields))
 }
 
 func PlaylistsShow(c *fiber.Ctx) error {
@@ -92,6 +97,7 @@ func PlaylistsShow(c *fiber.Ctx) error {
 type PlaylistsUpdateBody struct {
 	Name   *string `form:"name" validate:"min:2"`
 	Public *string `form:"public" validate:"boolean"`
+	Image  *string `form:"image" validate:"nullable"`
 }
 
 func PlaylistsUpdate(c *fiber.Ctx) error {
@@ -126,6 +132,31 @@ func PlaylistsUpdate(c *fiber.Ctx) error {
 	if body.Public != nil {
 		updates["public"] = *body.Public == "true"
 	}
+	if imageFile, err := c.FormFile("image"); err == nil {
+		// Remove old image file
+		if playlist.ImageID != nil && *playlist.ImageID != "" {
+			_ = os.Remove(fmt.Sprintf("storage/playlists/original/%s", *playlist.ImageID))
+			_ = os.Remove(fmt.Sprintf("storage/playlists/small/%s.jpg", *playlist.ImageID))
+			_ = os.Remove(fmt.Sprintf("storage/playlists/medium/%s.jpg", *playlist.ImageID))
+		}
+
+		// Store new image
+		imageID := uuid.New()
+		if err := utils.StoreUploadedImage(c, "playlists", imageID, imageFile, false); err != nil {
+			return err
+		}
+		updates["image"] = imageID.String()
+	}
+	if body.Image != nil && *body.Image == "" {
+		if playlist.ImageID != nil && *playlist.ImageID != "" {
+			// Remove old image file
+			_ = os.Remove(fmt.Sprintf("storage/playlists/original/%s", *playlist.ImageID))
+			_ = os.Remove(fmt.Sprintf("storage/playlists/small/%s.jpg", *playlist.ImageID))
+			_ = os.Remove(fmt.Sprintf("storage/playlists/medium/%s.jpg", *playlist.ImageID))
+
+			updates["image"] = nil
+		}
+	}
 	models.PlaylistModel.Where("id", playlist.ID).Update(updates)
 
 	// Get updated playlist
@@ -147,113 +178,6 @@ func PlaylistsDelete(c *fiber.Ctx) error {
 
 	// Delete playlist
 	models.PlaylistModel.Where("id", playlist.ID).Delete()
-	return c.JSON(fiber.Map{"success": true})
-}
-
-func PlaylistsImage(c *fiber.Ctx) error {
-	// Check if playlist exists
-	playlist := models.PlaylistModel.Find(c.Params("playlistID"))
-	if playlist == nil {
-		return fiber.ErrNotFound
-	}
-
-	// Check auth
-	authUser := c.Locals("authUser").(*models.User)
-	if !(authUser.Role == models.UserRoleAdmin || playlist.UserID == authUser.ID) {
-		return fiber.ErrUnauthorized
-	}
-
-	// Remove old image file
-	if playlist.ImageID != nil && *playlist.ImageID != "" {
-		_ = os.Remove(fmt.Sprintf("storage/playlists/original/%s", *playlist.ImageID))
-		_ = os.Remove(fmt.Sprintf("storage/playlists/small/%s.jpg", *playlist.ImageID))
-		_ = os.Remove(fmt.Sprintf("storage/playlists/medium/%s.jpg", *playlist.ImageID))
-	}
-
-	// Save uploaded image file
-	imageID := uuid.New()
-	uploadedImage, err := c.FormFile("image")
-	if err != nil {
-		return fiber.ErrBadRequest
-	}
-	if err = c.SaveFile(uploadedImage, fmt.Sprintf("storage/playlists/original/%s", imageID.String())); err != nil {
-		log.Fatalln(err)
-	}
-
-	// Open uploaded image
-	originalFile, err := os.Open(fmt.Sprintf("storage/playlists/original/%s", imageID.String()))
-	if err != nil {
-		log.Fatalln(err)
-	}
-	defer originalFile.Close()
-	if err != nil {
-		log.Fatalln(err)
-	}
-	var originalImage image.Image
-	originalImage, _, err = image.Decode(originalFile)
-	if err != nil {
-		if err := os.Remove(fmt.Sprintf("storage/playlists/original/%s", imageID.String())); err != nil {
-			log.Fatalln(err)
-		}
-		return c.JSON(fiber.Map{"success": false})
-	}
-
-	// Save small resize
-	smallFile, err := os.Create(fmt.Sprintf("storage/playlists/small/%s.jpg", imageID.String()))
-	if err != nil {
-		log.Fatalln(err)
-	}
-	defer smallFile.Close()
-	smallImage := resize.Resize(250, 250, originalImage, resize.Lanczos3)
-	err = jpeg.Encode(smallFile, smallImage, nil)
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	// Save small resize
-	mediumFile, err := os.Create(fmt.Sprintf("storage/playlists/medium/%s.jpg", imageID.String()))
-	if err != nil {
-		log.Fatalln(err)
-	}
-	defer mediumFile.Close()
-	mediumImage := resize.Resize(500, 500, originalImage, resize.Lanczos3)
-	err = jpeg.Encode(mediumFile, mediumImage, nil)
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	// Save image id for playlist
-	models.PlaylistModel.Where("id", playlist.ID).Update(database.Map{
-		"image": imageID.String(),
-	})
-	return c.JSON(fiber.Map{"success": true})
-}
-
-func PlaylistsImageDelete(c *fiber.Ctx) error {
-	// Check if playlist exists
-	playlist := models.PlaylistModel.Find(c.Params("playlistID"))
-	if playlist == nil {
-		return fiber.ErrNotFound
-	}
-
-	// Check auth
-	authUser := c.Locals("authUser").(*models.User)
-	if !(authUser.Role == models.UserRoleAdmin || playlist.UserID == authUser.ID) {
-		return fiber.ErrUnauthorized
-	}
-
-	// Check if playlist has image
-	if playlist.ImageID != nil && *playlist.ImageID != "" {
-		// Remove old image file
-		_ = os.Remove(fmt.Sprintf("storage/playlists/original/%s", *playlist.ImageID))
-		_ = os.Remove(fmt.Sprintf("storage/playlists/small/%s.jpg", *playlist.ImageID))
-		_ = os.Remove(fmt.Sprintf("storage/playlists/medium/%s.jpg", *playlist.ImageID))
-
-		// Clear image id for playlist
-		models.PlaylistModel.Where("id", playlist.ID).Update(database.Map{
-			"image": nil,
-		})
-	}
 	return c.JSON(fiber.Map{"success": true})
 }
 
