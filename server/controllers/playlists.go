@@ -78,6 +78,11 @@ func PlaylistsCreate(c *fiber.Ctx) error {
 }
 
 func PlaylistsShow(c *fiber.Ctx) error {
+	// Check if playlist id is valid uuid
+	if !uuid.IsValid(c.Params("playlistID")) {
+		return fiber.ErrBadRequest
+	}
+
 	// Check if playlist exists
 	playlist := models.PlaylistModel.WithArgs("liked", c.Locals("authUser")).With("user").
 		WithArgs("tracks", c.Locals("authUser")).Find(c.Params("playlistID"))
@@ -101,6 +106,11 @@ type PlaylistsUpdateBody struct {
 }
 
 func PlaylistsUpdate(c *fiber.Ctx) error {
+	// Check if playlist id is valid uuid
+	if !uuid.IsValid(c.Params("playlistID")) {
+		return fiber.ErrBadRequest
+	}
+
 	// Check if playlist exists
 	playlist := models.PlaylistModel.Find(c.Params("playlistID"))
 	if playlist == nil {
@@ -164,6 +174,11 @@ func PlaylistsUpdate(c *fiber.Ctx) error {
 }
 
 func PlaylistsDelete(c *fiber.Ctx) error {
+	// Check if playlist id is valid uuid
+	if !uuid.IsValid(c.Params("playlistID")) {
+		return fiber.ErrBadRequest
+	}
+
 	// Check if playlist exists
 	playlist := models.PlaylistModel.Find(c.Params("playlistID"))
 	if playlist == nil {
@@ -186,6 +201,11 @@ type PlaylistsAppendTrackBody struct {
 }
 
 func PlaylistsAppendTrack(c *fiber.Ctx) error {
+	// Check if playlist id is valid uuid
+	if !uuid.IsValid(c.Params("playlistID")) {
+		return fiber.ErrBadRequest
+	}
+
 	// Check if playlist exists
 	playlist := models.PlaylistModel.Find(c.Params("playlistID"))
 	if playlist == nil {
@@ -232,6 +252,11 @@ type PlaylistsInsertTrackBody struct {
 }
 
 func PlaylistsInsertTrack(c *fiber.Ctx) error {
+	// Check if playlist id is valid uuid
+	if !uuid.IsValid(c.Params("playlistID")) {
+		return fiber.ErrBadRequest
+	}
+
 	// Check if playlist exists
 	playlist := models.PlaylistModel.Find(c.Params("playlistID"))
 	if playlist == nil {
@@ -291,6 +316,11 @@ func PlaylistsInsertTrack(c *fiber.Ctx) error {
 }
 
 func PlaylistsRemoveTrack(c *fiber.Ctx) error {
+	// Check if playlist id is valid uuid
+	if !uuid.IsValid(c.Params("playlistID")) {
+		return fiber.ErrBadRequest
+	}
+
 	// Check if playlist exists
 	playlist := models.PlaylistModel.Find(c.Params("playlistID"))
 	if playlist == nil {
@@ -335,6 +365,11 @@ func PlaylistsRemoveTrack(c *fiber.Ctx) error {
 }
 
 func PlaylistsLike(c *fiber.Ctx) error {
+	// Check if playlist id is valid uuid
+	if !uuid.IsValid(c.Params("playlistID")) {
+		return fiber.ErrBadRequest
+	}
+
 	// Check if playlist exists
 	playlist := models.PlaylistModel.Find(c.Params("playlistID"))
 	if playlist == nil {
@@ -348,14 +383,14 @@ func PlaylistsLike(c *fiber.Ctx) error {
 	}
 
 	// Check if playlist already liked
-	playlistLike := models.PlaylistLikeModel.Where("playlist_id", c.Params("playlistID")).Where("user_id", authUser.ID).First()
+	playlistLike := models.PlaylistLikeModel.Where("playlist_id", playlist.ID).Where("user_id", authUser.ID).First()
 	if playlistLike != nil {
 		return c.JSON(fiber.Map{"success": true})
 	}
 
 	// Like playlist
 	models.PlaylistLikeModel.Create(database.Map{
-		"playlist_id": c.Params("playlistID"),
+		"playlist_id": playlist.ID,
 		"user_id":     authUser.ID,
 	})
 
@@ -363,6 +398,11 @@ func PlaylistsLike(c *fiber.Ctx) error {
 }
 
 func PlaylistsLikeDelete(c *fiber.Ctx) error {
+	// Check if playlist id is valid uuid
+	if !uuid.IsValid(c.Params("playlistID")) {
+		return fiber.ErrBadRequest
+	}
+
 	// Check if playlist exists
 	playlist := models.PlaylistModel.Find(c.Params("playlistID"))
 	if playlist == nil {
@@ -376,12 +416,12 @@ func PlaylistsLikeDelete(c *fiber.Ctx) error {
 	}
 
 	// Check if playlist not liked
-	playlistLike := models.PlaylistLikeModel.Where("playlist_id", c.Params("playlistID")).Where("user_id", authUser.ID).First()
+	playlistLike := models.PlaylistLikeModel.Where("playlist_id", playlist.ID).Where("user_id", authUser.ID).First()
 	if playlistLike == nil {
 		return c.JSON(fiber.Map{"success": true})
 	}
 
 	// Delete like
-	models.PlaylistLikeModel.Where("playlist_id", c.Params("playlistID")).Where("user_id", authUser.ID).Delete()
+	models.PlaylistLikeModel.Where("playlist_id", playlist.ID).Where("user_id", authUser.ID).Delete()
 	return c.JSON(fiber.Map{"success": true})
 }

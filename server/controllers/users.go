@@ -66,10 +66,17 @@ func UsersCreate(c *fiber.Ctx) error {
 }
 
 func UsersShow(c *fiber.Ctx) error {
+	// Check if user id is valid uuid
+	if !uuid.IsValid(c.Params("userID")) {
+		return fiber.ErrBadRequest
+	}
+
+	// Check if user exists
 	user := models.UserModel.Find(c.Params("userID"))
 	if user == nil {
 		return fiber.ErrNotFound
 	}
+
 	return c.JSON(user)
 }
 
@@ -85,6 +92,11 @@ type UsersUpdateBody struct {
 }
 
 func UsersUpdate(c *fiber.Ctx) error {
+	// Check if user id is valid uuid
+	if !uuid.IsValid(c.Params("userID")) {
+		return fiber.ErrBadRequest
+	}
+
 	// Check if user exists
 	user := models.UserModel.Find(c.Params("userID"))
 	if user == nil {
@@ -176,6 +188,11 @@ func UsersUpdate(c *fiber.Ctx) error {
 }
 
 func UsersDelete(c *fiber.Ctx) error {
+	// Check if user id is valid uuid
+	if !uuid.IsValid(c.Params("userID")) {
+		return fiber.ErrBadRequest
+	}
+
 	// Check if user exists
 	user := models.UserModel.Find(c.Params("userID"))
 	if user == nil {
@@ -195,6 +212,11 @@ func UsersDelete(c *fiber.Ctx) error {
 
 func UsersLikedArtists(c *fiber.Ctx) error {
 	query, page, limit := utils.ParseIndexVars(c)
+
+	// Check if user id is valid uuid
+	if !uuid.IsValid(c.Params("userID")) {
+		return fiber.ErrBadRequest
+	}
 
 	// Check if user exists
 	user := models.UserModel.Find(c.Params("userID"))
@@ -234,6 +256,11 @@ func UsersLikedArtists(c *fiber.Ctx) error {
 func UsersLikedGenres(c *fiber.Ctx) error {
 	query, page, limit := utils.ParseIndexVars(c)
 
+	// Check if user id is valid uuid
+	if !uuid.IsValid(c.Params("userID")) {
+		return fiber.ErrBadRequest
+	}
+
 	// Check if user exists
 	user := models.UserModel.Find(c.Params("userID"))
 	if user == nil {
@@ -267,6 +294,11 @@ func UsersLikedGenres(c *fiber.Ctx) error {
 
 func UsersLikedAlbums(c *fiber.Ctx) error {
 	query, page, limit := utils.ParseIndexVars(c)
+
+	// Check if user id is valid uuid
+	if !uuid.IsValid(c.Params("userID")) {
+		return fiber.ErrBadRequest
+	}
 
 	// Check if user exists
 	user := models.UserModel.Find(c.Params("userID"))
@@ -307,6 +339,11 @@ func UsersLikedAlbums(c *fiber.Ctx) error {
 func UsersLikedTracks(c *fiber.Ctx) error {
 	query, page, limit := utils.ParseIndexVars(c)
 
+	// Check if user id is valid uuid
+	if !uuid.IsValid(c.Params("userID")) {
+		return fiber.ErrBadRequest
+	}
+
 	// Check if user exists
 	user := models.UserModel.Find(c.Params("userID"))
 	if user == nil {
@@ -345,6 +382,11 @@ func UsersLikedTracks(c *fiber.Ctx) error {
 
 func UsersLikedPlaylists(c *fiber.Ctx) error {
 	query, page, limit := utils.ParseIndexVars(c)
+
+	// Check if user id is valid uuid
+	if !uuid.IsValid(c.Params("userID")) {
+		return fiber.ErrBadRequest
+	}
 
 	// Check if user exists
 	user := models.UserModel.Find(c.Params("userID"))
@@ -389,6 +431,11 @@ func UsersLikedPlaylists(c *fiber.Ctx) error {
 func UsersPlayedTracks(c *fiber.Ctx) error {
 	query, page, limit := utils.ParseIndexVars(c)
 
+	// Check if user id is valid uuid
+	if !uuid.IsValid(c.Params("userID")) {
+		return fiber.ErrBadRequest
+	}
+
 	// Check if user exists
 	user := models.UserModel.Find(c.Params("userID"))
 	if user == nil {
@@ -411,6 +458,11 @@ func UsersPlayedTracks(c *fiber.Ctx) error {
 func UsersSessions(c *fiber.Ctx) error {
 	_, page, limit := utils.ParseIndexVars(c)
 
+	// Check if user id is valid uuid
+	if !uuid.IsValid(c.Params("userID")) {
+		return fiber.ErrBadRequest
+	}
+
 	// Check if user exists
 	user := models.UserModel.Find(c.Params("userID"))
 	if user == nil {
@@ -430,6 +482,11 @@ func UsersSessions(c *fiber.Ctx) error {
 
 func UsersActiveSessions(c *fiber.Ctx) error {
 	_, page, limit := utils.ParseIndexVars(c)
+
+	// Check if user id is valid uuid
+	if !uuid.IsValid(c.Params("userID")) {
+		return fiber.ErrBadRequest
+	}
 
 	// Check if user exists
 	user := models.UserModel.Find(c.Params("userID"))
@@ -451,6 +508,11 @@ func UsersActiveSessions(c *fiber.Ctx) error {
 
 func UsersPlaylists(c *fiber.Ctx) error {
 	query, page, limit := utils.ParseIndexVars(c)
+
+	// Check if user id is valid uuid
+	if !uuid.IsValid(c.Params("userID")) {
+		return fiber.ErrBadRequest
+	}
 
 	// Check if user exists
 	user := models.UserModel.Find(c.Params("userID"))

@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/bplaat/bassiemusic/core/database"
+	"github.com/bplaat/bassiemusic/core/uuid"
 	"github.com/bplaat/bassiemusic/core/validation"
 	"github.com/bplaat/bassiemusic/models"
 	"github.com/bplaat/bassiemusic/utils"
@@ -28,10 +29,17 @@ func GenresIndex(c *fiber.Ctx) error {
 }
 
 func GenresShow(c *fiber.Ctx) error {
+	// Check if genre id is valid uuid
+	if !uuid.IsValid(c.Params("genreID")) {
+		return fiber.ErrBadRequest
+	}
+
+	// Check if genre exists
 	genre := models.GenreModel.WithArgs("liked", c.Locals("authUser")).Find(c.Params("genreID"))
 	if genre == nil {
 		return fiber.ErrNotFound
 	}
+
 	return c.JSON(genre)
 }
 
@@ -42,6 +50,11 @@ type GenresUpdateBody struct {
 }
 
 func GenresUpdate(c *fiber.Ctx) error {
+	// Check if genre id is valid uuid
+	if !uuid.IsValid(c.Params("genreID")) {
+		return fiber.ErrBadRequest
+	}
+
 	// Check if genre exists
 	genre := models.GenreModel.Find(c.Params("genreID"))
 	if genre == nil {
@@ -98,6 +111,11 @@ func GenresUpdate(c *fiber.Ctx) error {
 }
 
 func GenresDelete(c *fiber.Ctx) error {
+	// Check if genre id is valid uuid
+	if !uuid.IsValid(c.Params("genreID")) {
+		return fiber.ErrBadRequest
+	}
+
 	// Check if genre exists
 	genre := models.GenreModel.Find(c.Params("genreID"))
 	if genre == nil {
@@ -117,11 +135,18 @@ func GenresDelete(c *fiber.Ctx) error {
 }
 
 func GenresAlbums(c *fiber.Ctx) error {
+	// Check if genre id is valid uuid
+	if !uuid.IsValid(c.Params("genreID")) {
+		return fiber.ErrBadRequest
+	}
+
+	// Check if genre exists
 	genre := models.GenreModel.Find(c.Params("genreID"))
 	if genre == nil {
 		return fiber.ErrNotFound
 	}
 
+	// Get genre albums
 	query, page, limit := utils.ParseIndexVars(c)
 	return c.JSON(models.AlbumModel.With("artists", "genres").WhereIn("album_genre", "album_id", "genre_id", genre.ID).
 		WhereRaw("`title` LIKE ?", "%"+query+"%").OrderByDesc("released_at").Paginate(page, limit))
@@ -130,6 +155,11 @@ func GenresAlbums(c *fiber.Ctx) error {
 func GenresLike(c *fiber.Ctx) error {
 	authUser := c.Locals("authUser").(*models.User)
 
+	// Check if genre id is valid uuid
+	if !uuid.IsValid(c.Params("genreID")) {
+		return fiber.ErrBadRequest
+	}
+
 	// Check if genre exists
 	genre := models.GenreModel.Find(c.Params("genreID"))
 	if genre == nil {
@@ -137,14 +167,14 @@ func GenresLike(c *fiber.Ctx) error {
 	}
 
 	// Check if genre already liked
-	genreLike := models.GenreLikeModel.Where("genre_id", c.Params("genreID")).Where("user_id", authUser.ID).First()
+	genreLike := models.GenreLikeModel.Where("genre_id", genre.ID).Where("user_id", authUser.ID).First()
 	if genreLike != nil {
 		return c.JSON(fiber.Map{"success": true})
 	}
 
 	// Like genre
 	models.GenreLikeModel.Create(database.Map{
-		"genre_id": c.Params("genreID"),
+		"genre_id": genre.ID,
 		"user_id":  authUser.ID,
 	})
 
@@ -154,6 +184,11 @@ func GenresLike(c *fiber.Ctx) error {
 func GenresLikeDelete(c *fiber.Ctx) error {
 	authUser := c.Locals("authUser").(*models.User)
 
+	// Check if genre id is valid uuid
+	if !uuid.IsValid(c.Params("genreID")) {
+		return fiber.ErrBadRequest
+	}
+
 	// Check if genre exists
 	genre := models.GenreModel.Find(c.Params("genreID"))
 	if genre == nil {
@@ -161,12 +196,12 @@ func GenresLikeDelete(c *fiber.Ctx) error {
 	}
 
 	// Check if genre not liked
-	genreLike := models.GenreLikeModel.Where("genre_id", c.Params("genreID")).Where("user_id", authUser.ID).First()
+	genreLike := models.GenreLikeModel.Where("genre_id", genre.ID).Where("user_id", authUser.ID).First()
 	if genreLike == nil {
 		return c.JSON(fiber.Map{"success": true})
 	}
 
 	// Delete like
-	models.GenreLikeModel.Where("genre_id", c.Params("genreID")).Where("user_id", authUser.ID).Delete()
+	models.GenreLikeModel.Where("genre_id", genre.ID).Where("user_id", authUser.ID).Delete()
 	return c.JSON(fiber.Map{"success": true})
 }
