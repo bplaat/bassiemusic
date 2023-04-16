@@ -26,9 +26,9 @@
     // Props
     export let token;
     export let playlist;
-    let errors = {};
 
     // State
+    let errors = {};
     let isOpen = false;
 
     // Methods

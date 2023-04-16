@@ -156,11 +156,19 @@ func ValidateStructUpdates(c *fiber.Ctx, target any, data any) error {
 						errors[formName] = append(errors[formName], ruleName)
 					}
 				} else if value != nil {
-					if ruleName == "nullable" && *value == "" {
-						return nil
+					if ruleName == "nullable" {
+						if *value == "" {
+							return nil
+						} else {
+							continue
+						}
 					}
-					if !Rules[ruleName](ruleArgs, target, *value) {
-						errors[formName] = append(errors[formName], rule)
+					if _, ok := Rules[ruleName]; ok {
+						if !Rules[ruleName](ruleArgs, target, *value) {
+							errors[formName] = append(errors[formName], rule)
+						}
+					} else {
+						log.Fatalln("Validate: rule '" + ruleName + "' doesn't exists")
 					}
 				}
 			}

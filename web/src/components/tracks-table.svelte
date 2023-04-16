@@ -2,6 +2,7 @@
     import { page } from '$app/stores';
     import { tick, onMount } from 'svelte';
     import LikeButton from './buttons/like-button.svelte';
+    import EditModal from './modals/tracks/edit-modal.svelte';
     import DeleteModal from './modals/delete-modal.svelte';
     import { sidebar, musicPlayer, musicState, language } from '../stores.js';
     import { formatDuration } from '../filters.js';
@@ -30,6 +31,7 @@
             add_to_playlist: 'Add to playlist',
             playlists_empty: 'You have no playlists',
             remove_from_playlist: 'Remove from playlist',
+            edit: 'Edit track',
             delete: 'Delete track',
         },
         nl: {
@@ -55,6 +57,7 @@
             add_to_playlist: 'Voeg toe aan afspeellijst',
             playlists_empty: 'Je hebt geen afspeellijsten',
             remove_from_playlist: 'Verwijder van afspeellijst',
+            edit: 'Verander track',
             delete: 'Verwijder track',
         },
     };
@@ -75,6 +78,7 @@
     let contextmenuTrack;
     let contextmenuPosition;
     let lastPlaylists = [];
+    let editModal;
     let deleteModal;
 
     // On mount
@@ -294,7 +298,7 @@
                 <td>{formatDuration(track.duration)}</td>
                 <td class="is-hidden-mobile">{track.plays}</td>
                 <td class="px-0 is-hidden-mobile">
-                    <LikeButton token={token} item={track} itemRoute="tracks" itemLabel={t('track')} />
+                    <LikeButton {token} item={track} itemRoute="tracks" itemLabel={t('track')} />
                 </td>
                 <td class="pl-0">
                     <button
@@ -431,6 +435,11 @@
 
         {#if authUser.role == 'admin'}
             <!-- svelte-ignore a11y-invalid-attribute -->
+            <a class="dropdown-item" href="#" on:click|preventDefault={() => editModal.open()}>
+                {t('edit')}
+            </a>
+
+            <!-- svelte-ignore a11y-invalid-attribute -->
             <a class="dropdown-item" href="#" on:click|preventDefault={() => deleteModal.open()}>
                 {t('delete')}
             </a>
@@ -438,7 +447,19 @@
     {/if}
 </div>
 
-{#if authUser.role == 'admin'}
+{#if authUser.role == 'admin' && contextmenuTrack != null}
+    <EditModal
+        bind:this={editModal}
+        {token}
+        track={contextmenuTrack}
+        on:update={(event) => {
+            tracks = tracks.map((track) => {
+                if (track.id == event.detail.track.id) return event.detail.track;
+                return track;
+            });
+        }}
+    />
+
     <DeleteModal
         bind:this={deleteModal}
         {token}

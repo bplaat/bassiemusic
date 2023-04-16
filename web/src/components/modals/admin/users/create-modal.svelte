@@ -44,6 +44,7 @@
         role: 'normal',
         allow_explicit: true,
     };
+    let errors = {};
     let isOpen = false;
 
     // Methods
@@ -78,7 +79,10 @@
             user.password = '';
             user.role = 'normal';
             user.allow_explicit = true;
-            dispatch('createUser', { user: createdUser });
+            dispatch('create', { user: createdUser });
+        } else {
+            const data = await response.json();
+            errors = data.errors;
         }
     }
 </script>
@@ -97,7 +101,14 @@
                     <div class="field">
                         <label class="label" for="create-username">{t('username')}</label>
                         <div class="control">
-                            <input class="input" type="text" id="create-username" bind:value={user.username} required />
+                            <input
+                                class="input"
+                                class:is-danger={'username' in errors}
+                                type="text"
+                                id="create-username"
+                                bind:value={user.username}
+                                required
+                            />
                         </div>
                     </div>
                 </div>
@@ -106,7 +117,14 @@
                     <div class="field">
                         <label class="label" for="create-email">{t('email')}</label>
                         <div class="control">
-                            <input class="input" type="email" id="create-email" bind:value={user.email} required />
+                            <input
+                                class="input"
+                                class:is-danger={'email' in errors}
+                                type="email"
+                                id="create-email"
+                                bind:value={user.email}
+                                required
+                            />
                         </div>
                     </div>
                 </div>
@@ -115,7 +133,13 @@
             <div class="field">
                 <label class="label" for="create-password">{t('password')}</label>
                 <div class="control">
-                    <input class="input" type="password" id="create-password" bind:value={user.password} />
+                    <input
+                        class="input"
+                        class:is-danger={'password' in errors}
+                        type="password"
+                        id="create-password"
+                        bind:value={user.password}
+                    />
                 </div>
             </div>
 

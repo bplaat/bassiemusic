@@ -1,5 +1,5 @@
 <script>
-    import { onMount } from 'svelte';
+    import { tick, onMount } from 'svelte';
     import CreateModal from '../../../components/modals/admin/users/create-modal.svelte';
     import EditModal from '../../../components/modals/admin/users/edit-modal.svelte';
     import DeleteModal from '../../../components/modals/delete-modal.svelte';
@@ -41,7 +41,7 @@
     // State
     export let data;
     let { token, users } = data;
-    let selectedUser = {};
+    let selectedUser = null;
     let createModal;
     let editModal;
     let deleteModal;
@@ -68,21 +68,6 @@
         onMount(() => {
             fetchPage(2);
         });
-    }
-
-    function updateUsers() {
-        users = [];
-        fetchPage(1);
-    }
-
-    function editUser(user) {
-        selectedUser = user;
-        editModal.open();
-    }
-
-    function deleteUser(user) {
-        selectedUser = user;
-        deleteModal.open();
     }
 </script>
 
@@ -118,8 +103,25 @@
                 <td>{user.role == 'normal' ? t('role_normal') : t('role_admin')}</td>
                 <td>
                     <div class="buttons">
-                        <button class="button is-link is-small" on:click={() => editUser(user)}>{t('edit')}</button>
-                        <button class="button is-danger is-small" on:click={() => deleteUser(user)}>
+                        <button
+                            class="button is-link is-small"
+                            on:click={async () => {
+                                selectedUser = user;
+                                await tick();
+                                editModal.open();
+                            }}
+                        >
+                            {t('edit')}
+                        </button>
+
+                        <button
+                            class="button is-danger is-small"
+                            on:click={async () => {
+                                selectedUser = user;
+                                await tick();
+                                deleteModal.open();
+                            }}
+                        >
                             {t('delete')}
                         </button>
                     </div>
@@ -129,15 +131,37 @@
     </tbody>
 </table>
 
-<CreateModal bind:this={createModal} {token} on:createUser={updateUsers} />
-
-<EditModal bind:this={editModal} {token} user={selectedUser} on:updateUser={updateUsers} />
-
-<DeleteModal
-    bind:this={deleteModal}
+<CreateModal
+    bind:this={createModal}
     {token}
-    item={selectedUser}
-    itemRoute="users"
-    itemLabel={t('user')}
-    on:delete={updateUsers}
+    on:create={(event) => {
+        users = [...users, event.detail.user].sort((a, b) =>
+            a.username.toLowerCase().localeCompare(b.username.toLowerCase())
+        );
+    }}
 />
+
+{#if selectedUser != null}
+    <EditModal
+        bind:this={editModal}
+        {token}
+        user={selectedUser}
+        on:update={(event) => {
+            users = users.map((user) => {
+                if (user.id == event.detail.user.id) return event.detail.user;
+                return user;
+            });
+        }}
+    />
+
+    <DeleteModal
+        bind:this={deleteModal}
+        {token}
+        item={selectedUser}
+        itemRoute="users"
+        itemLabel={t('user')}
+        on:delete={(event) => {
+            users = users.filter((user) => user.id != selectedUser.id);
+        }}
+    />
+{/if}

@@ -29,7 +29,7 @@
             delete_account: 'Delete account',
 
             sessions: 'Sessions management',
-            current: 'CURRENT',
+            current: 'Current',
             location: 'With $1 at $2',
             unknown_location: 'Unknown location',
             logged_in_at: 'Logged in at: $1',
@@ -60,7 +60,7 @@
             delete_account: 'Verwijder account',
 
             sessions: 'Sessie beheer',
-            current: 'HUIDIGE',
+            current: 'Huidige',
             location: 'Met $1 in $2',
             unknown_location: 'Onbekende locatie',
             logged_in_at: 'Ingelogt op: $1',
@@ -77,6 +77,7 @@
 
     // Change details
     let newPassword = '';
+    let changeErrors = {};
 
     async function changeDetails() {
         const body = new URLSearchParams({
@@ -97,7 +98,8 @@
         if (response.status == 200) {
             window.location = '/settings';
         } else {
-            alert(`Error: ${JSON.stringify(await response.json())}`);
+            const data = await response.json();
+            changeErrors = data.errors;
         }
     }
 
@@ -193,7 +195,14 @@
                     <div class="field">
                         <label class="label" for="username">{t('username')}</label>
                         <div class="control">
-                            <input class="input" type="text" id="username" bind:value={authUser.username} required />
+                            <input
+                                class="input"
+                                class:is-danger={'username' in changeErrors}
+                                type="text"
+                                id="username"
+                                bind:value={authUser.username}
+                                required
+                            />
                         </div>
                     </div>
                 </div>
@@ -202,7 +211,14 @@
                     <div class="field">
                         <label class="label" for="email">{t('email')}</label>
                         <div class="control">
-                            <input class="input" type="email" id="email" bind:value={authUser.email} required />
+                            <input
+                                class="input"
+                                class:is-danger={'email' in changeErrors}
+                                type="email"
+                                id="email"
+                                bind:value={authUser.email}
+                                required
+                            />
                         </div>
                     </div>
                 </div>
@@ -211,7 +227,13 @@
             <div class="field">
                 <label class="label" for="password">{t('password')}</label>
                 <div class="control">
-                    <input class="input" type="password" id="password" bind:value={newPassword} />
+                    <input
+                        class="input"
+                        class:is-danger={'password' in changeErrors}
+                        type="password"
+                        id="password"
+                        bind:value={newPassword}
+                    />
                 </div>
             </div>
 
@@ -312,7 +334,9 @@
                     <h3 class="title is-4">
                         {session.client_name} on {session.client_os}
                         {#if currentSessionId == session.id}
-                            <span class="tag is-link is-pulled-right">{t('current')}</span>
+                            <span class="tag is-link is-pulled-right" style="text-transform: uppercase;"
+                                >{t('current')}</span
+                            >
                         {/if}
                     </h3>
                     <p>
@@ -345,11 +369,4 @@
     </div>
 </div>
 
-<DeleteModal
-    bind:this={deleteModal}
-    {token}
-    item={authUser}
-    itemRoute="users"
-    itemLabel="account"
-    on:delete={logout}
-/>
+<DeleteModal bind:this={deleteModal} {token} item={authUser} itemRoute="users" itemLabel="account" on:delete={logout} />

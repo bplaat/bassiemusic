@@ -17,8 +17,8 @@ type Track struct {
 	Position  int       `column:"position,int" json:"position"`
 	Duration  float32   `column:"duration,float" json:"duration"`
 	Explicit  bool      `column:"explicit,bool" json:"explicit"`
-	DeezerID  int64     `column:"deezer_id,bigint" json:"-"`
-	YoutubeID *string   `column:"youtube_id,string" json:"-"`
+	DeezerID  int64     `column:"deezer_id,bigint" json:"deezer_id"`
+	YoutubeID *string   `column:"youtube_id,string" json:"youtube_id"`
 	Plays     int64     `column:"plays,bigint" json:"plays"`
 	Music     *string   `json:"music"`
 	Liked     *bool     `json:"liked,omitempty"`

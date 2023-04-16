@@ -28,6 +28,7 @@
             released_at: 'Released at',
             explicit: 'Expliciete teksten',
             explicit_description: 'Dit album bevat expliciete teksten',
+            deezer_id: 'Deezer ID',
             edit: 'Verander album',
             cancel: 'Annuleren',
         },
@@ -37,9 +38,9 @@
     // Props
     export let token;
     export let album;
-    let errors = {};
 
     // State
+    let errors = {};
     let isOpen = false;
 
     // Methods

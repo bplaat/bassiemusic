@@ -49,6 +49,7 @@
 
     // State
     let newPassword = '';
+    let errors = {};
     let isOpen = false;
 
     // Methods
@@ -81,9 +82,10 @@
         if (response.status == 200) {
             const updatedUser = await response.json();
             close();
-            dispatch('updateUser', { user: updatedUser });
+            dispatch('update', { user: updatedUser });
         } else {
-            alert(`Error: ${JSON.stringify(await response.json())}`);
+            const data = await response.json();
+            errors = data.errors;
         }
     }
 </script>
@@ -102,7 +104,14 @@
                     <div class="field">
                         <label class="label" for="edit-username">{t('username')}</label>
                         <div class="control">
-                            <input class="input" type="text" id="edit-username" bind:value={user.username} required />
+                            <input
+                                class="input"
+                                class:is-danger={'username' in errors}
+                                type="text"
+                                id="edit-username"
+                                bind:value={user.username}
+                                required
+                            />
                         </div>
                     </div>
                 </div>
@@ -111,7 +120,14 @@
                     <div class="field">
                         <label class="label" for="edit-email">{t('email')}</label>
                         <div class="control">
-                            <input class="input" type="email" id="edit-email" bind:value={user.email} required />
+                            <input
+                                class="input"
+                                class:is-danger={'email' in errors}
+                                type="email"
+                                id="edit-email"
+                                bind:value={user.email}
+                                required
+                            />
                         </div>
                     </div>
                 </div>
@@ -120,7 +136,13 @@
             <div class="field">
                 <label class="label" for="edit-password">{t('password')}</label>
                 <div class="control">
-                    <input class="input" type="password" id="edit-password" bind:value={newPassword} />
+                    <input
+                        class="input"
+                        class:is-danger={'password' in errors}
+                        type="password"
+                        id="edit-password"
+                        bind:value={newPassword}
+                    />
                 </div>
             </div>
 

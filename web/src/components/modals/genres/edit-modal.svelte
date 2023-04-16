@@ -24,9 +24,9 @@
     // Props
     export let token;
     export let genre;
-    let errors = {};
 
     // State
+    let errors = {};
     let isOpen = false;
 
     // Methods
