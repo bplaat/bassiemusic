@@ -38,6 +38,7 @@ func GenresShow(c *fiber.Ctx) error {
 type GenresUpdateBody struct {
 	Name     *string `form:"name" validate:"min:2"`
 	DeezerID *string `form:"deezer_id" validate:"integer"`
+	Image    *string `form:"image" validate:"nullable"`
 }
 
 func GenresUpdate(c *fiber.Ctx) error {
@@ -66,6 +67,29 @@ func GenresUpdate(c *fiber.Ctx) error {
 	if body.DeezerID != nil {
 		deezerID, _ := strconv.ParseInt(*body.DeezerID, 10, 64)
 		updates["deezer_id"] = deezerID
+	}
+	if imageFile, err := c.FormFile("image"); err == nil {
+		// Remove old image file
+		if _, err := os.Stat(fmt.Sprintf("storage/genres/small/%s.jpg", genre.ID)); err == nil {
+			_ = os.Remove(fmt.Sprintf("storage/genres/original/%s", genre.ID))
+			_ = os.Remove(fmt.Sprintf("storage/genres/small/%s.jpg", genre.ID))
+			_ = os.Remove(fmt.Sprintf("storage/genres/medium/%s.jpg", genre.ID))
+			_ = os.Remove(fmt.Sprintf("storage/genres/large/%s.jpg", genre.ID))
+		}
+
+		// Store new image
+		if err := utils.StoreUploadedImage(c, "genres", genre.ID, imageFile, true); err != nil {
+			return err
+		}
+	}
+	if body.Image != nil && *body.Image == "" {
+		// Remove old image file
+		if _, err := os.Stat(fmt.Sprintf("storage/genres/small/%s.jpg", genre.ID)); err == nil {
+			_ = os.Remove(fmt.Sprintf("storage/genres/original/%s", genre.ID))
+			_ = os.Remove(fmt.Sprintf("storage/genres/small/%s.jpg", genre.ID))
+			_ = os.Remove(fmt.Sprintf("storage/genres/medium/%s.jpg", genre.ID))
+			_ = os.Remove(fmt.Sprintf("storage/genres/large/%s.jpg", genre.ID))
+		}
 	}
 	models.GenreModel.Where("id", genre.ID).Update(updates)
 

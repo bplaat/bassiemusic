@@ -290,6 +290,20 @@ paths:
                 deezer_id:
                   type: integer
                   format: int64
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                sync:
+                  type: boolean
+                deezer_id:
+                  type: integer
+                  format: int64
+                image:
+                  type: string
+                  format: binary
       responses:
         "200":
           description: Successfull response
@@ -400,6 +414,18 @@ paths:
                 deezer_id:
                   type: integer
                   format: int64
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                deezer_id:
+                  type: integer
+                  format: int64
+                image:
+                  type: string
+                  format: binary
       responses:
         "200":
           description: Successfull response
@@ -533,6 +559,26 @@ paths:
                 deezer_id:
                   type: integer
                   format: int64
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                type:
+                  type: string
+                  enum: [album, ep, single]
+                released_at:
+                  type: string
+                  format: date
+                explicit:
+                  type: boolean
+                deezer_id:
+                  type: integer
+                  format: int64
+                cover:
+                  type: string
+                  format: binary
       responses:
         "200":
           description: Successfull response

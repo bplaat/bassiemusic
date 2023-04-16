@@ -47,6 +47,7 @@ type AlbumsUpdateBody struct {
 	ReleasedAt *string `form:"released_at" validate:"date"`
 	Explicit   *string `form:"explicit" validate:"boolean"`
 	DeezerID   *string `form:"deezer_id" validate:"integer"`
+	Cover      *string `form:"cover" validate:"nullable"`
 }
 
 func AlbumsUpdate(c *fiber.Ctx) error {
@@ -92,6 +93,29 @@ func AlbumsUpdate(c *fiber.Ctx) error {
 	if body.DeezerID != nil {
 		deezerID, _ := strconv.ParseInt(*body.DeezerID, 10, 64)
 		updates["deezer_id"] = deezerID
+	}
+	if coverFile, err := c.FormFile("cover"); err == nil {
+		// Remove old cover file
+		if _, err := os.Stat(fmt.Sprintf("storage/albums/small/%s.jpg", album.ID)); err == nil {
+			_ = os.Remove(fmt.Sprintf("storage/albums/original/%s", album.ID))
+			_ = os.Remove(fmt.Sprintf("storage/albums/small/%s.jpg", album.ID))
+			_ = os.Remove(fmt.Sprintf("storage/albums/medium/%s.jpg", album.ID))
+			_ = os.Remove(fmt.Sprintf("storage/albums/large/%s.jpg", album.ID))
+		}
+
+		// Store new cover
+		if err := utils.StoreUploadedImage(c, "albums", album.ID, coverFile, true); err != nil {
+			return err
+		}
+	}
+	if body.Cover != nil && *body.Cover == "" {
+		// Remove old cover file
+		if _, err := os.Stat(fmt.Sprintf("storage/albums/small/%s.jpg", album.ID)); err == nil {
+			_ = os.Remove(fmt.Sprintf("storage/albums/original/%s", album.ID))
+			_ = os.Remove(fmt.Sprintf("storage/albums/small/%s.jpg", album.ID))
+			_ = os.Remove(fmt.Sprintf("storage/albums/medium/%s.jpg", album.ID))
+			_ = os.Remove(fmt.Sprintf("storage/albums/large/%s.jpg", album.ID))
+		}
 	}
 	models.AlbumModel.Where("id", album.ID).Update(updates)
 

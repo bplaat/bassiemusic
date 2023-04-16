@@ -55,6 +55,7 @@ func cleanArtistImages() {
 		if len(parts) == 2 {
 			artistID := parts[0]
 			if models.ArtistModel.Find(artistID) == nil {
+				_ = os.Remove(fmt.Sprintf("storage/artists/original/%s", artistID))
 				_ = os.Remove(fmt.Sprintf("storage/artists/small/%s.jpg", artistID))
 				_ = os.Remove(fmt.Sprintf("storage/artists/medium/%s.jpg", artistID))
 				_ = os.Remove(fmt.Sprintf("storage/artists/large/%s.jpg", artistID))
@@ -74,6 +75,7 @@ func cleanAlbumImages() {
 		if len(parts) == 2 {
 			albumID := parts[0]
 			if models.AlbumModel.Find(albumID) == nil {
+				_ = os.Remove(fmt.Sprintf("storage/artists/original/%s", albumID))
 				_ = os.Remove(fmt.Sprintf("storage/albums/small/%s.jpg", albumID))
 				_ = os.Remove(fmt.Sprintf("storage/albums/medium/%s.jpg", albumID))
 				_ = os.Remove(fmt.Sprintf("storage/albums/large/%s.jpg", albumID))
@@ -93,6 +95,7 @@ func cleanGenreImages() {
 		if len(parts) == 2 {
 			genreID := parts[0]
 			if models.GenreModel.Find(genreID) == nil {
+				_ = os.Remove(fmt.Sprintf("storage/artists/original/%s", genreID))
 				_ = os.Remove(fmt.Sprintf("storage/genres/small/%s.jpg", genreID))
 				_ = os.Remove(fmt.Sprintf("storage/genres/medium/%s.jpg", genreID))
 				_ = os.Remove(fmt.Sprintf("storage/genres/large/%s.jpg", genreID))

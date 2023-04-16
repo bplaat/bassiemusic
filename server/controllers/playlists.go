@@ -69,7 +69,7 @@ func PlaylistsCreate(c *fiber.Ctx) error {
 	if imageFile, err := c.FormFile("image"); err == nil {
 		// Store image when given
 		imageID := uuid.New()
-		if err := utils.StoreUploadedImage(c, "playlists", imageID, imageFile, false); err != nil {
+		if err := utils.StoreUploadedImage(c, "playlists", imageID.String(), imageFile, false); err != nil {
 			return err
 		}
 		fields["image"] = imageID.String()
@@ -142,7 +142,7 @@ func PlaylistsUpdate(c *fiber.Ctx) error {
 
 		// Store new image
 		imageID := uuid.New()
-		if err := utils.StoreUploadedImage(c, "playlists", imageID, imageFile, false); err != nil {
+		if err := utils.StoreUploadedImage(c, "playlists", imageID.String(), imageFile, false); err != nil {
 			return err
 		}
 		updates["image"] = imageID.String()

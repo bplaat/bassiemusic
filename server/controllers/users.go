@@ -57,7 +57,7 @@ func UsersCreate(c *fiber.Ctx) error {
 	if avatarFile, err := c.FormFile("avatar"); err == nil {
 		// Store avatar when given
 		avatarID := uuid.New()
-		if err := utils.StoreUploadedImage(c, "avatars", avatarID, avatarFile, false); err != nil {
+		if err := utils.StoreUploadedImage(c, "avatars", avatarID.String(), avatarFile, false); err != nil {
 			return err
 		}
 		fields["avatar"] = avatarID.String()
@@ -154,7 +154,7 @@ func UsersUpdate(c *fiber.Ctx) error {
 
 		// Store new avatar
 		avatarID := uuid.New()
-		if err := utils.StoreUploadedImage(c, "avatars", avatarID, avatarFile, false); err != nil {
+		if err := utils.StoreUploadedImage(c, "avatars", avatarID.String(), avatarFile, false); err != nil {
 			return err
 		}
 		updates["avatar"] = avatarID.String()
