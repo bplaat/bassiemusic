@@ -28,9 +28,13 @@
             remove_queue: 'Remove track from play queue',
             go_to_album: 'Go to album',
             go_to_artist: 'Go to artist',
+            context_menu: 'Open context menu',
+            
             add_to_playlist: 'Add to playlist',
             playlists_empty: 'You have no playlists',
             remove_from_playlist: 'Remove from playlist',
+            playlist_placeholder: 'Find a playlist',
+            playlist_search_empty: "Can't find anything with your search query"
             edit: 'Edit track',
             delete: 'Delete track',
         },
@@ -54,9 +58,12 @@
             go_to_album: 'Ga naar album',
             go_to_artist: 'Ga naar artiest',
             context_menu: 'Open context menu',
+
             add_to_playlist: 'Voeg toe aan afspeellijst',
             playlists_empty: 'Je hebt geen afspeellijsten',
             remove_from_playlist: 'Verwijder van afspeellijst',
+            playlist_placeholder: 'Vind de playlist',
+            playlist_search_empty: 'Kan niets vinden met je zoekopdracht',
             edit: 'Verander track',
             delete: 'Verwijder track',
         },
@@ -80,6 +87,8 @@
     let lastPlaylists = [];
     let editModal;
     let deleteModal;
+    let playlistQuery = '';
+    let noPlaylists = false;
 
     // On mount
     if (isAlbum) {
@@ -119,22 +128,29 @@
     }
 
     async function fetchPlaylists() {
-        const response = await fetch(
-            `${import.meta.env.VITE_API_URL}/users/${authUser.id}/playlists?sort_by=updated_at_desc&limit=10`,
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
+        if(!noPlaylists){
+            const response = await fetch(
+                `${import.meta.env.VITE_API_URL}/users/${authUser.id}/playlists?sort_by=updated_at_desc&limit=10&q=${playlistQuery}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+            const { data } = await response.json();
+            lastPlaylists = data;
+
+            if(playlistQuery == '' && lastPlaylists.length == 0){
+                noPlaylists = true
             }
-        );
-        const { data } = await response.json();
-        lastPlaylists = data;
+        }
     }
 
     async function openContextmenu(track, position, x, y) {
         isContextmenuOpen = true;
         contextmenuTrack = track;
         contextmenuPosition = position;
+        playlistQuery = [];
         fetchPlaylists();
         await tick();
         const app = document.querySelector('.app');
@@ -180,6 +196,14 @@
         $sidebar.updateLastPlaylists();
         tracks.splice(position - 1, 1);
         tracks = tracks;
+    }
+
+    function debounce(func, wait) {
+        let timeout;
+        return function(...args) {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, args), wait);
+        };
     }
 </script>
 
@@ -397,29 +421,52 @@
         {/if}
 
         <div class="dropdown is-hoverable" style="width: 100%;">
-            <div class="dropdown-trigger dropdown-item" style="width: 100%;">
+            <div 
+                class="dropdown-trigger dropdown-item" style="width: 100%;"
+                class:disabled = {noPlaylists}
+                >
                 {t('add_to_playlist')}
-                <svg class="icon is-inline is-pulled-right" viewBox="0 0 24 24">
-                    <path d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z" />
-                </svg>
+                {#if !noPlaylists}
+                    <svg class="icon is-inline is-pulled-right" viewBox="0 0 24 24">
+                        <path d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z" />
+                    </svg>
+                {/if}
             </div>
-            <div class="dropdown-menu" style="top: auto; bottom: 0; left: 32px; width: 100%;">
-                <div class="dropdown-content">
-                    {#each lastPlaylists as playlist}
-                        <!-- svelte-ignore a11y-invalid-attribute -->
-                        <a
-                            class="dropdown-item ellipsis"
-                            href="#"
-                            on:click|preventDefault={() => appendTrackToPlaylist(playlist, contextmenuTrack)}
-                        >
-                            {playlist.name}
-                        </a>
-                    {/each}
-                    {#if lastPlaylists.length == 0}
-                        <p class="dropdown-item"><i>{t('playlists_empty')}</i></p>
-                    {/if}
+            {#if !noPlaylists}
+                <div class="dropdown-menu" style="bottom: 0; top:0; left: 32px; width: 100%;">
+                    <div class="dropdown-content">
+                        <input
+                            class="input"
+                            type="text"
+                            on:click|stopPropagation
+                            bind:value={playlistQuery}
+                            on:input={() => debounce(fetchPlaylists, 500)()}
+                            placeholder={t('playlist_placeholder')}
+                        />
+
+                        {#if lastPlaylists.length == 0}
+                            <p><i>{t('playlist_search_empty')}</i></p>
+                        {/if}
+
+                        <div 
+                            on:wheel|stopPropagation
+                            class="app" 
+                            style="overflow-x: hidden; overflow-y: scroll; max-height: 200px"
+                            >
+                            {#each lastPlaylists as playlist}
+                                <!-- svelte-ignore a11y-invalid-attribute -->
+                                <a
+                                    class="dropdown-item ellipsis"
+                                    href="#"
+                                    on:click|preventDefault={() => appendTrackToPlaylist(playlist, contextmenuTrack)}
+                                >
+                                    {playlist.name}
+                                </a>
+                            {/each}
+                        </div>
+                    </div>
                 </div>
-            </div>
+            {/if}
         </div>
 
         {#if inPlaylist != null && (authUser.role == 'admin' || inPlaylist.user.id == authUser.id)}

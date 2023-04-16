@@ -450,7 +450,7 @@ func UsersActiveSessions(c *fiber.Ctx) error {
 }
 
 func UsersPlaylists(c *fiber.Ctx) error {
-	_, page, limit := utils.ParseIndexVars(c)
+	query, page, limit := utils.ParseIndexVars(c)
 
 	// Check if user exists
 	user := models.UserModel.Find(c.Params("userID"))
@@ -465,7 +465,7 @@ func UsersPlaylists(c *fiber.Ctx) error {
 	}
 
 	// Get user playlists
-	q := models.PlaylistModel.WithArgs("liked", c.Locals("authUser")).Where("user_id", user.ID)
+	q := models.PlaylistModel.WithArgs("liked", c.Locals("authUser")).Where("user_id", user.ID).WhereRaw("`name` LIKE ?", "%"+query+"%")
 	if c.Query("sort_by") == "public" {
 		q = q.OrderByRaw("`public` DESC, LOWER(`name`)")
 	} else if c.Query("sort_by") == "public_desc" {
