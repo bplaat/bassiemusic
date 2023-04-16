@@ -28,13 +28,11 @@
             remove_queue: 'Remove track from play queue',
             go_to_album: 'Go to album',
             go_to_artist: 'Go to artist',
-            context_menu: 'Open context menu',
-            
+
             add_to_playlist: 'Add to playlist',
-            playlists_empty: 'You have no playlists',
             remove_from_playlist: 'Remove from playlist',
             playlist_placeholder: 'Find a playlist',
-            playlist_search_empty: "Can't find anything with your search query"
+            playlist_search_empty: "Can't find anything with your search query",
             edit: 'Edit track',
             delete: 'Delete track',
         },
@@ -57,10 +55,8 @@
             remove_queue: 'Verwijder track van wachtrij',
             go_to_album: 'Ga naar album',
             go_to_artist: 'Ga naar artiest',
-            context_menu: 'Open context menu',
 
             add_to_playlist: 'Voeg toe aan afspeellijst',
-            playlists_empty: 'Je hebt geen afspeellijsten',
             remove_from_playlist: 'Verwijder van afspeellijst',
             playlist_placeholder: 'Vind de playlist',
             playlist_search_empty: 'Kan niets vinden met je zoekopdracht',
@@ -421,7 +417,7 @@
         {/if}
 
         <div class="dropdown is-hoverable" style="width: 100%;">
-            <div 
+            <div
                 class="dropdown-trigger dropdown-item" style="width: 100%;"
                 class:disabled = {noPlaylists}
                 >
@@ -448,9 +444,9 @@
                             <p><i>{t('playlist_search_empty')}</i></p>
                         {/if}
 
-                        <div 
+                        <div
                             on:wheel|stopPropagation
-                            class="app" 
+                            class="app"
                             style="overflow-x: hidden; overflow-y: scroll; max-height: 200px"
                             >
                             {#each lastPlaylists as playlist}

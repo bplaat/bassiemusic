@@ -160,7 +160,7 @@
         item={selectedUser}
         itemRoute="users"
         itemLabel={t('user')}
-        on:delete={(event) => {
+        on:delete={() => {
             users = users.filter((user) => user.id != selectedUser.id);
         }}
     />

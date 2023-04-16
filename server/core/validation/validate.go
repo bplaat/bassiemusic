@@ -176,7 +176,7 @@ func ValidateStructUpdates(c *fiber.Ctx, target any, data any) error {
 	}
 
 	if len(errors) > 0 {
-		c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+		_ = c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"success": false,
 			"errors":  errors,
 		})
