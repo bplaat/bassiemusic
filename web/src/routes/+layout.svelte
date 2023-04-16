@@ -92,7 +92,7 @@
         <nav class="navbar has-background-white-bis is-fixed-top is-hidden-desktop">
             <div class="navbar-brand">
                 <!-- svelte-ignore a11y-invalid-attribute -->
-                <a href="#" class="navbar-burger ml-0" on:click|preventDefault={() => sidebar.open()}>
+                <a href="#" class="navbar-burger ml-0" on:click|preventDefault={() => $sidebar.open()}>
                     <span />
                     <span />
                     <span />
