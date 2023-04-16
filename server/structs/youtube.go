@@ -32,7 +32,7 @@ type YoutubeVideo struct {
 			SecFetchMode   string `json:"Sec-Fetch-Mode"`
 		} `json:"http_headers"`
 		Asr                int         `json:"asr,omitempty"`
-		Filesize           int         `json:"filesize,omitempty"`
+		Filesize           int64       `json:"filesize,omitempty"`
 		SourcePreference   int         `json:"source_preference,omitempty"`
 		AudioChannels      int         `json:"audio_channels,omitempty"`
 		Quality            float64     `json:"quality,omitempty"`
@@ -48,7 +48,7 @@ type YoutubeVideo struct {
 		} `json:"downloader_options,omitempty"`
 		Container      string  `json:"container,omitempty"`
 		Vbr            float64 `json:"vbr,omitempty"`
-		FilesizeApprox int     `json:"filesize_approx,omitempty"`
+		FilesizeApprox int64   `json:"filesize_approx,omitempty"`
 	} `json:"formats"`
 	Thumbnails []struct {
 		URL        string `json:"url"`
@@ -155,7 +155,7 @@ type YoutubeVideo struct {
 	Protocol       string      `json:"protocol"`
 	Language       interface{} `json:"language"`
 	FormatNote     string      `json:"format_note"`
-	FilesizeApprox int         `json:"filesize_approx"`
+	FilesizeApprox int64       `json:"filesize_approx"`
 	Tbr            float64     `json:"tbr"`
 	Width          int         `json:"width"`
 	Height         int         `json:"height"`

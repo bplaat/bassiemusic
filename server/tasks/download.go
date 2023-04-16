@@ -34,7 +34,7 @@ func createArtist(deezerID int, name string, sync bool) string {
 
 	// Get Deezer artist info
 	var deezerArtist structs.DeezerArtist
-	if err := utils.FetchJson(fmt.Sprintf("https://api.deezer.com/artist/%d", deezerID), &deezerArtist); err != nil {
+	if err := utils.DeezerFetch(fmt.Sprintf("https://api.deezer.com/artist/%d", deezerID), &deezerArtist); err != nil {
 		log.Fatalln(err)
 	}
 
@@ -63,7 +63,7 @@ func createGenre(deezerID int, name string) string {
 
 	// Get Deezer genre info
 	var deezerGenre structs.DeezerGenre
-	if err := utils.FetchJson(fmt.Sprintf("https://api.deezer.com/genre/%d", deezerID), &deezerGenre); err != nil {
+	if err := utils.DeezerFetch(fmt.Sprintf("https://api.deezer.com/genre/%d", deezerID), &deezerGenre); err != nil {
 		log.Fatalln(err)
 	}
 
@@ -82,10 +82,10 @@ func createGenre(deezerID int, name string) string {
 	return genreID.String()
 }
 
-func CreateTrack(albumID string, deezerID int) {
+func CreateTrack(albumID string, deezerID int64) {
 	// Get Deezer track info
 	var deezerTrack structs.DeezerTrack
-	if err := utils.FetchJson(fmt.Sprintf("https://api.deezer.com/track/%d", deezerID), &deezerTrack); err != nil {
+	if err := utils.DeezerFetch(fmt.Sprintf("https://api.deezer.com/track/%d", deezerID), &deezerTrack); err != nil {
 		log.Fatalln(err)
 	}
 
@@ -166,7 +166,7 @@ func SearchAndDownloadTrackMusic(track *models.Track) error {
 func DownloadAlbum(deezerID int) {
 	// Get Deezer album info
 	var deezerAlbum structs.DeezerAlbum
-	if err := utils.FetchJson(fmt.Sprintf("https://api.deezer.com/album/%d", deezerID), &deezerAlbum); err != nil {
+	if err := utils.DeezerFetch(fmt.Sprintf("https://api.deezer.com/album/%d", deezerID), &deezerAlbum); err != nil {
 		log.Fatalln(err)
 	}
 
@@ -238,14 +238,13 @@ func fetchAlbums(DeezerID int64) []structs.DeezerArtistAlbum {
 	for {
 		log.Println(nextUrl)
 		var artistAlbums structs.DeezerArtistAlbums
-		if err := utils.FetchJson(nextUrl, &artistAlbums); err != nil {
+		if err := utils.DeezerFetch(nextUrl, &artistAlbums); err != nil {
 			log.Fatalln(err)
 		}
 		albums = append(albums, artistAlbums.Data...)
 		if artistAlbums.Next == "" {
 			break
 		} else {
-			time.Sleep(2 * time.Second)
 			nextUrl = artistAlbums.Next
 		}
 	}
@@ -280,7 +279,7 @@ func DownloadTask() {
 
 			// Create artist
 			var deezerArtist structs.DeezerArtist
-			if err := utils.FetchJson(fmt.Sprintf("https://api.deezer.com/artist/%d", downloadTask.DeezerID), &deezerArtist); err != nil {
+			if err := utils.DeezerFetch(fmt.Sprintf("https://api.deezer.com/artist/%d", downloadTask.DeezerID), &deezerArtist); err != nil {
 				log.Fatalln(err)
 			}
 			createArtist(deezerArtist.ID, deezerArtist.Name, true)

@@ -161,7 +161,7 @@ type DeezerAlbum struct {
 	Type   string `json:"type"`
 	Tracks struct {
 		Data []struct {
-			ID                    int    `json:"id"`
+			ID                    int64  `json:"id"`
 			Readable              bool   `json:"readable"`
 			Title                 string `json:"title"`
 			TitleShort            string `json:"title_short"`
@@ -209,7 +209,7 @@ type DeezerGenre struct {
 }
 
 type DeezerTrack struct {
-	ID                    int      `json:"id"`
+	ID                    int64    `json:"id"`
 	Readable              bool     `json:"readable"`
 	Title                 string   `json:"title"`
 	TitleShort            string   `json:"title_short"`
