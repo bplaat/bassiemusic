@@ -266,16 +266,16 @@ func DownloadTask() {
 		if downloadTask.Type == models.DownloadTaskTypeDeezerArtist {
 			// Report progress
 			downloadTask.Status = 1
-			data, _ := json.Marshal(fiber.Map{
-				"success": true,
-				"type":    "taskUpdate",
-				"data":    downloadTask,
-			})
-			controllers.SendMessageToAll(data)
-
 			models.DownloadTaskModel().Where("id", downloadTask.ID).Update(database.Map{
 				"status": 1,
 			})
+
+			data, _ := json.Marshal(fiber.Map{
+				"success": true,
+				"type":    "taskUpdate",
+				"data":    models.DownloadTaskModel().Where("id", downloadTask.ID),
+			})
+			controllers.SendMessageToAll(data)
 
 			// Create artist
 			var deezerArtist structs.DeezerArtist
@@ -296,31 +296,32 @@ func DownloadTask() {
 				progress := int(math.Round((float64(index) / float64(len(artistAlbums))) * 100))
 
 				downloadTask.Progress = progress
-				data, _ := json.Marshal(fiber.Map{
-					"success": true,
-					"type":    "taskUpdate",
-					"data":    downloadTask,
-				})
-				controllers.SendMessageToAll(data)
 
 				models.DownloadTaskModel().Where("id", downloadTask.ID).Update(database.Map{
 					"progress": progress,
 				})
+
+				data, _ := json.Marshal(fiber.Map{
+					"success": true,
+					"type":    "taskUpdate",
+					"data":    models.DownloadTaskModel().Find(downloadTask.ID),
+				})
+				controllers.SendMessageToAll(data)
 			}
 		}
 		if downloadTask.Type == models.DownloadTaskTypeDeezerAlbum {
 			// Report progress
 			downloadTask.Status = 1
-			data, _ := json.Marshal(fiber.Map{
-				"success": true,
-				"type":    "taskUpdate",
-				"data":    downloadTask,
-			})
-			controllers.SendMessageToAll(data)
-
 			models.DownloadTaskModel().Where("id", downloadTask.ID).Update(database.Map{
 				"status": 1,
 			})
+
+			data, _ := json.Marshal(fiber.Map{
+				"success": true,
+				"type":    "taskUpdate",
+				"data":    models.DownloadTaskModel().Find(downloadTask.ID),
+			})
+			controllers.SendMessageToAll(data)
 
 			DownloadAlbum(int(downloadTask.DeezerID))
 		}
@@ -329,7 +330,7 @@ func DownloadTask() {
 		data, _ := json.Marshal(fiber.Map{
 			"success": true,
 			"type":    "taskDelete",
-			"data":    downloadTask,
+			"data":    models.DownloadTaskModel().Find(downloadTask.ID),
 		})
 		controllers.SendMessageToAll(data)
 

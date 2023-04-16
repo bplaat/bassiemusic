@@ -1,6 +1,7 @@
 <script>
     import { formatBytes } from '../../../filters.js';
     import { language } from '../../../stores.js';
+    import { onMount } from 'svelte';
 
     // Language strings
     const lang = {
@@ -8,9 +9,21 @@
             title: 'Downloader - Admin - BassieMusic',
             header: 'Admin Downloader',
 
+            index: '#',
+            type: "Type",
+            display_name: "Name",
+            status: "Status",
+            progress: "progress",
+
             storage_size: 'Storage folder size',
             storage_used: 'Used: $1',
             storage_max: 'Max: $1',
+
+            deezer_artist: "Artist",
+            deezer_album: "Album",
+            pending: "Pending",
+            downloading: "Downloading",
+            empty_tasks: "There are no download tasks",
 
             search_header: 'Search and download albums and artists',
             query_placeholder: 'Find an album or artist...',
@@ -23,14 +36,27 @@
             image_alt: 'Image of artist $1',
             add_artist: 'Add artist to BassieMusic',
             artists_empty: "Can't find any artists on Deezer",
+            tasks_header: 'Current tasks',
         },
         nl: {
             title: 'Downloader - Admin - BassieMusic',
             header: 'Admin Downloader',
 
+            index: '#',
+            type: "Type",
+            display_name: "Naam",
+            status: "Status",
+            progress: "Progressie",
+
             storage_size: 'Storage folder groote',
             storage_used: 'Gebruikt: $1',
             storage_max: 'Max: $1',
+
+            deezer_artist: "Artiest",
+            deezer_album: "Album",
+            pending: "Wachten",
+            downloading: "Aan het downloaden",
+            empty_tasks: "Er zijn geen download opdrachten",
 
             search_header: 'Zoek en download albums en artisten',
             query_placeholder: 'Vind een album of artist...',
@@ -43,12 +69,14 @@
             image_alt: 'Afbeelding van artist $1',
             add_artist: 'Voeg artist toe aan BassieMusic',
             artists_empty: 'Kan geen artisten vinden op Deezer',
+            tasks_header: 'Huidige opdrachten',
         },
     };
     const t = (key, p1 = '') => lang[$language][key].replace('$1', p1);
 
     // State
     export let data;
+    let token = data.token;
     let query = '';
     let results = false;
     let albums = [];
@@ -69,7 +97,7 @@
             })}`,
             {
                 headers: {
-                    Authorization: `Bearer ${data.token}`,
+                    Authorization: `Bearer ${token}`,
                 },
             }
         );
@@ -83,10 +111,11 @@
         await fetch(`${import.meta.env.VITE_API_URL}/download/album`, {
             method: 'POST',
             headers: {
-                Authorization: `Bearer ${data.token}`,
+                Authorization: `Bearer ${token}`,
             },
             body: new URLSearchParams({
                 deezer_id: album.id,
+                display_name: album.title,
             }),
         });
         albums = albums.filter((otherAlbum) => otherAlbum.id != album.id);
@@ -96,14 +125,68 @@
         await fetch(`${import.meta.env.VITE_API_URL}/download/artist`, {
             method: 'POST',
             headers: {
-                Authorization: `Bearer ${data.token}`,
+                Authorization: `Bearer ${token}`,
             },
             body: new URLSearchParams({
                 deezer_id: artist.id,
+                display_name: artist.name,
             }),
         });
         artists = artists.filter((otherArtist) => otherArtist.id != artist.id);
     }
+
+    // Logger
+    function removeAt(arr, index) {
+        var j = 0;
+        var arr2 = [];
+        for (var i = 0; i < arr.length; i++) {
+            if (i != index) {
+            arr2[j] = arr[i];
+            j++;
+            }
+        }
+        return arr2
+    }
+
+    let ws;
+    let tasks = [];
+    onMount(() => {
+        ws = new WebSocket(import.meta.env.VITE_WEBSOCKET_URL);
+        ws.onopen = () => {
+            ws.onmessage = (event) => {
+                let data = JSON.parse(event.data);
+
+                if(data.type == 'allTasks'){
+                    tasks = data['data']
+                }else if(data.type == 'newTask'){
+                    tasks.push(data['data'])
+                }else if(data.type == 'taskUpdate'){
+                    let newTasks = [];
+                    tasks.forEach((task) => {
+                        if(task.id == data['data'].id){
+                            task = data['data']
+                        }
+                        newTasks.push(task)
+                    })
+
+                    tasks = newTasks;
+                }else if(data.type == 'taskDelete'){
+                    let i = 0;
+                    tasks.forEach((task) => {
+                        if(task.id == data['data'].id){
+                            tasks = removeAt(tasks, i)
+                        }
+                        i += 1
+                    })
+                }
+
+                tasks = tasks;
+            }
+
+            ws.send(JSON.stringify({type: 'auth', token}));
+        };
+    });
+
 </script>
 
 <svelte:head>
@@ -189,4 +272,46 @@
             </div>
         </div>
     {/if}
+</div>
+
+<div class="box">
+    <h2 class="title is-4">{t('tasks_header')}</h2>
+    {#key tasks}
+        {#if tasks.length != 0}
+            <table class="table" style="width: 100%; table-layout: fixed;">
+                <thead>
+                    <th style="width: 10%;">{t('index')}</th>
+                    <th style="width: 20%;">{t('type')}</th>
+                    <th style="width: 30%;">{t('display_name')}</th>
+                    <th style="width: 20%;">{t('status')}</th>
+                    <th style="width: 30%; text-align: center;">{t('progress')}</th>
+                </thead>
+                <tbody>
+                    {#each tasks as task, index}
+                        <tr>
+                            <td>
+                                <div>{index + 1}</div>
+                            </td>
+                            <td>
+                                {t(task.type)}
+                            </td>
+                            <td>
+                                {task.display_name}
+                            </td>
+                            <td>
+                                {t(task.status)}
+                            </td>
+                            <td>
+                                <progress class="progress is-link" value={task.progress} max=100>
+                                    {task.progress}%
+                                </progress>
+                            </td>
+                        </tr>
+                    {/each}
+                </tbody>
+            </table>
+        {:else}
+            <p>{t('empty_tasks')}</p>
+        {/if}
+    {/key}
 </div>

@@ -81,9 +81,9 @@ func Websocket(c *fiber.Ctx) error {
 
 					if len(downloadTasks) > 0 {
 						response, _ := json.Marshal(fiber.Map{
-							"success":       true,
-							"type":          "allTasks",
-							"downloadTasks": downloadTasks,
+							"success": true,
+							"type":    "allTasks",
+							"data":    downloadTasks,
 						})
 						if err := conn.WriteMessage(websocket.TextMessage, response); err != nil {
 							log.Println(err)

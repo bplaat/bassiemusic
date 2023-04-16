@@ -60,7 +60,6 @@ func DeezerFetch(url string, data any) error {
 				return err
 			}
 		} else {
-			log.Println(data)
 			return err
 		}
 	}

@@ -206,6 +206,7 @@ CREATE TABLE `download_tasks` (
     `id` BINARY(16) NOT NULL,
     `type` TINYINT UNSIGNED NOT NULL,
     `deezer_id` BIGINT UNSIGNED NOT NULL,
+    `display_name` VARCHAR(255) NOT NULL,
     `status` TINYINT UNSIGNED NOT NULL,
     `progress` TINYINT UNSIGNED NOT NULL,
     `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,

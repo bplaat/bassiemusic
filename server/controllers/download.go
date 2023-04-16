@@ -11,7 +11,8 @@ import (
 )
 
 type DownloadArtistParams struct {
-	DeezerID string `form:"deezer_id" validate:"required,numeric"`
+	DeezerID    string `form:"deezer_id" validate:"required,numeric"`
+	DisplayName string `form:"display_name" validate:"required"`
 }
 
 func DownloadArtist(c *fiber.Ctx) error {
@@ -31,18 +32,18 @@ func DownloadArtist(c *fiber.Ctx) error {
 
 	// Create download task
 	newTask := database.Map{
-		"type":      models.DownloadTaskTypeDeezerArtist,
-		"deezer_id": params.DeezerID,
+		"type":         models.DownloadTaskTypeDeezerArtist,
+		"deezer_id":    params.DeezerID,
+		"display_name": params.DisplayName,
 	}
 
-	models.DownloadTaskModel().Create(newTask)
+	task := models.DownloadTaskModel().Create(newTask)
 
 	// Send new task to all admins
 	data, _ := json.Marshal(fiber.Map{
-		"success":      true,
-		"type":         "newTask",
-		"status":       0,
-		"downloadTask": newTask,
+		"success": true,
+		"type":    "newTask",
+		"data":    task,
 	})
 
 	SendMessageToAll(data)
@@ -51,7 +52,8 @@ func DownloadArtist(c *fiber.Ctx) error {
 }
 
 type DownloadAlbumParams struct {
-	DeezerID string `form:"deezer_id" validate:"required,numeric"`
+	DeezerID    string `form:"deezer_id" validate:"required,numeric"`
+	DisplayName string `form:"display_name" validate:"required"`
 }
 
 func DownloadAlbum(c *fiber.Ctx) error {
@@ -71,18 +73,18 @@ func DownloadAlbum(c *fiber.Ctx) error {
 
 	// Create download task
 	newTask := database.Map{
-		"type":      models.DownloadTaskTypeDeezerAlbum,
-		"deezer_id": params.DeezerID,
+		"type":         models.DownloadTaskTypeDeezerAlbum,
+		"deezer_id":    params.DeezerID,
+		"display_name": params.DisplayName,
 	}
 
-	models.DownloadTaskModel().Create(newTask)
+	task := models.DownloadTaskModel().Create(newTask)
 
 	// Send tasks to all admins
 	data, _ := json.Marshal(fiber.Map{
-		"success":      true,
-		"type":         "newTask",
-		"status":       0,
-		"downloadTask": newTask,
+		"success": true,
+		"type":    "newTask",
+		"data":    task,
 	})
 
 	SendMessageToAll(data)
