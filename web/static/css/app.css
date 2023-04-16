@@ -133,18 +133,21 @@ img {
 }
 
 .app,
-.sidebar {
+.sidebar,
+.scrollable {
     scrollbar-width: thin;
     scrollbar-color: transparent transparent;
 }
 
 .app::-webkit-scrollbar,
-.sidebar::-webkit-scrollbar {
+.sidebar::-webkit-scrollbar,
+.scrollable::-webkit-scrollbar {
     width: 6px;
 }
 
 .app::-webkit-scrollbar-thumb,
-.sidebar::-webkit-scrollbar-thumb {
+.sidebar::-webkit-scrollbar-thumb,
+.scrollable::-webkit-scrollbar-thumb  {
     background-color: transparent;
 }
 
@@ -180,12 +183,14 @@ img {
 }
 
 .app:hover,
-.sidebar:hover {
+.sidebar:hover,
+.scrollable:hover  {
     scrollbar-color: rgba(0, 0, 0, 0.3) transparent;
 }
 
 .app:hover::-webkit-scrollbar-thumb,
-.sidebar:hover::-webkit-scrollbar-thumb {
+.sidebar:hover::-webkit-scrollbar-thumb,
+.scrollable:hover::-webkit-scrollbar-thumb {
     background-color: rgba(0, 0, 0, 0.3);
 }
 
@@ -196,12 +201,14 @@ img {
     }
 
     .app:hover,
-    .sidebar:hover {
+    .sidebar:hover,
+    .scrollable:hover {
         scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
     }
 
     .app:hover::-webkit-scrollbar-thumb,
-    .sidebar:hover::-webkit-scrollbar-thumb {
+    .sidebar:hover::-webkit-scrollbar-thumb,
+    .scrollable:hover::-webkit-scrollbar-thumb  {
         background-color: rgba(255, 255, 255, 0.3);
     }
 }

@@ -124,9 +124,11 @@
     }
 
     async function fetchPlaylists() {
-        if(!noPlaylists){
+        if (!noPlaylists) {
             const response = await fetch(
-                `${import.meta.env.VITE_API_URL}/users/${authUser.id}/playlists?sort_by=updated_at_desc&limit=10&q=${playlistQuery}`,
+                `${import.meta.env.VITE_API_URL}/users/${
+                    authUser.id
+                }/playlists?sort_by=updated_at_desc&limit=10&q=${playlistQuery}`,
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,
@@ -136,8 +138,8 @@
             const { data } = await response.json();
             lastPlaylists = data;
 
-            if(playlistQuery == '' && lastPlaylists.length == 0){
-                noPlaylists = true
+            if (playlistQuery == '' && lastPlaylists.length == 0) {
+                noPlaylists = true;
             }
         }
     }
@@ -196,7 +198,7 @@
 
     function debounce(func, wait) {
         let timeout;
-        return function(...args) {
+        return function (...args) {
             clearTimeout(timeout);
             timeout = setTimeout(() => func.apply(this, args), wait);
         };
@@ -417,10 +419,7 @@
         {/if}
 
         <div class="dropdown is-hoverable" style="width: 100%;">
-            <div
-                class="dropdown-trigger dropdown-item" style="width: 100%;"
-                class:disabled = {noPlaylists}
-                >
+            <div class="dropdown-trigger dropdown-item" style="width: 100%;" class:disabled={noPlaylists}>
                 {t('add_to_playlist')}
                 {#if !noPlaylists}
                     <svg class="icon is-inline is-pulled-right" viewBox="0 0 24 24">
@@ -432,7 +431,7 @@
                 <div class="dropdown-menu" style="bottom: 0; top:0; left: 32px; width: 100%;">
                     <div class="dropdown-content">
                         <input
-                            class="input"
+                            class="input mb-1"
                             type="text"
                             on:click|stopPropagation
                             bind:value={playlistQuery}
@@ -440,26 +439,28 @@
                             placeholder={t('playlist_placeholder')}
                         />
 
-                        {#if lastPlaylists.length == 0}
-                            <p><i>{t('playlist_search_empty')}</i></p>
-                        {/if}
-
-                        <div
-                            on:wheel|stopPropagation
-                            class="app"
-                            style="overflow-x: hidden; overflow-y: scroll; max-height: 200px"
+                        {#if lastPlaylists.length > 0}
+                            <div
+                                class="scrollable"
+                                style="overflow-x: hidden; overflow-y: scroll; max-height: 200px"
+                                on:wheel|stopPropagation
                             >
-                            {#each lastPlaylists as playlist}
-                                <!-- svelte-ignore a11y-invalid-attribute -->
-                                <a
-                                    class="dropdown-item ellipsis"
-                                    href="#"
-                                    on:click|preventDefault={() => appendTrackToPlaylist(playlist, contextmenuTrack)}
-                                >
-                                    {playlist.name}
-                                </a>
-                            {/each}
-                        </div>
+                                {#each lastPlaylists as playlist}
+                                    <!-- svelte-ignore a11y-invalid-attribute -->
+                                    <a
+                                        class="dropdown-item ellipsis"
+                                        href="#"
+                                        on:click|preventDefault={() =>
+                                            appendTrackToPlaylist(playlist, contextmenuTrack)}
+                                    >
+                                        {playlist.name}
+                                    </a>
+                                {/each}
+                            </div>
+                        {:else}
+                            <!-- svelte-ignore a11y-invalid-attribute -->
+                            <div class="dropdown-item ellipsis"><i>{t('playlist_search_empty')}</i></div>
+                        {/if}
                     </div>
                 </div>
             {/if}

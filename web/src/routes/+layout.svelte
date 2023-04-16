@@ -47,7 +47,8 @@
             <link rel="stylesheet" href="/css/bulma-light.min.css" />
             <style>
                 .app:hover::-webkit-scrollbar-thumb,
-                .sidebar:hover::-webkit-scrollbar-thumb {
+                .sidebar:hover::-webkit-scrollbar-thumb,
+                .scrollable:hover::-webkit-scrollbar-thumb {
                     background-color: rgba(0, 0, 0, 0.3) !important;
                 }
             </style>
@@ -56,7 +57,8 @@
             <link rel="stylesheet" href="/css/bulma-dark.min.css" />
             <style>
                 .app:hover::-webkit-scrollbar-thumb,
-                .sidebar:hover::-webkit-scrollbar-thumb {
+                .sidebar:hover::-webkit-scrollbar-thumb,
+                .scrollable:hover::-webkit-scrollbar-thumb {
                     background-color: rgba(255, 255, 255, 0.3) !important;
                 }
             </style>
@@ -65,7 +67,8 @@
         <link rel="stylesheet" href="/css/bulma-dark.min.css" />
         <style>
             .app:hover::-webkit-scrollbar-thumb,
-            .sidebar:hover::-webkit-scrollbar-thumb {
+            .sidebar:hover::-webkit-scrollbar-thumb,
+                .scrollable:hover::-webkit-scrollbar-thumb {
                 background-color: rgba(255, 255, 255, 0.3) !important;
             }
         </style>
