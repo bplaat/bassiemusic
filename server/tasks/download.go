@@ -119,49 +119,66 @@ func SearchAndDownloadTrackMusic(track *models.Track) error {
 	// Search for youtube video
 	var searchQuery string
 	if len(*track.Artists) > 0 {
-		searchQuery = fmt.Sprintf("%s - %s - %s", (*track.Artists)[0].Name, track.Album.Title, track.Title)
+		searchQuery = fmt.Sprintf("%s - %s", (*track.Artists)[0].Name, track.Title)
 	} else {
 		searchQuery = fmt.Sprintf("%s - %s", track.Album.Title, track.Title)
 	}
-	searchCommand := exec.Command("yt-dlp", "--dump-json", "ytsearch25:"+searchQuery)
+	searchCommand := exec.Command("yt-dlp", "--dump-json", "ytsearch10:"+searchQuery)
+
 	log.Println(searchCommand.String())
+
 	stdout, err := searchCommand.StdoutPipe()
+
 	if err != nil {
 		return err
 	}
+
 	if err := searchCommand.Start(); err != nil {
 		return err
 	}
+
+	fallPoins := 0
+
+	lowestScore := 1000000.0
+	youtubeID := ""
+	youtubeDuration := 0
+
 	for {
 		var youtubeVideo structs.YoutubeVideo
 		if err := json.NewDecoder(stdout).Decode(&youtubeVideo); err != nil {
-			return err
+			break
 		}
 
-		// When video duration is in slack download it
-		if track.Duration >= float32(youtubeVideo.Duration-consts.TRACK_DURATION_SLACK) &&
-			track.Duration <= float32(youtubeVideo.Duration+consts.TRACK_DURATION_SLACK) {
-			if err := searchCommand.Process.Kill(); err != nil {
-				log.Fatalln(err)
-			}
-
-			// Download right youtube video
-			downloadCommand := exec.Command("yt-dlp", "-f", "bestaudio[ext=m4a]", fmt.Sprintf("https://www.youtube.com/watch?v=%s", youtubeVideo.ID),
-				"-o", fmt.Sprintf("storage/tracks/%s.m4a", track.ID))
-			log.Println(downloadCommand.String())
-
-			if err := downloadCommand.Run(); err != nil {
-				log.Fatalln(err)
-			}
-
-			// Update track
-			models.TrackModel(nil).Where("id", track.ID).Update(database.Map{
-				"duration":   youtubeVideo.Duration,
-				"youtube_id": youtubeVideo.ID,
-			})
-			return nil
+		score := float32(youtubeVideo.Duration) - track.Duration
+		if score < 0 {
+			score = score - score - score
 		}
+		if score+float32(fallPoins) < float32(lowestScore) {
+			lowestScore = float64(score) + float64(fallPoins)
+			youtubeID = youtubeVideo.ID
+			youtubeDuration = youtubeVideo.Duration
+		}
+
+		fallPoins += consts.PUNISHMENT_POINTS
 	}
+
+	if youtubeID != "" {
+		// Download right youtube video
+		downloadCommand := exec.Command("yt-dlp", "-f", "bestaudio[ext=m4a]", fmt.Sprintf("https://www.youtube.com/watch?v=%s", youtubeID),
+			"-o", fmt.Sprintf("storage/tracks/%s.m4a", track.ID))
+		log.Println(downloadCommand.String())
+
+		if err := downloadCommand.Run(); err != nil {
+			log.Fatalln(err)
+		}
+
+		// Update track
+		models.TrackModel(nil).Where("id", track.ID).Update(database.Map{
+			"duration":   youtubeDuration,
+			"youtube_id": youtubeID,
+		})
+	}
+	return nil
 }
 
 func DownloadAlbum(deezerID int) {
