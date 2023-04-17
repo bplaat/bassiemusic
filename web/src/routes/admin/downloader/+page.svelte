@@ -207,6 +207,48 @@
 </div>
 
 <div class="box">
+    <h2 class="title is-4">{t('tasks_header')}</h2>
+    {#key tasks}
+        {#if tasks.length != 0}
+            <table class="table" style="width: 100%; table-layout: fixed;">
+                <thead>
+                    <th style="width: 10%;">{t('index')}</th>
+                    <th style="width: 20%;">{t('type')}</th>
+                    <th style="width: 30%;">{t('display_name')}</th>
+                    <th style="width: 20%;">{t('status')}</th>
+                    <th style="width: 30%; text-align: center;">{t('progress')}</th>
+                </thead>
+                <tbody>
+                    {#each tasks as task, index}
+                        <tr>
+                            <td>
+                                <div>{index + 1}</div>
+                            </td>
+                            <td>
+                                {t(task.type)}
+                            </td>
+                            <td>
+                                {task.display_name}
+                            </td>
+                            <td>
+                                {t(task.status)}
+                            </td>
+                            <td>
+                                <progress class="progress is-link" value={task.progress} max=100>
+                                    {task.progress}%
+                                </progress>
+                            </td>
+                        </tr>
+                    {/each}
+                </tbody>
+            </table>
+        {:else}
+            <p>{t('empty_tasks')}</p>
+        {/if}
+    {/key}
+</div>
+
+<div class="box">
     <h2 class="title is-4">{t('search_header')}</h2>
 
     <form on:submit|preventDefault={search} class="field has-addons">
@@ -272,46 +314,4 @@
             </div>
         </div>
     {/if}
-</div>
-
-<div class="box">
-    <h2 class="title is-4">{t('tasks_header')}</h2>
-    {#key tasks}
-        {#if tasks.length != 0}
-            <table class="table" style="width: 100%; table-layout: fixed;">
-                <thead>
-                    <th style="width: 10%;">{t('index')}</th>
-                    <th style="width: 20%;">{t('type')}</th>
-                    <th style="width: 30%;">{t('display_name')}</th>
-                    <th style="width: 20%;">{t('status')}</th>
-                    <th style="width: 30%; text-align: center;">{t('progress')}</th>
-                </thead>
-                <tbody>
-                    {#each tasks as task, index}
-                        <tr>
-                            <td>
-                                <div>{index + 1}</div>
-                            </td>
-                            <td>
-                                {t(task.type)}
-                            </td>
-                            <td>
-                                {task.display_name}
-                            </td>
-                            <td>
-                                {t(task.status)}
-                            </td>
-                            <td>
-                                <progress class="progress is-link" value={task.progress} max=100>
-                                    {task.progress}%
-                                </progress>
-                            </td>
-                        </tr>
-                    {/each}
-                </tbody>
-            </table>
-        {:else}
-            <p>{t('empty_tasks')}</p>
-        {/if}
-    {/key}
 </div>

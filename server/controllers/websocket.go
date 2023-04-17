@@ -77,7 +77,7 @@ func Websocket(c *fiber.Ctx) error {
 					addedConnection = true
 
 					// Send current active download tasks
-					downloadTasks := models.DownloadTaskModel().Get()
+					downloadTasks := models.DownloadTaskModel().OrderBy("created_at").Get()
 
 					if len(downloadTasks) > 0 {
 						response, _ := json.Marshal(fiber.Map{

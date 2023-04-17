@@ -46,10 +46,11 @@ func createArtist(deezerID int, name string, sync bool) string {
 		"deezer_id": deezerID,
 		"sync":      sync,
 	})
+
 	if deezerArtist.PictureMedium != "https://e-cdns-images.dzcdn.net/images/artist//250x250-000000-80-0-0.jpg" {
-		utils.FetchFile(deezerArtist.PictureMedium, fmt.Sprintf("storage/artists/small/%s.jpg", artistID.String()))
-		utils.FetchFile(deezerArtist.PictureBig, fmt.Sprintf("storage/artists/medium/%s.jpg", artistID.String()))
-		utils.FetchFile(deezerArtist.PictureXl, fmt.Sprintf("storage/artists/large/%s.jpg", artistID.String()))
+		utils.DeezerFetchFile(deezerArtist.PictureMedium, fmt.Sprintf("storage/artists/small/%s.jpg", artistID.String()))
+		utils.DeezerFetchFile(deezerArtist.PictureBig, fmt.Sprintf("storage/artists/medium/%s.jpg", artistID.String()))
+		utils.DeezerFetchFile(deezerArtist.PictureXl, fmt.Sprintf("storage/artists/large/%s.jpg", artistID.String()))
 	}
 	return artistID.String()
 }
@@ -75,9 +76,9 @@ func createGenre(deezerID int, name string) string {
 		"deezer_id": deezerID,
 	})
 	if deezerGenre.PictureMedium != "https://e-cdns-images.dzcdn.net/images/misc//250x250-000000-80-0-0.jpg" {
-		utils.FetchFile(deezerGenre.PictureMedium, fmt.Sprintf("storage/genres/small/%s.jpg", genreID.String()))
-		utils.FetchFile(deezerGenre.PictureBig, fmt.Sprintf("storage/genres/medium/%s.jpg", genreID.String()))
-		utils.FetchFile(deezerGenre.PictureXl, fmt.Sprintf("storage/genres/large/%s.jpg", genreID.String()))
+		utils.DeezerFetchFile(deezerGenre.PictureMedium, fmt.Sprintf("storage/genres/small/%s.jpg", genreID.String()))
+		utils.DeezerFetchFile(deezerGenre.PictureBig, fmt.Sprintf("storage/genres/medium/%s.jpg", genreID.String()))
+		utils.DeezerFetchFile(deezerGenre.PictureXl, fmt.Sprintf("storage/genres/large/%s.jpg", genreID.String()))
 	}
 	return genreID.String()
 }
@@ -193,9 +194,10 @@ func DownloadAlbum(deezerID int) {
 		"explicit":    deezerAlbum.ExplicitLyrics,
 		"deezer_id":   deezerID,
 	})
-	utils.FetchFile(deezerAlbum.CoverMedium, fmt.Sprintf("storage/albums/small/%s.jpg", albumID.String()))
-	utils.FetchFile(deezerAlbum.CoverBig, fmt.Sprintf("storage/albums/medium/%s.jpg", albumID.String()))
-	utils.FetchFile(deezerAlbum.CoverXl, fmt.Sprintf("storage/albums/large/%s.jpg", albumID.String()))
+
+	utils.DeezerFetchFile(deezerAlbum.CoverMedium, fmt.Sprintf("storage/albums/small/%s.jpg", albumID.String()))
+	utils.DeezerFetchFile(deezerAlbum.CoverBig, fmt.Sprintf("storage/albums/medium/%s.jpg", albumID.String()))
+	utils.DeezerFetchFile(deezerAlbum.CoverXl, fmt.Sprintf("storage/albums/large/%s.jpg", albumID.String()))
 
 	// Create album genre bindings
 	for _, genre := range deezerAlbum.Genres.Data {
@@ -236,7 +238,6 @@ func fetchAlbums(DeezerID int64) []structs.DeezerArtistAlbum {
 	nextUrl := fmt.Sprintf("https://api.deezer.com/artist/%d/albums", DeezerID)
 	var albums []structs.DeezerArtistAlbum
 	for {
-		log.Println(nextUrl)
 		var artistAlbums structs.DeezerArtistAlbums
 		if err := utils.DeezerFetch(nextUrl, &artistAlbums); err != nil {
 			log.Fatalln(err)
@@ -257,7 +258,7 @@ func DownloadTask() {
 		time.Sleep(5 * time.Second)
 
 		// Get first download task
-		downloadTask := models.DownloadTaskModel().First()
+		downloadTask := models.DownloadTaskModel().OrderBy("created_at").First()
 		if downloadTask == nil {
 			continue
 		}
@@ -273,7 +274,7 @@ func DownloadTask() {
 			data, _ := json.Marshal(fiber.Map{
 				"success": true,
 				"type":    "taskUpdate",
-				"data":    models.DownloadTaskModel().Where("id", downloadTask.ID),
+				"data":    models.DownloadTaskModel().Find(downloadTask.ID),
 			})
 			controllers.SendMessageToAll(data)
 
