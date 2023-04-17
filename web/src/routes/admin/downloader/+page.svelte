@@ -214,9 +214,8 @@
                 <thead>
                     <th style="width: 10%;">{t('index')}</th>
                     <th style="width: 20%;">{t('type')}</th>
-                    <th style="width: 30%;">{t('display_name')}</th>
-                    <th style="width: 20%;">{t('status')}</th>
-                    <th style="width: 30%; text-align: center;">{t('progress')}</th>
+                    <th style="width: 20%;">{t('display_name')}</th>
+                    <th style="width: 20%; text-align: center;">{t('status')}</th>
                 </thead>
                 <tbody>
                     {#each tasks as task, index}
@@ -225,18 +224,19 @@
                                 <div>{index + 1}</div>
                             </td>
                             <td>
-                                {t(task.type)}
+                                <p class="ellipsis">{t(task.type)}</p>
                             </td>
                             <td>
-                                {task.display_name}
+                                <p class="ellipsis mb-1" style="font-weight: 500;">{task.display_name}</p>
                             </td>
-                            <td>
-                                {t(task.status)}
-                            </td>
-                            <td>
-                                <progress class="progress is-link" value={task.progress} max=100>
-                                    {task.progress}%
-                                </progress>
+                            <td style="text-align: center;">
+                                {#if task.status == "downloading"}
+                                    <progress class="progress is-link" value={task.progress} max=100>
+                                        {task.progress}%
+                                    </progress>
+                                {:else}
+                                    <p class="ellipsis">{t(task.status)}</p>
+                                {/if}
                             </td>
                         </tr>
                     {/each}
