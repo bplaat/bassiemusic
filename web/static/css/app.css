@@ -147,7 +147,7 @@ img {
 
 .app::-webkit-scrollbar-thumb,
 .sidebar::-webkit-scrollbar-thumb,
-.scrollable::-webkit-scrollbar-thumb  {
+.scrollable::-webkit-scrollbar-thumb {
     background-color: transparent;
 }
 
@@ -184,7 +184,7 @@ img {
 
 .app:hover,
 .sidebar:hover,
-.scrollable:hover  {
+.scrollable:hover {
     scrollbar-color: rgba(0, 0, 0, 0.3) transparent;
 }
 
@@ -208,7 +208,7 @@ img {
 
     .app:hover::-webkit-scrollbar-thumb,
     .sidebar:hover::-webkit-scrollbar-thumb,
-    .scrollable:hover::-webkit-scrollbar-thumb  {
+    .scrollable:hover::-webkit-scrollbar-thumb {
         background-color: rgba(255, 255, 255, 0.3);
     }
 }

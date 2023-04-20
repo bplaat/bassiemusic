@@ -53,7 +53,7 @@
     // Props
     export let token;
     export let queue = [];
-    export let track = undefined;
+    export let track = null;
     export let position = 0;
     export let duration = 0;
 
@@ -110,13 +110,13 @@
         isShuffling = false;
 
     function loadAndPlayTrack(autoplay) {
-        if (audio != undefined) {
+        if (audio != null) {
             audio.pause();
         }
-        if (updateUiTimeout != undefined) {
+        if (updateUiTimeout != null) {
             clearTimeout(updateUiTimeout);
         }
-        if (updateServerTimeout != undefined) {
+        if (updateServerTimeout != null) {
             clearTimeout(updateServerTimeout);
         }
 
@@ -173,7 +173,7 @@
 
         isShuffling = localStorage.getItem('player-shuffling') == 'true';
 
-        if (track != undefined) {
+        if (track != null) {
             loadAndPlayTrack(false);
         }
     });
@@ -313,20 +313,20 @@
     function setVolume(newVolume) {
         localStorage.setItem('player-volume', newVolume);
         volume = newVolume;
-        if (audio != undefined) {
+        if (audio != null) {
             audio.volume = newVolume;
         }
     }
 
-    let oldVolume = undefined;
+    let oldVolume = null;
     function toggleVolume() {
         if (volume > 0) {
             oldVolume = volume;
             setVolume(0);
         } else {
-            if (oldVolume != undefined) {
+            if (oldVolume != null) {
                 setVolume(oldVolume);
-                oldVolume = undefined;
+                oldVolume = null;
             } else {
                 setVolume(1);
             }
@@ -334,7 +334,7 @@
     }
 </script>
 
-{#if track != undefined}
+{#if track != null}
     <div class="music-player box m-0 p-0 py-2 has-background-white-bis">
         <div class="media px-4 py-2">
             <div class="media-left">
@@ -358,7 +358,7 @@
                 </p>
             </div>
             <div class="media-right">
-                <LikeButton token={token} item={track} itemRoute="tracks" itemLabel={t('track')} />
+                <LikeButton {token} item={track} itemRoute="tracks" itemLabel={t('track')} />
             </div>
         </div>
 

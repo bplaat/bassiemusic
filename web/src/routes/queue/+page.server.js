@@ -1,6 +1,4 @@
-import { isAuthedMiddleware } from '../../middlewares/auth.js';
-
-export async function load({ url, fetch, cookies }) {
-    const authUser = await isAuthedMiddleware({ url, fetch, cookies });
-    return { token: cookies.get('token'), authUser };
+export async function load({ locals, cookies }) {
+    // Return token and auth user
+    return { token: cookies.get('token'), authUser: locals.authUser };
 }

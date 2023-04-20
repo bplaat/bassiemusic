@@ -1,15 +1,13 @@
 import { error } from '@sveltejs/kit';
-import { isAuthedMiddleware } from '../../../middlewares/auth.js';
 
-export async function load({ url, fetch, cookies, params }) {
-    const authUser = await isAuthedMiddleware({ url, fetch, cookies });
-
+export async function load({ locals, fetch, cookies, params }) {
+    // Fetch album
     const response = await fetch(`${import.meta.env.VITE_API_URL}/albums/${params.id}`, {
         headers: {
             Authorization: `Bearer ${cookies.get('token')}`,
         },
     });
-    if (response.status == 404) {
+    if (response.status === 404) {
         throw error(404, 'Not Found');
     }
     const album = await response.json();
@@ -18,5 +16,10 @@ export async function load({ url, fetch, cookies, params }) {
         return track;
     });
 
-    return { token: cookies.get('token'), authUser, album };
+    // Return values
+    return {
+        token: cookies.get('token'),
+        authUser: locals.authUser,
+        album,
+    };
 }

@@ -1,9 +1,4 @@
-import { isGuestMiddleware } from '../../../middlewares/auth.js';
-
-export async function load({ url, fetch, cookies }) {
-    await isGuestMiddleware({ fetch, cookies });
-
-    return {
-        continueUrl: url.searchParams.get('continue'),
-    };
+export async function load({ url }) {
+    // Return continue query variable
+    return { continueUrl: url.searchParams.get('continue') };
 }

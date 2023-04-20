@@ -72,7 +72,7 @@
 
     // State
     export let data;
-    let { token, authUser, currentSessionId, sessions } = data;
+    let { token, authUser, authSessionId, sessions } = data;
     let deleteModal;
 
     // Change details
@@ -170,7 +170,7 @@
                 Authorization: `Bearer ${token}`,
             },
         });
-        if (currentSessionId == session.id) {
+        if (authSessionId == session.id) {
             logout();
         } else {
             sessions = sessions.filter((otherSession) => otherSession.id != session.id);
@@ -333,7 +333,7 @@
                 <div class="box content">
                     <h3 class="title is-4">
                         {session.client_name} on {session.client_os}
-                        {#if currentSessionId == session.id}
+                        {#if authSessionId == session.id}
                             <span class="tag is-link is-pulled-right" style="text-transform: uppercase;"
                                 >{t('current')}</span
                             >
@@ -343,7 +343,7 @@
                         {t(
                             'location',
                             session.ip,
-                            session.ip_city != undefined && session.ip_country != undefined
+                            session.ip_city != null && session.ip_country != null
                                 ? `${session.ip_city}, ${session.ip_country.toUpperCase()}`
                                 : t('unknown_location')
                         )}

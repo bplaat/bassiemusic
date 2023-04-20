@@ -50,7 +50,7 @@
             },
             body: new URLSearchParams({
                 name: playlist.name,
-                public: playlist.public
+                public: playlist.public,
             }),
         });
 

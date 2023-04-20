@@ -253,7 +253,7 @@
             {/if}
 
             <tr
-                id={isAlbum ? `${track.disk}-${track.position}` : undefined}
+                id={isAlbum ? `${track.disk}-${track.position}` : null}
                 class="track-container"
                 class:disabled={track.music == null || (!authUser.allow_explicit && track.explicit)}
                 on:contextmenu={(event) =>
@@ -266,7 +266,7 @@
                             document.querySelector('.app').offsetTop
                     )}
                 on:dblclick|preventDefault={() => playTrack(track)}
-                class:has-background-light={$musicState.track != undefined && $musicState.track.id == track.id}
+                class:has-background-light={$musicState.track != null && $musicState.track.id == track.id}
             >
                 <td>
                     <div class="track-index">{isAlbum ? track.position : index + 1}</div>
@@ -368,7 +368,7 @@
             <!-- svelte-ignore a11y-invalid-attribute -->
             <a
                 class="dropdown-item"
-                class:disabled={$musicState.track != undefined && $musicState.track.id == contextmenuTrack.id}
+                class:disabled={$musicState.track != null && $musicState.track.id == contextmenuTrack.id}
                 href="#"
                 on:click|preventDefault={() => $musicPlayer.removeTrack(contextmenuTrack)}
             >

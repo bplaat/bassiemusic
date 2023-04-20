@@ -16,7 +16,7 @@
     // Sidebar
     let app;
     afterNavigate(({ to }) => {
-        if ((to.url == undefined || to.url.hash == '') && !to.url.searchParams.has('albums_filter')) {
+        if ((to.url == null || to.url.hash == '') && !to.url.searchParams.has('albums_filter')) {
             app.scrollTop = 0;
         }
         if ($sidebar) $sidebar.close();
@@ -29,7 +29,7 @@
         resizing = true;
         if (resizeTimeout) clearTimeout(resizeTimeout);
         resizeTimeout = setTimeout(() => {
-            resizeTimeout = undefined;
+            resizeTimeout = null;
             resizing = false;
         }, 100);
     }
@@ -38,12 +38,12 @@
 <svelte:window on:contextmenu|preventDefault={() => {}} on:resize={windowResize} />
 
 <svelte:head>
-    {#if authUser != undefined}
+    {#if authUser != null}
         {#if authUser.theme == 'system'}
             <link rel="stylesheet" href="/css/bulma-light.min.css" media="(prefers-color-scheme: light)" />
             <link rel="stylesheet" href="/css/bulma-dark.min.css" media="(prefers-color-scheme: dark)" />
         {/if}
-        {#if authUser != undefined && authUser.theme == 'light'}
+        {#if authUser != null && authUser.theme == 'light'}
             <link rel="stylesheet" href="/css/bulma-light.min.css" />
             <style>
                 .app:hover::-webkit-scrollbar-thumb,
@@ -53,7 +53,7 @@
                 }
             </style>
         {/if}
-        {#if authUser != undefined && authUser.theme == 'dark'}
+        {#if authUser != null && authUser.theme == 'dark'}
             <link rel="stylesheet" href="/css/bulma-dark.min.css" />
             <style>
                 .app:hover::-webkit-scrollbar-thumb,
@@ -68,7 +68,7 @@
         <style>
             .app:hover::-webkit-scrollbar-thumb,
             .sidebar:hover::-webkit-scrollbar-thumb,
-                .scrollable:hover::-webkit-scrollbar-thumb {
+            .scrollable:hover::-webkit-scrollbar-thumb {
                 background-color: rgba(255, 255, 255, 0.3) !important;
             }
         </style>
@@ -82,16 +82,16 @@
 <div
     bind:this={app}
     class="app"
-    class:has-sidebar={authUser != undefined}
+    class:has-sidebar={authUser != null}
     class:is-macos-app={agent.os == 'macOS' && agent.name == 'BassieMusic App'}
     class:is-windows-app={agent.os == 'Windows' && agent.name == 'BassieMusic App'}
     class:is-linux-app={agent.os == 'Linux' && agent.name == 'BassieMusic App'}
-    class:is-light={authUser != undefined && authUser.theme == 'light'}
-    class:is-dark={authUser != undefined && authUser.theme == 'dark'}
-    class:is-playing={lastTrack != undefined}
+    class:is-light={authUser != null && authUser.theme == 'light'}
+    class:is-dark={authUser != null && authUser.theme == 'dark'}
+    class:is-playing={lastTrack != null}
     class:is-resizing={resizing}
 >
-    {#if authUser != undefined}
+    {#if authUser != null}
         <nav class="navbar has-background-white-bis is-fixed-top is-hidden-desktop">
             <div class="navbar-brand">
                 <!-- svelte-ignore a11y-invalid-attribute -->
@@ -111,8 +111,8 @@
         <slot />
     </div>
 
-    {#if authUser != undefined}
-        {#if lastTrack != undefined}
+    {#if authUser != null}
+        {#if lastTrack != null}
             <MusicPlayer
                 bind:this={$musicPlayer}
                 {token}
