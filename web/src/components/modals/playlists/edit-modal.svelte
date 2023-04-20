@@ -54,7 +54,7 @@
             }),
         });
 
-        if (response.status == 200) {
+        if (response.status === 200) {
             const updatedPlaylist = await response.json();
             playlist.name = updatedPlaylist.name;
             playlist.public = updatedPlaylist.public;

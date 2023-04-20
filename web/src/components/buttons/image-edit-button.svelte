@@ -53,10 +53,10 @@
         imageInput.accept = '*.jpg,*.jpeg,*.png';
         imageInput.addEventListener('change', async () => {
             const body = new FormData();
-            if (itemRoute == 'artists' || itemRoute == 'genres' || itemRoute == 'playlists') {
+            if (itemRoute === 'artists' || itemRoute === 'genres' || itemRoute === 'playlists') {
                 body.set('image', imageInput.files[0], imageInput.files[0].name);
             }
-            if (itemRoute == 'albums') {
+            if (itemRoute === 'albums') {
                 body.set('cover', imageInput.files[0], imageInput.files[0].name);
             }
             const response = await fetch(`${import.meta.env.VITE_API_URL}/${itemRoute}/${item.id}`, {
@@ -66,16 +66,16 @@
                 },
                 body,
             });
-            if (response.status == 200) {
+            if (response.status === 200) {
                 const updatedItem = await response.json();
-                if (itemRoute == 'artists' || itemRoute == 'genres' || itemRoute == 'playlists') {
+                if (itemRoute === 'artists' || itemRoute === 'genres' || itemRoute === 'playlists') {
                     item.small_image = updatedItem.small_image;
                     item.medium_image = updatedItem.medium_image;
                 }
-                if (itemRoute == 'artists' || itemRoute == 'genres') {
+                if (itemRoute === 'artists' || itemRoute === 'genres') {
                     item.large_image = updatedItem.large_image;
                 }
-                if (itemRoute == 'albums') {
+                if (itemRoute === 'albums') {
                     item.small_cover = updatedItem.small_cover;
                     item.medium_cover = updatedItem.medium_cover;
                     item.large_cover = updatedItem.large_cover;
@@ -87,10 +87,10 @@
 
     async function deleteImage() {
         const body = new URLSearchParams();
-        if (itemRoute == 'artists' || itemRoute == 'genres' || itemRoute == 'playlists') {
+        if (itemRoute === 'artists' || itemRoute === 'genres' || itemRoute === 'playlists') {
             body.set('image', '');
         }
-        if (itemRoute == 'albums') {
+        if (itemRoute === 'albums') {
             body.set('cover', '');
         }
         await fetch(`${import.meta.env.VITE_API_URL}/${itemRoute}/${item.id}`, {
@@ -100,14 +100,14 @@
             },
             body,
         });
-        if (itemRoute == 'artists' || itemRoute == 'genres' || itemRoute == 'playlists') {
+        if (itemRoute === 'artists' || itemRoute === 'genres' || itemRoute === 'playlists') {
             item.small_image = null;
             item.medium_image = null;
         }
-        if (itemRoute == 'artists' || itemRoute == 'genres') {
+        if (itemRoute === 'artists' || itemRoute === 'genres') {
             item.large_image = null;
         }
-        if (itemRoute == 'albums') {
+        if (itemRoute === 'albums') {
             item.small_cover = null;
             item.medium_cover = null;
             item.large_cover = null;
@@ -117,22 +117,22 @@
 
 <div class="image-edit-button box has-image p-0" class:is-editable={editable}>
     <figure class="image is-1by1">
-        {#if itemRoute == 'artists'}
+        {#if itemRoute === 'artists'}
             <img src={item.large_image || '/images/avatar-default.svg'} alt={t('artist_image_alt', item.name)} />
         {/if}
-        {#if itemRoute == 'genres'}
+        {#if itemRoute === 'genres'}
             <img src={item.large_image || '/images/album-default.svg'} alt={t('genre_image_alt', item.name)} />
         {/if}
-        {#if itemRoute == 'albums'}
+        {#if itemRoute === 'albums'}
             <img src={item.large_cover || '/images/album-default.svg'} alt={t('album_cover_alt', item.title)} />
         {/if}
-        {#if itemRoute == 'playlists'}
+        {#if itemRoute === 'playlists'}
             <img src={item.medium_image || '/images/album-default.svg'} alt={t('playlist_image_alt', item.name)} />
         {/if}
     </figure>
 
     <div class="image-tags">
-        {#if itemRoute == 'artists' && item.sync}
+        {#if itemRoute === 'artists' && item.sync}
             <span class="tag px-2 py-1" style="height: auto;" title={t('artist_sync')}>
                 <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                     <path
@@ -142,14 +142,14 @@
             </span>
         {/if}
 
-        {#if itemRoute == 'albums'}
-            {#if item.type == 'album'}
+        {#if itemRoute === 'albums'}
+            {#if item.type === 'album'}
                 <span class="tag" style="text-transform: uppercase;">{t('album_album')}</span>
             {/if}
-            {#if item.type == 'ep'}
+            {#if item.type === 'ep'}
                 <span class="tag" style="text-transform: uppercase;">{t('album_ep')}</span>
             {/if}
-            {#if item.type == 'single'}
+            {#if item.type === 'single'}
                 <span class="tag" style="text-transform: uppercase;">{t('album_single')}</span>
             {/if}
             {#if item.explicit}
@@ -157,7 +157,7 @@
             {/if}
         {/if}
 
-        {#if itemRoute == 'playlists' && item.public}
+        {#if itemRoute === 'playlists' && item.public}
             <span class="tag px-2 py-1" style="height: auto;" title={t('playlist_public')}>
                 <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                     <path
@@ -171,7 +171,7 @@
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     {#if editable}
         <div class="image-edit-button-overlay" on:click={editImage}>
-            {#if item.small_image != null || item.small_cover != null}
+            {#if item.small_image !== null || item.small_cover !== null}
                 <div class="image-tags">
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <span class="delete" on:click|stopPropagation={deleteImage} />

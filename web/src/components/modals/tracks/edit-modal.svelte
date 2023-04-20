@@ -68,7 +68,7 @@
             }),
         });
 
-        if (response.status == 200) {
+        if (response.status === 200) {
             const updatedTrack = await response.json();
             track.title = updatedTrack.title;
             track.disk = updatedTrack.disk;

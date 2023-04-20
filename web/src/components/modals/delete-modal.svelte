@@ -45,7 +45,7 @@
                 Authorization: `Bearer ${token}`,
             },
         });
-        if (response.status == 200) {
+        if (response.status === 200) {
             close();
             dispatch('delete');
         }

@@ -59,7 +59,7 @@
             token={data.token}
             item={data.playlist}
             itemRoute="playlists"
-            editable={data.playlist.user.id == data.authUser.id || data.authUser.role == 'admin'}
+            editable={data.playlist.user.id === data.authUser.id || data.authUser.role === 'admin'}
         />
     </div>
 
@@ -82,7 +82,7 @@
                 isLarge={true}
             />
 
-            {#if data.playlist.user.id == data.authUser.id || data.authUser.role == 'admin'}
+            {#if data.playlist.user.id === data.authUser.id || data.authUser.role === 'admin'}
                 <button class="button is-large" on:click={() => editModal.open()} title={t('edit')}>
                     <svg class="icon" viewBox="0 0 24 24">
                         <path
@@ -102,7 +102,7 @@
 </div>
 
 <h3 class="title is-4">{t('tracks')}</h3>
-{#if data.playlist.tracks.length != 0}
+{#if data.playlist.tracks.length !== 0}
     <TracksTable
         bind:this={tracksTable}
         token={data.token}
@@ -114,7 +114,7 @@
     <p><i>{t('tracks_empty')}</i></p>
 {/if}
 
-{#if data.playlist.user.id == data.authUser.id || data.authUser.role == 'admin'}
+{#if data.playlist.user.id === data.authUser.id || data.authUser.role === 'admin'}
     <EditModal
         bind:this={editModal}
         token={data.token}

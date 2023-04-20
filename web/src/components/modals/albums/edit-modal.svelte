@@ -69,7 +69,7 @@
             }),
         });
 
-        if (response.status == 200) {
+        if (response.status === 200) {
             const updatedAlbum = await response.json();
             album.title = updatedAlbum.title;
             album.type = updatedAlbum.type;

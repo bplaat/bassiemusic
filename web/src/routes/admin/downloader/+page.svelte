@@ -56,7 +56,7 @@
 
     // Methods
     async function search() {
-        if (query == '') {
+        if (query === '') {
             results = false;
             albums = [];
             artists = [];
@@ -89,7 +89,7 @@
                 deezer_id: album.id,
             }),
         });
-        albums = albums.filter((otherAlbum) => otherAlbum.id != album.id);
+        albums = albums.filter((otherAlbum) => otherAlbum.id !== album.id);
     }
 
     async function downloadArtist(artist) {
@@ -102,7 +102,7 @@
                 deezer_id: artist.id,
             }),
         });
-        artists = artists.filter((otherArtist) => otherArtist.id != artist.id);
+        artists = artists.filter((otherArtist) => otherArtist.id !== artist.id);
     }
 </script>
 
@@ -159,7 +159,7 @@
                         </div>
                     </div>
                 {/each}
-                {#if albums.length == 0}
+                {#if albums.length === 0}
                     <p><i>{t('albums_empty')}</i></p>
                 {/if}
             </div>
@@ -183,7 +183,7 @@
                         </button>
                     </div>
                 {/each}
-                {#if artists.length == 0}
+                {#if artists.length === 0}
                     <p><i>{t('artists_empty')}</i></p>
                 {/if}
             </div>

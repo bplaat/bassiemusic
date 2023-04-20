@@ -32,7 +32,7 @@
     <div class="dropdown-menu">
         <div class="dropdown-content">
             {#each Object.keys(options) as key}
-                <a href="?sort_by={key}" class="dropdown-item" class:is-active={sortBy == key}>
+                <a href="?sort_by={key}" class="dropdown-item" class:is-active={sortBy === key}>
                     {options[key]}
                 </a>
             {/each}

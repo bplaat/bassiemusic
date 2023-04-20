@@ -1,7 +1,7 @@
 <script>
     import { tick, onMount } from 'svelte';
-    import CreateModal from '../../../components/modals/admin/users/create-modal.svelte';
-    import EditModal from '../../../components/modals/admin/users/edit-modal.svelte';
+    import CreateModal from '../../../components/modals/users/create-modal.svelte';
+    import EditModal from '../../../components/modals/users/edit-modal.svelte';
     import DeleteModal from '../../../components/modals/delete-modal.svelte';
     import { language } from '../../../stores.js';
 
@@ -100,7 +100,7 @@
                 <td>{index + 1}</td>
                 <td>{user.username}</td>
                 <td>{user.email}</td>
-                <td>{user.role == 'normal' ? t('role_normal') : t('role_admin')}</td>
+                <td>{user.role === 'normal' ? t('role_normal') : t('role_admin')}</td>
                 <td>
                     <div class="buttons">
                         <button
@@ -141,14 +141,14 @@
     }}
 />
 
-{#if selectedUser != null}
+{#if selectedUser !== null}
     <EditModal
         bind:this={editModal}
         {token}
         user={selectedUser}
         on:update={(event) => {
             users = users.map((user) => {
-                if (user.id == event.detail.user.id) return event.detail.user;
+                if (user.id === event.detail.user.id) return event.detail.user;
                 return user;
             });
         }}
@@ -161,7 +161,7 @@
         itemRoute="users"
         itemLabel={t('user')}
         on:delete={() => {
-            users = users.filter((user) => user.id != selectedUser.id);
+            users = users.filter((user) => user.id !== selectedUser.id);
         }}
     />
 {/if}

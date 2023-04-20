@@ -75,7 +75,7 @@
     }
 
     export function removeTrack(track) {
-        queue = queue.filter((otherTrack) => otherTrack.id != track.id);
+        queue = queue.filter((otherTrack) => otherTrack.id !== track.id);
         musicState.update((musicState) => {
             musicState.queue = queue;
             return musicState;
@@ -104,19 +104,19 @@
 
     // Music player
     let isPlaying = false,
-        audio,
-        updateUiTimeout,
-        updateServerTimeout,
+        audio = null,
+        updateUiTimeout = null,
+        updateServerTimeout = null,
         isShuffling = false;
 
     function loadAndPlayTrack(autoplay) {
-        if (audio != null) {
+        if (audio !== null) {
             audio.pause();
         }
-        if (updateUiTimeout != null) {
+        if (updateUiTimeout !== null) {
             clearTimeout(updateUiTimeout);
         }
-        if (updateServerTimeout != null) {
+        if (updateServerTimeout !== null) {
             clearTimeout(updateServerTimeout);
         }
 
@@ -140,7 +140,7 @@
                 artist: track.artists.map((artist) => artist.name).join(', '),
                 album: track.album.title,
                 artwork:
-                    track.album.small_cover != null
+                    track.album.small_cover !== null
                         ? [
                               {
                                   type: 'image/jpeg',
@@ -171,9 +171,9 @@
     onMount(() => {
         musicState.set({ queue, track });
 
-        isShuffling = localStorage.getItem('player-shuffling') == 'true';
+        isShuffling = localStorage.getItem('player-shuffling') === 'true';
 
-        if (track != null) {
+        if (track !== null) {
             loadAndPlayTrack(false);
         }
     });
@@ -313,7 +313,7 @@
     function setVolume(newVolume) {
         localStorage.setItem('player-volume', newVolume);
         volume = newVolume;
-        if (audio != null) {
+        if (audio !== null) {
             audio.volume = newVolume;
         }
     }
@@ -324,7 +324,7 @@
             oldVolume = volume;
             setVolume(0);
         } else {
-            if (oldVolume != null) {
+            if (oldVolume !== null) {
                 setVolume(oldVolume);
                 oldVolume = null;
             } else {
@@ -334,7 +334,7 @@
     }
 </script>
 
-{#if track != null}
+{#if track !== null}
     <div class="music-player box m-0 p-0 py-2 has-background-white-bis">
         <div class="media px-4 py-2">
             <div class="media-left">
@@ -431,7 +431,7 @@
         </div>
 
         <div class="music-player-volume px-4 is-hidden-touch">
-            {#if $page.url.pathname != '/queue'}
+            {#if $page.url.pathname !== '/queue'}
                 <a class="button mr-4" href="/queue" title={t('open_queue')}>
                     <svg class="icon" viewBox="0 0 24 24">
                         <path
@@ -463,7 +463,7 @@
                         title={volume > 0 ? t('mute_volume') : t('restore_volume')}
                     >
                         <svg class="icon" viewBox="0 0 24 24">
-                            {#if volume == 0}
+                            {#if volume === 0}
                                 <path
                                     d="M12,4L9.91,6.09L12,8.18M4.27,3L3,4.27L7.73,9H3V15H7L12,20V13.27L16.25,17.53C15.58,18.04 14.83,18.46 14,18.7V20.77C15.38,20.45 16.63,19.82 17.68,18.96L19.73,21L21,19.73L12,10.73M19,12C19,12.94 18.8,13.82 18.46,14.64L19.97,16.15C20.62,14.91 21,13.5 21,12C21,7.72 18,4.14 14,3.23V5.29C16.89,6.15 19,8.83 19,12M16.5,12C16.5,10.23 15.5,8.71 14,7.97V10.18L16.45,12.63C16.5,12.43 16.5,12.21 16.5,12Z"
                                 />
