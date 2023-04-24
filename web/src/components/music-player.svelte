@@ -84,8 +84,10 @@
 
     // Websocket connection
     let ws;
+    let connecting = false;
     let connected = false;
     function websocketConnect() {
+        connecting = true;
         ws = new WebSocket(import.meta.env.VITE_WEBSOCKET_URL);
         ws.onopen = () => {
             connected = true;
@@ -96,7 +98,6 @@
             setTimeout(websocketConnect, WEBSOCKET_RECONNECT_TIMEOUT);
         };
     }
-    onMount(websocketConnect);
     onDestroy(() => {
         if (!connected) return;
         ws.close();
@@ -201,7 +202,10 @@
     }
 
     function sendTrackPlay() {
-        if (!connected) return;
+        if (!connected && !connecting) {
+            websocketConnect();
+            return;
+        }
         ws.send(JSON.stringify({ type: 'track_play', track_id: track.id, position: audio.currentTime }));
     }
     async function updateServerLoop() {
