@@ -203,7 +203,8 @@
         align-items: center;
         flex-direction: column;
         justify-content: center;
-        background-color: rgba(10, 10, 10, 0.86);
+        background-color: rgba(10, 10, 10, 0.5);
+        color: #fff;
         visibility: hidden;
         cursor: pointer;
     }
