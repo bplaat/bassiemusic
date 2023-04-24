@@ -18,5 +18,5 @@ export async function load({ locals, fetch, cookies, request }) {
         },
     });
     const agent = await response.json();
-    return { authUser: null, agent };
+    return { authUser: null, agent, lastTrack: null };
 }
