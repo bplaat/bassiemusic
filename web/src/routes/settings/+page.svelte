@@ -72,7 +72,7 @@
 
     // State
     export let data;
-    let { token, authUser, currentSessionId, sessions } = data;
+    let { token, authUser, authSessionId, sessions } = data;
     let deleteModal;
 
     // Change details
@@ -87,7 +87,7 @@
             theme: authUser.theme,
             allow_explicit: authUser.allow_explicit,
         });
-        if (newPassword != '') body.set('password', newPassword);
+        if (newPassword !== '') body.set('password', newPassword);
         const response = await fetch(`${import.meta.env.VITE_API_URL}/users/${authUser.id}`, {
             method: 'PUT',
             headers: {
@@ -95,7 +95,7 @@
             },
             body,
         });
-        if (response.status == 200) {
+        if (response.status === 200) {
             window.location = '/settings';
         } else {
             const data = await response.json();
@@ -120,7 +120,7 @@
             },
             body,
         });
-        if (response.status == 200) {
+        if (response.status === 200) {
             window.location = '/settings';
         }
     }
@@ -133,7 +133,7 @@
             },
             body: new URLSearchParams({ avatar: '' }),
         });
-        if (response.status == 200) {
+        if (response.status === 200) {
             window.location = '/settings';
         }
     }
@@ -170,10 +170,10 @@
                 Authorization: `Bearer ${token}`,
             },
         });
-        if (currentSessionId == session.id) {
+        if (authSessionId === session.id) {
             logout();
         } else {
-            sessions = sessions.filter((otherSession) => otherSession.id != session.id);
+            sessions = sessions.filter((otherSession) => otherSession.id !== session.id);
         }
     }
 </script>
@@ -333,7 +333,7 @@
                 <div class="box content">
                     <h3 class="title is-4">
                         {session.client_name} on {session.client_os}
-                        {#if currentSessionId == session.id}
+                        {#if authSessionId === session.id}
                             <span class="tag is-link is-pulled-right" style="text-transform: uppercase;"
                                 >{t('current')}</span
                             >
@@ -343,7 +343,7 @@
                         {t(
                             'location',
                             session.ip,
-                            session.ip_city != undefined && session.ip_country != undefined
+                            session.ip_city !== null && session.ip_country !== null
                                 ? `${session.ip_city}, ${session.ip_country.toUpperCase()}`
                                 : t('unknown_location')
                         )}

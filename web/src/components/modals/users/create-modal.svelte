@@ -1,6 +1,6 @@
 <script>
     import { createEventDispatcher } from 'svelte';
-    import { language } from '../../../../stores.js';
+    import { language } from '../../../stores.js';
 
     // Language strings
     const lang = {
@@ -71,7 +71,7 @@
                 allow_explicit: user.allow_explicit,
             }),
         });
-        if (response.status == 200) {
+        if (response.status === 200) {
             const createdUser = await response.json();
             close();
             user.username = '';

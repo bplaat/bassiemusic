@@ -28,8 +28,8 @@
         });
         const completePlaylist = await response.json();
         const tracks = authUser.allow_explicit
-            ? completePlaylist.tracks.filter((track) => track.music != null)
-            : completePlaylist.tracks.filter((track) => track.music != null && !track.explicit);
+            ? completePlaylist.tracks.filter((track) => track.music !== null)
+            : completePlaylist.tracks.filter((track) => track.music !== null && !track.explicit);
         if (tracks.length > 0) {
             $musicPlayer.playTracks(tracks, tracks[0]);
         }

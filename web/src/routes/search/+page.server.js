@@ -1,12 +1,8 @@
-import { isAuthedMiddleware } from '../../middlewares/auth.js';
-
-export async function load({ url, fetch, cookies }) {
-    const authUser = await isAuthedMiddleware({ url, fetch, cookies });
-
+export async function load({ locals, url, fetch, cookies }) {
     // Do search when query is given
     const query = url.searchParams.get('q') || '';
     let searchResult = null;
-    if (query != '') {
+    if (query !== '') {
         const response = await fetch(
             `${import.meta.env.VITE_API_URL}/search?${new URLSearchParams({
                 q: query,
@@ -20,17 +16,18 @@ export async function load({ url, fetch, cookies }) {
         searchResult = await response.json();
     }
 
-    // Always load first genres page
-    const response = await fetch(`${import.meta.env.VITE_API_URL}/genres`, {
+    // Always fetch genres first page
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/genres?page=1`, {
         headers: {
             Authorization: `Bearer ${cookies.get('token')}`,
         },
     });
     const { data: genres, pagination } = await response.json();
 
+    // Return values
     return {
         token: cookies.get('token'),
-        authUser,
+        authUser: locals.authUser,
         query,
         searchResult,
         genres,

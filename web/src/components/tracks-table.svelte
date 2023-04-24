@@ -75,10 +75,10 @@
     export let isMusicQueue = false;
 
     // State
-    $: isMultiDisk = tracks.find((track) => track.disk != 1) != null;
+    $: isMultiDisk = tracks.find((track) => track.disk !== 1) !== null;
     let isContextmenuOpen = false;
     let contextmenu;
-    let contextmenuTrack;
+    let contextmenuTrack = null;
     let contextmenuPosition;
     let lastPlaylists = [];
     let editModal;
@@ -92,7 +92,7 @@
             const trackPosition = $page.url.hash.substring(1);
             if (trackPosition) {
                 const trackRow = document.getElementById(trackPosition);
-                if (trackRow != null) {
+                if (trackRow !== null) {
                     document.querySelector('.app').scrollTop = trackRow.offsetTop;
                 }
             }
@@ -103,12 +103,12 @@
     function playTrack(track) {
         if (authUser.allow_explicit) {
             $musicPlayer.playTracks(
-                tracks.filter((otherTrack) => otherTrack.music != null),
+                tracks.filter((otherTrack) => otherTrack.music !== null),
                 track
             );
         } else {
             $musicPlayer.playTracks(
-                tracks.filter((otherTrack) => otherTrack.music != null && !otherTrack.explicit),
+                tracks.filter((otherTrack) => otherTrack.music !== null && !otherTrack.explicit),
                 track
             );
         }
@@ -116,9 +116,9 @@
 
     export function playFirstTrack() {
         let firstTrack = authUser.allow_explicit
-            ? tracks.find((otherTrack) => otherTrack.music != null)
-            : tracks.find((otherTrack) => otherTrack.music != null && !otherTrack.explicit);
-        if (firstTrack != null) {
+            ? tracks.find((otherTrack) => otherTrack.music !== null)
+            : tracks.find((otherTrack) => otherTrack.music !== null && !otherTrack.explicit);
+        if (firstTrack !== null) {
             playTrack(firstTrack);
         }
     }
@@ -138,7 +138,7 @@
             const { data } = await response.json();
             lastPlaylists = data;
 
-            if (playlistQuery == '' && lastPlaylists.length == 0) {
+            if (playlistQuery === '' && lastPlaylists.length === 0) {
                 noPlaylists = true;
             }
         }
@@ -234,7 +234,7 @@
     </thead>
     <tbody>
         {#each tracks as track, index}
-            {#if isAlbum && isMultiDisk && (index == 0 || track.disk != tracks[index - 1].disk)}
+            {#if isAlbum && isMultiDisk && (index === 0 || track.disk !== tracks[index - 1].disk)}
                 <tr>
                     <td>
                         <svg class="icon is-colored" viewBox="0 0 24 24">
@@ -253,9 +253,9 @@
             {/if}
 
             <tr
-                id={isAlbum ? `${track.disk}-${track.position}` : undefined}
+                id={isAlbum ? `${track.disk}-${track.position}` : null}
                 class="track-container"
-                class:disabled={track.music == null || (!authUser.allow_explicit && track.explicit)}
+                class:disabled={track.music === null || (!authUser.allow_explicit && track.explicit)}
                 on:contextmenu={(event) =>
                     openContextmenu(
                         track,
@@ -266,7 +266,7 @@
                             document.querySelector('.app').offsetTop
                     )}
                 on:dblclick|preventDefault={() => playTrack(track)}
-                class:has-background-light={$musicState.track != undefined && $musicState.track.id == track.id}
+                class:has-background-light={$musicState.track !== null && $musicState.track.id === track.id}
             >
                 <td>
                     <div class="track-index">{isAlbum ? track.position : index + 1}</div>
@@ -353,7 +353,7 @@
     class:hidden={!isContextmenuOpen}
     style="position: absolute; z-index: 99999;"
 >
-    {#if contextmenuTrack != null}
+    {#if contextmenuTrack !== null}
         {#if !isMusicQueue}
             <!-- svelte-ignore a11y-invalid-attribute -->
             <a
@@ -368,7 +368,7 @@
             <!-- svelte-ignore a11y-invalid-attribute -->
             <a
                 class="dropdown-item"
-                class:disabled={$musicState.track != undefined && $musicState.track.id == contextmenuTrack.id}
+                class:disabled={$musicState.track !== null && $musicState.track.id === contextmenuTrack.id}
                 href="#"
                 on:click|preventDefault={() => $musicPlayer.removeTrack(contextmenuTrack)}
             >
@@ -466,7 +466,7 @@
             {/if}
         </div>
 
-        {#if inPlaylist != null && (authUser.role == 'admin' || inPlaylist.user.id == authUser.id)}
+        {#if inPlaylist !== null && (authUser.role === 'admin' || inPlaylist.user.id === authUser.id)}
             <!-- svelte-ignore a11y-invalid-attribute -->
             <a
                 class="dropdown-item"
@@ -477,7 +477,7 @@
             </a>
         {/if}
 
-        {#if authUser.role == 'admin'}
+        {#if authUser.role === 'admin'}
             <!-- svelte-ignore a11y-invalid-attribute -->
             <a class="dropdown-item" href="#" on:click|preventDefault={() => editModal.open()}>
                 {t('edit')}
@@ -491,14 +491,14 @@
     {/if}
 </div>
 
-{#if authUser.role == 'admin' && contextmenuTrack != null}
+{#if authUser.role === 'admin' && contextmenuTrack !== null}
     <EditModal
         bind:this={editModal}
         {token}
         track={contextmenuTrack}
         on:update={(event) => {
             tracks = tracks.map((track) => {
-                if (track.id == event.detail.track.id) return event.detail.track;
+                if (track.id === event.detail.track.id) return event.detail.track;
                 return track;
             });
         }}
@@ -511,7 +511,7 @@
         itemRoute="tracks"
         itemLabel={t('track')}
         on:delete={() => {
-            tracks = tracks.filter((track) => track.id != contextmenuTrack.id);
+            tracks = tracks.filter((track) => track.id !== contextmenuTrack.id);
         }}
     />
 {/if}

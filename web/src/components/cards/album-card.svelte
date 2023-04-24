@@ -30,8 +30,8 @@
         const completeAlbum = await response.json();
         const tracks = (
             authUser.allow_explicit
-                ? completeAlbum.tracks.filter((track) => track.music != null)
-                : completeAlbum.tracks.filter((track) => track.music != null && !track.explicit)
+                ? completeAlbum.tracks.filter((track) => track.music !== null)
+                : completeAlbum.tracks.filter((track) => track.music !== null && !track.explicit)
         ).map((track) => {
             track.album = album;
             return track;
@@ -53,13 +53,13 @@
             <img src={album.medium_cover || '/images/album-default.svg'} alt={t('cover_alt', album.title)} />
         </figure>
         <div class="image-tags">
-            {#if album.type == 'album'}
+            {#if album.type === 'album'}
                 <span class="tag">ALBUM</span>
             {/if}
-            {#if album.type == 'ep'}
+            {#if album.type === 'ep'}
                 <span class="tag">EP</span>
             {/if}
-            {#if album.type == 'single'}
+            {#if album.type === 'single'}
                 <span class="tag">SINGLE</span>
             {/if}
             {#if album.explicit}

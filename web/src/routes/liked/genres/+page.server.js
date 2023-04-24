@@ -1,12 +1,10 @@
-import { isAuthedMiddleware } from '../../../middlewares/auth.js';
-
-export async function load({ url, fetch, cookies }) {
-    const authUser = await isAuthedMiddleware({ url, fetch, cookies });
-
+export async function load({ locals, url, fetch, cookies }) {
+    // Fetch liked genres first page
     const sortBy = url.searchParams.get('sort_by') || 'liked_at_desc';
     const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/users/${authUser.id}/liked_genres?${new URLSearchParams({
+        `${import.meta.env.VITE_API_URL}/users/${locals.authUser.id}/liked_genres?${new URLSearchParams({
             sort_by: sortBy,
+            page: 1,
         })}`,
         {
             headers: {
@@ -16,9 +14,10 @@ export async function load({ url, fetch, cookies }) {
     );
     const { data: genres, pagination } = await response.json();
 
+    // Return values
     return {
         token: cookies.get('token'),
-        authUser,
+        authUser: locals.authUser,
         genres,
         sortBy,
         total: pagination.total,

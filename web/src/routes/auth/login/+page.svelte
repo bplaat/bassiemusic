@@ -23,7 +23,7 @@
             document.cookie = `token=${token}; path=/; samesite=strict; expires=${new Date(
                 Date.now() + AUTH_TOKEN_EXPIRES_TIMEOUT
             ).toUTCString()}`;
-            if (data.continueUrl != null) {
+            if (data.continueUrl !== null) {
                 window.location = data.continueUrl;
             } else {
                 window.location = '/';

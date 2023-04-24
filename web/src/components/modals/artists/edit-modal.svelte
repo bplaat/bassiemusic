@@ -57,7 +57,7 @@
             }),
         });
 
-        if (response.status == 200) {
+        if (response.status === 200) {
             const updatedArtist = await response.json();
             artist.name = updatedArtist.name;
             artist.sync = updatedArtist.sync;

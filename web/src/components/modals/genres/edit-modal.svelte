@@ -52,7 +52,7 @@
             }),
         });
 
-        if (response.status == 200) {
+        if (response.status === 200) {
             const updatedGenre = await response.json();
             genre.name = updatedGenre.name;
             genre.deezer_id = updatedGenre.deezer_id;

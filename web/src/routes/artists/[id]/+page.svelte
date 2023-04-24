@@ -72,7 +72,7 @@
             token={data.token}
             item={data.artist}
             itemRoute="artists"
-            editable={data.authUser.role == 'admin'}
+            editable={data.authUser.role === 'admin'}
         />
     </div>
 
@@ -94,7 +94,7 @@
                 isLarge={true}
             />
 
-            {#if data.authUser.role == 'admin'}
+            {#if data.authUser.role === 'admin'}
                 <button class="button is-large" on:click={() => editModal.open()} title={t('edit')}>
                     <svg class="icon" viewBox="0 0 24 24">
                         <path
@@ -129,16 +129,16 @@
 {#if data.artist.albums.length > 0}
     <div class="tabs is-toggle">
         <ul>
-            <li class:is-active={data.filterAlbumsBy == 'all'}>
+            <li class:is-active={data.filterAlbumsBy === 'all'}>
                 <a href="?albums_filter=all">{t('album_type_all')}</a>
             </li>
-            <li class:is-active={data.filterAlbumsBy == 'album'}>
+            <li class:is-active={data.filterAlbumsBy === 'album'}>
                 <a href="?albums_filter=album">{t('album_type_album')}</a>
             </li>
-            <li class:is-active={data.filterAlbumsBy == 'ep'}>
+            <li class:is-active={data.filterAlbumsBy === 'ep'}>
                 <a href="?albums_filter=ep">{t('album_type_ep')}</a>
             </li>
-            <li class:is-active={data.filterAlbumsBy == 'single'}>
+            <li class:is-active={data.filterAlbumsBy === 'single'}>
                 <a href="?albums_filter=single">{t('album_type_single')}</a>
             </li>
         </ul>
@@ -159,7 +159,7 @@
     <p><i>{t('albums_empty')}</i></p>
 {/if}
 
-{#if data.authUser.role == 'admin'}
+{#if data.authUser.role === 'admin'}
     <EditModal
         bind:this={editModal}
         token={data.token}

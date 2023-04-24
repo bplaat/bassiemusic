@@ -65,7 +65,7 @@
 
     // Methods
     async function search() {
-        if (data.query != '') {
+        if (data.query !== '') {
             const newUrl = new URL(window.location.href);
             newUrl.searchParams.set('q', data.query);
             goto(newUrl);
@@ -89,7 +89,7 @@
             type="text"
             placeholder={t('query_placeholder')}
             bind:value={data.query}
-            autofocus={data.query == ''}
+            autofocus={data.query === ''}
         />
     </div>
     <div class="control">
@@ -97,8 +97,8 @@
     </div>
 </form>
 
-{#if data.searchResult != null}
-    {#if data.searchResult.tracks.length == 0 && data.searchResult.albums.length == 0 && data.searchResult.artists.length == 0 && data.searchResult.playlists.length == 0 && data.searchResult.genres.length == 0}
+{#if data.searchResult !== null}
+    {#if data.searchResult.tracks.length === 0 && data.searchResult.albums.length === 0 && data.searchResult.artists.length === 0 && data.searchResult.playlists.length === 0 && data.searchResult.genres.length === 0}
         <p><i>{t('empty')}</i></p>
     {:else}
         {#if data.searchResult.tracks.length > 0}

@@ -1,6 +1,6 @@
 <script>
     import { createEventDispatcher } from 'svelte';
-    import { language } from '../../../../stores.js';
+    import { language } from '../../../stores.js';
 
     // Language strings
     const lang = {
@@ -71,7 +71,7 @@
             theme: user.theme,
             allow_explicit: user.allow_explicit,
         });
-        if (newPassword != '') body.set('password', newPassword);
+        if (newPassword !== '') body.set('password', newPassword);
         const response = await fetch(`${import.meta.env.VITE_API_URL}/users/${user.id}`, {
             method: 'PUT',
             headers: {
@@ -79,7 +79,7 @@
             },
             body,
         });
-        if (response.status == 200) {
+        if (response.status === 200) {
             const updatedUser = await response.json();
             close();
             dispatch('update', { user: updatedUser });
