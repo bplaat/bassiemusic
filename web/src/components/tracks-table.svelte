@@ -75,7 +75,7 @@
     export let isMusicQueue = false;
 
     // State
-    $: isMultiDisk = tracks.find((track) => track.disk !== 1) !== null;
+    $: isMultiDisk = tracks.find((track) => track.disk !== 1) !== undefined;
     let isContextmenuOpen = false;
     let contextmenu;
     let contextmenuTrack = null;
@@ -118,7 +118,7 @@
         let firstTrack = authUser.allow_explicit
             ? tracks.find((otherTrack) => otherTrack.music !== null)
             : tracks.find((otherTrack) => otherTrack.music !== null && !otherTrack.explicit);
-        if (firstTrack !== null) {
+        if (firstTrack !== undefined) {
             playTrack(firstTrack);
         }
     }
