@@ -33,7 +33,7 @@ a:focus {
 }
 
 a.card,
-.card .title>a,
+.card .title > a,
 .tabs a,
 .menu-list a,
 .dropdown a,
@@ -124,23 +124,30 @@ img {
     text-overflow: ellipsis;
 }
 
+.modal {
+    z-index: 99999;
+}
+
 .contextmenu .dropdown-item {
-    padding: .375rem 1rem !important;
+    padding: 0.375rem 1rem !important;
 }
 
 .app,
-.sidebar {
+.sidebar,
+.scrollable {
     scrollbar-width: thin;
     scrollbar-color: transparent transparent;
 }
 
 .app::-webkit-scrollbar,
-.sidebar::-webkit-scrollbar {
+.sidebar::-webkit-scrollbar,
+.scrollable::-webkit-scrollbar {
     width: 6px;
 }
 
 .app::-webkit-scrollbar-thumb,
-.sidebar::-webkit-scrollbar-thumb {
+.sidebar::-webkit-scrollbar-thumb,
+.scrollable::-webkit-scrollbar-thumb {
     background-color: transparent;
 }
 
@@ -149,7 +156,7 @@ img {
         float: right !important;
     }
 
-    .dropdown.is-right-tablet>.dropdown-menu {
+    .dropdown.is-right-tablet > .dropdown-menu {
         left: auto;
         right: 0;
     }
@@ -176,29 +183,32 @@ img {
 }
 
 .app:hover,
-.sidebar:hover {
+.sidebar:hover,
+.scrollable:hover {
     scrollbar-color: rgba(0, 0, 0, 0.3) transparent;
 }
 
 .app:hover::-webkit-scrollbar-thumb,
-.sidebar:hover::-webkit-scrollbar-thumb {
+.sidebar:hover::-webkit-scrollbar-thumb,
+.scrollable:hover::-webkit-scrollbar-thumb {
     background-color: rgba(0, 0, 0, 0.3);
 }
 
 @media (prefers-color-scheme: dark) {
-
     .box.has-image,
     .card-image {
         background-color: #333;
     }
 
     .app:hover,
-    .sidebar:hover {
+    .sidebar:hover,
+    .scrollable:hover {
         scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
     }
 
     .app:hover::-webkit-scrollbar-thumb,
-    .sidebar:hover::-webkit-scrollbar-thumb {
+    .sidebar:hover::-webkit-scrollbar-thumb,
+    .scrollable:hover::-webkit-scrollbar-thumb {
         background-color: rgba(255, 255, 255, 0.3);
     }
 }

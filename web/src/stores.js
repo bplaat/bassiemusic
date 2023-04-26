@@ -8,5 +8,5 @@ export const musicPlayer = writable();
 
 export const musicState = writable({
     queue: [],
-    track: undefined,
+    track: null,
 });

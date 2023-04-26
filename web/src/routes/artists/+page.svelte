@@ -1,5 +1,5 @@
 <script>
-    import SortByDropdown from '../../components/sort-by-dropdown.svelte';
+    import SortByDropdown from '../../components/buttons/sort-by-dropdown.svelte';
     import ArtistCard from '../../components/cards/artist-card.svelte';
     import { lazyLoader } from '../../utils.js';
     import { language } from '../../stores.js';
@@ -18,15 +18,15 @@
             empty: "You don't have added any artists",
         },
         nl: {
-            title: 'Artists - BassieMusic',
-            header: 'Artists',
+            title: 'Artiesten - BassieMusic',
+            header: 'Artiesten',
             sort_by_name: 'Naam (A - Z)',
             sort_by_name_desc: 'Naam (Z - A)',
             sort_by_sync: 'Gesynced (gesynced - niet gesynced)',
             sort_by_sync_desc: 'Gesynced (niet gesynced - gesynced)',
             sort_by_created_at_desc: 'Gedownload op (nieuw - oud)',
             sort_by_created_at: 'Gedownload op (oud - nieuw)',
-            empty: 'Je hebt nog geen enkele artist toegevoegd',
+            empty: 'Je hebt nog geen enkele artiest toegevoegd',
         },
     };
     const t = (key) => lang[$language][key];

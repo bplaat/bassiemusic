@@ -5,8 +5,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/bplaat/bassiemusic/database"
-	"github.com/gofiber/fiber/v2"
+	"github.com/bplaat/bassiemusic/core/database"
 )
 
 // Track
@@ -18,8 +17,8 @@ type Track struct {
 	Position  int       `column:"position,int" json:"position"`
 	Duration  float32   `column:"duration,float" json:"duration"`
 	Explicit  bool      `column:"explicit,bool" json:"explicit"`
-	DeezerID  int64     `column:"deezer_id,bigint" json:"-"`
-	YoutubeID *string   `column:"youtube_id,string" json:"-"`
+	DeezerID  int64     `column:"deezer_id,bigint" json:"deezer_id"`
+	YoutubeID *string   `column:"youtube_id,string" json:"youtube_id"`
 	Plays     int64     `column:"plays,bigint" json:"plays"`
 	Music     *string   `json:"music"`
 	Liked     *bool     `json:"liked,omitempty"`
@@ -28,8 +27,10 @@ type Track struct {
 	Artists   *[]Artist `json:"artists,omitempty"`
 }
 
-func TrackModel(c *fiber.Ctx) *database.Model[Track] {
-	return (&database.Model[Track]{
+var TrackModel *database.Model[Track]
+
+func init() {
+	TrackModel = (&database.Model[Track]{
 		TableName: "tracks",
 		Process: func(track *Track) {
 			if _, err := os.Stat(fmt.Sprintf("storage/tracks/%s.m4a", track.ID)); err == nil {
@@ -37,19 +38,23 @@ func TrackModel(c *fiber.Ctx) *database.Model[Track] {
 				track.Music = &music
 			}
 		},
-		Relationships: map[string]database.ModelProcessFunc[Track]{
-			"like": func(track *Track) {
-				if c != nil {
-					authUser := c.Locals("authUser").(*User)
-					liked := TrackLikeModel().Where("track_id", track.ID).Where("user_id", authUser.ID).First() != nil
+		Relationships: map[string]database.ModelRelationshipFunc[Track]{
+			"liked": func(track *Track, args []any) {
+				if len(args) > 0 {
+					authUser := args[0].(*User)
+					liked := TrackLikeModel.Where("track_id", track.ID).Where("user_id", authUser.ID).First() != nil
 					track.Liked = &liked
 				}
 			},
-			"album": func(track *Track) {
-				track.Album = AlbumModel(c).With("genres", "artists").Find(track.AlbumID)
+			"liked_true": func(track *Track, args []any) {
+				liked := true
+				track.Liked = &liked
 			},
-			"artists": func(track *Track) {
-				artists := ArtistModel(c).WhereIn("track_artist", "artist_id", "track_id", track.ID).OrderByRaw("LOWER(`name`)").Get()
+			"album": func(track *Track, args []any) {
+				track.Album = AlbumModel.With("genres", "artists").Find(track.AlbumID)
+			},
+			"artists": func(track *Track, args []any) {
+				artists := ArtistModel.WhereIn("track_artist", "artist_id", "track_id", track.ID).OrderByRaw("LOWER(`name`)").Get()
 				track.Artists = &artists
 			},
 		},
@@ -63,11 +68,9 @@ type TrackArtist struct {
 	ArtistID string `column:"artist_id,uuid"`
 }
 
-func TrackArtistModel() *database.Model[TrackArtist] {
-	return (&database.Model[TrackArtist]{
-		TableName: "track_artist",
-	}).Init()
-}
+var TrackArtistModel *database.Model[TrackArtist] = (&database.Model[TrackArtist]{
+	TableName: "track_artist",
+}).Init()
 
 // Track Like
 type TrackLike struct {
@@ -77,11 +80,9 @@ type TrackLike struct {
 	CreatedAt time.Time `column:"created_at,timestamp"`
 }
 
-func TrackLikeModel() *database.Model[TrackLike] {
-	return (&database.Model[TrackLike]{
-		TableName: "track_likes",
-	}).Init()
-}
+var TrackLikeModel *database.Model[TrackLike] = (&database.Model[TrackLike]{
+	TableName: "track_likes",
+}).Init()
 
 // Track Play
 type TrackPlay struct {
@@ -92,24 +93,22 @@ type TrackPlay struct {
 	CreatedAt time.Time `column:"created_at,timestamp"`
 }
 
-func TrackPlayModel() *database.Model[TrackPlay] {
-	return (&database.Model[TrackPlay]{
-		TableName: "track_plays",
-	}).Init()
-}
+var TrackPlayModel *database.Model[TrackPlay] = (&database.Model[TrackPlay]{
+	TableName: "track_plays",
+}).Init()
 
 func HandleTrackPlay(authUser *User, trackID string, position float32) bool {
 	// Check if track exists
-	track := TrackModel(nil).Find(trackID)
+	track := TrackModel.Find(trackID)
 	if track == nil {
 		return false
 	}
 
 	// Get user last track play and update if latest
-	trackPlay := TrackPlayModel().Where("user_id", authUser.ID).OrderByDesc("created_at").First()
+	trackPlay := TrackPlayModel.Where("user_id", authUser.ID).OrderByDesc("created_at").First()
 	if trackPlay != nil {
 		if track.ID == trackPlay.TrackID {
-			TrackPlayModel().Where("id", trackPlay.ID).Update(database.Map{
+			TrackPlayModel.Where("id", trackPlay.ID).Update(database.Map{
 				"position": position,
 			})
 			return true
@@ -117,14 +116,14 @@ func HandleTrackPlay(authUser *User, trackID string, position float32) bool {
 	}
 
 	// Create new track play
-	TrackPlayModel().Create(database.Map{
+	TrackPlayModel.Create(database.Map{
 		"track_id": track.ID,
 		"user_id":  authUser.ID,
 		"position": position,
 	})
 
 	// Increment global track plays count
-	TrackModel(nil).Where("id", track.ID).Update(database.Map{
+	TrackModel.Where("id", track.ID).Update(database.Map{
 		"plays": track.Plays + 1,
 	})
 	return true

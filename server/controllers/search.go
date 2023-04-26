@@ -15,19 +15,19 @@ func SearchIndex(c *fiber.Ctx) error {
 	query, _, _ := utils.ParseIndexVars(c)
 
 	// Get tracks
-	tracks := models.TrackModel(c).With("like", "artists", "album").WhereRaw("`title` LIKE ?", "%"+query+"%").OrderByRaw("`plays` DESC, LOWER(`title`)").Limit(10).Get()
+	tracks := models.TrackModel.WithArgs("liked", c.Locals("authUser")).With("artists", "album").WhereRaw("`title` LIKE ?", "%"+query+"%").OrderByRaw("`plays` DESC, LOWER(`title`)").Limit(10).Get()
 
 	// Get albums
-	albums := models.AlbumModel(c).With("artists", "genres").WhereRaw("`title` LIKE ?", "%"+query+"%").OrderByRaw("LOWER(`title`)").Limit(10).Get()
+	albums := models.AlbumModel.With("artists").WhereRaw("`title` LIKE ?", "%"+query+"%").OrderByRaw("LOWER(`title`)").Limit(10).Get()
 
 	// Get artists
-	artists := models.ArtistModel(c).WhereRaw("`name` LIKE ?", "%"+query+"%").OrderByRaw("LOWER(`name`)").Limit(10).Get()
+	artists := models.ArtistModel.WhereRaw("`name` LIKE ?", "%"+query+"%").OrderByRaw("LOWER(`name`)").Limit(10).Get()
 
 	// Get Genres
-	genres := models.GenreModel(c).WhereRaw("`name` LIKE ?", "%"+query+"%").OrderByRaw("LOWER(`name`)").Limit(10).Get()
+	genres := models.GenreModel.WhereRaw("`name` LIKE ?", "%"+query+"%").OrderByRaw("LOWER(`name`)").Limit(10).Get()
 
 	// Get Playlists
-	playlistsQuery := models.PlaylistModel(c).With("like", "user").WhereRaw("`name` LIKE ?", "%"+query+"%").OrderByRaw("LOWER(`name`)")
+	playlistsQuery := models.PlaylistModel.WhereRaw("`name` LIKE ?", "%"+query+"%").OrderByRaw("LOWER(`name`)")
 	if authUser.Role != models.UserRoleAdmin {
 		playlistsQuery = playlistsQuery.Where("public", true)
 	}
@@ -60,7 +60,7 @@ func DeezerSearchIndex(c *fiber.Ctx) error {
 	}
 	deezerAlbums := []structs.DeezerAlbumSearchItem{}
 	for _, deezerAlbum := range deezerAlbumSearch.Data {
-		if models.AlbumModel(c).Where("title", deezerAlbum.Title).First() == nil {
+		if models.AlbumModel.Where("title", deezerAlbum.Title).First() == nil {
 			deezerAlbums = append(deezerAlbums, deezerAlbum)
 		}
 	}

@@ -2,114 +2,103 @@ package controllers
 
 import (
 	"fmt"
-	"image"
-	"image/jpeg"
 	_ "image/png"
-	"log"
 	"os"
 	"time"
 
-	"github.com/bplaat/bassiemusic/database"
+	"github.com/bplaat/bassiemusic/core/database"
+	"github.com/bplaat/bassiemusic/core/uuid"
+	"github.com/bplaat/bassiemusic/core/validation"
 	"github.com/bplaat/bassiemusic/models"
 	"github.com/bplaat/bassiemusic/utils"
-	"github.com/bplaat/bassiemusic/utils/uuid"
-	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
-	"github.com/nfnt/resize"
 )
 
 func UsersIndex(c *fiber.Ctx) error {
 	query, page, limit := utils.ParseIndexVars(c)
-	return c.JSON(models.UserModel().WhereRaw("`username` LIKE ?", "%"+query+"%").WhereOrRaw("`email` LIKE ?", "%"+query+"%").OrderByRaw("LOWER(`username`)").Paginate(page, limit))
+	return c.JSON(models.UserModel.WhereRaw("`username` LIKE ?", "%"+query+"%").WhereOrRaw("`email` LIKE ?", "%"+query+"%").OrderByRaw("LOWER(`username`)").Paginate(page, limit))
 }
 
-type UsersCreateParams struct {
-	Username      string `form:"username" validate:"required,min=2"`
-	Email         string `form:"email" validate:"required,email"`
-	Password      string `form:"password" validate:"required,min=6"`
-	AllowExplicit string `form:"allow_explicit" validate:"required"`
-	Role          string `form:"role" validate:"required"`
+type UsersCreateBody struct {
+	Username      string `form:"username" validate:"required|min:2|unique:users,username"`
+	Email         string `form:"email" validate:"required|email|unique:users,email"`
+	Password      string `form:"password" validate:"required|min:6"`
+	AllowExplicit string `form:"allow_explicit" validate:"required|boolean"`
+	Role          string `form:"role" validate:"required|enum:normal,admin"`
 }
 
 func UsersCreate(c *fiber.Ctx) error {
 	// Parse body
-	var params UsersCreateParams
-	if err := c.BodyParser(&params); err != nil {
-		log.Println(err)
+	var body UsersCreateBody
+	if err := c.BodyParser(&body); err != nil {
 		return fiber.ErrBadRequest
 	}
 
-	// Validate values
-	validate := validator.New()
-	if err := validate.Struct(params); err != nil {
-		log.Println(err)
-		return fiber.ErrBadRequest
-	}
-
-	// Validate username is unique
-	if models.UserModel().Where("username", params.Username).First() != nil {
-		log.Println("username not unique")
-		return fiber.ErrBadRequest
-	}
-
-	// Validate email is unique
-	if models.UserModel().Where("email", params.Email).First() != nil {
-		log.Println("email not unique")
-		return fiber.ErrBadRequest
-	}
-
-	// Validate role is correct
-	if params.Role != "normal" && params.Role != "admin" {
-		log.Println("role not valid")
-		return fiber.ErrBadRequest
-	}
-	var userRole models.UserRole
-	if params.Role == "normal" {
-		userRole = models.UserRoleNormal
-	}
-	if params.Role == "admin" {
-		userRole = models.UserRoleAdmin
-	}
-
-	// Validate allow_explicit is correct
-	if params.AllowExplicit != "true" && params.AllowExplicit != "false" {
-		log.Println("allow_explicit not valid")
-		return fiber.ErrBadRequest
+	// Validate body
+	if err := validation.ValidateStruct(c, &body); err != nil {
+		return nil
 	}
 
 	// Create user
-	return c.JSON(models.UserModel().Create(database.Map{
-		"username":       params.Username,
-		"email":          params.Email,
-		"password":       utils.HashPassword(params.Password),
-		"allow_explicit": params.AllowExplicit == "true",
-		"role":           userRole,
+	fields := database.Map{
+		"username":       body.Username,
+		"email":          body.Email,
+		"password":       utils.HashPassword(body.Password),
+		"allow_explicit": body.AllowExplicit == "true",
 		"language":       "en",
 		"theme":          models.UserThemeSystem,
-	}))
+	}
+	if body.Role == "normal" {
+		fields["role"] = models.UserRoleNormal
+	}
+	if body.Role == "admin" {
+		fields["role"] = models.UserRoleAdmin
+	}
+	if avatarFile, err := c.FormFile("avatar"); err == nil {
+		// Store avatar when given
+		avatarID := uuid.New()
+		if err := utils.StoreUploadedImage(c, "avatars", avatarID.String(), avatarFile, false); err != nil {
+			return err
+		}
+		fields["avatar"] = avatarID.String()
+	}
+	return c.JSON(models.UserModel.Create(fields))
 }
 
 func UsersShow(c *fiber.Ctx) error {
-	user := models.UserModel().Find(c.Params("userID"))
+	// Check if user id is valid uuid
+	if !uuid.IsValid(c.Params("userID")) {
+		return fiber.ErrBadRequest
+	}
+
+	// Check if user exists
+	user := models.UserModel.Find(c.Params("userID"))
 	if user == nil {
 		return fiber.ErrNotFound
 	}
+
 	return c.JSON(user)
 }
 
-type UsersEditParams struct {
-	Username      string `form:"username" validate:"required,min=2"`
-	Email         string `form:"email" validate:"required,email"`
-	Password      string `form:"password" validate:"omitempty,min=6"`
-	AllowExplicit string `form:"allow_explicit" validate:"omitempty,required"`
-	Role          string `form:"role" validate:"omitempty,required"`
-	Language      string `form:"language" validate:"required"`
-	Theme         string `form:"theme" validate:"required"`
+type UsersUpdateBody struct {
+	Username      *string `form:"username" validate:"min:2|unique:users,username,Username"`
+	Email         *string `form:"email" validate:"email|unique:users,email,Email"`
+	Password      *string `form:"password" validate:"min:6"`
+	AllowExplicit *string `form:"allow_explicit" validate:"boolean"`
+	Role          *string `form:"role" validate:"enum:normal,admin"`
+	Language      *string `form:"language" validate:"enum:en,nl"`
+	Theme         *string `form:"theme" validate:"enum:system,light,dark"`
+	Avatar        *string `form:"avatar" validate:"nullable"`
 }
 
-func UsersEdit(c *fiber.Ctx) error {
+func UsersUpdate(c *fiber.Ctx) error {
+	// Check if user id is valid uuid
+	if !uuid.IsValid(c.Params("userID")) {
+		return fiber.ErrBadRequest
+	}
+
 	// Check if user exists
-	user := models.UserModel().Find(c.Params("userID"))
+	user := models.UserModel.Find(c.Params("userID"))
 	if user == nil {
 		return fiber.ErrNotFound
 	}
@@ -121,97 +110,91 @@ func UsersEdit(c *fiber.Ctx) error {
 	}
 
 	// Parse body
-	var params UsersEditParams
-	if err := c.BodyParser(&params); err != nil {
-		log.Println(err)
+	var body UsersUpdateBody
+	if err := c.BodyParser(&body); err != nil {
 		return fiber.ErrBadRequest
 	}
 
-	// Validate values
-	validate := validator.New()
-	if err := validate.Struct(params); err != nil {
-		log.Println(err)
-		return fiber.ErrBadRequest
+	// Validate body
+	if err := validation.ValidateStructUpdates(c, user, &body); err != nil {
+		return nil
 	}
 
-	// Validate username is unique when diffrent
-	if user.Username != params.Username && models.UserModel().Where("username", params.Username).First() != nil {
-		log.Println("username not unique")
-		return fiber.ErrBadRequest
+	// Run updates
+	updates := database.Map{}
+	if body.Username != nil {
+		updates["username"] = *body.Username
 	}
+	if body.Email != nil {
+		updates["email"] = *body.Email
+	}
+	if body.Password != nil {
+		updates["password"] = utils.HashPassword(*body.Password)
+	}
+	if body.AllowExplicit != nil {
+		updates["allow_explicit"] = *body.AllowExplicit == "true"
+	}
+	if body.Role != nil {
+		if *body.Role == "normal" {
+			updates["role"] = models.UserRoleNormal
+		}
+		if *body.Role == "admin" {
+			updates["role"] = models.UserRoleAdmin
+		}
+	}
+	if body.Language != nil {
+		updates["language"] = *body.Language
+	}
+	if body.Theme != nil {
+		if *body.Theme == "system" {
+			updates["theme"] = models.UserThemeSystem
+		}
+		if *body.Theme == "light" {
+			updates["theme"] = models.UserThemeLight
+		}
+		if *body.Theme == "dark" {
+			updates["theme"] = models.UserThemeDark
+		}
+	}
+	if avatarFile, err := c.FormFile("avatar"); err == nil {
+		// Remove old avatar file
+		if user.AvatarID != nil && *user.AvatarID != "" {
+			_ = os.Remove(fmt.Sprintf("storage/avatars/original/%s", *user.AvatarID))
+			_ = os.Remove(fmt.Sprintf("storage/avatars/small/%s.jpg", *user.AvatarID))
+			_ = os.Remove(fmt.Sprintf("storage/avatars/medium/%s.jpg", *user.AvatarID))
+		}
 
-	// Validate email is unique
-	if user.Email != params.Email && models.UserModel().Where("email", params.Email).First() != nil {
-		log.Println("email not unique")
-		return fiber.ErrBadRequest
+		// Store new avatar
+		avatarID := uuid.New()
+		if err := utils.StoreUploadedImage(c, "avatars", avatarID.String(), avatarFile, false); err != nil {
+			return err
+		}
+		updates["avatar"] = avatarID.String()
 	}
+	if body.Avatar != nil && *body.Avatar == "" {
+		if user.AvatarID != nil && *user.AvatarID != "" {
+			// Remove old avatar file
+			_ = os.Remove(fmt.Sprintf("storage/avatars/original/%s", *user.AvatarID))
+			_ = os.Remove(fmt.Sprintf("storage/avatars/small/%s.jpg", *user.AvatarID))
+			_ = os.Remove(fmt.Sprintf("storage/avatars/medium/%s.jpg", *user.AvatarID))
 
-	// Validate allow_explicit is correct
-	if params.AllowExplicit != "" && params.AllowExplicit != "true" && params.AllowExplicit != "false" {
-		log.Println("allow_explicit not valid")
-		return fiber.ErrBadRequest
+			updates["avatar"] = nil
+		}
 	}
-
-	// Validate role is correct
-	if params.Role != "" && params.Role != "normal" && params.Role != "admin" {
-		log.Println("role not valid")
-		return fiber.ErrBadRequest
-	}
-
-	// Validate lang is correct
-	if params.Language != "en" && params.Language != "nl" {
-		log.Println("lang not valid")
-		return fiber.ErrBadRequest
-	}
-
-	// Validate theme is correct
-	if params.Theme != "system" && params.Theme != "light" && params.Theme != "dark" {
-		log.Println("theme not valid")
-		return fiber.ErrBadRequest
-	}
-
-	// Update user
-	var userRole models.UserRole
-	if params.Role == "normal" {
-		userRole = models.UserRoleNormal
-	}
-	if params.Role == "admin" {
-		userRole = models.UserRoleAdmin
-	}
-
-	var userTheme models.UserTheme
-	if params.Theme == "system" {
-		userTheme = models.UserThemeSystem
-	}
-	if params.Theme == "light" {
-		userTheme = models.UserThemeLight
-	}
-	if params.Theme == "dark" {
-		userTheme = models.UserThemeDark
-	}
-
-	updates := database.Map{
-		"username":       params.Username,
-		"email":          params.Email,
-		"allow_explicit": params.AllowExplicit == "true",
-		"language":       params.Language,
-		"theme":          userTheme,
-	}
-	if params.Password != "" {
-		updates["password"] = utils.HashPassword(params.Password)
-	}
-	if authUser.Role == models.UserRoleAdmin && params.Role != "" {
-		updates["role"] = userRole
-	}
-	models.UserModel().Where("id", user.ID).Update(updates)
+	models.UserModel.Where("id", user.ID).Update(updates)
 
 	// Get updated user
-	return c.JSON(models.UserModel().Find(user.ID))
+	return c.JSON(models.UserModel.Find(user.ID))
 }
 
 func UsersDelete(c *fiber.Ctx) error {
+	// Check if user id is valid uuid
+	if !uuid.IsValid(c.Params("userID")) {
+		return fiber.ErrBadRequest
+	}
+
 	// Check if user exists
-	user := models.UserModel().Find(c.Params("userID"))
+	user := models.UserModel.Find(c.Params("userID"))
 	if user == nil {
 		return fiber.ErrNotFound
 	}
@@ -223,122 +206,20 @@ func UsersDelete(c *fiber.Ctx) error {
 	}
 
 	// Delete user
-	models.UserModel().Where("id", user.ID).Delete()
-	return c.JSON(fiber.Map{"success": true})
-}
-
-func UsersAvatar(c *fiber.Ctx) error {
-	// Check if user exists
-	user := models.UserModel().Find(c.Params("userID"))
-	if user == nil {
-		return fiber.ErrNotFound
-	}
-
-	// Check auth
-	authUser := c.Locals("authUser").(*models.User)
-	if authUser.Role != models.UserRoleAdmin && authUser.ID != user.ID {
-		return fiber.ErrUnauthorized
-	}
-
-	// Remove old avatar file
-	if user.AvatarID != nil && *user.AvatarID != "" {
-		_ = os.Remove(fmt.Sprintf("storage/avatars/original/%s", *user.AvatarID))
-		_ = os.Remove(fmt.Sprintf("storage/avatars/small/%s.jpg", *user.AvatarID))
-		_ = os.Remove(fmt.Sprintf("storage/avatars/medium/%s.jpg", *user.AvatarID))
-	}
-
-	// Save uploaded avatar file
-	avatarID := uuid.New()
-	avatar, err := c.FormFile("avatar")
-	if err != nil {
-		return fiber.ErrBadRequest
-	}
-	if err = c.SaveFile(avatar, fmt.Sprintf("storage/avatars/original/%s", avatarID.String())); err != nil {
-		log.Fatalln(err)
-	}
-
-	// Open uploaded image
-	originalFile, err := os.Open(fmt.Sprintf("storage/avatars/original/%s", avatarID.String()))
-	if err != nil {
-		log.Fatalln(err)
-	}
-	defer originalFile.Close()
-	if err != nil {
-		log.Fatalln(err)
-	}
-	var originalImage image.Image
-	originalImage, _, err = image.Decode(originalFile)
-	if err != nil {
-		if err := os.Remove(fmt.Sprintf("storage/avatars/original/%s", avatarID.String())); err != nil {
-			log.Fatalln(err)
-		}
-		return c.JSON(fiber.Map{"success": false})
-	}
-
-	// Save small resize
-	smallFile, err := os.Create(fmt.Sprintf("storage/avatars/small/%s.jpg", avatarID.String()))
-	if err != nil {
-		log.Fatalln(err)
-	}
-	defer smallFile.Close()
-	smallImage := resize.Resize(250, 250, originalImage, resize.Lanczos3)
-	err = jpeg.Encode(smallFile, smallImage, nil)
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	// Save small resize
-	mediumFile, err := os.Create(fmt.Sprintf("storage/avatars/medium/%s.jpg", avatarID.String()))
-	if err != nil {
-		log.Fatalln(err)
-	}
-	defer mediumFile.Close()
-	mediumImage := resize.Resize(500, 500, originalImage, resize.Lanczos3)
-	err = jpeg.Encode(mediumFile, mediumImage, nil)
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	// Save avatar id for user
-	models.UserModel().Where("id", user.ID).Update(database.Map{
-		"avatar": avatarID.String(),
-	})
-	return c.JSON(fiber.Map{"success": true})
-}
-
-func UsersAvatarDelete(c *fiber.Ctx) error {
-	// Check if user exists
-	user := models.UserModel().Find(c.Params("userID"))
-	if user == nil {
-		return fiber.ErrNotFound
-	}
-
-	// Check auth
-	authUser := c.Locals("authUser").(*models.User)
-	if authUser.Role != models.UserRoleAdmin && authUser.ID != user.ID {
-		return fiber.ErrUnauthorized
-	}
-
-	// Check if user has avatar
-	if user.AvatarID != nil && *user.AvatarID != "" {
-		// Remove old avatar file
-		_ = os.Remove(fmt.Sprintf("storage/avatars/original/%s", *user.AvatarID))
-		_ = os.Remove(fmt.Sprintf("storage/avatars/small/%s.jpg", *user.AvatarID))
-		_ = os.Remove(fmt.Sprintf("storage/avatars/medium/%s.jpg", *user.AvatarID))
-
-		// Clear avatar id for user
-		models.UserModel().Where("id", user.ID).Update(database.Map{
-			"avatar": nil,
-		})
-	}
+	models.UserModel.Where("id", user.ID).Delete()
 	return c.JSON(fiber.Map{"success": true})
 }
 
 func UsersLikedArtists(c *fiber.Ctx) error {
 	query, page, limit := utils.ParseIndexVars(c)
 
+	// Check if user id is valid uuid
+	if !uuid.IsValid(c.Params("userID")) {
+		return fiber.ErrBadRequest
+	}
+
 	// Check if user exists
-	user := models.UserModel().Find(c.Params("userID"))
+	user := models.UserModel.Find(c.Params("userID"))
 	if user == nil {
 		return fiber.ErrNotFound
 	}
@@ -350,7 +231,7 @@ func UsersLikedArtists(c *fiber.Ctx) error {
 	}
 
 	// Get liked artists
-	q := models.ArtistModel(c).Join("INNER JOIN `artist_likes` ON `artists`.`id` = `artist_likes`.`artist_id`").
+	q := models.ArtistModel.Join("INNER JOIN `artist_likes` ON `artists`.`id` = `artist_likes`.`artist_id`").
 		WhereRaw("`artist_likes`.`user_id` = UUID_TO_BIN(?)", authUser.ID).WhereRaw("`artists`.`name` LIKE ?", "%"+query+"%")
 	if c.Query("sort_by") == "name" {
 		q = q.OrderByRaw("LOWER(`artists`.`name`)")
@@ -372,11 +253,55 @@ func UsersLikedArtists(c *fiber.Ctx) error {
 	return c.JSON(q.Paginate(page, limit))
 }
 
+func UsersLikedGenres(c *fiber.Ctx) error {
+	query, page, limit := utils.ParseIndexVars(c)
+
+	// Check if user id is valid uuid
+	if !uuid.IsValid(c.Params("userID")) {
+		return fiber.ErrBadRequest
+	}
+
+	// Check if user exists
+	user := models.UserModel.Find(c.Params("userID"))
+	if user == nil {
+		return fiber.ErrNotFound
+	}
+
+	// Check auth
+	authUser := c.Locals("authUser").(*models.User)
+	if authUser.Role != models.UserRoleAdmin && authUser.ID != user.ID {
+		return fiber.ErrUnauthorized
+	}
+
+	// Get liked genres
+	q := models.GenreModel.Join("INNER JOIN `genre_likes` ON `genres`.`id` = `genre_likes`.`genre_id`").
+		WhereRaw("`genre_likes`.`user_id` = UUID_TO_BIN(?)", authUser.ID).WhereRaw("`genres`.`name` LIKE ?", "%"+query+"%")
+	if c.Query("sort_by") == "name" {
+		q = q.OrderByRaw("LOWER(`genres`.`name`)")
+	} else if c.Query("sort_by") == "name_desc" {
+		q = q.OrderByRaw("LOWER(`genres`.`name`) DESC")
+	} else if c.Query("sort_by") == "created_at" {
+		q = q.OrderByRaw("`genres`.`created_at`")
+	} else if c.Query("sort_by") == "created_at_desc" {
+		q = q.OrderByRaw("`genres`.`created_at` DESC")
+	} else if c.Query("sort_by") == "liked_at" {
+		q = q.OrderByRaw("`genre_likes`.`created_at`")
+	} else {
+		q = q.OrderByRaw("`genre_likes`.`created_at` DESC")
+	}
+	return c.JSON(q.Paginate(page, limit))
+}
+
 func UsersLikedAlbums(c *fiber.Ctx) error {
 	query, page, limit := utils.ParseIndexVars(c)
 
+	// Check if user id is valid uuid
+	if !uuid.IsValid(c.Params("userID")) {
+		return fiber.ErrBadRequest
+	}
+
 	// Check if user exists
-	user := models.UserModel().Find(c.Params("userID"))
+	user := models.UserModel.Find(c.Params("userID"))
 	if user == nil {
 		return fiber.ErrNotFound
 	}
@@ -388,7 +313,7 @@ func UsersLikedAlbums(c *fiber.Ctx) error {
 	}
 
 	// Get liked albums
-	q := models.AlbumModel(c).Join("INNER JOIN `album_likes` ON `albums`.`id` = `album_likes`.`album_id`").
+	q := models.AlbumModel.Join("INNER JOIN `album_likes` ON `albums`.`id` = `album_likes`.`album_id`").
 		With("artists", "genres").WhereRaw("`album_likes`.`user_id` = UUID_TO_BIN(?)", authUser.ID).
 		WhereRaw("`albums`.`title` LIKE ?", "%"+query+"%")
 	if c.Query("sort_by") == "title" {
@@ -414,8 +339,13 @@ func UsersLikedAlbums(c *fiber.Ctx) error {
 func UsersLikedTracks(c *fiber.Ctx) error {
 	query, page, limit := utils.ParseIndexVars(c)
 
+	// Check if user id is valid uuid
+	if !uuid.IsValid(c.Params("userID")) {
+		return fiber.ErrBadRequest
+	}
+
 	// Check if user exists
-	user := models.UserModel().Find(c.Params("userID"))
+	user := models.UserModel.Find(c.Params("userID"))
 	if user == nil {
 		return fiber.ErrNotFound
 	}
@@ -427,8 +357,8 @@ func UsersLikedTracks(c *fiber.Ctx) error {
 	}
 
 	// Get liked tracks
-	q := models.TrackModel(c).Join("INNER JOIN `track_likes` ON `tracks`.`id` = `track_likes`.`track_id`").
-		With("like", "artists", "album").WhereRaw("`track_likes`.`user_id` = UUID_TO_BIN(?)", authUser.ID).
+	q := models.TrackModel.Join("INNER JOIN `track_likes` ON `tracks`.`id` = `track_likes`.`track_id`").
+		With("liked_true", "artists", "album").WhereRaw("`track_likes`.`user_id` = UUID_TO_BIN(?)", authUser.ID).
 		WhereRaw("`tracks`.`title` LIKE ?", "%"+query+"%")
 	if c.Query("sort_by") == "title" {
 		q = q.OrderByRaw("LOWER(`tracks`.`title`)")
@@ -453,8 +383,13 @@ func UsersLikedTracks(c *fiber.Ctx) error {
 func UsersLikedPlaylists(c *fiber.Ctx) error {
 	query, page, limit := utils.ParseIndexVars(c)
 
+	// Check if user id is valid uuid
+	if !uuid.IsValid(c.Params("userID")) {
+		return fiber.ErrBadRequest
+	}
+
 	// Check if user exists
-	user := models.UserModel().Find(c.Params("userID"))
+	user := models.UserModel.Find(c.Params("userID"))
 	if user == nil {
 		return fiber.ErrNotFound
 	}
@@ -466,8 +401,8 @@ func UsersLikedPlaylists(c *fiber.Ctx) error {
 	}
 
 	// Get liked playlists
-	q := models.PlaylistModel(c).Join("INNER JOIN `playlist_likes` ON `playlists`.`id` = `playlist_likes`.`playlist_id`").
-		With("like").WhereRaw("`playlist_likes`.`user_id` = UUID_TO_BIN(?)", authUser.ID).
+	q := models.PlaylistModel.Join("INNER JOIN `playlist_likes` ON `playlists`.`id` = `playlist_likes`.`playlist_id`").
+		WhereRaw("`playlist_likes`.`user_id` = UUID_TO_BIN(?)", authUser.ID).
 		WhereRaw("`playlists`.`name` LIKE ?", "%"+query+"%")
 	if c.Query("sort_by") == "name" {
 		q = q.OrderByRaw("LOWER(`playlists`.`name`)")
@@ -496,8 +431,13 @@ func UsersLikedPlaylists(c *fiber.Ctx) error {
 func UsersPlayedTracks(c *fiber.Ctx) error {
 	query, page, limit := utils.ParseIndexVars(c)
 
+	// Check if user id is valid uuid
+	if !uuid.IsValid(c.Params("userID")) {
+		return fiber.ErrBadRequest
+	}
+
 	// Check if user exists
-	user := models.UserModel().Find(c.Params("userID"))
+	user := models.UserModel.Find(c.Params("userID"))
 	if user == nil {
 		return fiber.ErrNotFound
 	}
@@ -509,8 +449,8 @@ func UsersPlayedTracks(c *fiber.Ctx) error {
 	}
 
 	// Get played tracks
-	playedTracks := models.TrackModel(c).Join("INNER JOIN `track_plays` ON `tracks`.`id` = `track_plays`.`track_id`").
-		With("like", "artists", "album").WhereRaw("`track_plays`.`user_id` = UUID_TO_BIN(?)", authUser.ID).
+	playedTracks := models.TrackModel.Join("INNER JOIN `track_plays` ON `tracks`.`id` = `track_plays`.`track_id`").
+		WithArgs("liked", c.Locals("authUser")).With("artists", "album").WhereRaw("`track_plays`.`user_id` = UUID_TO_BIN(?)", authUser.ID).
 		WhereRaw("`tracks`.`title` LIKE ?", "%"+query+"%").OrderByRaw("`track_plays`.`updated_at` DESC").Paginate(page, limit)
 	return c.JSON(playedTracks)
 }
@@ -518,8 +458,13 @@ func UsersPlayedTracks(c *fiber.Ctx) error {
 func UsersSessions(c *fiber.Ctx) error {
 	_, page, limit := utils.ParseIndexVars(c)
 
+	// Check if user id is valid uuid
+	if !uuid.IsValid(c.Params("userID")) {
+		return fiber.ErrBadRequest
+	}
+
 	// Check if user exists
-	user := models.UserModel().Find(c.Params("userID"))
+	user := models.UserModel.Find(c.Params("userID"))
 	if user == nil {
 		return fiber.ErrNotFound
 	}
@@ -531,15 +476,20 @@ func UsersSessions(c *fiber.Ctx) error {
 	}
 
 	// Get user sessions
-	userSessions := models.SessionModel().Where("user_id", user.ID).OrderByDesc("created_at").Paginate(page, limit)
+	userSessions := models.SessionModel.Where("user_id", user.ID).OrderByDesc("created_at").Paginate(page, limit)
 	return c.JSON(userSessions)
 }
 
 func UsersActiveSessions(c *fiber.Ctx) error {
 	_, page, limit := utils.ParseIndexVars(c)
 
+	// Check if user id is valid uuid
+	if !uuid.IsValid(c.Params("userID")) {
+		return fiber.ErrBadRequest
+	}
+
 	// Check if user exists
-	user := models.UserModel().Find(c.Params("userID"))
+	user := models.UserModel.Find(c.Params("userID"))
 	if user == nil {
 		return fiber.ErrNotFound
 	}
@@ -551,16 +501,21 @@ func UsersActiveSessions(c *fiber.Ctx) error {
 	}
 
 	// Get user sessions
-	userSessions := models.SessionModel().Where("user_id", user.ID).WhereRaw("`expires_at` > ?", time.Now()).
+	userSessions := models.SessionModel.Where("user_id", user.ID).WhereRaw("`expires_at` > ?", time.Now()).
 		OrderByDesc("created_at").Paginate(page, limit)
 	return c.JSON(userSessions)
 }
 
 func UsersPlaylists(c *fiber.Ctx) error {
-	_, page, limit := utils.ParseIndexVars(c)
+	query, page, limit := utils.ParseIndexVars(c)
+
+	// Check if user id is valid uuid
+	if !uuid.IsValid(c.Params("userID")) {
+		return fiber.ErrBadRequest
+	}
 
 	// Check if user exists
-	user := models.UserModel().Find(c.Params("userID"))
+	user := models.UserModel.Find(c.Params("userID"))
 	if user == nil {
 		return fiber.ErrNotFound
 	}
@@ -572,7 +527,7 @@ func UsersPlaylists(c *fiber.Ctx) error {
 	}
 
 	// Get user playlists
-	q := models.PlaylistModel(c).With("like").Where("user_id", user.ID)
+	q := models.PlaylistModel.WithArgs("liked", c.Locals("authUser")).Where("user_id", user.ID).WhereRaw("`name` LIKE ?", "%"+query+"%")
 	if c.Query("sort_by") == "public" {
 		q = q.OrderByRaw("`public` DESC, LOWER(`name`)")
 	} else if c.Query("sort_by") == "public_desc" {

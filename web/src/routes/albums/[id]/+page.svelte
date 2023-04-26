@@ -1,4 +1,9 @@
 <script>
+    import { goto } from '$app/navigation';
+    import ImageEditButton from '../../../components/buttons/image-edit-button.svelte';
+    import LikeButton from '../../../components/buttons/like-button.svelte';
+    import EditModal from '../../../components/modals/albums/edit-modal.svelte';
+    import DeleteModal from '../../../components/modals/delete-modal.svelte';
     import TracksTable from '../../../components/tracks-table.svelte';
     import { language } from '../../../stores.js';
 
@@ -7,22 +12,20 @@
         en: {
             title: '$1 - Albums - BassieMusic',
             back: 'Go back one page',
-            cover_alt: 'Cover of album $1',
-            explicit: 'Explicit lyrics',
             play: 'Play album',
-            like: 'Like album',
-            remove_like: 'Remove album like',
+            edit: 'Edit album',
+            album: 'album',
+            delete: 'Delete album',
             tracks: 'Tracks',
             tracks_empty: "This album doesn't have any tracks",
         },
         nl: {
             title: '$1 - Albums - BassieMusic',
             back: 'Ga een pagina terug',
-            cover_alt: 'Hoes van album $1',
-            explicit: 'Expliciete songtekst',
             play: 'Speel album',
-            like: 'Like album',
-            remove_like: 'Verwijder album like',
+            edit: 'Verander album',
+            album: 'album',
+            delete: 'Verwijder album',
             tracks: 'Tracks',
             tracks_empty: 'Dit album heeft geen enkele track',
         },
@@ -32,17 +35,8 @@
     // State
     export let data;
     let tracksTable;
-
-    // Methods
-    function likeAlbum() {
-        fetch(`${import.meta.env.VITE_API_URL}/albums/${data.album.id}/like`, {
-            method: data.album.liked ? 'DELETE' : 'PUT',
-            headers: {
-                Authorization: `Bearer ${data.token}`,
-            },
-        });
-        data.album.liked = !data.album.liked;
-    }
+    let editModal;
+    let deleteModal;
 </script>
 
 <svelte:head>
@@ -59,28 +53,12 @@
 
 <div class="columns">
     <div class="column is-one-quarter mr-5 mr-0-mobile">
-        <div class="box has-image p-0 has-image-tags">
-            <figure class="image is-1by1">
-                <img
-                    src={data.album.large_cover || '/images/album-default.svg'}
-                    alt={t('cover_alt', data.album.title)}
-                />
-            </figure>
-            <div class="image-tags">
-                {#if data.album.type == 'album'}
-                    <span class="tag">ALBUM</span>
-                {/if}
-                {#if data.album.type == 'ep'}
-                    <span class="tag">EP</span>
-                {/if}
-                {#if data.album.type == 'single'}
-                    <span class="tag">SINGLE</span>
-                {/if}
-                {#if data.album.explicit}
-                    <span class="tag is-danger" title={t('explicit')}>E</span>
-                {/if}
-            </div>
-        </div>
+        <ImageEditButton
+            token={data.token}
+            item={data.album}
+            itemRoute="albums"
+            editable={data.authUser.role === 'admin'}
+        />
     </div>
 
     <div class="column" style="display: flex; flex-direction: column; justify-content: center;">
@@ -106,21 +84,20 @@
                 </svg>
             </button>
 
-            {#if !data.album.liked}
-                <button class="button is-large" on:click={likeAlbum} title={t('like')}>
+            <LikeButton token={data.token} item={data.album} itemRoute="albums" itemLabel={t('album')} isLarge={true} />
+
+            {#if data.authUser.role === 'admin'}
+                <button class="button is-large" on:click={() => editModal.open()} title={t('edit')}>
                     <svg class="icon" viewBox="0 0 24 24">
                         <path
-                            d="M12.1,18.55L12,18.65L11.89,18.55C7.14,14.24 4,11.39 4,8.5C4,6.5 5.5,5 7.5,5C9.04,5 10.54,6 11.07,7.36H12.93C13.46,6 14.96,5 16.5,5C18.5,5 20,6.5 20,8.5C20,11.39 16.86,14.24 12.1,18.55M16.5,3C14.76,3 13.09,3.81 12,5.08C10.91,3.81 9.24,3 7.5,3C4.42,3 2,5.41 2,8.5C2,12.27 5.4,15.36 10.55,20.03L12,21.35L13.45,20.03C18.6,15.36 22,12.27 22,8.5C22,5.41 19.58,3 16.5,3Z"
+                            d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z"
                         />
                     </svg>
                 </button>
-            {:else}
-                <button class="button is-large" on:click={likeAlbum} title={t('remove_like')}>
-                    <svg class="icon is-colored" viewBox="0 0 24 24">
-                        <path
-                            fill="#f14668"
-                            d="M12,21.35L10.55,20.03C5.4,15.36 2,12.27 2,8.5C2,5.41 4.42,3 7.5,3C9.24,3 10.91,3.81 12,5.08C13.09,3.81 14.76,3 16.5,3C19.58,3 22,5.41 22,8.5C22,12.27 18.6,15.36 13.45,20.03L12,21.35Z"
-                        />
+
+                <button class="button is-large" on:click={() => deleteModal.open()} title={t('delete')}>
+                    <svg class="icon" viewBox="0 0 24 24">
+                        <path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z" />
                     </svg>
                 </button>
             {/if}
@@ -139,4 +116,26 @@
     />
 {:else}
     <p><i>{t('tracks_empty')}</i></p>
+{/if}
+
+{#if data.authUser.role === 'admin'}
+    <EditModal
+        bind:this={editModal}
+        token={data.token}
+        album={data.album}
+        on:update={(event) => {
+            data.album = event.detail.album;
+        }}
+    />
+
+    <DeleteModal
+        bind:this={deleteModal}
+        token={data.token}
+        item={data.album}
+        itemRoute="albums"
+        itemLabel={t('album')}
+        on:delete={() => {
+            goto('/albums');
+        }}
+    />
 {/if}

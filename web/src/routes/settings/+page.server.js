@@ -1,37 +1,17 @@
-import { redirect } from '@sveltejs/kit';
-
-export async function load({ url, fetch, cookies }) {
-    // Validate token
-    const validateResponse = await fetch(`${import.meta.env.VITE_API_URL}/auth/validate`, {
-        headers: {
-            Authorization: `Bearer ${cookies.get('token')}`,
-        },
-    });
-    if (validateResponse.status !== 200) {
-        cookies.delete('token', {
-            path: '/',
-        });
-        throw redirect(
-            307,
-            `/auth/login?${new URLSearchParams({
-                continue: url.href,
-            })}`
-        );
-    }
-    const { user: authUser, session_id: currentSessionId } = await validateResponse.json();
-
-    // Fetch sessions
-    const response = await fetch(`${import.meta.env.VITE_API_URL}/users/${authUser.id}/active_sessions`, {
+export async function load({ locals, fetch, cookies }) {
+    // Fetch user active sessions first page
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/users/${locals.authUser.id}/active_sessions`, {
         headers: {
             Authorization: `Bearer ${cookies.get('token')}`,
         },
     });
     const { data: sessions, pagination } = await response.json();
 
+    // Return values
     return {
         token: cookies.get('token'),
-        authUser,
-        currentSessionId,
+        authUser: locals.authUser,
+        authSessionId: locals.authSessionId,
         sessions,
         sessionsTotal: pagination.total,
     };

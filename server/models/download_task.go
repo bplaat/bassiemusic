@@ -3,7 +3,7 @@ package models
 import (
 	"time"
 
-	"github.com/bplaat/bassiemusic/database"
+	"github.com/bplaat/bassiemusic/core/database"
 )
 
 type DownloadTask struct {
@@ -19,31 +19,30 @@ type DownloadTask struct {
 }
 
 type DownloadTaskType int
-type StatusType int
 
 const DownloadTaskTypeDeezerArtist DownloadTaskType = 0
 const DownloadTaskTypeDeezerAlbum DownloadTaskType = 1
 
-const DownloadStatusTypePending StatusType = 0
-const DownloadStatusTypeDownloading StatusType = 1
+type DownloadTaskStatus int
 
-func DownloadTaskModel() *database.Model[DownloadTask] {
-	return (&database.Model[DownloadTask]{
-		TableName: "download_tasks",
-		Process: func(downloadTask *DownloadTask) {
-			if downloadTask.Type == DownloadTaskTypeDeezerArtist {
-				downloadTask.TypeString = "deezer_artist"
-			}
-			if downloadTask.Type == DownloadTaskTypeDeezerAlbum {
-				downloadTask.TypeString = "deezer_album"
-			}
+const DownloadTaskStatusPending DownloadTaskStatus = 0
+const DownloadTaskStatusDownloading DownloadTaskStatus = 1
 
-			if downloadTask.Status == DownloadStatusTypePending {
-				downloadTask.StatusString = "pending"
-			}
-			if downloadTask.Status == DownloadStatusTypeDownloading {
-				downloadTask.StatusString = "downloading"
-			}
-		},
-	}).Init()
-}
+var DownloadTaskModel *database.Model[DownloadTask] = (&database.Model[DownloadTask]{
+	TableName: "download_tasks",
+	Process: func(downloadTask *DownloadTask) {
+		if downloadTask.Type == DownloadTaskTypeDeezerArtist {
+			downloadTask.TypeString = "deezer_artist"
+		}
+		if downloadTask.Type == DownloadTaskTypeDeezerAlbum {
+			downloadTask.TypeString = "deezer_album"
+		}
+    
+		if downloadTask.Status == DownloadTaskStatusPending {
+			downloadTask.StatusString = "pending"
+		}
+		if downloadTask.Status == DownloadTaskStatusDownloading {
+			downloadTask.StatusString = "downloading"
+		}
+	},
+}).Init()

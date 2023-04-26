@@ -5,11 +5,11 @@
     const lang = {
         en: {
             image_alt: 'Image of artist $1',
-            sync: 'This aritist is synced, we will download automatic new albums'
+            sync: 'This aritist is synced, we will download automatic new albums',
         },
         nl: {
             image_alt: 'Afbeelding van artiest $1',
-            sync: 'Deze artiest is gesynchroniseerd, we zullen automatisch nieuwe albums downloaden'
+            sync: 'Deze artiest is gesynchroniseerd, we zullen automatisch nieuwe albums downloaden',
         },
     };
     const t = (key, p1) => lang[$language][key].replace('$1', p1);
@@ -28,8 +28,8 @@
         });
         const completeArtist = await response.json();
         let playableTracks = authUser.allow_explicit
-            ? completeArtist.top_tracks.filter((track) => track.music != null)
-            : completeArtist.top_tracks.filter((track) => track.music != null && !track.explicit);
+            ? completeArtist.top_tracks.filter((track) => track.music !== null)
+            : completeArtist.top_tracks.filter((track) => track.music !== null && !track.explicit);
         if (playableTracks.length > 0) {
             $musicPlayer.playTracks(playableTracks, playableTracks[0]);
         }

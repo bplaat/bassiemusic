@@ -1,6 +1,7 @@
 <script>
     import { page } from '$app/stores';
     import { onMount, onDestroy } from 'svelte';
+    import LikeButton from './buttons/like-button.svelte';
     import { musicState, language } from '../stores.js';
     import {
         WEBSOCKET_RECONNECT_TIMEOUT,
@@ -16,8 +17,7 @@
     const lang = {
         en: {
             cover_alt: 'Cover of album $1',
-            like: 'Like track',
-            remove_like: 'Remove track like',
+            track: 'track',
             shuffle: 'Start shuffling play queue',
             stop_shuffle: 'Stop shuffling play queue',
             previous: 'Previous',
@@ -33,8 +33,7 @@
         },
         nl: {
             cover_alt: 'Hoes van album $1',
-            like: 'Like track',
-            remove_like: 'Verwijder track like',
+            track: 'track',
             shuffle: 'Start willekeurige wachtrij',
             stop_shuffle: 'Stop willekeurige wachtrij',
             previous: 'Vorige',
@@ -54,7 +53,7 @@
     // Props
     export let token;
     export let queue = [];
-    export let track = undefined;
+    export let track = null;
     export let position = 0;
     export let duration = 0;
 
@@ -76,7 +75,7 @@
     }
 
     export function removeTrack(track) {
-        queue = queue.filter((otherTrack) => otherTrack.id != track.id);
+        queue = queue.filter((otherTrack) => otherTrack.id !== track.id);
         musicState.update((musicState) => {
             musicState.queue = queue;
             return musicState;
@@ -85,8 +84,10 @@
 
     // Websocket connection
     let ws;
+    let connecting = false;
     let connected = false;
     function websocketConnect() {
+        connecting = true;
         ws = new WebSocket(import.meta.env.VITE_WEBSOCKET_URL);
         ws.onopen = () => {
             connected = true;
@@ -97,7 +98,6 @@
             setTimeout(websocketConnect, WEBSOCKET_RECONNECT_TIMEOUT);
         };
     }
-    onMount(websocketConnect);
     onDestroy(() => {
         if (!connected) return;
         ws.close();
@@ -105,19 +105,19 @@
 
     // Music player
     let isPlaying = false,
-        audio,
-        updateUiTimeout,
-        updateServerTimeout,
+        audio = null,
+        updateUiTimeout = null,
+        updateServerTimeout = null,
         isShuffling = false;
 
     function loadAndPlayTrack(autoplay) {
-        if (audio != undefined) {
+        if (audio !== null) {
             audio.pause();
         }
-        if (updateUiTimeout != undefined) {
+        if (updateUiTimeout !== null) {
             clearTimeout(updateUiTimeout);
         }
-        if (updateServerTimeout != undefined) {
+        if (updateServerTimeout !== null) {
             clearTimeout(updateServerTimeout);
         }
 
@@ -141,7 +141,7 @@
                 artist: track.artists.map((artist) => artist.name).join(', '),
                 album: track.album.title,
                 artwork:
-                    track.album.small_cover != null
+                    track.album.small_cover !== null
                         ? [
                               {
                                   type: 'image/jpeg',
@@ -172,9 +172,9 @@
     onMount(() => {
         musicState.set({ queue, track });
 
-        isShuffling = localStorage.getItem('player-shuffling') == 'true';
+        isShuffling = localStorage.getItem('player-shuffling') === 'true';
 
-        if (track != undefined) {
+        if (track !== null) {
             loadAndPlayTrack(false);
         }
     });
@@ -202,7 +202,10 @@
     }
 
     function sendTrackPlay() {
-        if (!connected) return;
+        if (!connected && !connecting) {
+            websocketConnect();
+            return;
+        }
         ws.send(JSON.stringify({ type: 'track_play', track_id: track.id, position: audio.currentTime }));
     }
     async function updateServerLoop() {
@@ -306,17 +309,6 @@
         }
     });
 
-    // Like
-    function likeTrack() {
-        fetch(`${import.meta.env.VITE_API_URL}/tracks/${track.id}/like`, {
-            method: track.liked ? 'DELETE' : 'PUT',
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
-        track.liked = !track.liked;
-    }
-
     // Volume
     let volume = 1;
     onMount(() => {
@@ -325,20 +317,20 @@
     function setVolume(newVolume) {
         localStorage.setItem('player-volume', newVolume);
         volume = newVolume;
-        if (audio != undefined) {
+        if (audio !== null) {
             audio.volume = newVolume;
         }
     }
 
-    let oldVolume = undefined;
+    let oldVolume = null;
     function toggleVolume() {
         if (volume > 0) {
             oldVolume = volume;
             setVolume(0);
         } else {
-            if (oldVolume != undefined) {
+            if (oldVolume !== null) {
                 setVolume(oldVolume);
-                oldVolume = undefined;
+                oldVolume = null;
             } else {
                 setVolume(1);
             }
@@ -346,7 +338,7 @@
     }
 </script>
 
-{#if track != undefined}
+{#if track !== null}
     <div class="music-player box m-0 p-0 py-2 has-background-white-bis">
         <div class="media px-4 py-2">
             <div class="media-left">
@@ -370,24 +362,7 @@
                 </p>
             </div>
             <div class="media-right">
-                {#if !track.liked}
-                    <button class="button ml-3" on:click={likeTrack} title={t('like')}>
-                        <svg class="icon" viewBox="0 0 24 24">
-                            <path
-                                d="M12.1,18.55L12,18.65L11.89,18.55C7.14,14.24 4,11.39 4,8.5C4,6.5 5.5,5 7.5,5C9.04,5 10.54,6 11.07,7.36H12.93C13.46,6 14.96,5 16.5,5C18.5,5 20,6.5 20,8.5C20,11.39 16.86,14.24 12.1,18.55M16.5,3C14.76,3 13.09,3.81 12,5.08C10.91,3.81 9.24,3 7.5,3C4.42,3 2,5.41 2,8.5C2,12.27 5.4,15.36 10.55,20.03L12,21.35L13.45,20.03C18.6,15.36 22,12.27 22,8.5C22,5.41 19.58,3 16.5,3Z"
-                            />
-                        </svg>
-                    </button>
-                {:else}
-                    <button class="button ml-3" on:click={likeTrack} title={t('remove_like')}>
-                        <svg class="icon is-colored" viewBox="0 0 24 24">
-                            <path
-                                fill="#f14668"
-                                d="M12,21.35L10.55,20.03C5.4,15.36 2,12.27 2,8.5C2,5.41 4.42,3 7.5,3C9.24,3 10.91,3.81 12,5.08C13.09,3.81 14.76,3 16.5,3C19.58,3 22,5.41 22,8.5C22,12.27 18.6,15.36 13.45,20.03L12,21.35Z"
-                            />
-                        </svg>
-                    </button>
-                {/if}
+                <LikeButton {token} item={track} itemRoute="tracks" itemLabel={t('track')} />
             </div>
         </div>
 
@@ -460,7 +435,7 @@
         </div>
 
         <div class="music-player-volume px-4 is-hidden-touch">
-            {#if $page.url.pathname != '/queue'}
+            {#if $page.url.pathname !== '/queue'}
                 <a class="button mr-4" href="/queue" title={t('open_queue')}>
                     <svg class="icon" viewBox="0 0 24 24">
                         <path
@@ -492,7 +467,7 @@
                         title={volume > 0 ? t('mute_volume') : t('restore_volume')}
                     >
                         <svg class="icon" viewBox="0 0 24 24">
-                            {#if volume == 0}
+                            {#if volume === 0}
                                 <path
                                     d="M12,4L9.91,6.09L12,8.18M4.27,3L3,4.27L7.73,9H3V15H7L12,20V13.27L16.25,17.53C15.58,18.04 14.83,18.46 14,18.7V20.77C15.38,20.45 16.63,19.82 17.68,18.96L19.73,21L21,19.73L12,10.73M19,12C19,12.94 18.8,13.82 18.46,14.64L19.97,16.15C20.62,14.91 21,13.5 21,12C21,7.72 18,4.14 14,3.23V5.29C16.89,6.15 19,8.83 19,12M16.5,12C16.5,10.23 15.5,8.71 14,7.97V10.18L16.45,12.63C16.5,12.43 16.5,12.21 16.5,12Z"
                                 />

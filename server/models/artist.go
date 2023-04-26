@@ -5,8 +5,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/bplaat/bassiemusic/database"
-	"github.com/gofiber/fiber/v2"
+	"github.com/bplaat/bassiemusic/core/database"
 )
 
 // Artist
@@ -14,7 +13,7 @@ type Artist struct {
 	ID          string    `column:"id,uuid" json:"id"`
 	Name        string    `column:"name,string" json:"name"`
 	Sync        bool      `column:"sync,bool" json:"sync"`
-	DeezerID    int64     `column:"deezer_id,bigint" json:"-"`
+	DeezerID    int64     `column:"deezer_id,bigint" json:"deezer_id"`
 	SmallImage  *string   `json:"small_image"`
 	MediumImage *string   `json:"medium_image"`
 	LargeImage  *string   `json:"large_image"`
@@ -24,8 +23,10 @@ type Artist struct {
 	TopTracks   *[]Track  `json:"top_tracks,omitempty"`
 }
 
-func ArtistModel(c *fiber.Ctx) *database.Model[Artist] {
-	return (&database.Model[Artist]{
+var ArtistModel *database.Model[Artist]
+
+func init() {
+	ArtistModel = (&database.Model[Artist]{
 		TableName: "artists",
 		Process: func(artist *Artist) {
 			if _, err := os.Stat(fmt.Sprintf("storage/artists/small/%s.jpg", artist.ID)); err == nil {
@@ -37,20 +38,25 @@ func ArtistModel(c *fiber.Ctx) *database.Model[Artist] {
 				artist.LargeImage = &largeImage
 			}
 		},
-		Relationships: map[string]database.ModelProcessFunc[Artist]{
-			"like": func(artist *Artist) {
-				if c != nil {
-					authUser := c.Locals("authUser").(*User)
-					liked := ArtistLikeModel().Where("artist_id", artist.ID).Where("user_id", authUser.ID).First() != nil
+		Relationships: map[string]database.ModelRelationshipFunc[Artist]{
+			"liked": func(artist *Artist, args []any) {
+				if len(args) > 0 {
+					authUser := args[0].(*User)
+					liked := ArtistLikeModel.Where("artist_id", artist.ID).Where("user_id", authUser.ID).First() != nil
 					artist.Liked = &liked
 				}
 			},
-			"albums": func(artist *Artist) {
-				albums := AlbumModel(c).With("artists", "genres").WhereIn("album_artist", "album_id", "artist_id", artist.ID).OrderByDesc("released_at").Get()
+			"albums": func(artist *Artist, args []any) {
+				albums := AlbumModel.With("artists", "genres").WhereIn("album_artist", "album_id", "artist_id", artist.ID).OrderByDesc("released_at").Get()
 				artist.Albums = &albums
 			},
-			"top_tracks": func(artist *Artist) {
-				topTracks := TrackModel(c).With("like", "artists", "album").WhereIn("track_artist", "track_id", "artist_id", artist.ID).OrderByDesc("plays").Limit(5).Get()
+			"top_tracks": func(artist *Artist, args []any) {
+				topTracksQuery := TrackModel.With("artists", "album")
+				if len(args) > 0 {
+					authUser := args[0].(*User)
+					topTracksQuery = topTracksQuery.WithArgs("liked", authUser)
+				}
+				topTracks := topTracksQuery.WhereIn("track_artist", "track_id", "artist_id", artist.ID).OrderByDesc("plays").Limit(5).Get()
 				artist.TopTracks = &topTracks
 			},
 		},
@@ -65,8 +71,6 @@ type ArtistLike struct {
 	CreatedAt time.Time `column:"created_at,timestamp"`
 }
 
-func ArtistLikeModel() *database.Model[ArtistLike] {
-	return (&database.Model[ArtistLike]{
-		TableName: "artist_likes",
-	}).Init()
-}
+var ArtistLikeModel *database.Model[ArtistLike] = (&database.Model[ArtistLike]{
+	TableName: "artist_likes",
+}).Init()

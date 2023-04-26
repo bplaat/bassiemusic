@@ -12,9 +12,9 @@ import (
 )
 
 func Sync() {
-	total := models.ArtistModel(nil).Where("sync", true).Count()
+	total := models.ArtistModel.Where("sync", true).Count()
 	index := 0
-	models.ArtistModel(nil).Where("sync", true).With("albums").Chunk(50, func(artists []models.Artist) {
+	models.ArtistModel.With("albums").Where("sync", true).Chunk(50, func(artists []models.Artist) {
 		for _, artist := range artists {
 			// Fetch deezer artist albums
 			var artistAlbums structs.DeezerArtistAlbums

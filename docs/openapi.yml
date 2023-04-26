@@ -257,7 +257,7 @@ paths:
   /artists/{id}:
     get:
       tags: [Artists]
-      description: Get an artist
+      description: Get artist
       security:
         - TokenAuth: []
       parameters:
@@ -269,6 +269,64 @@ paths:
           description: Authorization error
         "404":
           description: Artist not found
+    put:
+      tags: [Artists]
+      description: Update artist
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ArtistID"
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                sync:
+                  type: boolean
+                deezer_id:
+                  type: integer
+                  format: int64
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                sync:
+                  type: boolean
+                deezer_id:
+                  type: integer
+                  format: int64
+                image:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: Successfull response
+        "400":
+          description: Bad Request
+        "401":
+          description: Authorization error
+        "404":
+          description: Artist not found
+    delete:
+      tags: [Artists]
+      description: Delete artist
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ArtistID"
+      responses:
+        "200":
+          description: Successfull response
+        "401":
+          description: Authorization error
+        "404":
+          description: User not found
   /artists/{id}/like:
     put:
       tags: [Artists]
@@ -299,6 +357,143 @@ paths:
         "404":
           description: Artist not found
 
+  # Genres
+  /genres:
+    get:
+      tags: [Genres]
+      description: Get a list of genres
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Query"
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+        - name: sort_by
+          in: query
+          description: Sort items by
+          required: false
+          schema:
+            type: string
+            enum: ['name', 'name_desc', 'created_at', 'created_at_desc']
+      responses:
+        "200":
+          description: Successfull response
+        "401":
+          description: Authorization error
+  /genres/{id}:
+    get:
+      tags: [Genres]
+      description: Get genre
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/GenreID"
+      responses:
+        "200":
+          description: Successfull response
+        "401":
+          description: Authorization error
+        "404":
+          description: Genre not found
+    put:
+      tags: [Genres]
+      description: Update genre
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/GenreID"
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                deezer_id:
+                  type: integer
+                  format: int64
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                deezer_id:
+                  type: integer
+                  format: int64
+                image:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: Successfull response
+        "400":
+          description: Bad Request
+        "401":
+          description: Authorization error
+        "404":
+          description: Genre not found
+    delete:
+      tags: [Genres]
+      description: Delete genre
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/GenreID"
+      responses:
+        "200":
+          description: Successfull response
+        "401":
+          description: Authorization error
+        "404":
+          description: User not found
+  /genres/{id}/albums:
+    get:
+      tags: [Genres]
+      description: Get a list of albums that have genre
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/GenreID"
+      responses:
+        "200":
+          description: Successfull response
+        "401":
+          description: Authorization error
+        "404":
+          description: Genre not found
+  /genres/{id}/like:
+    put:
+      tags: [Genres]
+      description: Like a genre with authed user
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/GenreID"
+      responses:
+        "200":
+          description: Successfull response
+        "401":
+          description: Authorization error
+        "404":
+          description: Genre not found
+    delete:
+      tags: [Genres]
+      description: Delete a liked to a genre
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/GenreID"
+      responses:
+        "200":
+          description: Successfull response
+        "401":
+          description: Authorization error
+        "404":
+          description: Genre not found
+
   # Albums
   /albums:
     get:
@@ -325,7 +520,7 @@ paths:
   /albums/{id}:
     get:
       tags: [Albums]
-      description: Get an album
+      description: Get album
       security:
         - TokenAuth: []
       parameters:
@@ -337,6 +532,76 @@ paths:
           description: Authorization error
         "404":
           description: Album not found
+    put:
+      tags: [Albums]
+      description: Update album
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/AlbumID"
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                type:
+                  type: string
+                  enum: [album, ep, single]
+                released_at:
+                  type: string
+                  format: date
+                explicit:
+                  type: boolean
+                deezer_id:
+                  type: integer
+                  format: int64
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                type:
+                  type: string
+                  enum: [album, ep, single]
+                released_at:
+                  type: string
+                  format: date
+                explicit:
+                  type: boolean
+                deezer_id:
+                  type: integer
+                  format: int64
+                cover:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: Successfull response
+        "400":
+          description: Bad Request
+        "401":
+          description: Authorization error
+        "404":
+          description: Album not found
+    delete:
+      tags: [Albums]
+      description: Delete album
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/AlbumID"
+      responses:
+        "200":
+          description: Successfull response
+        "401":
+          description: Authorization error
+        "404":
+          description: User not found
   /albums/{id}/like:
     put:
       tags: [Albums]
@@ -367,60 +632,6 @@ paths:
         "404":
           description: Album not found
 
-  # Genres
-  /genres:
-    get:
-      tags: [Genres]
-      description: Get a list of genres
-      security:
-        - TokenAuth: []
-      parameters:
-        - $ref: "#/components/parameters/Query"
-        - $ref: "#/components/parameters/Page"
-        - $ref: "#/components/parameters/Limit"
-        - name: sort_by
-          in: query
-          description: Sort items by
-          required: false
-          schema:
-            type: string
-            enum: ['name', 'name_desc', 'created_at', 'created_at_desc']
-      responses:
-        "200":
-          description: Successfull response
-        "401":
-          description: Authorization error
-  /genres/{id}:
-    get:
-      tags: [Genres]
-      description: Get a genre
-      security:
-        - TokenAuth: []
-      parameters:
-        - $ref: "#/components/parameters/GenreID"
-      responses:
-        "200":
-          description: Successfull response
-        "401":
-          description: Authorization error
-        "404":
-          description: Genre not found
-  /genres/{id}/albums:
-    get:
-      tags: [Genres]
-      description: Get a list of albums that have genre
-      security:
-        - TokenAuth: []
-      parameters:
-        - $ref: "#/components/parameters/GenreID"
-      responses:
-        "200":
-          description: Successfull response
-        "401":
-          description: Authorization error
-        "404":
-          description: Genre not found
-
   # Tracks
   /tracks:
     get:
@@ -447,7 +658,77 @@ paths:
   /tracks/{id}:
     get:
       tags: [Tracks]
-      description: Get a track
+      description: Get track
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/TrackID"
+      responses:
+        "200":
+          description: Successfull response
+        "401":
+          description: Authorization error
+        "404":
+          description: Track not found
+    put:
+      tags: [Tracks]
+      description: Update track
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/TrackID"
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                album_id:
+                  type: string
+                  format: uuid
+                disk:
+                  type: integer
+                  format: int32
+                position:
+                  type: integer
+                  format: int32
+                explicit:
+                  type: boolean
+                deezer_id:
+                  type: integer
+                  format: int64
+                youtube_id:
+                  type: string
+      responses:
+        "200":
+          description: Successfull response
+        "400":
+          description: Bad Request
+        "401":
+          description: Authorization error
+        "404":
+          description: Album not found
+    delete:
+      tags: [Tracks]
+      description: Delete track
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/TrackID"
+      responses:
+        "200":
+          description: Successfull response
+        "401":
+          description: Authorization error
+        "404":
+          description: User not found
+  /tracks/{id}/play:
+    put:
+      tags: [Tracks]
+      description: Play a track
       security:
         - TokenAuth: []
       parameters:
@@ -477,21 +758,6 @@ paths:
     delete:
       tags: [Tracks]
       description: Delete a liked to a track
-      security:
-        - TokenAuth: []
-      parameters:
-        - $ref: "#/components/parameters/TrackID"
-      responses:
-        "200":
-          description: Successfull response
-        "401":
-          description: Authorization error
-        "404":
-          description: Track not found
-  /tracks/{id}/play:
-    put:
-      tags: [Tracks]
-      description: Play a track
       security:
         - TokenAuth: []
       parameters:
@@ -546,6 +812,20 @@ paths:
               required:
                 - name
                 - public
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                public:
+                  type: boolean
+                image:
+                  type: string
+                  format: binary
+              required:
+                - name
+                - public
       responses:
         "200":
           description: Successfull response
@@ -556,7 +836,7 @@ paths:
   /playlists/{id}:
     get:
       tags: [Playlists]
-      description: Get an playlist
+      description: Get playlist
       security:
         - TokenAuth: []
       parameters:
@@ -570,7 +850,7 @@ paths:
           description: Playlist not found
     put:
       tags: [Playlists]
-      description: Update an existing playlist
+      description: Update playlist
       security:
         - TokenAuth: []
       parameters:
@@ -586,9 +866,17 @@ paths:
                   type: string
                 public:
                   type: boolean
-              required:
-                - name
-                - public
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                public:
+                  type: boolean
+                image:
+                  type: string
+                  format: binary
       responses:
         "200":
           description: Successfull response
@@ -601,47 +889,6 @@ paths:
     delete:
       tags: [Playlists]
       description: Delete playlist
-      security:
-        - TokenAuth: []
-      parameters:
-        - $ref: "#/components/parameters/PlaylistID"
-      responses:
-        "200":
-          description: Successfull response
-        "401":
-          description: Authorization error
-        "404":
-          description: Playlist not found
-  /playlists/{id}/image:
-    post:
-      tags: [Playlists]
-      description: Upload new playlist image
-      security:
-        - TokenAuth: []
-      parameters:
-        - $ref: "#/components/parameters/PlaylistID"
-      requestBody:
-        required: true
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              properties:
-                image:
-                  type: string
-                  format: binary
-              required:
-                - image
-      responses:
-        "200":
-          description: Successfull response
-        "401":
-          description: Authorization error
-        "404":
-          description: Playlist not found
-    delete:
-      tags: [Playlists]
-      description: Delete playlist image
       security:
         - TokenAuth: []
       parameters:
@@ -742,7 +989,7 @@ paths:
   /playlists/{id}/like:
     put:
       tags: [Playlists]
-      description: Like an playlist with authed user
+      description: Like a playlist with authed user
       security:
         - TokenAuth: []
       parameters:
@@ -756,7 +1003,7 @@ paths:
           description: Playlist not found
     delete:
       tags: [Playlists]
-      description: Delete a liked to an playlist
+      description: Delete a liked to a playlist
       security:
         - TokenAuth: []
       parameters:
@@ -817,6 +1064,31 @@ paths:
                 - password
                 - allow_explicit
                 - role
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                allow_explicit:
+                  type: boolean
+                role:
+                  type: string
+                  enum: [normal, admin]
+                avatar:
+                  type: string
+                  format: binary
+              required:
+                - username
+                - email
+                - password
+                - allow_explicit
+                - role
       responses:
         "200":
           description: Successfull response
@@ -827,7 +1099,7 @@ paths:
   /users/{id}:
     get:
       tags: [Users]
-      description: Get an user
+      description: Get user
       security:
         - TokenAuth: []
       parameters:
@@ -841,7 +1113,7 @@ paths:
           description: User not found
     put:
       tags: [Users]
-      description: Update an existing user
+      description: Update user
       security:
         - TokenAuth: []
       parameters:
@@ -871,6 +1143,31 @@ paths:
                 theme:
                   type: string
                   enum: [system, light, dark]
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                allow_explicit:
+                  type: boolean
+                role:
+                  type: string
+                  enum: [normal, admin]
+                language:
+                  type: string
+                  enum: [en, nl]
+                theme:
+                  type: string
+                  enum: [system, light, dark]
+                avatar:
+                  type: string
+                  format: binary
       responses:
         "200":
           description: Successfull response
@@ -883,47 +1180,6 @@ paths:
     delete:
       tags: [Users]
       description: Delete user
-      security:
-        - TokenAuth: []
-      parameters:
-        - $ref: "#/components/parameters/UserID"
-      responses:
-        "200":
-          description: Successfull response
-        "401":
-          description: Authorization error
-        "404":
-          description: User not found
-  /users/{id}/avatar:
-    post:
-      tags: [Users]
-      description: Upload new user avatar
-      security:
-        - TokenAuth: []
-      parameters:
-        - $ref: "#/components/parameters/UserID"
-      requestBody:
-        required: true
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              properties:
-                avatar:
-                  type: string
-                  format: binary
-              required:
-                - avatar
-      responses:
-        "200":
-          description: Successfull response
-        "401":
-          description: Authorization error
-        "404":
-          description: User not found
-    delete:
-      tags: [Users]
-      description: Delete user avatar
       security:
         - TokenAuth: []
       parameters:
@@ -978,6 +1234,31 @@ paths:
           schema:
             type: string
             enum: ['liked_at', 'liked_at_desc', 'title', 'title_desc', 'released_at', 'released_at_desc', 'created_at', 'created_at_desc']
+      responses:
+        "200":
+          description: Successfull response
+        "401":
+          description: Authorization error
+        "404":
+          description: User not found
+  /users/{id}/liked_genres:
+    get:
+      tags: [Users]
+      description: Get a list of liked genres of user
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/UserID"
+        - $ref: "#/components/parameters/Query"
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+        - name: sort_by
+          in: query
+          description: Sort items by
+          required: false
+          schema:
+            type: string
+            enum: ['liked_at', 'liked_at_desc', 'name', 'name_desc', 'created_at', 'created_at_desc']
       responses:
         "200":
           description: Successfull response
@@ -1095,6 +1376,7 @@ paths:
         - TokenAuth: []
       parameters:
         - $ref: "#/components/parameters/UserID"
+        - $ref: "#/components/parameters/Query"
         - $ref: "#/components/parameters/Page"
         - $ref: "#/components/parameters/Limit"
         - name: sort_by
@@ -1161,52 +1443,56 @@ paths:
   /download/artist:
     post:
       tags: [Downloader]
-      description: Add a queue item to download an Deezer artist
+      description: Add a queue item to download a Deezer artist
       security:
         - TokenAuth: []
-      parameters:
-        - name: deezer_id
-          in: query
-          description: Deezer Artist ID
-          required: true
-          schema:
-            type: integer
-            format: int64
-        - name: display_name
-          in: query
-          description: Display Name
-          required: true
-          schema:
-            type: string
-            format: string
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                deezer_id:
+                  type: integer
+                  format: int64
+                display_name:
+                  type: string
+              required:
+                - deezer_id
+                - display_name
       responses:
         "200":
           description: Successfull response
+        "400":
+          description: Bad Request
         "401":
           description: Authorization error
   /download/album:
     post:
       tags: [Downloader]
-      description: Add a queue item to download an Deezer album
+      description: Add a queue item to download a Deezer album
       security:
         - TokenAuth: []
-      parameters:
-        - name: deezer_id
-          in: query
-          description: Deezer Album ID
-          required: true
-          schema:
-            type: integer
-            format: int64
-        - name: display_name
-          in: query
-          description: Display Name
-          required: true
-          schema:
-            type: string
-            format: string
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                deezer_id:
+                  type: integer
+                  format: int64
+                display_name:
+                  type: string
+              required:
+                - deezer_id
+                - display_name
       responses:
         "200":
           description: Successfull response
+        "400":
+          description: Bad Request
         "401":
           description: Authorization error

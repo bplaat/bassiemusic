@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/bplaat/bassiemusic/database"
+	"github.com/bplaat/bassiemusic/core/database"
 )
 
 type User struct {
@@ -35,35 +35,33 @@ const UserThemeSystem UserTheme = 0
 const UserThemeLight UserTheme = 1
 const UserThemeDark UserTheme = 2
 
-func UserModel() *database.Model[User] {
-	return (&database.Model[User]{
-		TableName: "users",
-		Process: func(user *User) {
-			if user.Role == UserRoleNormal {
-				user.RoleString = "normal"
-			}
-			if user.Role == UserRoleAdmin {
-				user.RoleString = "admin"
-			}
+var UserModel *database.Model[User] = (&database.Model[User]{
+	TableName: "users",
+	Process: func(user *User) {
+		if user.Role == UserRoleNormal {
+			user.RoleString = "normal"
+		}
+		if user.Role == UserRoleAdmin {
+			user.RoleString = "admin"
+		}
 
-			if user.Theme == UserThemeSystem {
-				user.ThemeString = "system"
-			}
-			if user.Theme == UserThemeLight {
-				user.ThemeString = "light"
-			}
-			if user.Theme == UserThemeDark {
-				user.ThemeString = "dark"
-			}
+		if user.Theme == UserThemeSystem {
+			user.ThemeString = "system"
+		}
+		if user.Theme == UserThemeLight {
+			user.ThemeString = "light"
+		}
+		if user.Theme == UserThemeDark {
+			user.ThemeString = "dark"
+		}
 
-			if user.AvatarID != nil && *user.AvatarID != "" {
-				if _, err := os.Stat(fmt.Sprintf("storage/avatars/original/%s", *user.AvatarID)); err == nil {
-					smallAvatar := fmt.Sprintf("%s/avatars/small/%s.jpg", os.Getenv("STORAGE_URL"), *user.AvatarID)
-					user.SmallAvatar = &smallAvatar
-					mediumAvatar := fmt.Sprintf("%s/avatars/medium/%s.jpg", os.Getenv("STORAGE_URL"), *user.AvatarID)
-					user.MediumAvatar = &mediumAvatar
-				}
+		if user.AvatarID != nil && *user.AvatarID != "" {
+			if _, err := os.Stat(fmt.Sprintf("storage/avatars/original/%s", *user.AvatarID)); err == nil {
+				smallAvatar := fmt.Sprintf("%s/avatars/small/%s.jpg", os.Getenv("STORAGE_URL"), *user.AvatarID)
+				user.SmallAvatar = &smallAvatar
+				mediumAvatar := fmt.Sprintf("%s/avatars/medium/%s.jpg", os.Getenv("STORAGE_URL"), *user.AvatarID)
+				user.MediumAvatar = &mediumAvatar
 			}
-		},
-	}).Init()
-}
+		}
+	},
+}).Init()

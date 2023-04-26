@@ -2,26 +2,22 @@ package controllers
 
 import (
 	"fmt"
-	"image"
-	"image/jpeg"
 	_ "image/png"
-	"log"
 	"os"
 	"strconv"
 
-	"github.com/bplaat/bassiemusic/database"
+	"github.com/bplaat/bassiemusic/core/database"
+	"github.com/bplaat/bassiemusic/core/uuid"
+	"github.com/bplaat/bassiemusic/core/validation"
 	"github.com/bplaat/bassiemusic/models"
 	"github.com/bplaat/bassiemusic/utils"
-	"github.com/bplaat/bassiemusic/utils/uuid"
-	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
-	"github.com/nfnt/resize"
 )
 
 func PlaylistsIndex(c *fiber.Ctx) error {
 	authUser := c.Locals("authUser").(*models.User)
 	query, page, limit := utils.ParseIndexVars(c)
-	q := models.PlaylistModel(c).With("like", "user").WhereRaw("`name` LIKE ?", "%"+query+"%")
+	q := models.PlaylistModel.WithArgs("liked", c.Locals("authUser")).With("user").WhereRaw("`name` LIKE ?", "%"+query+"%")
 	if authUser.Role != models.UserRoleAdmin {
 		q = q.Where("public", true)
 	}
@@ -45,45 +41,51 @@ func PlaylistsIndex(c *fiber.Ctx) error {
 	return c.JSON(q.Paginate(page, limit))
 }
 
-type PlaylistsCreateParams struct {
-	Name   string `form:"name" validate:"required,min=2"`
-	Public string `form:"public" validate:"required"`
+type PlaylistsCreateBody struct {
+	Name   string `form:"name" validate:"required|min:2"`
+	Public string `form:"public" validate:"required|boolean"`
 }
 
 func PlaylistsCreate(c *fiber.Ctx) error {
 	authUser := c.Locals("authUser").(*models.User)
 
 	// Parse body
-	var params PlaylistsCreateParams
-	if err := c.BodyParser(&params); err != nil {
-		log.Println(err)
+	var body PlaylistsCreateBody
+	if err := c.BodyParser(&body); err != nil {
 		return fiber.ErrBadRequest
 	}
 
-	// Validate values
-	validate := validator.New()
-	if err := validate.Struct(params); err != nil {
-		log.Println(err)
-		return fiber.ErrBadRequest
-	}
-
-	// Validate public is correct
-	if params.Public != "true" && params.Public != "false" {
-		log.Println("public not valid")
-		return fiber.ErrBadRequest
+	// Validate body
+	if err := validation.ValidateStruct(c, &body); err != nil {
+		return nil
 	}
 
 	// Create playlist
-	return c.JSON(models.PlaylistModel(c).Create(database.Map{
+	fields := database.Map{
 		"user_id": authUser.ID,
-		"name":    params.Name,
-		"public":  params.Public == "true",
-	}))
+		"name":    body.Name,
+		"public":  body.Public == "true",
+	}
+	if imageFile, err := c.FormFile("image"); err == nil {
+		// Store image when given
+		imageID := uuid.New()
+		if err := utils.StoreUploadedImage(c, "playlists", imageID.String(), imageFile, false); err != nil {
+			return err
+		}
+		fields["image"] = imageID.String()
+	}
+	return c.JSON(models.PlaylistModel.Create(fields))
 }
 
 func PlaylistsShow(c *fiber.Ctx) error {
+	// Check if playlist id is valid uuid
+	if !uuid.IsValid(c.Params("playlistID")) {
+		return fiber.ErrBadRequest
+	}
+
 	// Check if playlist exists
-	playlist := models.PlaylistModel(c).With("like", "user", "tracks").Find(c.Params("playlistID"))
+	playlist := models.PlaylistModel.WithArgs("liked", c.Locals("authUser")).With("user").
+		WithArgs("tracks", c.Locals("authUser")).Find(c.Params("playlistID"))
 	if playlist == nil {
 		return fiber.ErrNotFound
 	}
@@ -97,14 +99,20 @@ func PlaylistsShow(c *fiber.Ctx) error {
 	return c.JSON(playlist)
 }
 
-type PlaylistsEditParams struct {
-	Name   string `form:"name" validate:"required,min=2"`
-	Public string `form:"public" validate:"required"`
+type PlaylistsUpdateBody struct {
+	Name   *string `form:"name" validate:"min:2"`
+	Public *string `form:"public" validate:"boolean"`
+	Image  *string `form:"image" validate:"nullable"`
 }
 
-func PlaylistsEdit(c *fiber.Ctx) error {
+func PlaylistsUpdate(c *fiber.Ctx) error {
+	// Check if playlist id is valid uuid
+	if !uuid.IsValid(c.Params("playlistID")) {
+		return fiber.ErrBadRequest
+	}
+
 	// Check if playlist exists
-	playlist := models.PlaylistModel(c).Find(c.Params("playlistID"))
+	playlist := models.PlaylistModel.Find(c.Params("playlistID"))
 	if playlist == nil {
 		return fiber.ErrNotFound
 	}
@@ -116,38 +124,63 @@ func PlaylistsEdit(c *fiber.Ctx) error {
 	}
 
 	// Parse body
-	var params PlaylistsEditParams
-	if err := c.BodyParser(&params); err != nil {
-		log.Println(err)
+	var body PlaylistsUpdateBody
+	if err := c.BodyParser(&body); err != nil {
 		return fiber.ErrBadRequest
 	}
 
-	// Validate values
-	validate := validator.New()
-	if err := validate.Struct(params); err != nil {
-		log.Println(err)
-		return fiber.ErrBadRequest
-	}
-
-	// Validate public is correct
-	if params.Public != "true" && params.Public != "false" {
-		log.Println("public not valid")
-		return fiber.ErrBadRequest
+	// Validate body
+	if err := validation.ValidateStructUpdates(c, playlist, &body); err != nil {
+		return nil
 	}
 
 	// Update playlist
-	models.PlaylistModel(c).Where("id", playlist.ID).Update(database.Map{
-		"name":   params.Name,
-		"public": params.Public == "true",
-	})
+	updates := database.Map{}
+	if body.Name != nil {
+		updates["name"] = *body.Name
+	}
+	if body.Public != nil {
+		updates["public"] = *body.Public == "true"
+	}
+	if imageFile, err := c.FormFile("image"); err == nil {
+		// Remove old image file
+		if playlist.ImageID != nil && *playlist.ImageID != "" {
+			_ = os.Remove(fmt.Sprintf("storage/playlists/original/%s", *playlist.ImageID))
+			_ = os.Remove(fmt.Sprintf("storage/playlists/small/%s.jpg", *playlist.ImageID))
+			_ = os.Remove(fmt.Sprintf("storage/playlists/medium/%s.jpg", *playlist.ImageID))
+		}
+
+		// Store new image
+		imageID := uuid.New()
+		if err := utils.StoreUploadedImage(c, "playlists", imageID.String(), imageFile, false); err != nil {
+			return err
+		}
+		updates["image"] = imageID.String()
+	}
+	if body.Image != nil && *body.Image == "" {
+		if playlist.ImageID != nil && *playlist.ImageID != "" {
+			// Remove old image file
+			_ = os.Remove(fmt.Sprintf("storage/playlists/original/%s", *playlist.ImageID))
+			_ = os.Remove(fmt.Sprintf("storage/playlists/small/%s.jpg", *playlist.ImageID))
+			_ = os.Remove(fmt.Sprintf("storage/playlists/medium/%s.jpg", *playlist.ImageID))
+
+			updates["image"] = nil
+		}
+	}
+	models.PlaylistModel.Where("id", playlist.ID).Update(updates)
 
 	// Get updated playlist
-	return c.JSON(models.PlaylistModel(c).Find(playlist.ID))
+	return c.JSON(models.PlaylistModel.Find(playlist.ID))
 }
 
 func PlaylistsDelete(c *fiber.Ctx) error {
+	// Check if playlist id is valid uuid
+	if !uuid.IsValid(c.Params("playlistID")) {
+		return fiber.ErrBadRequest
+	}
+
 	// Check if playlist exists
-	playlist := models.PlaylistModel(c).Find(c.Params("playlistID"))
+	playlist := models.PlaylistModel.Find(c.Params("playlistID"))
 	if playlist == nil {
 		return fiber.ErrNotFound
 	}
@@ -159,124 +192,22 @@ func PlaylistsDelete(c *fiber.Ctx) error {
 	}
 
 	// Delete playlist
-	models.PlaylistModel(c).Where("id", playlist.ID).Delete()
+	models.PlaylistModel.Where("id", playlist.ID).Delete()
 	return c.JSON(fiber.Map{"success": true})
 }
 
-func PlaylistsImage(c *fiber.Ctx) error {
-	// Check if playlist exists
-	playlist := models.PlaylistModel(c).Find(c.Params("playlistID"))
-	if playlist == nil {
-		return fiber.ErrNotFound
-	}
-
-	// Check auth
-	authUser := c.Locals("authUser").(*models.User)
-	if !(authUser.Role == models.UserRoleAdmin || playlist.UserID == authUser.ID) {
-		return fiber.ErrUnauthorized
-	}
-
-	// Remove old image file
-	if playlist.ImageID != nil && *playlist.ImageID != "" {
-		_ = os.Remove(fmt.Sprintf("storage/playlists/original/%s", *playlist.ImageID))
-		_ = os.Remove(fmt.Sprintf("storage/playlists/small/%s.jpg", *playlist.ImageID))
-		_ = os.Remove(fmt.Sprintf("storage/playlists/medium/%s.jpg", *playlist.ImageID))
-	}
-
-	// Save uploaded image file
-	imageID := uuid.New()
-	uploadedImage, err := c.FormFile("image")
-	if err != nil {
-		return fiber.ErrBadRequest
-	}
-	if err = c.SaveFile(uploadedImage, fmt.Sprintf("storage/playlists/original/%s", imageID.String())); err != nil {
-		log.Fatalln(err)
-	}
-
-	// Open uploaded image
-	originalFile, err := os.Open(fmt.Sprintf("storage/playlists/original/%s", imageID.String()))
-	if err != nil {
-		log.Fatalln(err)
-	}
-	defer originalFile.Close()
-	if err != nil {
-		log.Fatalln(err)
-	}
-	var originalImage image.Image
-	originalImage, _, err = image.Decode(originalFile)
-	if err != nil {
-		if err := os.Remove(fmt.Sprintf("storage/playlists/original/%s", imageID.String())); err != nil {
-			log.Fatalln(err)
-		}
-		return c.JSON(fiber.Map{"success": false})
-	}
-
-	// Save small resize
-	smallFile, err := os.Create(fmt.Sprintf("storage/playlists/small/%s.jpg", imageID.String()))
-	if err != nil {
-		log.Fatalln(err)
-	}
-	defer smallFile.Close()
-	smallImage := resize.Resize(250, 250, originalImage, resize.Lanczos3)
-	err = jpeg.Encode(smallFile, smallImage, nil)
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	// Save small resize
-	mediumFile, err := os.Create(fmt.Sprintf("storage/playlists/medium/%s.jpg", imageID.String()))
-	if err != nil {
-		log.Fatalln(err)
-	}
-	defer mediumFile.Close()
-	mediumImage := resize.Resize(500, 500, originalImage, resize.Lanczos3)
-	err = jpeg.Encode(mediumFile, mediumImage, nil)
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	// Save image id for playlist
-	models.PlaylistModel(c).Where("id", playlist.ID).Update(database.Map{
-		"image": imageID.String(),
-	})
-	return c.JSON(fiber.Map{"success": true})
-}
-
-func PlaylistsImageDelete(c *fiber.Ctx) error {
-	// Check if playlist exists
-	playlist := models.PlaylistModel(c).Find(c.Params("playlistID"))
-	if playlist == nil {
-		return fiber.ErrNotFound
-	}
-
-	// Check auth
-	authUser := c.Locals("authUser").(*models.User)
-	if !(authUser.Role == models.UserRoleAdmin || playlist.UserID == authUser.ID) {
-		return fiber.ErrUnauthorized
-	}
-
-	// Check if playlist has image
-	if playlist.ImageID != nil && *playlist.ImageID != "" {
-		// Remove old image file
-		_ = os.Remove(fmt.Sprintf("storage/playlists/original/%s", *playlist.ImageID))
-		_ = os.Remove(fmt.Sprintf("storage/playlists/small/%s.jpg", *playlist.ImageID))
-		_ = os.Remove(fmt.Sprintf("storage/playlists/medium/%s.jpg", *playlist.ImageID))
-
-		// Clear image id for playlist
-		models.PlaylistModel(c).Where("id", playlist.ID).Update(database.Map{
-			"image": nil,
-		})
-	}
-	return c.JSON(fiber.Map{"success": true})
-}
-
-type PlaylistsAppendTrackParams struct {
-	TrackID string `form:"track_id" validate:"required"`
+type PlaylistsAppendTrackBody struct {
+	TrackID string `form:"track_id" validate:"required|uuid|exists:tracks,id"`
 }
 
 func PlaylistsAppendTrack(c *fiber.Ctx) error {
+	// Check if playlist id is valid uuid
+	if !uuid.IsValid(c.Params("playlistID")) {
+		return fiber.ErrBadRequest
+	}
+
 	// Check if playlist exists
-	playlist := models.PlaylistModel(c).Find(c.Params("playlistID"))
+	playlist := models.PlaylistModel.Find(c.Params("playlistID"))
 	if playlist == nil {
 		return fiber.ErrNotFound
 	}
@@ -288,50 +219,46 @@ func PlaylistsAppendTrack(c *fiber.Ctx) error {
 	}
 
 	// Parse body
-	var params PlaylistsInsertTrackParams
-	if err := c.BodyParser(&params); err != nil {
-		log.Println(err)
+	var body PlaylistsAppendTrackBody
+	if err := c.BodyParser(&body); err != nil {
 		return fiber.ErrBadRequest
 	}
 
-	// Validate values
-	validate := validator.New()
-	if err := validate.Struct(params); err != nil {
-		log.Println(err)
-		return fiber.ErrBadRequest
-	}
-
-	// Validate track id exists
-	if models.TrackModel(c).Find(params.TrackID) == nil {
-		log.Println("track_id not valid")
-		return fiber.ErrBadRequest
+	// Validate body
+	if err := validation.ValidateStruct(c, &body); err != nil {
+		return nil
 	}
 
 	// Trigger playlist update
 	oldName := playlist.Name
-	models.PlaylistModel(c).Where("id", playlist.ID).Update(database.Map{
+	models.PlaylistModel.Where("id", playlist.ID).Update(database.Map{
 		"name": "~" + oldName,
 	})
-	models.PlaylistModel(c).Where("id", playlist.ID).Update(database.Map{
+	models.PlaylistModel.Where("id", playlist.ID).Update(database.Map{
 		"name": oldName,
 	})
 
 	// Create playlist track
-	models.PlaylistTrackModel().Create(database.Map{
+	models.PlaylistTrackModel.Create(database.Map{
 		"playlist_id": playlist.ID,
-		"track_id":    params.TrackID,
-		"position":    models.PlaylistTrackModel().Where("playlist_id", playlist.ID).Count() + 1,
+		"track_id":    body.TrackID,
+		"position":    models.PlaylistTrackModel.Where("playlist_id", playlist.ID).Count() + 1,
 	})
 	return c.JSON(fiber.Map{"success": true})
 }
 
-type PlaylistsInsertTrackParams struct {
-	TrackID string `form:"track_id" validate:"required"`
+type PlaylistsInsertTrackBody struct {
+	TrackID string `form:"track_id" validate:"required|uuid|exists:tracks,id"`
 }
 
 func PlaylistsInsertTrack(c *fiber.Ctx) error {
+	// Check if playlist id is valid uuid
+	if !uuid.IsValid(c.Params("playlistID")) {
+		return fiber.ErrBadRequest
+	}
+
 	// Check if playlist exists
-	playlist := models.PlaylistModel(c).Find(c.Params("playlistID"))
+	playlist := models.PlaylistModel.Find(c.Params("playlistID"))
 	if playlist == nil {
 		return fiber.ErrNotFound
 	}
@@ -343,23 +270,14 @@ func PlaylistsInsertTrack(c *fiber.Ctx) error {
 	}
 
 	// Parse body
-	var params PlaylistsInsertTrackParams
-	if err := c.BodyParser(&params); err != nil {
-		log.Println(err)
+	var body PlaylistsInsertTrackBody
+	if err := c.BodyParser(&body); err != nil {
 		return fiber.ErrBadRequest
 	}
 
-	// Validate values
-	validate := validator.New()
-	if err := validate.Struct(params); err != nil {
-		log.Println(err)
-		return fiber.ErrBadRequest
-	}
-
-	// Validate track id exists
-	if models.TrackModel(c).Find(params.TrackID) == nil {
-		log.Println("track_id not valid")
-		return fiber.ErrBadRequest
+	// Validate body
+	if err := validation.ValidateStruct(c, &body); err != nil {
+		return nil
 	}
 
 	// Parse position
@@ -373,33 +291,38 @@ func PlaylistsInsertTrack(c *fiber.Ctx) error {
 
 	// Trigger playlist update
 	oldName := playlist.Name
-	models.PlaylistModel(c).Where("id", playlist.ID).Update(database.Map{
+	models.PlaylistModel.Where("id", playlist.ID).Update(database.Map{
 		"name": "~" + oldName,
 	})
-	models.PlaylistModel(c).Where("id", playlist.ID).Update(database.Map{
+	models.PlaylistModel.Where("id", playlist.ID).Update(database.Map{
 		"name": oldName,
 	})
 
 	// Move all existing track ids to the left
-	playlistTracks := models.PlaylistTrackModel().Where("playlist_id", playlist.ID).WhereRaw("`position` >= ?", position).Get()
+	playlistTracks := models.PlaylistTrackModel.Where("playlist_id", playlist.ID).WhereRaw("`position` >= ?", position).Get()
 	for _, playlistTrack := range playlistTracks {
-		models.PlaylistTrackModel().Where("id", playlistTrack.ID).Update(database.Map{
+		models.PlaylistTrackModel.Where("id", playlistTrack.ID).Update(database.Map{
 			"position": playlistTrack.Position + 1,
 		})
 	}
 
 	// Create playlist track
-	models.PlaylistTrackModel().Create(database.Map{
+	models.PlaylistTrackModel.Create(database.Map{
 		"playlist_id": playlist.ID,
-		"track_id":    params.TrackID,
+		"track_id":    body.TrackID,
 		"position":    position,
 	})
 	return c.JSON(fiber.Map{"success": true})
 }
 
 func PlaylistsRemoveTrack(c *fiber.Ctx) error {
+	// Check if playlist id is valid uuid
+	if !uuid.IsValid(c.Params("playlistID")) {
+		return fiber.ErrBadRequest
+	}
+
 	// Check if playlist exists
-	playlist := models.PlaylistModel(c).Find(c.Params("playlistID"))
+	playlist := models.PlaylistModel.Find(c.Params("playlistID"))
 	if playlist == nil {
 		return fiber.ErrNotFound
 	}
@@ -421,20 +344,20 @@ func PlaylistsRemoveTrack(c *fiber.Ctx) error {
 
 	// Trigger playlist update
 	oldName := playlist.Name
-	models.PlaylistModel(c).Where("id", playlist.ID).Update(database.Map{
+	models.PlaylistModel.Where("id", playlist.ID).Update(database.Map{
 		"name": "~" + oldName,
 	})
-	models.PlaylistModel(c).Where("id", playlist.ID).Update(database.Map{
+	models.PlaylistModel.Where("id", playlist.ID).Update(database.Map{
 		"name": oldName,
 	})
 
 	// Remove playlist track
-	models.PlaylistTrackModel().Where("playlist_id", playlist.ID).Where("position", position).Delete()
+	models.PlaylistTrackModel.Where("playlist_id", playlist.ID).Where("position", position).Delete()
 
 	// Move all existing track ids to the right
-	playlistTracks := models.PlaylistTrackModel().Where("playlist_id", playlist.ID).WhereRaw("`position` > ?", position).Get()
+	playlistTracks := models.PlaylistTrackModel.Where("playlist_id", playlist.ID).WhereRaw("`position` > ?", position).Get()
 	for _, playlistTrack := range playlistTracks {
-		models.PlaylistTrackModel().Where("id", playlistTrack.ID).Update(database.Map{
+		models.PlaylistTrackModel.Where("id", playlistTrack.ID).Update(database.Map{
 			"position": playlistTrack.Position - 1,
 		})
 	}
@@ -442,8 +365,13 @@ func PlaylistsRemoveTrack(c *fiber.Ctx) error {
 }
 
 func PlaylistsLike(c *fiber.Ctx) error {
+	// Check if playlist id is valid uuid
+	if !uuid.IsValid(c.Params("playlistID")) {
+		return fiber.ErrBadRequest
+	}
+
 	// Check if playlist exists
-	playlist := models.PlaylistModel(c).Find(c.Params("playlistID"))
+	playlist := models.PlaylistModel.Find(c.Params("playlistID"))
 	if playlist == nil {
 		return fiber.ErrNotFound
 	}
@@ -455,14 +383,14 @@ func PlaylistsLike(c *fiber.Ctx) error {
 	}
 
 	// Check if playlist already liked
-	playlistLike := models.PlaylistLikeModel().Where("playlist_id", c.Params("playlistID")).Where("user_id", authUser.ID).First()
+	playlistLike := models.PlaylistLikeModel.Where("playlist_id", playlist.ID).Where("user_id", authUser.ID).First()
 	if playlistLike != nil {
 		return c.JSON(fiber.Map{"success": true})
 	}
 
 	// Like playlist
-	models.PlaylistLikeModel().Create(database.Map{
-		"playlist_id": c.Params("playlistID"),
+	models.PlaylistLikeModel.Create(database.Map{
+		"playlist_id": playlist.ID,
 		"user_id":     authUser.ID,
 	})
 
@@ -470,8 +398,13 @@ func PlaylistsLike(c *fiber.Ctx) error {
 }
 
 func PlaylistsLikeDelete(c *fiber.Ctx) error {
+	// Check if playlist id is valid uuid
+	if !uuid.IsValid(c.Params("playlistID")) {
+		return fiber.ErrBadRequest
+	}
+
 	// Check if playlist exists
-	playlist := models.PlaylistModel(c).Find(c.Params("playlistID"))
+	playlist := models.PlaylistModel.Find(c.Params("playlistID"))
 	if playlist == nil {
 		return fiber.ErrNotFound
 	}
@@ -483,12 +416,12 @@ func PlaylistsLikeDelete(c *fiber.Ctx) error {
 	}
 
 	// Check if playlist not liked
-	playlistLike := models.PlaylistLikeModel().Where("playlist_id", c.Params("playlistID")).Where("user_id", authUser.ID).First()
+	playlistLike := models.PlaylistLikeModel.Where("playlist_id", playlist.ID).Where("user_id", authUser.ID).First()
 	if playlistLike == nil {
 		return c.JSON(fiber.Map{"success": true})
 	}
 
 	// Delete like
-	models.PlaylistLikeModel().Where("playlist_id", c.Params("playlistID")).Where("user_id", authUser.ID).Delete()
+	models.PlaylistLikeModel.Where("playlist_id", playlist.ID).Where("user_id", authUser.ID).Delete()
 	return c.JSON(fiber.Map{"success": true})
 }

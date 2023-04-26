@@ -64,6 +64,27 @@ CREATE TABLE `artist_likes` (
     FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
 );
 
+-- Genres
+CREATE TABLE `genres` (
+    `id` BINARY(16) NOT NULL,
+    `name` VARCHAR(255) NOT NULL,
+    `deezer_id` BIGINT UNSIGNED NOT NULL,
+    `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`)
+);
+
+CREATE TABLE `genre_likes` (
+    `id` BINARY(16) NOT NULL,
+    `genre_id` BINARY(16) NOT NULL,
+    `user_id` BINARY(16) NOT NULL,
+    `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    FOREIGN KEY (`genre_id`) REFERENCES `genres`(`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
+);
+
 -- Albums
 CREATE TABLE `albums` (
     `id` BINARY(16) NOT NULL,
@@ -86,6 +107,15 @@ CREATE TABLE `album_artist` (
     FOREIGN KEY (`artist_id`) REFERENCES `artists`(`id`) ON DELETE CASCADE
 );
 
+CREATE TABLE `album_genre` (
+    `id` BINARY(16) NOT NULL,
+    `album_id` BINARY(16) NOT NULL,
+    `genre_id` BINARY(16) NOT NULL,
+    PRIMARY KEY (`id`),
+    FOREIGN KEY (`album_id`) REFERENCES `albums`(`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`genre_id`) REFERENCES `genres`(`id`) ON DELETE CASCADE
+);
+
 CREATE TABLE `album_likes` (
     `id` BINARY(16) NOT NULL,
     `album_id` BINARY(16) NOT NULL,
@@ -95,25 +125,6 @@ CREATE TABLE `album_likes` (
     PRIMARY KEY (`id`),
     FOREIGN KEY (`album_id`) REFERENCES `albums`(`id`) ON DELETE CASCADE,
     FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
-);
-
--- Genres
-CREATE TABLE `genres` (
-    `id` BINARY(16) NOT NULL,
-    `name` VARCHAR(255) NOT NULL,
-    `deezer_id` BIGINT UNSIGNED NOT NULL,
-    `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    PRIMARY KEY (`id`)
-);
-
-CREATE TABLE `album_genre` (
-    `id` BINARY(16) NOT NULL,
-    `album_id` BINARY(16) NOT NULL,
-    `genre_id` BINARY(16) NOT NULL,
-    PRIMARY KEY (`id`),
-    FOREIGN KEY (`album_id`) REFERENCES `albums`(`id`) ON DELETE CASCADE,
-    FOREIGN KEY (`genre_id`) REFERENCES `genres`(`id`) ON DELETE CASCADE
 );
 
 -- Tracks

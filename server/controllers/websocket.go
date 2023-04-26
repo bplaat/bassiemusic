@@ -60,7 +60,7 @@ func Websocket(c *fiber.Ctx) error {
 
 			// Guest messages
 			if message.Type == "auth" {
-				session := models.SessionModel().With("user").Where("token", message.Token).WhereRaw("`expires_at` > ?", time.Now()).First()
+				session := models.SessionModel.With("user").Where("token", message.Token).WhereRaw("`expires_at` > ?", time.Now()).First()
 				if session == nil {
 					response := "{\"success\":false}"
 					if err := conn.WriteMessage(websocket.TextMessage, []byte(response)); err != nil {

@@ -65,7 +65,7 @@
             cover_alt: 'Hoes van album $1',
             add_album: 'Voeg album toe aan BassieMusic',
             albums_empty: 'Kan geen albums vinden op Deezer',
-            artists: 'Artisten',
+            artists: 'Artiesten',
             image_alt: 'Afbeelding van artist $1',
             add_artist: 'Voeg artist toe aan BassieMusic',
             artists_empty: 'Kan geen artisten vinden op Deezer',
@@ -84,7 +84,7 @@
 
     // Methods
     async function search() {
-        if (query == '') {
+        if (query === '') {
             results = false;
             albums = [];
             artists = [];
@@ -118,7 +118,7 @@
                 display_name: album.title,
             }),
         });
-        albums = albums.filter((otherAlbum) => otherAlbum.id != album.id);
+        albums = albums.filter((otherAlbum) => otherAlbum.id !== album.id);
     }
 
     async function downloadArtist(artist) {
@@ -132,7 +132,7 @@
                 display_name: artist.name,
             }),
         });
-        artists = artists.filter((otherArtist) => otherArtist.id != artist.id);
+        artists = artists.filter((otherArtist) => otherArtist.id !== artist.id);
     }
 
     // Logger
@@ -284,7 +284,7 @@
                         </div>
                     </div>
                 {/each}
-                {#if albums.length == 0}
+                {#if albums.length === 0}
                     <p><i>{t('albums_empty')}</i></p>
                 {/if}
             </div>
@@ -308,7 +308,7 @@
                         </button>
                     </div>
                 {/each}
-                {#if artists.length == 0}
+                {#if artists.length === 0}
                     <p><i>{t('artists_empty')}</i></p>
                 {/if}
             </div>
