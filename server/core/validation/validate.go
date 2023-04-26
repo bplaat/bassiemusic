@@ -146,7 +146,7 @@ func ValidateStructUpdates(c *fiber.Ctx, target any, data any) error {
 			for _, rule := range strings.Split(tag, "|") {
 				parts := strings.Split(rule, ":")
 				ruleName := parts[0]
-				var ruleArgs []string = []string{}
+				ruleArgs := []string{}
 				if len(parts) > 1 {
 					ruleArgs = strings.Split(parts[1], ",")
 				}

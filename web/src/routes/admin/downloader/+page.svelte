@@ -1,7 +1,8 @@
 <script>
+    import { onMount, onDestroy } from 'svelte';
+    import { WEBSOCKET_RECONNECT_TIMEOUT } from '../../../consts.js';
     import { formatBytes } from '../../../filters.js';
     import { language } from '../../../stores.js';
-    import { onMount } from 'svelte';
 
     // Language strings
     const lang = {
@@ -9,21 +10,20 @@
             title: 'Downloader - Admin - BassieMusic',
             header: 'Admin Downloader',
 
-            index: '#',
-            type: "Type",
-            display_name: "Name",
-            status: "Status",
-            progress: "progress",
-
             storage_size: 'Storage folder size',
             storage_used: 'Used: $1',
             storage_max: 'Max: $1',
 
-            deezer_artist: "Artist",
-            deezer_album: "Album",
-            pending: "Pending",
-            downloading: "Downloading",
-            empty_tasks: "There are no download tasks",
+            download_tasks: 'Current download tasks',
+            download_tasks_index: '#',
+            download_tasks_type: 'Type',
+            download_tasks_deezer_artist: 'Deezer Artist',
+            download_tasks_deezer_album: 'Deezer Album',
+            download_tasks_display_name: 'Name',
+            download_tasks_status: 'Status',
+            download_tasks_status_pending: 'Waiting',
+            download_tasks_progress: 'Progress',
+            download_tasks_empty: 'There are no current download tasks',
 
             search_header: 'Search and download albums and artists',
             query_placeholder: 'Find an album or artist...',
@@ -36,27 +36,25 @@
             image_alt: 'Image of artist $1',
             add_artist: 'Add artist to BassieMusic',
             artists_empty: "Can't find any artists on Deezer",
-            tasks_header: 'Current tasks',
         },
         nl: {
             title: 'Downloader - Admin - BassieMusic',
             header: 'Admin Downloader',
 
-            index: '#',
-            type: "Type",
-            display_name: "Naam",
-            status: "Status",
-            progress: "Progressie",
-
             storage_size: 'Storage folder groote',
             storage_used: 'Gebruikt: $1',
             storage_max: 'Max: $1',
 
-            deezer_artist: "Artiest",
-            deezer_album: "Album",
-            pending: "Wachten",
-            downloading: "Aan het downloaden",
-            empty_tasks: "Er zijn geen download opdrachten",
+            download_tasks: 'Huidge download taken',
+            download_tasks_index: '#',
+            download_tasks_type: 'Type',
+            download_tasks_deezer_artist: 'Deezer Artiest',
+            download_tasks_deezer_album: 'Deezer Album',
+            download_tasks_display_name: 'Naam',
+            download_tasks_status: 'Status',
+            download_tasks_status_pending: 'Wachten',
+            download_tasks_progress: 'Progressie',
+            download_tasks_empty: 'Er zijn geen huidige download taken',
 
             search_header: 'Zoek en download albums en artisten',
             query_placeholder: 'Vind een album of artist...',
@@ -76,7 +74,6 @@
 
     // State
     export let data;
-    let token = data.token;
     let query = '';
     let results = false;
     let albums = [];
@@ -97,7 +94,7 @@
             })}`,
             {
                 headers: {
-                    Authorization: `Bearer ${token}`,
+                    Authorization: `Bearer ${data.token}`,
                 },
             }
         );
@@ -111,7 +108,7 @@
         await fetch(`${import.meta.env.VITE_API_URL}/download/album`, {
             method: 'POST',
             headers: {
-                Authorization: `Bearer ${token}`,
+                Authorization: `Bearer ${data.token}`,
             },
             body: new URLSearchParams({
                 deezer_id: album.id,
@@ -125,7 +122,7 @@
         await fetch(`${import.meta.env.VITE_API_URL}/download/artist`, {
             method: 'POST',
             headers: {
-                Authorization: `Bearer ${token}`,
+                Authorization: `Bearer ${data.token}`,
             },
             body: new URLSearchParams({
                 deezer_id: artist.id,
@@ -135,58 +132,48 @@
         artists = artists.filter((otherArtist) => otherArtist.id !== artist.id);
     }
 
-    // Logger
-    function removeAt(arr, index) {
-        var j = 0;
-        var arr2 = [];
-        for (var i = 0; i < arr.length; i++) {
-            if (i != index) {
-            arr2[j] = arr[i];
-            j++;
-            }
-        }
-        return arr2
-    }
-
+    // Download Tasks Logger
     let ws;
+    let connected = false;
     let tasks = [];
-    onMount(() => {
+    function websocketConnect() {
         ws = new WebSocket(import.meta.env.VITE_WEBSOCKET_URL);
         ws.onopen = () => {
-            ws.onmessage = (event) => {
-                let data = JSON.parse(event.data);
-
-                if(data.type == 'allTasks'){
-                    tasks = data['data']
-                }else if(data.type == 'newTask'){
-                    tasks.push(data['data'])
-                }else if(data.type == 'taskUpdate'){
-                    let newTasks = [];
-                    tasks.forEach((task) => {
-                        if(task.id == data['data'].id){
-                            task = data['data']
-                        }
-                        newTasks.push(task)
-                    })
-
-                    tasks = newTasks;
-                }else if(data.type == 'taskDelete'){
-                    let i = 0;
-                    tasks.forEach((task) => {
-                        if(task.id == data['data'].id){
-                            tasks = removeAt(tasks, i)
-                        }
-                        i += 1
-                    })
-                }
-
-                tasks = tasks;
-            }
-
-            ws.send(JSON.stringify({type: 'auth', token}));
+            connected = true;
+            ws.send(JSON.stringify({ type: 'auth.validate', data: { token: data.token } }));
+            ws.send(JSON.stringify({ type: 'download_tasks.init' }));
         };
+        ws.onmessage = (event) => {
+            const { type, data } = JSON.parse(event.data);
+            console.log(type, data);
+            if (type === 'download_tasks.init.response') {
+                tasks = data;
+            }
+            if (type === 'download_tasks.create') {
+                tasks = [...tasks, data];
+            }
+            if (type === 'download_tasks.update') {
+                tasks = tasks.map((task) => {
+                    if (task.id === data.id) return data;
+                    return task;
+                });
+            }
+            if (type === 'download_tasks.delete') {
+                tasks = tasks.filter((task) => task.id !== data.id);
+            }
+        };
+        ws.disconnect = () => {
+            connected = false;
+            setTimeout(websocketConnect, WEBSOCKET_RECONNECT_TIMEOUT);
+        };
+    }
+    onMount(() => {
+        websocketConnect();
     });
-
+    onDestroy(() => {
+        if (!connected) return;
+        ws.close();
+    });
 </script>
 
 <svelte:head>
@@ -207,45 +194,44 @@
 </div>
 
 <div class="box">
-    <h2 class="title is-4">{t('tasks_header')}</h2>
-    {#key tasks}
-        {#if tasks.length != 0}
-            <table class="table" style="width: 100%; table-layout: fixed;">
-                <thead>
-                    <th style="width: 10%;">{t('index')}</th>
-                    <th style="width: 20%;">{t('type')}</th>
-                    <th style="width: 20%;">{t('display_name')}</th>
-                    <th style="width: 20%; text-align: center;">{t('status')}</th>
-                </thead>
-                <tbody>
-                    {#each tasks as task, index}
-                        <tr>
-                            <td>
-                                <div>{index + 1}</div>
-                            </td>
-                            <td>
-                                <p class="ellipsis">{t(task.type)}</p>
-                            </td>
-                            <td>
-                                <p class="ellipsis mb-1" style="font-weight: 500;">{task.display_name}</p>
-                            </td>
-                            <td style="text-align: center;">
-                                {#if task.status == "downloading"}
-                                    <progress class="progress is-link" value={task.progress} max=100>
-                                        {task.progress}%
-                                    </progress>
-                                {:else}
-                                    <p class="ellipsis">{t(task.status)}</p>
-                                {/if}
-                            </td>
-                        </tr>
-                    {/each}
-                </tbody>
-            </table>
-        {:else}
-            <p>{t('empty_tasks')}</p>
-        {/if}
-    {/key}
+    <h2 class="title is-4">{t('download_tasks')}</h2>
+    {#if tasks.length > 0}
+        <table class="table">
+            <thead>
+                <th style="width: 10%;">{t('download_tasks_index')}</th>
+                <th style="width: 20%;">{t('download_tasks_type')}</th>
+                <th style="width: 35%;">{t('download_tasks_display_name')}</th>
+                <th style="width: 35%;">{t('download_tasks_status')}</th>
+            </thead>
+            <tbody>
+                {#each tasks as task, index}
+                    <tr>
+                        <td>{index + 1}</td>
+                        <td class="ellipsis">
+                            {#if task.type === 'deezer_artist'}
+                                {t('download_tasks_deezer_artist')}
+                            {/if}
+                            {#if task.type === 'deezer_album'}
+                                {t('download_tasks_deezer_album')}
+                            {/if}
+                        </td>
+                        <td class="ellipsis" style="font-weight: 500;">{task.display_name}</td>
+                        <td>
+                            {#if task.status === 'downloading'}
+                                <progress class="progress is-link" style="width: 100%;" value={task.progress} max="100">
+                                    {task.progress}%
+                                </progress>
+                            {:else}
+                                <span class="ellipsis">{t('download_tasks_status_pending')}</span>
+                            {/if}
+                        </td>
+                    </tr>
+                {/each}
+            </tbody>
+        </table>
+    {:else}
+        <p>{t('download_tasks_empty')}</p>
+    {/if}
 </div>
 
 <div class="box">

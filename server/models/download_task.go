@@ -14,7 +14,7 @@ type DownloadTask struct {
 	DisplayName  string             `column:"display_name,string" json:"display_name"`
 	Status       DownloadTaskStatus `column:"status,int" json:"-"`
 	StatusString string             `json:"status"`
-	Progress     int                `column:"progress,int" json:"progress"`
+	Progress     float32            `column:"progress,float" json:"progress"`
 	CreatedAt    time.Time          `column:"created_at,timestamp" json:"created_at"`
 }
 

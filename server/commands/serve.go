@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/bplaat/bassiemusic/controllers"
+	"github.com/bplaat/bassiemusic/controllers/websocket"
 	"github.com/bplaat/bassiemusic/middlewares"
 	"github.com/bplaat/bassiemusic/tasks"
 	"github.com/bplaat/bassiemusic/utils"
@@ -64,7 +65,7 @@ func Serve() {
 	})
 
 	// Websocket
-	app.Get("/ws", controllers.Websocket)
+	app.Get("/ws", websocket.ServerHandle)
 
 	// Get agent information
 	app.Get("/agent", func(c *fiber.Ctx) error {

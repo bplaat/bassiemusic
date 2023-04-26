@@ -212,7 +212,7 @@
 />
 
 <!-- Tracks table -->
-<table class="table" style="width: 100%; table-layout: fixed;">
+<table class="table">
     <thead>
         {#if isAlbum}
             <th style="width: 10%;"><div class="track-index">{t('index')}</div></th>
