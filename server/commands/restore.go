@@ -17,7 +17,7 @@ func removeOldUserAvatarIDs() {
 	index := 0
 	models.UserModel.WhereNotNull("avatar").Chunk(50, func(users []models.User) {
 		for _, user := range users {
-			if _, err := os.Stat(fmt.Sprintf("storage/avatars/original/%s", *user.AvatarID)); os.IsNotExist(err) {
+			if _, err := os.Stat(fmt.Sprintf("storage/avatars/original/%s", user.AvatarID.String)); os.IsNotExist(err) {
 				models.UserModel.Where("id", user.ID).Update(database.Map{
 					"avatar": nil,
 				})
@@ -33,7 +33,7 @@ func removeOldPlaylistImageIDs() {
 	index := 0
 	models.PlaylistModel.WhereNotNull("image").Chunk(50, func(playlists []models.Playlist) {
 		for _, playlist := range playlists {
-			if _, err := os.Stat(fmt.Sprintf("storage/playlists/original/%s", *playlist.ImageID)); os.IsNotExist(err) {
+			if _, err := os.Stat(fmt.Sprintf("storage/playlists/original/%s", playlist.ImageID.String)); os.IsNotExist(err) {
 				models.PlaylistModel.Where("id", playlist.ID).Update(database.Map{
 					"image": nil,
 				})
@@ -114,7 +114,8 @@ func restoreTrackMusic() {
 	models.TrackModel.WhereNotNull("youtube_id").Chunk(50, func(tracks []models.Track) {
 		for _, track := range tracks {
 			if _, err := os.Stat(fmt.Sprintf("storage/tracks/%s.m4a", track.ID)); os.IsNotExist(err) {
-				downloadCommand := exec.Command("yt-dlp", "-f", "bestaudio[ext=m4a]", fmt.Sprintf("https://www.youtube.com/watch?v=%s", *track.YoutubeID),
+				downloadCommand := exec.Command("yt-dlp", "-f", "bestaudio[ext=m4a]",
+					fmt.Sprintf("https://www.youtube.com/watch?v=%s", track.YoutubeID.String),
 					"-o", fmt.Sprintf("storage/tracks/%s.m4a", track.ID))
 				log.Println(downloadCommand.String())
 				if err := downloadCommand.Run(); err != nil {

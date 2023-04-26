@@ -8,8 +8,8 @@ import (
 	"mime/multipart"
 	"os"
 
+	"github.com/disintegration/imaging"
 	"github.com/gofiber/fiber/v2"
-	"github.com/nfnt/resize"
 )
 
 func StoreUploadedImage(c *fiber.Ctx, storageDir string, id string, file *multipart.FileHeader, saveLarge bool) error {
@@ -42,7 +42,7 @@ func StoreUploadedImage(c *fiber.Ctx, storageDir string, id string, file *multip
 		log.Fatalln(err)
 	}
 	defer smallFile.Close()
-	smallImage := resize.Resize(250, 250, originalImage, resize.Lanczos3)
+	smallImage := imaging.Resize(originalImage, 250, 250, imaging.Lanczos)
 	err = jpeg.Encode(smallFile, smallImage, nil)
 	if err != nil {
 		log.Fatalln(err)
@@ -54,7 +54,7 @@ func StoreUploadedImage(c *fiber.Ctx, storageDir string, id string, file *multip
 		log.Fatalln(err)
 	}
 	defer mediumFile.Close()
-	mediumImage := resize.Resize(500, 500, originalImage, resize.Lanczos3)
+	mediumImage := imaging.Resize(originalImage, 500, 500, imaging.Lanczos)
 	err = jpeg.Encode(mediumFile, mediumImage, nil)
 	if err != nil {
 		log.Fatalln(err)
@@ -67,7 +67,7 @@ func StoreUploadedImage(c *fiber.Ctx, storageDir string, id string, file *multip
 			log.Fatalln(err)
 		}
 		defer largeFile.Close()
-		largeImage := resize.Resize(1000, 1000, originalImage, resize.Lanczos3)
+		largeImage := imaging.Resize(originalImage, 1000, 1000, imaging.Lanczos)
 		err = jpeg.Encode(largeFile, largeImage, nil)
 		if err != nil {
 			log.Fatalln(err)

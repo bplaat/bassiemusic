@@ -110,7 +110,16 @@ func AuthValidate(c *fiber.Ctx) error {
 
 	// Get session agent
 	session := c.Locals("session").(*models.Session)
-	agent := utils.Agent{OS: *session.ClientOS, Name: *session.ClientName, Version: *session.ClientVersion}
+	agent := utils.Agent{OS: "?", Name: "?", Version: "?"}
+	if session.ClientOS.Valid {
+		agent.OS = session.ClientOS.String
+	}
+	if session.ClientName.Valid {
+		agent.Name = session.ClientName.String
+	}
+	if session.ClientVersion.Valid {
+		agent.Version = session.ClientVersion.String
+	}
 	response := fiber.Map{
 		"success":    true,
 		"user":       authUser,

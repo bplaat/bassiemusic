@@ -16,11 +16,11 @@ type Album struct {
 	ReleasedAt  time.Time `column:"released_at,date" json:"released_at"`
 	Explicit    bool      `column:"explicit,bool" json:"explicit"`
 	DeezerID    int64     `column:"deezer_id,bigint" json:"deezer_id"`
+	CreatedAt   time.Time `column:"created_at,timestamp" json:"created_at"`
 	SmallCover  *string   `json:"small_cover"`
 	MediumCover *string   `json:"medium_cover"`
 	LargeCover  *string   `json:"large_cover"`
 	Liked       *bool     `json:"liked,omitempty"`
-	CreatedAt   time.Time `column:"created_at,timestamp" json:"created_at"`
 	Artists     *[]Artist `json:"artists,omitempty"`
 	Genres      *[]Genre  `json:"genres,omitempty"`
 	Tracks      *[]Track  `json:"tracks,omitempty"`
