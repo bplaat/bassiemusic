@@ -11,12 +11,12 @@ import (
 	"time"
 
 	"github.com/bplaat/bassiemusic/consts"
+	"github.com/bplaat/bassiemusic/controllers"
 	"github.com/bplaat/bassiemusic/core/database"
 	"github.com/bplaat/bassiemusic/core/uuid"
 	"github.com/bplaat/bassiemusic/models"
 	"github.com/bplaat/bassiemusic/structs"
 	"github.com/bplaat/bassiemusic/utils"
-	"github.com/bplaat/bassiemusic/utils/uuid"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -173,7 +173,7 @@ func SearchAndDownloadTrackMusic(track *models.Track) error {
 		}
 
 		// Update track
-		models.TrackModel(nil).Where("id", track.ID).Update(database.Map{
+		models.TrackModel.Where("id", track.ID).Update(database.Map{
 			"duration":   youtubeDuration,
 			"youtube_id": youtubeID,
 		})
@@ -284,14 +284,14 @@ func DownloadTask() {
 		if downloadTask.Type == models.DownloadTaskTypeDeezerArtist {
 			// Report progress
 			downloadTask.Status = 1
-			models.DownloadTaskModel().Where("id", downloadTask.ID).Update(database.Map{
-				"status": 1,
+			models.DownloadTaskModel.Where("id", downloadTask.ID).Update(database.Map{
+				"status": models.DownloadTaskStatusDownloading,
 			})
 
 			data, _ := json.Marshal(fiber.Map{
 				"success": true,
 				"type":    "taskUpdate",
-				"data":    models.DownloadTaskModel().Find(downloadTask.ID),
+				"data":    models.DownloadTaskModel.Find(downloadTask.ID),
 			})
 			controllers.SendMessageToAll(data)
 
@@ -315,38 +315,38 @@ func DownloadTask() {
 
 				downloadTask.Progress = progress
 
-				models.DownloadTaskModel().Where("id", downloadTask.ID).Update(database.Map{
+				models.DownloadTaskModel.Where("id", downloadTask.ID).Update(database.Map{
 					"progress": progress,
 				})
 
 				data, _ := json.Marshal(fiber.Map{
 					"success": true,
 					"type":    "taskUpdate",
-					"data":    models.DownloadTaskModel().Find(downloadTask.ID),
+					"data":    models.DownloadTaskModel.Find(downloadTask.ID),
 				})
 				controllers.SendMessageToAll(data)
 			}
 		}
 		if downloadTask.Type == models.DownloadTaskTypeDeezerAlbum {
 			// Update download task status
-			downloadTask.Status = models.DownloadTaskModelStatusDownloading
-			models.DownloadTaskModel().Where("id", downloadTask.ID).Update(database.Map{
-				"status": models.DownloadTaskModelStatusDownloading,
+			downloadTask.Status = models.DownloadTaskStatusDownloading
+			models.DownloadTaskModel.Where("id", downloadTask.ID).Update(database.Map{
+				"status": models.DownloadTaskStatusDownloading,
 			})
 
-      // Send task update websocket message to admins
+			// Send task update websocket message to admins
 			jsonMessage, _ := json.Marshal(fiber.Map{
 				"success": true,
 				"type":    "taskUpdate",
-				"data":    models.DownloadTaskModel().Find(downloadTask.ID),
+				"data":    models.DownloadTaskModel.Find(downloadTask.ID),
 			})
 			controllers.SendMessageToAll(jsonMessage)
 
-      // Download aldum
+			// Download aldum
 			DownloadAlbum(int(downloadTask.DeezerID))
 		}
 
-    // Send task delete websocket message to admins
+		// Send task delete websocket message to admins
 		jsonMessage, _ := json.Marshal(fiber.Map{
 			"success": true,
 			"type":    "taskDelete",

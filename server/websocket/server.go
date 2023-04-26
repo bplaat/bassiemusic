@@ -1,4 +1,4 @@
-package controllers
+package websocket
 
 import (
 	"encoding/json"
@@ -10,6 +10,8 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/valyala/fasthttp"
 )
+
+type Map map[string]any
 
 var upgrader = websocket.FastHTTPUpgrader{
 	ReadBufferSize:  1024,
@@ -77,8 +79,7 @@ func Websocket(c *fiber.Ctx) error {
 					addedConnection = true
 
 					// Send current active download tasks
-					downloadTasks := models.DownloadTaskModel().OrderBy("created_at").Get()
-
+					downloadTasks := models.DownloadTaskModel.OrderBy("created_at").Get()
 					if len(downloadTasks) > 0 {
 						response, _ := json.Marshal(fiber.Map{
 							"success": true,
@@ -115,11 +116,11 @@ func Websocket(c *fiber.Ctx) error {
 }
 
 // Send a message to all connected admin WebSocket devices
-func SendMessageToAll(message []byte) error {
-	for _, conn := range connections {
-		if err := conn.WriteMessage(websocket.TextMessage, message); err != nil {
-			return err
-		}
-	}
+func Send(roleLevel models.UserRole, message any) error {
+	// for _, conn := range connections {
+	// 	if err := conn.WriteMessage(websocket.TextMessage, message); err != nil {
+	// 		return err
+	// 	}
+	// }
 	return nil
 }

@@ -7,11 +7,12 @@ import (
 	"github.com/bplaat/bassiemusic/core/database"
 	"github.com/bplaat/bassiemusic/core/validation"
 	"github.com/bplaat/bassiemusic/models"
+	"github.com/bplaat/bassiemusic/websocket"
 	"github.com/gofiber/fiber/v2"
 )
 
 type DownloadArtistBody struct {
-	DeezerID string `form:"deezer_id" validate:"required|integer"`
+	DeezerID    string `form:"deezer_id" validate:"required|integer"`
 	DisplayName string `form:"display_name" validate:"required"`
 }
 
@@ -34,16 +35,16 @@ func DownloadArtist(c *fiber.Ctx) error {
 		"deezer_id":    deezerID,
 		"display_name": body.DisplayName,
 	})
-  
-  // Broadcast new task message to all listening admins
+
+	// Broadcast new task message to all listening admins
 	jsonMessage, _ := json.Marshal(fiber.Map{
 		"success": true,
 		"type":    "newTask",
 		"data":    task,
-  })
+	})
 	SendMessageToAll(jsonMessage)
 
-  // Return success response
+	// Return success response
 	return c.JSON(fiber.Map{"success": true})
 }
 
@@ -67,19 +68,17 @@ func DownloadAlbum(c *fiber.Ctx) error {
 	// Create download task
 	deezerID, _ := strconv.ParseInt(body.DeezerID, 10, 64)
 	task := models.DownloadTaskModel.Create(database.Map{
-		"type":        models.DownloadTaskTypeDeezerAlbum,
-		"deezer_id":   deezerID,
-		"display_name": params.DisplayName,
+		"type":         models.DownloadTaskTypeDeezerAlbum,
+		"deezer_id":    deezerID,
+		"display_name": body.DisplayName,
 	})
 
-  // Broadcast new task message to all listening admins
-	jsonMessage, _ := json.Marshal(fiber.Map{
-		"success": true,
-		"type":    "newTask",
-		"data":    task,
-  })
-	SendMessageToAll(jsonMessage)
+	// Broadcast create task message to all admins
+	websocket.Send(models.UserRoleAdmin, websocket.Map{
+		"type": "download_tasks.create",
+		"data": task,
+	})
 
-  // Return success response
+	// Return success response
 	return c.JSON(fiber.Map{"success": true})
 }
