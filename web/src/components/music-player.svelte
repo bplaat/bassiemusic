@@ -91,7 +91,7 @@
         ws = new WebSocket(import.meta.env.VITE_WEBSOCKET_URL);
         ws.onopen = () => {
             connected = true;
-            ws.send(JSON.stringify({ type: 'auth', token }));
+            ws.send(JSON.stringify({ type: 'auth.validate', data: { token } }));
         };
         ws.disconnect = () => {
             connected = false;
@@ -206,7 +206,7 @@
             websocketConnect();
             return;
         }
-        ws.send(JSON.stringify({ type: 'track_play', track_id: track.id, position: audio.currentTime }));
+        ws.send(JSON.stringify({ type: 'tracks.play', data: { track_id: track.id, position: audio.currentTime } }));
     }
     async function updateServerLoop() {
         sendTrackPlay();

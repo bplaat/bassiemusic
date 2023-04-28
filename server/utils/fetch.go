@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 )
 
 func Fetch(url string) ([]byte, error) {
@@ -45,5 +46,47 @@ func FetchFile(url string, path string) {
 	defer out.Close()
 	if _, err = io.Copy(out, response.Body); err != nil {
 		log.Fatalln(err)
+	}
+}
+
+func DeezerFetch(url string, data any) error {
+	tries := 0
+	for {
+		err := FetchJson(url, data)
+		if err != nil {
+			tries += 1
+			time.Sleep(2 * time.Second)
+			if tries == 5 {
+				return err
+			}
+		} else {
+			return err
+		}
+	}
+}
+
+func DeezerFetchFile(url string, path string) {
+	tries := 0
+	if url != "" {
+		for {
+			response, err := http.Get(url)
+			if err == nil {
+				defer response.Body.Close()
+				out, err := os.Create(path)
+				if err == nil {
+					defer out.Close()
+					if _, err = io.Copy(out, response.Body); err == nil {
+						return
+					}
+				}
+			}
+
+			tries += 1
+			time.Sleep(2 * time.Second)
+			if tries == 5 {
+				log.Println(url)
+				log.Fatalln(err)
+			}
+		}
 	}
 }

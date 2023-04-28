@@ -1,6 +1,7 @@
 package models
 
 import (
+	"database/sql"
 	"fmt"
 	"os"
 	"time"
@@ -10,18 +11,18 @@ import (
 
 // Playlist
 type Playlist struct {
-	ID          string    `column:"id,uuid" json:"id"`
-	UserID      string    `column:"user_id,uuid" json:"-"`
-	Name        string    `column:"name,string" json:"name"`
-	ImageID     *string   `column:"image,uuid" json:"-"`
-	SmallImage  *string   `json:"small_image"`
-	MediumImage *string   `json:"medium_image"`
-	Public      bool      `column:"public,bool" json:"public"`
-	Liked       *bool     `json:"liked,omitempty"`
-	CreatedAt   time.Time `column:"created_at,timestamp" json:"created_at"`
-	UpdatedAt   time.Time `column:"updated_at,timestamp" json:"-"`
-	User        *User     `json:"user,omitempty"`
-	Tracks      *[]Track  `json:"tracks,omitempty"`
+	ID          string         `column:"id,uuid" json:"id"`
+	UserID      string         `column:"user_id,uuid" json:"-"`
+	Name        string         `column:"name,string" json:"name"`
+	ImageID     sql.NullString `column:"image,uuid" json:"-"`
+	Public      bool           `column:"public,bool" json:"public"`
+	CreatedAt   time.Time      `column:"created_at,timestamp" json:"created_at"`
+	UpdatedAt   time.Time      `column:"updated_at,timestamp" json:"-"`
+	SmallImage  *string        `json:"small_image"`
+	MediumImage *string        `json:"medium_image"`
+	Liked       *bool          `json:"liked,omitempty"`
+	User        *User          `json:"user,omitempty"`
+	Tracks      *[]Track       `json:"tracks,omitempty"`
 }
 
 var PlaylistModel *database.Model[Playlist]
@@ -30,11 +31,11 @@ func init() {
 	PlaylistModel = (&database.Model[Playlist]{
 		TableName: "playlists",
 		Process: func(playlist *Playlist) {
-			if playlist.ImageID != nil && *playlist.ImageID != "" {
-				if _, err := os.Stat(fmt.Sprintf("storage/playlists/original/%s", *playlist.ImageID)); err == nil {
-					smallImage := fmt.Sprintf("%s/playlists/small/%s.jpg", os.Getenv("STORAGE_URL"), *playlist.ImageID)
+			if playlist.ImageID.Valid {
+				if _, err := os.Stat(fmt.Sprintf("storage/playlists/original/%s", playlist.ImageID.String)); err == nil {
+					smallImage := fmt.Sprintf("%s/playlists/small/%s.jpg", os.Getenv("STORAGE_URL"), playlist.ImageID.String)
 					playlist.SmallImage = &smallImage
-					mediumImage := fmt.Sprintf("%s/playlists/medium/%s.jpg", os.Getenv("STORAGE_URL"), *playlist.ImageID)
+					mediumImage := fmt.Sprintf("%s/playlists/medium/%s.jpg", os.Getenv("STORAGE_URL"), playlist.ImageID.String)
 					playlist.MediumImage = &mediumImage
 				}
 			}

@@ -158,10 +158,10 @@ func UsersUpdate(c *fiber.Ctx) error {
 	}
 	if avatarFile, err := c.FormFile("avatar"); err == nil {
 		// Remove old avatar file
-		if user.AvatarID != nil && *user.AvatarID != "" {
-			_ = os.Remove(fmt.Sprintf("storage/avatars/original/%s", *user.AvatarID))
-			_ = os.Remove(fmt.Sprintf("storage/avatars/small/%s.jpg", *user.AvatarID))
-			_ = os.Remove(fmt.Sprintf("storage/avatars/medium/%s.jpg", *user.AvatarID))
+		if user.AvatarID.Valid {
+			_ = os.Remove(fmt.Sprintf("storage/avatars/original/%s", user.AvatarID.String))
+			_ = os.Remove(fmt.Sprintf("storage/avatars/small/%s.jpg", user.AvatarID.String))
+			_ = os.Remove(fmt.Sprintf("storage/avatars/medium/%s.jpg", user.AvatarID.String))
 		}
 
 		// Store new avatar
@@ -172,11 +172,11 @@ func UsersUpdate(c *fiber.Ctx) error {
 		updates["avatar"] = avatarID.String()
 	}
 	if body.Avatar != nil && *body.Avatar == "" {
-		if user.AvatarID != nil && *user.AvatarID != "" {
+		if user.AvatarID.Valid {
 			// Remove old avatar file
-			_ = os.Remove(fmt.Sprintf("storage/avatars/original/%s", *user.AvatarID))
-			_ = os.Remove(fmt.Sprintf("storage/avatars/small/%s.jpg", *user.AvatarID))
-			_ = os.Remove(fmt.Sprintf("storage/avatars/medium/%s.jpg", *user.AvatarID))
+			_ = os.Remove(fmt.Sprintf("storage/avatars/original/%s", user.AvatarID.String))
+			_ = os.Remove(fmt.Sprintf("storage/avatars/small/%s.jpg", user.AvatarID.String))
+			_ = os.Remove(fmt.Sprintf("storage/avatars/medium/%s.jpg", user.AvatarID.String))
 
 			updates["avatar"] = nil
 		}

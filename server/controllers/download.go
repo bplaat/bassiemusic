@@ -1,8 +1,10 @@
 package controllers
 
 import (
+	"log"
 	"strconv"
 
+	"github.com/bplaat/bassiemusic/controllers/websocket"
 	"github.com/bplaat/bassiemusic/core/database"
 	"github.com/bplaat/bassiemusic/core/validation"
 	"github.com/bplaat/bassiemusic/models"
@@ -10,7 +12,8 @@ import (
 )
 
 type DownloadArtistBody struct {
-	DeezerID string `form:"deezer_id" validate:"required|integer"`
+	DeezerID    string `form:"deezer_id" validate:"required|integer"`
+	DisplayName string `form:"display_name" validate:"required"`
 }
 
 func DownloadArtist(c *fiber.Ctx) error {
@@ -27,15 +30,26 @@ func DownloadArtist(c *fiber.Ctx) error {
 
 	// Create download task
 	deezerID, _ := strconv.ParseInt(body.DeezerID, 10, 64)
-	models.DownloadTaskModel.Create(database.Map{
-		"type":      models.DownloadTaskTypeDeezerArtist,
-		"deezer_id": deezerID,
+	downloadTask := models.DownloadTaskModel.Create(database.Map{
+		"type":         models.DownloadTaskTypeDeezerArtist,
+		"deezer_id":    deezerID,
+		"display_name": body.DisplayName,
+		"status":       models.DownloadTaskStatusPending,
+		"progress":     0,
 	})
+
+	// Broadcast new task message to all listening admins
+	if err := websocket.BroadcastAdmin("download_tasks.create", downloadTask); err != nil {
+		log.Println(err)
+	}
+
+	// Return success response
 	return c.JSON(fiber.Map{"success": true})
 }
 
 type DownloadAlbumBody struct {
-	DeezerID string `form:"deezer_id" validate:"required|integer"`
+	DeezerID    string `form:"deezer_id" validate:"required|integer"`
+	DisplayName string `form:"display_name" validate:"required"`
 }
 
 func DownloadAlbum(c *fiber.Ctx) error {
@@ -52,9 +66,19 @@ func DownloadAlbum(c *fiber.Ctx) error {
 
 	// Create download task
 	deezerID, _ := strconv.ParseInt(body.DeezerID, 10, 64)
-	models.DownloadTaskModel.Create(database.Map{
-		"type":      models.DownloadTaskTypeDeezerAlbum,
-		"deezer_id": deezerID,
+	downloadTask := models.DownloadTaskModel.Create(database.Map{
+		"type":         models.DownloadTaskTypeDeezerAlbum,
+		"deezer_id":    deezerID,
+		"display_name": body.DisplayName,
+		"status":       models.DownloadTaskStatusPending,
+		"progress":     0,
 	})
+
+	// Broadcast create task message to all admins
+	if err := websocket.BroadcastAdmin("download_tasks.create", downloadTask); err != nil {
+		log.Println(err)
+	}
+
+	// Return success response
 	return c.JSON(fiber.Map{"success": true})
 }

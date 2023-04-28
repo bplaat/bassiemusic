@@ -14,11 +14,11 @@ type Artist struct {
 	Name        string    `column:"name,string" json:"name"`
 	Sync        bool      `column:"sync,bool" json:"sync"`
 	DeezerID    int64     `column:"deezer_id,bigint" json:"deezer_id"`
+	CreatedAt   time.Time `column:"created_at,timestamp" json:"created_at"`
 	SmallImage  *string   `json:"small_image"`
 	MediumImage *string   `json:"medium_image"`
 	LargeImage  *string   `json:"large_image"`
 	Liked       *bool     `json:"liked,omitempty"`
-	CreatedAt   time.Time `column:"created_at,timestamp" json:"created_at"`
 	Albums      *[]Album  `json:"albums,omitempty"`
 	TopTracks   *[]Track  `json:"top_tracks,omitempty"`
 }

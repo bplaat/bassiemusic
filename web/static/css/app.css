@@ -33,7 +33,7 @@ a:focus {
 }
 
 a.card,
-.card .title > a,
+.card .title>a,
 .tabs a,
 .menu-list a,
 .dropdown a,
@@ -57,6 +57,11 @@ img {
     -webkit-user-drag: none;
     user-drag: none;
     -webkit-touch-callout: none;
+}
+
+.table {
+    width: 100%;
+    table-layout: fixed;
 }
 
 .table td {
@@ -156,7 +161,7 @@ img {
         float: right !important;
     }
 
-    .dropdown.is-right-tablet > .dropdown-menu {
+    .dropdown.is-right-tablet>.dropdown-menu {
         left: auto;
         right: 0;
     }
@@ -195,6 +200,7 @@ img {
 }
 
 @media (prefers-color-scheme: dark) {
+
     .box.has-image,
     .card-image {
         background-color: #333;

@@ -1456,8 +1456,11 @@ paths:
                 deezer_id:
                   type: integer
                   format: int64
+                display_name:
+                  type: string
               required:
                 - deezer_id
+                - display_name
       responses:
         "200":
           description: Successfull response
@@ -1481,8 +1484,11 @@ paths:
                 deezer_id:
                   type: integer
                   format: int64
+                display_name:
+                  type: string
               required:
                 - deezer_id
+                - display_name
       responses:
         "200":
           description: Successfull response

@@ -13,11 +13,11 @@ type Genre struct {
 	ID          string    `column:"id,uuid" json:"id"`
 	Name        string    `column:"name,string" json:"name"`
 	DeezerID    int64     `column:"deezer_id,bigint" json:"deezer_id"`
+	CreatedAt   time.Time `column:"created_at,timestamp" json:"created_at"`
 	SmallImage  *string   `json:"small_image,omitempty"`
 	MediumImage *string   `json:"medium_image,omitempty"`
 	LargeImage  *string   `json:"large_image,omitempty"`
 	Liked       *bool     `json:"liked,omitempty"`
-	CreatedAt   time.Time `column:"created_at,timestamp" json:"created_at"`
 }
 
 var GenreModel *database.Model[Genre] = (&database.Model[Genre]{

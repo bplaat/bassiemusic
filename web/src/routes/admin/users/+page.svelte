@@ -86,7 +86,7 @@
     </div>
 </div>
 
-<table class="table" style="width: 100%;">
+<table class="table">
     <thead>
         <th style="width: 10%;">{t('index')}</th>
         <th style="width: 25%;">{t('username')}</th>
