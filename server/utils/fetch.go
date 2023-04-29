@@ -72,7 +72,6 @@ func DeezerFetch(url string, data any) error {
 		if err != nil {
 			tries += 1
 			time.Sleep(2 * time.Second)
-			log.Println("waiting")
 			if tries == 5 {
 				return err
 			}

@@ -230,7 +230,7 @@
                                     {getProgress(task)}%
                                 </progress>
                             {:else}
-                                <span class="ellipsis">{t('download_tasks_status_pending')}</span>
+                                <span class="ellipsis" style="text-align: center;">{t('download_tasks_status_pending')}</span>
                             {/if}
                         </td>
                     </tr>

@@ -179,10 +179,10 @@ func SearchAndDownloadTrackMusic(track *models.Track) error {
 	return nil
 }
 
-func DownloadAlbum(deezerAlbum structs.DeezerAlbum, downloadTask *models.DownloadTask) int {
+func DownloadAlbum(deezerAlbum structs.DeezerAlbum, downloadTask *models.DownloadTask) {
 	// Check if album already exists
 	if models.AlbumModel.Where("title", deezerAlbum.Title).First() != nil {
-		return len(deezerAlbum.Tracks.Data)
+		return
 	}
 
 	// Create album
@@ -250,7 +250,7 @@ func DownloadAlbum(deezerAlbum structs.DeezerAlbum, downloadTask *models.Downloa
 	}
 
 	log.Printf("[DOWNLOAD] Done downloading album\n")
-	return len(deezerAlbum.Tracks.Data)
+	return
 }
 
 func fetchAlbums(DeezerID int64) ([]structs.DeezerAlbum, int) {
@@ -328,9 +328,12 @@ func DownloadTask() {
 				if strings.Contains(album.Title, "Deezer") {
 					continue
 				}
-				downloadTask.DownloadedTracks += DownloadAlbum(album, downloadTask)
+				downloadTracks := downloadTask.DownloadedTracks
+				DownloadAlbum(album, downloadTask)
+				downloadTask.DownloadedTracks = downloadTracks + len(album.Tracks.Data)
 
 				// Update download task progress
+				downloadTask.Status = models.DownloadTaskStatusDownloading
 				models.DownloadTaskModel.Where("id", downloadTask.ID).Update(database.Map{
 					"status":            downloadTask.Status,
 					"downloaded_tracks": downloadTask.DownloadedTracks,
