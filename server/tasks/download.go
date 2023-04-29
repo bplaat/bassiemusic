@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"math"
 	"os/exec"
 	"strings"
 	"time"
@@ -180,7 +179,7 @@ func SearchAndDownloadTrackMusic(track *models.Track) error {
 	return nil
 }
 
-func DownloadAlbum(deezerAlbum structs.DeezerAlbum) int {
+func DownloadAlbum(deezerAlbum structs.DeezerAlbum, downloadTask *models.DownloadTask) int {
 	// Check if album already exists
 	if models.AlbumModel.Where("title", deezerAlbum.Title).First() != nil {
 		return len(deezerAlbum.Tracks.Data)
@@ -239,6 +238,15 @@ func DownloadAlbum(deezerAlbum structs.DeezerAlbum) int {
 			log.Fatalln(err)
 		}
 		log.Printf("[DOWNLOAD] %s - %d-%d - %s\n", deezerAlbum.Title, track.Disk, track.Position, track.Title)
+
+		// Log when a track haves been downloaded
+		if downloadTask != nil {
+			downloadTask.DownloadedTracks += 1
+			downloadTask.Status = models.DownloadTaskStatusDownloading
+			if err := websocket.BroadcastAdmin("download_tasks.update", downloadTask); err != nil {
+				log.Println(err)
+			}
+		}
 	}
 
 	log.Printf("[DOWNLOAD] Done downloading album\n")
@@ -247,7 +255,6 @@ func DownloadAlbum(deezerAlbum structs.DeezerAlbum) int {
 
 func fetchAlbums(DeezerID int64) ([]structs.DeezerAlbum, int) {
 	nextUrl := fmt.Sprintf("https://api.deezer.com/artist/%d/albums", DeezerID)
-	var albums []structs.DeezerArtistAlbum
 	var fullAlbums []structs.DeezerAlbum
 	totalTracks := 0
 	for {
@@ -255,15 +262,14 @@ func fetchAlbums(DeezerID int64) ([]structs.DeezerAlbum, int) {
 		if err := utils.DeezerFetch(nextUrl, &artistAlbums); err != nil {
 			log.Fatalln(err)
 		}
-		albums = append(albums, artistAlbums.Data...)
 
-		for _, album := range albums {
+		for _, album := range artistAlbums.Data {
 			var deezerAlbum structs.DeezerAlbum
 			if err := utils.DeezerFetch(fmt.Sprintf("https://api.deezer.com/album/%d", album.ID), &deezerAlbum); err != nil {
 				log.Fatalln(err)
 			}
+			totalTracks += len(deezerAlbum.Tracks.Data)
 			fullAlbums = append(fullAlbums, deezerAlbum)
-			totalTracks += deezerAlbum.NbTracks
 		}
 
 		if artistAlbums.Next == "" {
@@ -307,33 +313,42 @@ func DownloadTask() {
 			createArtist(deezerArtist.ID, deezerArtist.Name, true)
 
 			// Download artist albums
-			downloadedTracks := 0
 			artistAlbums, totalTracks := fetchAlbums(downloadTask.DeezerID)
+			downloadTask.DownloadedTracks = 0
+			downloadTask.TotalTracks = totalTracks
+
+			models.DownloadTaskModel.Where("id", downloadTask.ID).Update(database.Map{
+				"total_tracks": downloadTask.TotalTracks,
+			})
+
+			if err := websocket.BroadcastAdmin("download_tasks.update", downloadTask); err != nil {
+				log.Println(err)
+			}
 			for _, album := range artistAlbums {
 				if strings.Contains(album.Title, "Deezer") {
 					continue
 				}
-				downloadedTracks += DownloadAlbum(album)
+				downloadTask.DownloadedTracks += DownloadAlbum(album, downloadTask)
 
 				// Update download task progress
-				downloadTask.Progress = float32(math.Round((float64(downloadedTracks) / float64(totalTracks)) * 100))
 				models.DownloadTaskModel.Where("id", downloadTask.ID).Update(database.Map{
-					"status":   downloadTask.Status,
-					"progress": downloadTask.Progress,
+					"status":            downloadTask.Status,
+					"downloaded_tracks": downloadTask.DownloadedTracks,
 				})
-
-				// Broadcast download tasks update message to admins
-				if err := websocket.BroadcastAdmin("download_tasks.update", downloadTask); err != nil {
-					log.Println(err)
-				}
 			}
 		}
 
 		if downloadTask.Type == models.DownloadTaskTypeDeezerAlbum {
-			// Update download task status
+			// Fetch album data and update download task status
+			var deezerAlbum structs.DeezerAlbum
+			if err := utils.DeezerFetch(fmt.Sprintf("https://api.deezer.com/album/%d", downloadTask.DeezerID), &deezerAlbum); err != nil {
+				log.Fatalln(err)
+			}
+
 			downloadTask.Status = models.DownloadTaskStatusDownloading
 			models.DownloadTaskModel.Where("id", downloadTask.ID).Update(database.Map{
-				"status": downloadTask.Status,
+				"status":       downloadTask.Status,
+				"total_tracks": len(deezerAlbum.Tracks.Data),
 			})
 
 			// Broadcast download tasks update message to admins
@@ -341,14 +356,8 @@ func DownloadTask() {
 				log.Println(err)
 			}
 
-			// Fetch album data
-			var deezerAlbum structs.DeezerAlbum
-			if err := utils.DeezerFetch(fmt.Sprintf("https://api.deezer.com/album/%d", downloadTask.DeezerID), &deezerAlbum); err != nil {
-				log.Fatalln(err)
-			}
-
 			// Download album
-			DownloadAlbum(deezerAlbum)
+			DownloadAlbum(deezerAlbum, downloadTask)
 		}
 
 		// Broadcast download tasks delete message to admins

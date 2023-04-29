@@ -132,6 +132,14 @@
         artists = artists.filter((otherArtist) => otherArtist.id !== artist.id);
     }
 
+    function getProgress(task){
+        if(task.total_tracks != 0){
+            return Math.floor((task.downloaded_tracks / task.total_tracks) * 100)
+        }else{
+            return 0
+        }
+    }
+
     // Download Tasks Logger
     let ws;
     let connected = false;
@@ -199,9 +207,9 @@
         <table class="table">
             <thead>
                 <th style="width: 10%;">{t('download_tasks_index')}</th>
-                <th style="width: 20%;">{t('download_tasks_type')}</th>
+                <th style="width: 35%;">{t('download_tasks_type')}</th>
                 <th style="width: 35%;">{t('download_tasks_display_name')}</th>
-                <th style="width: 35%;">{t('download_tasks_status')}</th>
+                <th style="width: 30%; text-align: center;">{t('download_tasks_status')}</th>
             </thead>
             <tbody>
                 {#each tasks as task, index}
@@ -218,8 +226,8 @@
                         <td class="ellipsis" style="font-weight: 500;">{task.display_name}</td>
                         <td>
                             {#if task.status === 'downloading'}
-                                <progress class="progress is-link" style="width: 100%;" value={task.progress} max="100">
-                                    {task.progress}%
+                                <progress class="progress is-link" style="width: 100%;" value={getProgress(task)} max="100">
+                                    {getProgress(task)}%
                                 </progress>
                             {:else}
                                 <span class="ellipsis">{t('download_tasks_status_pending')}</span>

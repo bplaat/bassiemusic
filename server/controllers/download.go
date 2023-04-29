@@ -31,11 +31,11 @@ func DownloadArtist(c *fiber.Ctx) error {
 	// Create download task
 	deezerID, _ := strconv.ParseInt(body.DeezerID, 10, 64)
 	downloadTask := models.DownloadTaskModel.Create(database.Map{
-		"type":         models.DownloadTaskTypeDeezerArtist,
-		"deezer_id":    deezerID,
-		"display_name": body.DisplayName,
-		"status":       models.DownloadTaskStatusPending,
-		"progress":     0,
+		"type":              models.DownloadTaskTypeDeezerArtist,
+		"deezer_id":         deezerID,
+		"display_name":      body.DisplayName,
+		"status":            models.DownloadTaskStatusPending,
+		"downloaded_tracks": 0,
 	})
 
 	// Broadcast new task message to all listening admins
@@ -67,11 +67,11 @@ func DownloadAlbum(c *fiber.Ctx) error {
 	// Create download task
 	deezerID, _ := strconv.ParseInt(body.DeezerID, 10, 64)
 	downloadTask := models.DownloadTaskModel.Create(database.Map{
-		"type":         models.DownloadTaskTypeDeezerAlbum,
-		"deezer_id":    deezerID,
-		"display_name": body.DisplayName,
-		"status":       models.DownloadTaskStatusPending,
-		"progress":     0,
+		"type":              models.DownloadTaskTypeDeezerAlbum,
+		"deezer_id":         deezerID,
+		"display_name":      body.DisplayName,
+		"status":            models.DownloadTaskStatusPending,
+		"downloaded_tracks": 0,
 	})
 
 	// Broadcast create task message to all admins

@@ -208,6 +208,14 @@ type DeezerGenre struct {
 	Type          string `json:"type"`
 }
 
+type DeezerError struct {
+	Error struct {
+		Type    string `json:"type"`
+		Message string `json:"message"`
+		Code    int    `json:"code" default:"nil"`
+	} `json:"error"`
+}
+
 type DeezerTrack struct {
 	ID                    int64    `json:"id"`
 	Readable              bool     `json:"readable"`
