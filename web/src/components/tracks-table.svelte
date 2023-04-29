@@ -73,6 +73,7 @@
     export let isAlbum = false;
     export let inPlaylist = null;
     export let isMusicQueue = false;
+    export let displayMax = null;
 
     // State
     $: isMultiDisk = tracks.find((track) => track.disk !== 1) !== undefined;
@@ -98,6 +99,10 @@
             }
         });
     }
+
+    onMount(() => {
+        fetchPlaylists();
+    })
 
     // Methods
     function playTrack(track) {
@@ -252,96 +257,98 @@
                 </tr>
             {/if}
 
-            <tr
-                id={isAlbum ? `${track.disk}-${track.position}` : null}
-                class="track-container"
-                class:disabled={track.music === null || (!authUser.allow_explicit && track.explicit)}
-                on:contextmenu={(event) =>
-                    openContextmenu(
-                        track,
-                        index + 1,
-                        event.clientX - document.querySelector('.app').offsetLeft,
-                        event.clientY +
-                            document.querySelector('.app').scrollTop -
-                            document.querySelector('.app').offsetTop
-                    )}
-                on:dblclick|preventDefault={() => playTrack(track)}
-                class:has-background-light={$musicState.track !== null && $musicState.track.id === track.id}
-            >
-                <td>
-                    <div class="track-index">{isAlbum ? track.position : index + 1}</div>
-                    <button
-                        class="button is-small track-play"
-                        on:click={() => playTrack(track)}
-                        title={t('play_track')}
-                    >
-                        <svg class="icon" viewBox="0 0 24 24">
-                            <path d="M8,5.14V19.14L19,12.14L8,5.14Z" />
-                        </svg>
-                    </button>
-                </td>
-                {#if !isAlbum}
+            {#if displayMax == null || (index < displayMax)}
+                <tr
+                    id={isAlbum ? `${track.disk}-${track.position}` : null}
+                    class="track-container"
+                    class:disabled={track.music === null || (!authUser.allow_explicit && track.explicit)}
+                    on:contextmenu={(event) =>
+                        openContextmenu(
+                            track,
+                            index + 1,
+                            event.clientX - document.querySelector('.app').offsetLeft,
+                            event.clientY +
+                                document.querySelector('.app').scrollTop -
+                                document.querySelector('.app').offsetTop
+                        )}
+                    on:dblclick|preventDefault={() => playTrack(track)}
+                    class:has-background-light={$musicState.track !== null && $musicState.track.id === track.id}
+                >
                     <td>
-                        <a
-                            href="/albums/{track.album.id}"
-                            class="box has-image m-0 p-0"
-                            style="width: 64px; height: 64px;"
+                        <div class="track-index">{isAlbum ? track.position : index + 1}</div>
+                        <button
+                            class="button is-small track-play"
+                            on:click={() => playTrack(track)}
+                            title={t('play_track')}
                         >
-                            <img
-                                src={track.album.small_cover || '/images/album-default.svg'}
-                                alt={t('cover_alt', track.album)}
-                            />
-                        </a>
+                            <svg class="icon" viewBox="0 0 24 24">
+                                <path d="M8,5.14V19.14L19,12.14L8,5.14Z" />
+                            </svg>
+                        </button>
                     </td>
-                {/if}
-                <td>
-                    <p class="ellipsis mb-1" style="font-weight: 500;">
-                        {#if isAlbum}
-                            <!-- svelte-ignore a11y-invalid-attribute -->
-                            <a href="#" on:click|preventDefault={playTrack(track)}>{track.title}</a>
-                        {:else}
-                            <a href="/albums/{track.album.id}#{track.disk}-{track.position}">{track.title}</a>
-                        {/if}
-                    </p>
-                    <p class="ellipsis">
-                        {#if track.explicit}
-                            <span class="tag is-danger mr-1" title={t('explicit')}>E</span>
-                        {/if}
-                        {#each track.artists as artist}
-                            <a href="/artists/{artist.id}" class="mr-2">{artist.name}</a>
-                        {/each}
-                    </p>
-                </td>
-                {#if !isAlbum}
-                    <td class="ellipsis is-hidden-mobile">
-                        <a href="/albums/{track.album.id}">{track.album.title}</a>
+                    {#if !isAlbum}
+                        <td>
+                            <a
+                                href="/albums/{track.album.id}"
+                                class="box has-image m-0 p-0"
+                                style="width: 64px; height: 64px;"
+                            >
+                                <img
+                                    src={track.album.small_cover || '/images/album-default.svg'}
+                                    alt={t('cover_alt', track.album)}
+                                />
+                            </a>
+                        </td>
+                    {/if}
+                    <td>
+                        <p class="ellipsis mb-1" style="font-weight: 500;">
+                            {#if isAlbum}
+                                <!-- svelte-ignore a11y-invalid-attribute -->
+                                <a href="#" on:click|preventDefault={playTrack(track)}>{track.title}</a>
+                            {:else}
+                                <a href="/albums/{track.album.id}#{track.disk}-{track.position}">{track.title}</a>
+                            {/if}
+                        </p>
+                        <p class="ellipsis">
+                            {#if track.explicit}
+                                <span class="tag is-danger mr-1" title={t('explicit')}>E</span>
+                            {/if}
+                            {#each track.artists as artist}
+                                <a href="/artists/{artist.id}" class="mr-2">{artist.name}</a>
+                            {/each}
+                        </p>
                     </td>
-                {/if}
-                <td>{formatDuration(track.duration)}</td>
-                <td class="is-hidden-mobile">{track.plays}</td>
-                <td class="px-0 is-hidden-mobile">
-                    <LikeButton {token} item={track} itemRoute="tracks" itemLabel={t('track')} />
-                </td>
-                <td class="pl-0">
-                    <button
-                        class="button"
-                        on:click|stopPropagation={(event) =>
-                            openContextmenu(
-                                track,
-                                index + 1,
-                                event.target.offsetLeft + event.target.offsetWidth - contextmenu.offsetWidth,
-                                event.target.offsetTop + event.target.offsetHeight
-                            )}
-                        title={t('options')}
-                    >
-                        <svg class="icon" viewBox="0 0 24 24" style="pointer-events: none;">
-                            <path
-                                d="M12,16A2,2 0 0,1 14,18A2,2 0 0,1 12,20A2,2 0 0,1 10,18A2,2 0 0,1 12,16M12,10A2,2 0 0,1 14,12A2,2 0 0,1 12,14A2,2 0 0,1 10,12A2,2 0 0,1 12,10M12,4A2,2 0 0,1 14,6A2,2 0 0,1 12,8A2,2 0 0,1 10,6A2,2 0 0,1 12,4Z"
-                            />
-                        </svg>
-                    </button>
-                </td>
-            </tr>
+                    {#if !isAlbum}
+                        <td class="ellipsis is-hidden-mobile">
+                            <a href="/albums/{track.album.id}">{track.album.title}</a>
+                        </td>
+                    {/if}
+                    <td>{formatDuration(track.duration)}</td>
+                    <td class="is-hidden-mobile">{track.plays}</td>
+                    <td class="px-0 is-hidden-mobile">
+                        <LikeButton {token} item={track} itemRoute="tracks" itemLabel={t('track')} />
+                    </td>
+                    <td class="pl-0">
+                        <button
+                            class="button"
+                            on:click|stopPropagation={(event) =>
+                                openContextmenu(
+                                    track,
+                                    index + 1,
+                                    event.target.offsetLeft + event.target.offsetWidth - contextmenu.offsetWidth,
+                                    event.target.offsetTop + event.target.offsetHeight
+                                )}
+                            title={t('options')}
+                        >
+                            <svg class="icon" viewBox="0 0 24 24" style="pointer-events: none;">
+                                <path
+                                    d="M12,16A2,2 0 0,1 14,18A2,2 0 0,1 12,20A2,2 0 0,1 10,18A2,2 0 0,1 12,16M12,10A2,2 0 0,1 14,12A2,2 0 0,1 12,14A2,2 0 0,1 10,12A2,2 0 0,1 12,10M12,4A2,2 0 0,1 14,6A2,2 0 0,1 12,8A2,2 0 0,1 10,6A2,2 0 0,1 12,4Z"
+                                />
+                            </svg>
+                        </button>
+                    </td>
+                </tr>
+            {/if}
         {/each}
     </tbody>
 </table>
@@ -465,6 +472,10 @@
                 </div>
             {/if}
         </div>
+
+        {#if (inPlaylist !== null && (authUser.role === 'admin' || inPlaylist.user.id === authUser.id)) || authUser.role === 'admin'}
+            <hr class="dropdown-divider" />
+        {/if}
 
         {#if inPlaylist !== null && (authUser.role === 'admin' || inPlaylist.user.id === authUser.id)}
             <!-- svelte-ignore a11y-invalid-attribute -->

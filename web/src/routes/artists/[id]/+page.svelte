@@ -120,6 +120,7 @@
         token={data.token}
         authUser={data.authUser}
         tracks={data.artist.top_tracks}
+        displayMax=5
     />
 {:else}
     <p><i>{t('top_tracks_empty')}</i></p>

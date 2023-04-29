@@ -56,7 +56,7 @@ func init() {
 					authUser := args[0].(*User)
 					topTracksQuery = topTracksQuery.WithArgs("liked", authUser)
 				}
-				topTracks := topTracksQuery.WhereIn("track_artist", "track_id", "artist_id", artist.ID).OrderByDesc("plays").Limit(5).Get()
+				topTracks := topTracksQuery.WhereIn("track_artist", "track_id", "artist_id", artist.ID).OrderByDesc("plays").Limit(25).Get()
 				artist.TopTracks = &topTracks
 			},
 		},

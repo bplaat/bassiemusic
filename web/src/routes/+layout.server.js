@@ -1,6 +1,7 @@
 export async function load({ locals, fetch, cookies, request }) {
     // When a user is authed return values
     if (locals.authUser !== null) {
+        if(locals.lastTrack == undefined) locals.lastTrack = null;
         return {
             token: cookies.get('token'),
             authUser: locals.authUser,

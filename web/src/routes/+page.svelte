@@ -70,7 +70,7 @@
     </div>
 
     <h2 class="title is-4 mt-5">{t('last_tracks')}</h2>
-    <TracksTable {token} {authUser} tracks={lastPlayedTracks.slice(0, 5)} />
+    <TracksTable {token} {authUser} tracks={lastPlayedTracks} displayMax=5/>
 {:else}
     <p>{t('empty')}</p>
 {/if}

@@ -28,7 +28,13 @@ func Sync() {
 					if strings.Contains(album.Title, "Deezer") {
 						continue
 					}
-					tasks.DownloadAlbum(album.ID)
+
+					var deezerAlbum structs.DeezerAlbum
+					if err := utils.DeezerFetch(fmt.Sprintf("https://api.deezer.com/album/%d", album.ID), &deezerAlbum); err != nil {
+						log.Fatalln(err)
+					}
+
+					tasks.DownloadAlbum(deezerAlbum)
 				}
 			}
 
