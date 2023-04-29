@@ -133,7 +133,7 @@
     }
 
     function getProgress(task){
-        if(task.total_tracks != 0){
+        if(task.total_tracks !== 0){
             return Math.floor((task.downloaded_tracks / task.total_tracks) * 100)
         }else{
             return 0
