@@ -1,7 +1,6 @@
 package models
 
 import (
-	"database/sql"
 	"fmt"
 	"os"
 	"time"
@@ -11,21 +10,21 @@ import (
 
 // Track
 type Track struct {
-	ID        string         `column:"id,uuid" json:"id"`
-	AlbumID   string         `column:"album_id,uuid" json:"-"`
-	Title     string         `column:"title,string" json:"title"`
-	Disk      int            `column:"disk,int" json:"disk"`
-	Position  int            `column:"position,int" json:"position"`
-	Duration  float32        `column:"duration,float" json:"duration"`
-	Explicit  bool           `column:"explicit,bool" json:"explicit"`
-	DeezerID  int64          `column:"deezer_id,bigint" json:"deezer_id"`
-	YoutubeID sql.NullString `column:"youtube_id,string" json:"youtube_id"`
-	Plays     int64          `column:"plays,bigint" json:"plays"`
-	CreatedAt time.Time      `column:"created_at,timestamp" json:"created_at"`
-	Music     *string        `json:"music"`
-	Liked     *bool          `json:"liked,omitempty"`
-	Album     *Album         `json:"album,omitempty"`
-	Artists   *[]Artist      `json:"artists,omitempty"`
+	ID        string              `column:"id,uuid" json:"id"`
+	AlbumID   string              `column:"album_id,uuid" json:"-"`
+	Title     string              `column:"title,string" json:"title"`
+	Disk      int                 `column:"disk,int" json:"disk"`
+	Position  int                 `column:"position,int" json:"position"`
+	Duration  float32             `column:"duration,float" json:"duration"`
+	Explicit  bool                `column:"explicit,bool" json:"explicit"`
+	DeezerID  int64               `column:"deezer_id,bigint" json:"deezer_id"`
+	YoutubeID database.NullString `column:"youtube_id,string" json:"youtube_id"`
+	Plays     int64               `column:"plays,bigint" json:"plays"`
+	CreatedAt time.Time           `column:"created_at,timestamp" json:"created_at"`
+	Music     *string             `json:"music"`
+	Liked     *bool               `json:"liked,omitempty"`
+	Album     *Album              `json:"album,omitempty"`
+	Artists   *[]Artist           `json:"artists,omitempty"`
 }
 
 var TrackModel *database.Model[Track]
