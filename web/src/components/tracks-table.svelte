@@ -227,7 +227,7 @@
             <th style="width: calc(40px + .75em);" />
             <th style="width: calc(40px + .75em);" class:is-hidden-mobile={!isMusicQueue} />
         {:else}
-            <th style="width: 10%;"><div class="track-index">{t('index')}</div></th>
+            <th style="width: 10%;" class="is-hidden-mobile"><div class="track-index">{t('index')}</div></th>
             <th style="width: calc(64px + 1.5em);">{t('title')}</th>
             <th class="track-title" />
             <th style="width: 30%;" class="is-hidden-mobile">{t('album')}</th>
@@ -257,7 +257,7 @@
                 </tr>
             {/if}
 
-            {#if displayMax == null || (index < displayMax)}
+            {#if displayMax === null || (index < displayMax)}
                 <tr
                     id={isAlbum ? `${track.disk}-${track.position}` : null}
                     class="track-container"
@@ -274,7 +274,7 @@
                     on:dblclick|preventDefault={() => playTrack(track)}
                     class:has-background-light={$musicState.track !== null && $musicState.track.id === track.id}
                 >
-                    <td>
+                    <td class:is-hidden-mobile={!isAlbum}>
                         <div class="track-index">{isAlbum ? track.position : index + 1}</div>
                         <button
                             class="button is-small track-play"
