@@ -35,6 +35,7 @@ func DownloadArtist(c *fiber.Ctx) error {
 		"deezer_id":    deezerID,
 		"display_name": body.DisplayName,
 		"status":       models.DownloadTaskStatusPending,
+		"progress":     0,
 	})
 
 	// Broadcast new task message to all listening admins
@@ -70,6 +71,7 @@ func DownloadAlbum(c *fiber.Ctx) error {
 		"deezer_id":    deezerID,
 		"display_name": body.DisplayName,
 		"status":       models.DownloadTaskStatusPending,
+		"progress":     0,
 	})
 
 	// Broadcast create task message to all admins

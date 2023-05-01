@@ -243,8 +243,14 @@ func DownloadAlbum(deezerAlbum structs.DeezerAlbum, downloadTask *models.Downloa
 		// Log when a track haves been downloaded
 		if downloadTask != nil && downloadedTracks != nil && totalTracks != nil {
 			*downloadedTracks += 1
-			downloadTask.Status = models.DownloadTaskStatusDownloading
+
+			// Update download task progress
 			downloadTask.Progress = float32(math.Round((float64(*downloadedTracks) / float64(*totalTracks)) * 100))
+			models.DownloadTaskModel.Where("id", downloadTask.ID).Update(database.Map{
+				"progress": downloadTask.Progress,
+			})
+
+			// Broadcast download tasks update message to admins
 			if err := websocket.BroadcastAdmin("download_tasks.update", downloadTask); err != nil {
 				log.Println(err)
 			}
@@ -298,6 +304,7 @@ func DownloadTask() {
 		if downloadTask.Type == models.DownloadTaskTypeDeezerArtist {
 			// Update download task status
 			downloadTask.Status = models.DownloadTaskStatusDownloading
+			downloadTask.StatusString = "downloading"
 			models.DownloadTaskModel.Where("id", downloadTask.ID).Update(database.Map{
 				"status": downloadTask.Status,
 			})
@@ -328,23 +335,28 @@ func DownloadTask() {
 				downloadedTracks = DownloadAlbum(album, downloadTask, &downloadedTracks, &totalTracks)
 
 				// Update download task progress
-				downloadTask.Status = models.DownloadTaskStatusDownloading
 				downloadTask.Progress = float32(math.Round((float64(downloadedTracks) / float64(totalTracks)) * 100))
 				models.DownloadTaskModel.Where("id", downloadTask.ID).Update(database.Map{
-					"status":   downloadTask.Status,
 					"progress": downloadTask.Progress,
 				})
+
+				// Broadcast download tasks update message to admins
+				if err := websocket.BroadcastAdmin("download_tasks.update", downloadTask); err != nil {
+					log.Println(err)
+				}
 			}
 		}
 
 		if downloadTask.Type == models.DownloadTaskTypeDeezerAlbum {
-			// Fetch album data and update download task status
+			// Fetch album data
 			var deezerAlbum structs.DeezerAlbum
 			if err := utils.DeezerFetch(fmt.Sprintf("https://api.deezer.com/album/%d", downloadTask.DeezerID), &deezerAlbum); err != nil {
 				log.Fatalln(err)
 			}
 
+			// Update download task status
 			downloadTask.Status = models.DownloadTaskStatusDownloading
+			downloadTask.StatusString = "downloading"
 			models.DownloadTaskModel.Where("id", downloadTask.ID).Update(database.Map{
 				"status": downloadTask.Status,
 			})
