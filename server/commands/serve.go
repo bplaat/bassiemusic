@@ -85,6 +85,7 @@ func Serve() {
 
 	app.Get("/artists", controllers.ArtistsIndex)
 	app.Get("/artists/:artistID", controllers.ArtistsShow)
+	app.Get("/artists/:artistID/tracks", controllers.ArtistsTracks)
 	app.Put("/artists/:artistID/like", controllers.ArtistsLike)
 	app.Delete("/artists/:artistID/like", controllers.ArtistsLikeDelete)
 

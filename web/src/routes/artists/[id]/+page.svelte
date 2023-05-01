@@ -26,6 +26,7 @@
             album_type_single: 'Singles',
             albums_type_empty: 'This artist has no albums of the selected type',
             albums_empty: 'This artist has no albums',
+            view_more: 'View more',
         },
         nl: {
             title: '$1 - Artiesten - BassieMusic',
@@ -43,6 +44,7 @@
             album_type_single: 'Singles',
             albums_type_empty: 'Deze artiest heeft geen albums van het geselecteerde type',
             albums_empty: 'Deze artiest heeft geen albums',
+            view_more: 'Zie meer',
         },
     };
     const t = (key, p1) => lang[$language][key].replace('$1', p1);
@@ -122,6 +124,11 @@
         tracks={data.artist.top_tracks}
         displayMax=5
     />
+    {#if data.artist.top_tracks.length > 5}
+        <a class="button" href="/artists/{data.artist.id}/tracks">
+            {t('view_more')}
+        </a>
+    {/if}
 {:else}
     <p><i>{t('top_tracks_empty')}</i></p>
 {/if}

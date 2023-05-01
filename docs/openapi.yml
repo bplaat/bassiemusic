@@ -356,7 +356,27 @@ paths:
           description: Authorization error
         "404":
           description: Artist not found
-
+  /artists/{id}/tracks:
+    get:
+      tags: [Tracks]
+      description: Get a list of tracks from artist
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+        - name: sort_by
+          in: query
+          description: Sort items by
+          required: false
+          schema:
+            type: string
+            enum: ['plays', 'plays_desc', 'title', 'title_desc', 'created_at', 'created_at_desc']
+      responses:
+        "200":
+          description: Successfull response
+        "401":
+          description: Authorization error
   # Genres
   /genres:
     get:
