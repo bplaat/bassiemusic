@@ -1,3 +1,5 @@
+import { error } from '@sveltejs/kit';
+
 export async function load({ locals, url, fetch, cookies, params}) {
     // Fetch artist
     let response = await fetch(`${import.meta.env.VITE_API_URL}/artists/${params.id}`, {
