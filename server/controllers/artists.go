@@ -212,8 +212,7 @@ func ArtistsTracks(c *fiber.Ctx) error {
 	}
 
 	// Fetching tracks
-	q := models.TrackModel.With("artists", "album").WhereIn("track_artist", "track_id", "artist_id", artist.ID)
-
+	q := models.TrackModel.With("artists", "album").WhereIn("id", models.TrackArtistModel.Select("track_id").Where("artist_id", artist.ID))
 	if c.Query("sort_by") == "title" {
 		q = q.OrderByRaw("LOWER(`title`)")
 	} else if c.Query("sort_by") == "title_desc" {
