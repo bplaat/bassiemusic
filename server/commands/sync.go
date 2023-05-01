@@ -34,7 +34,7 @@ func Sync() {
 						log.Fatalln(err)
 					}
 
-					tasks.DownloadAlbum(deezerAlbum)
+					tasks.DownloadAlbum(deezerAlbum, nil, nil, nil)
 				}
 			}
 

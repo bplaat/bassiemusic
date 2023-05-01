@@ -122,7 +122,7 @@
         token={data.token}
         authUser={data.authUser}
         tracks={data.artist.top_tracks}
-        displayMax=5
+        displayMax="5"
     />
     {#if data.artist.top_tracks.length > 5}
         <a class="button" href="/artists/{data.artist.id}/tracks">

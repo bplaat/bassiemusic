@@ -2,11 +2,14 @@ package utils
 
 import (
 	"encoding/json"
+	"errors"
 	"io"
 	"log"
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/bplaat/bassiemusic/structs"
 )
 
 func Fetch(url string) ([]byte, error) {
@@ -52,7 +55,20 @@ func FetchFile(url string, path string) {
 func DeezerFetch(url string, data any) error {
 	tries := 0
 	for {
-		err := FetchJson(url, data)
+		body, err := Fetch(url)
+
+		if err == nil {
+			var deezerError structs.DeezerError
+			err = json.Unmarshal(body, &deezerError)
+			if deezerError.Error.Code != 0 {
+				err = errors.New("Api Rate limit")
+			}
+		}
+
+		if err == nil {
+			err = json.Unmarshal(body, data)
+		}
+
 		if err != nil {
 			tries += 1
 			time.Sleep(2 * time.Second)
@@ -84,7 +100,6 @@ func DeezerFetchFile(url string, path string) {
 			tries += 1
 			time.Sleep(2 * time.Second)
 			if tries == 5 {
-				log.Println(url)
 				log.Fatalln(err)
 			}
 		}

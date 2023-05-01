@@ -21,8 +21,7 @@
             download_tasks_deezer_album: 'Deezer Album',
             download_tasks_display_name: 'Name',
             download_tasks_status: 'Status',
-            download_tasks_status_pending: 'Waiting',
-            download_tasks_progress: 'Progress',
+            download_tasks_status_pending: 'Pending',
             download_tasks_empty: 'There are no current download tasks',
 
             search_header: 'Search and download albums and artists',
@@ -52,8 +51,7 @@
             download_tasks_deezer_album: 'Deezer Album',
             download_tasks_display_name: 'Naam',
             download_tasks_status: 'Status',
-            download_tasks_status_pending: 'Wachten',
-            download_tasks_progress: 'Progressie',
+            download_tasks_status_pending: 'Wachtend',
             download_tasks_empty: 'Er zijn geen huidige download taken',
 
             search_header: 'Zoek en download albums en artisten',
@@ -199,9 +197,9 @@
         <table class="table">
             <thead>
                 <th style="width: 10%;">{t('download_tasks_index')}</th>
-                <th style="width: 20%;">{t('download_tasks_type')}</th>
+                <th style="width: 35%;">{t('download_tasks_type')}</th>
                 <th style="width: 35%;">{t('download_tasks_display_name')}</th>
-                <th style="width: 35%;">{t('download_tasks_status')}</th>
+                <th style="width: 30%;">{t('download_tasks_status')}</th>
             </thead>
             <tbody>
                 {#each tasks as task, index}
