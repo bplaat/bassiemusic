@@ -54,7 +54,7 @@ func init() {
 				track.Album = AlbumModel.With("genres", "artists").Find(track.AlbumID)
 			},
 			"artists": func(track *Track, args []any) {
-				artists := ArtistModel.WhereIn("track_artist", "artist_id", "track_id", track.ID).OrderByRaw("LOWER(`name`)").Get()
+				artists := ArtistModel.WhereIn("id", TrackArtistModel.Select("artist_id").Where("track_id", track.ID).OrderBy("position")).Get()
 				track.Artists = &artists
 			},
 		},
@@ -66,6 +66,7 @@ type TrackArtist struct {
 	ID       string `column:"id,uuid"`
 	TrackID  string `column:"track_id,uuid"`
 	ArtistID string `column:"artist_id,uuid"`
+	Position int    `column:"position,int"`
 }
 
 var TrackArtistModel *database.Model[TrackArtist] = (&database.Model[TrackArtist]{

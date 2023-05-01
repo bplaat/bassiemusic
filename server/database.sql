@@ -102,6 +102,7 @@ CREATE TABLE `album_artist` (
     `id` BINARY(16) NOT NULL,
     `album_id` BINARY(16) NOT NULL,
     `artist_id` BINARY(16) NOT NULL,
+    `position` INT UNSIGNED NOT NULL,
     PRIMARY KEY (`id`),
     FOREIGN KEY (`album_id`) REFERENCES `albums`(`id`) ON DELETE CASCADE,
     FOREIGN KEY (`artist_id`) REFERENCES `artists`(`id`) ON DELETE CASCADE
@@ -149,6 +150,7 @@ CREATE TABLE `track_artist` (
     `id` BINARY(16) NOT NULL,
     `track_id` BINARY(16) NOT NULL,
     `artist_id` BINARY(16) NOT NULL,
+    `position` INT UNSIGNED NOT NULL,
     PRIMARY KEY (`id`),
     FOREIGN KEY (`track_id`) REFERENCES `tracks`(`id`) ON DELETE CASCADE,
     FOREIGN KEY (`artist_id`) REFERENCES `artists`(`id`) ON DELETE CASCADE
@@ -192,8 +194,8 @@ CREATE TABLE `playlists` (
 CREATE TABLE `playlist_track` (
     `id` BINARY(16) NOT NULL,
     `playlist_id` BINARY(16) NOT NULL,
-    `position` INT UNSIGNED NOT NULL,
     `track_id` BINARY(16) NOT NULL,
+    `position` INT UNSIGNED NOT NULL,
     `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
