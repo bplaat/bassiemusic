@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math"
 	"os/exec"
 	"strings"
 	"time"
@@ -179,10 +180,10 @@ func SearchAndDownloadTrackMusic(track *models.Track) error {
 	return nil
 }
 
-func DownloadAlbum(deezerAlbum structs.DeezerAlbum, downloadTask *models.DownloadTask) {
+func DownloadAlbum(deezerAlbum structs.DeezerAlbum, downloadTask *models.DownloadTask, downloadedTracks *int, totalTracks *int) int {
 	// Check if album already exists
 	if models.AlbumModel.Where("title", deezerAlbum.Title).First() != nil {
-		return
+		return len(deezerAlbum.Tracks.Data)
 	}
 
 	// Create album
@@ -240,9 +241,10 @@ func DownloadAlbum(deezerAlbum structs.DeezerAlbum, downloadTask *models.Downloa
 		log.Printf("[DOWNLOAD] %s - %d-%d - %s\n", deezerAlbum.Title, track.Disk, track.Position, track.Title)
 
 		// Log when a track haves been downloaded
-		if downloadTask != nil {
-			downloadTask.DownloadedTracks += 1
+		if downloadTask != nil && downloadedTracks != nil && totalTracks != nil {
+			*downloadedTracks += 1
 			downloadTask.Status = models.DownloadTaskStatusDownloading
+			downloadTask.Progress = float32(math.Round((float64(*downloadedTracks) / float64(*totalTracks)) * 100))
 			if err := websocket.BroadcastAdmin("download_tasks.update", downloadTask); err != nil {
 				log.Println(err)
 			}
@@ -250,7 +252,7 @@ func DownloadAlbum(deezerAlbum structs.DeezerAlbum, downloadTask *models.Downloa
 	}
 
 	log.Printf("[DOWNLOAD] Done downloading album\n")
-	return
+	return *downloadedTracks
 }
 
 func fetchAlbums(DeezerID int64) ([]structs.DeezerAlbum, int) {
@@ -314,12 +316,7 @@ func DownloadTask() {
 
 			// Download artist albums
 			artistAlbums, totalTracks := fetchAlbums(downloadTask.DeezerID)
-			downloadTask.DownloadedTracks = 0
-			downloadTask.TotalTracks = totalTracks
-
-			models.DownloadTaskModel.Where("id", downloadTask.ID).Update(database.Map{
-				"total_tracks": downloadTask.TotalTracks,
-			})
+			downloadedTracks := 0
 
 			if err := websocket.BroadcastAdmin("download_tasks.update", downloadTask); err != nil {
 				log.Println(err)
@@ -328,15 +325,14 @@ func DownloadTask() {
 				if strings.Contains(album.Title, "Deezer") {
 					continue
 				}
-				downloadTracks := downloadTask.DownloadedTracks
-				DownloadAlbum(album, downloadTask)
-				downloadTask.DownloadedTracks = downloadTracks + len(album.Tracks.Data)
+				downloadedTracks = DownloadAlbum(album, downloadTask, &downloadedTracks, &totalTracks)
 
 				// Update download task progress
 				downloadTask.Status = models.DownloadTaskStatusDownloading
+				downloadTask.Progress = float32(math.Round((float64(downloadedTracks) / float64(totalTracks)) * 100))
 				models.DownloadTaskModel.Where("id", downloadTask.ID).Update(database.Map{
-					"status":            downloadTask.Status,
-					"downloaded_tracks": downloadTask.DownloadedTracks,
+					"status":   downloadTask.Status,
+					"progress": downloadTask.Progress,
 				})
 			}
 		}
@@ -350,8 +346,7 @@ func DownloadTask() {
 
 			downloadTask.Status = models.DownloadTaskStatusDownloading
 			models.DownloadTaskModel.Where("id", downloadTask.ID).Update(database.Map{
-				"status":       downloadTask.Status,
-				"total_tracks": len(deezerAlbum.Tracks.Data),
+				"status": downloadTask.Status,
 			})
 
 			// Broadcast download tasks update message to admins
@@ -360,7 +355,9 @@ func DownloadTask() {
 			}
 
 			// Download album
-			DownloadAlbum(deezerAlbum, downloadTask)
+			downloadedTracks := 0
+			totalTracks := len(deezerAlbum.Tracks.Data)
+			downloadedTracks = DownloadAlbum(deezerAlbum, downloadTask, &downloadedTracks, &totalTracks)
 		}
 
 		// Broadcast download tasks delete message to admins

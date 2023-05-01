@@ -219,8 +219,7 @@ CREATE TABLE `download_tasks` (
     `deezer_id` BIGINT UNSIGNED NOT NULL,
     `display_name` VARCHAR(255) NOT NULL,
     `status` TINYINT UNSIGNED NOT NULL,
-    `downloaded_tracks` int(11) NOT NULL,
-    `total_tracks` int(11) NOT NULL,
+    `progress` FLOAT NOT NULL,
     `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`)

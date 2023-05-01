@@ -7,16 +7,15 @@ import (
 )
 
 type DownloadTask struct {
-	ID               string             `column:"id,uuid" json:"id"`
-	Type             DownloadTaskType   `column:"type,int" json:"-"`
-	TypeString       string             `json:"type"`
-	DeezerID         int64              `column:"deezer_id,bigint" json:"deezer_id"`
-	DisplayName      string             `column:"display_name,string" json:"display_name"`
-	Status           DownloadTaskStatus `column:"status,int" json:"-"`
-	StatusString     string             `json:"status"`
-	DownloadedTracks int                `column:"downloaded_tracks,int" json:"downloaded_tracks"`
-	TotalTracks      int                `column:"total_tracks, int" json:"total_tracks"`
-	CreatedAt        time.Time          `column:"created_at,timestamp" json:"created_at"`
+	ID           string             `column:"id,uuid" json:"id"`
+	Type         DownloadTaskType   `column:"type,int" json:"-"`
+	TypeString   string             `json:"type"`
+	DeezerID     int64              `column:"deezer_id,bigint" json:"deezer_id"`
+	DisplayName  string             `column:"display_name,string" json:"display_name"`
+	Status       DownloadTaskStatus `column:"status,int" json:"-"`
+	StatusString string             `json:"status"`
+	Progress     float32            `column:"progress,float" json:"progress"`
+	CreatedAt    time.Time          `column:"created_at,timestamp" json:"created_at"`
 }
 
 type DownloadTaskType int
