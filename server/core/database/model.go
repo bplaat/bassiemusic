@@ -10,9 +10,9 @@ import (
 type Map map[string]any
 
 type ModelColumn struct {
-	Name   string
-	Column string
-	Type   string
+	FieldName  string
+	ColumnName string
+	Type       string
 }
 
 type ModelProcessFunc[T any] func(model *T)
@@ -41,13 +41,13 @@ func (m *Model[T]) Init() *Model[T] {
 		tag := field.Tag.Get("column")
 		if tag != "" {
 			parts := strings.Split(tag, ",")
-			columnInfo := ModelColumn{
-				Name:   field.Name,
-				Column: parts[0],
-				Type:   parts[1],
+			column := ModelColumn{
+				FieldName:  field.Name,
+				ColumnName: parts[0],
+				Type:       parts[1],
 			}
-			m.Columns = append(m.Columns, &columnInfo)
-			m.ColumnsLookup[columnInfo.Column] = &columnInfo
+			m.Columns = append(m.Columns, &column)
+			m.ColumnsLookup[column.ColumnName] = &column
 		}
 	}
 	return m
@@ -62,14 +62,14 @@ func (m *Model[T]) Create(values Map) *T {
 	valuesQueryPart := ""
 	queryValues := []any{}
 	index := 0
-	for column, value := range values {
-		insertQuery += "`" + column + "`"
+	for columnName, value := range values {
+		insertQuery += "`" + columnName + "`"
 		if index != len(values)-1 {
 			insertQuery += ", "
 		}
 
-		columnInfo := m.ColumnsLookup[column]
-		if columnInfo.Type == "uuid" {
+		column := m.ColumnsLookup[columnName]
+		if column.Type == "uuid" {
 			valuesQueryPart += "UUID_TO_BIN(?)"
 		} else {
 			valuesQueryPart += "?"
@@ -88,6 +88,10 @@ func (m *Model[T]) Create(values Map) *T {
 
 func (m *Model[T]) query() *QueryBuilder[T] {
 	return &QueryBuilder[T]{model: m, withs: map[string][]any{}}
+}
+
+func (m *Model[T]) Select(columns ...string) *QueryBuilder[T] {
+	return m.query().Select(columns...)
 }
 
 func (m *Model[T]) Join(join string) *QueryBuilder[T] {
@@ -130,8 +134,8 @@ func (m *Model[T]) WhereOrNotNull(column string) *QueryBuilder[T] {
 	return m.query().WhereOrNotNull(column)
 }
 
-func (m *Model[T]) WhereIn(pivotTableName string, pivotModelId string, pivotRelationshipId string, value string) *QueryBuilder[T] {
-	return m.query().WhereIn(pivotTableName, pivotModelId, pivotRelationshipId, value)
+func (m *Model[T]) WhereIn(column string, queryBuilder QueryBuilderSelectQuery) *QueryBuilder[T] {
+	return m.query().WhereIn(column, queryBuilder)
 }
 
 func (m *Model[T]) OrderBy(column string) *QueryBuilder[T] {

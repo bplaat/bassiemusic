@@ -196,3 +196,35 @@ func ArtistsLikeDelete(c *fiber.Ctx) error {
 	models.ArtistLikeModel.Where("artist_id", artist.ID).Where("user_id", authUser.ID).Delete()
 	return c.JSON(fiber.Map{"success": true})
 }
+
+func ArtistsTracks(c *fiber.Ctx) error {
+	_, page, limit := utils.ParseIndexVars(c)
+
+	// Check if artist id is valid uuid
+	if !uuid.IsValid(c.Params("artistID")) {
+		return fiber.ErrBadRequest
+	}
+
+	// Check if artist exists
+	artist := models.ArtistModel.Find(c.Params("artistID"))
+	if artist == nil {
+		return fiber.ErrNotFound
+	}
+
+	// Fetching tracks
+	q := models.TrackModel.With("artists", "album").WhereIn("id", models.TrackArtistModel.Select("track_id").Where("artist_id", artist.ID))
+	if c.Query("sort_by") == "title" {
+		q = q.OrderByRaw("LOWER(`title`)")
+	} else if c.Query("sort_by") == "title_desc" {
+		q = q.OrderByRaw("LOWER(`title`) DESC")
+	} else if c.Query("sort_by") == "created_at" {
+		q = q.OrderBy("created_at")
+	} else if c.Query("sort_by") == "created_at_desc" {
+		q = q.OrderByDesc("created_at")
+	} else if c.Query("sort_by") == "plays" {
+		q = q.OrderByRaw("`plays`, LOWER(`title`)")
+	} else {
+		q = q.OrderByRaw("`plays` DESC, LOWER(`title`)")
+	}
+	return c.JSON(q.Paginate(page, limit))
+}

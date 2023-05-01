@@ -5,9 +5,9 @@
 ## Windows
 
 ### Database
-- Download and install the latest stable [MariaDB](https://mariadb.org/download/)
-- In the setup also install HeidiSQL
-- Login as root to your database with HeidiSQL
+- Download and install the latest stable [MySQL](https://dev.mysql.com/downloads/installer/)
+- Download and install [HeidiSQL](https://www.heidisql.com/download.php)
+- Connect and login as root to the MySQL server with HeidiSQL
 - Create BassieMusic user and database
     ```sql
     CREATE USER 'bassiemusic'@'localhost' IDENTIFIED BY 'bassiemusic';
@@ -15,8 +15,7 @@
     GRANT ALL PRIVILEGES ON `bassiemusic`.* TO 'bassiemusic'@'localhost';
     FLUSH PRIVILEGES;
     ```
-- Change database with `use bassiemusic;`
-- Create MariaDB UUID_TO_BIN and BIN_TO_UUID [pollyfills](https://gist.github.com/bplaat/1d8d1bba135c726178ebdfc9df08e2ca)
+- Change database with to `bassiemusic`
 - Create the tables in [`server/database.sql`](../server/database.sql)
 
 ### Server

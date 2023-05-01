@@ -47,7 +47,7 @@ func init() {
 				}
 			},
 			"albums": func(artist *Artist, args []any) {
-				albums := AlbumModel.With("artists", "genres").WhereIn("album_artist", "album_id", "artist_id", artist.ID).OrderByDesc("released_at").Get()
+				albums := AlbumModel.With("artists", "genres").WhereIn("id", AlbumArtistModel.Select("album_id").Where("artist_id", artist.ID)).OrderByDesc("released_at").Get()
 				artist.Albums = &albums
 			},
 			"top_tracks": func(artist *Artist, args []any) {
@@ -56,7 +56,7 @@ func init() {
 					authUser := args[0].(*User)
 					topTracksQuery = topTracksQuery.WithArgs("liked", authUser)
 				}
-				topTracks := topTracksQuery.WhereIn("track_artist", "track_id", "artist_id", artist.ID).OrderByDesc("plays").Limit(25).Get()
+				topTracks := topTracksQuery.WhereIn("id", TrackArtistModel.Select("track_id").Where("artist_id", artist.ID)).OrderByDesc("plays").Limit(25).Get()
 				artist.TopTracks = &topTracks
 			},
 		},

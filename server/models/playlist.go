@@ -1,7 +1,6 @@
 package models
 
 import (
-	"database/sql"
 	"fmt"
 	"os"
 	"time"
@@ -11,18 +10,18 @@ import (
 
 // Playlist
 type Playlist struct {
-	ID          string         `column:"id,uuid" json:"id"`
-	UserID      string         `column:"user_id,uuid" json:"-"`
-	Name        string         `column:"name,string" json:"name"`
-	ImageID     sql.NullString `column:"image,uuid" json:"-"`
-	Public      bool           `column:"public,bool" json:"public"`
-	CreatedAt   time.Time      `column:"created_at,timestamp" json:"created_at"`
-	UpdatedAt   time.Time      `column:"updated_at,timestamp" json:"-"`
-	SmallImage  *string        `json:"small_image"`
-	MediumImage *string        `json:"medium_image"`
-	Liked       *bool          `json:"liked,omitempty"`
-	User        *User          `json:"user,omitempty"`
-	Tracks      *[]Track       `json:"tracks,omitempty"`
+	ID          string              `column:"id,uuid" json:"id"`
+	UserID      string              `column:"user_id,uuid" json:"-"`
+	Name        string              `column:"name,string" json:"name"`
+	ImageID     database.NullString `column:"image,uuid" json:"-"`
+	Public      bool                `column:"public,bool" json:"public"`
+	CreatedAt   time.Time           `column:"created_at,timestamp" json:"created_at"`
+	UpdatedAt   time.Time           `column:"updated_at,timestamp" json:"-"`
+	SmallImage  *string             `json:"small_image"`
+	MediumImage *string             `json:"medium_image"`
+	Liked       *bool               `json:"liked,omitempty"`
+	User        *User               `json:"user,omitempty"`
+	Tracks      *[]Track            `json:"tracks,omitempty"`
 }
 
 var PlaylistModel *database.Model[Playlist]
