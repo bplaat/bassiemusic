@@ -143,7 +143,8 @@
         };
         ws.onmessage = (event) => {
             const { type, data } = JSON.parse(event.data);
-            console.log(type, data);
+
+            // Download Tasks messages
             if (type === 'download_tasks.init.response') {
                 tasks = data;
             }
