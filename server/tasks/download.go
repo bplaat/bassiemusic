@@ -105,11 +105,12 @@ func CreateTrack(albumID string, deezerID int64) {
 	})
 
 	// Create track artists bindings
-	for _, artist := range deezerTrack.Contributors {
+	for index, artist := range deezerTrack.Contributors {
 		artistID := createArtist(artist.ID, artist.Name, false)
 		models.TrackArtistModel.Create(database.Map{
 			"track_id":  trackID.String(),
 			"artist_id": artistID,
+			"position":  index + 1,
 		})
 	}
 }
@@ -219,11 +220,12 @@ func DownloadAlbum(deezerAlbum structs.DeezerAlbum) int {
 	}
 
 	// Create album artist bindings
-	for _, artist := range deezerAlbum.Contributors {
+	for index, artist := range deezerAlbum.Contributors {
 		artistID := createArtist(artist.ID, artist.Name, false)
 		models.AlbumArtistModel.Create(database.Map{
 			"album_id":  albumID.String(),
 			"artist_id": artistID,
+			"position":  index + 1,
 		})
 	}
 

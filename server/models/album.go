@@ -66,11 +66,11 @@ func init() {
 				}
 			},
 			"artists": func(album *Album, args []any) {
-				artists := ArtistModel.WhereIn("album_artist", "artist_id", "album_id", album.ID).OrderByRaw("LOWER(`name`)").Get()
+				artists := ArtistModel.WhereIn("id", AlbumArtistModel.Select("artist_id").Where("album_id", album.ID).OrderBy("position")).Get()
 				album.Artists = &artists
 			},
 			"genres": func(album *Album, args []any) {
-				genres := GenreModel.WhereIn("album_genre", "genre_id", "album_id", album.ID).OrderByRaw("LOWER(`name`)").Get()
+				genres := GenreModel.WhereIn("id", AlbumGenreModel.Select("genre_id").Where("album_id", album.ID)).OrderByRaw("LOWER(`name`)").Get()
 				album.Genres = &genres
 			},
 			"tracks": func(album *Album, args []any) {
@@ -91,6 +91,7 @@ type AlbumArtist struct {
 	ID       string `column:"id,uuid"`
 	AlbumID  string `column:"album_id,uuid"`
 	ArtistID string `column:"artist_id,uuid"`
+	Position int    `column:"position,int"`
 }
 
 var AlbumArtistModel *database.Model[AlbumArtist] = (&database.Model[AlbumArtist]{

@@ -8,6 +8,7 @@ import (
 
 type QueryBuilder[T any] struct {
 	model          *Model[T]
+	selectColumns  []string
 	joinQueryPart  string
 	withs          map[string][]any
 	whereQueryPart string
@@ -17,6 +18,10 @@ type QueryBuilder[T any] struct {
 	limit          int64
 }
 
+type QueryBuilderSelectQuery interface {
+	SelectQuery(whereInQuery bool) (string, []any)
+}
+
 type QueryBuilderPaginated[T any] struct {
 	Data       []T `json:"data"`
 	Pagination struct {
@@ -24,6 +29,11 @@ type QueryBuilderPaginated[T any] struct {
 		Limit int64 `json:"limit"`
 		Total int64 `json:"total"`
 	} `json:"pagination"`
+}
+
+func (qb *QueryBuilder[T]) Select(columns ...string) *QueryBuilder[T] {
+	qb.selectColumns = append(qb.selectColumns, columns...)
+	return qb
 }
 
 func (qb *QueryBuilder[T]) Join(join string) *QueryBuilder[T] {
@@ -59,15 +69,15 @@ func (qb *QueryBuilder[T]) FormatColumn(column string) string {
 	}
 }
 
-func (qb *QueryBuilder[T]) where(column string, value any, operator string) *QueryBuilder[T] {
+func (qb *QueryBuilder[T]) where(columnName string, value any, operator string) *QueryBuilder[T] {
 	if qb.whereQueryPart != "" {
 		qb.whereQueryPart += " " + operator + " "
 	}
-	columnInfo := qb.model.ColumnsLookup[column]
-	if columnInfo.Type == "uuid" {
-		qb.whereQueryPart += qb.FormatColumn(column) + " = UUID_TO_BIN(?)"
+	column := qb.model.ColumnsLookup[columnName]
+	if column.Type == "uuid" {
+		qb.whereQueryPart += qb.FormatColumn(columnName) + " = UUID_TO_BIN(?)"
 	} else {
-		qb.whereQueryPart += qb.FormatColumn(column) + " = ?"
+		qb.whereQueryPart += qb.FormatColumn(columnName) + " = ?"
 	}
 	qb.whereValues = append(qb.whereValues, value)
 	return qb
@@ -122,9 +132,10 @@ func (qb *QueryBuilder[T]) WhereOrNotNull(column string) *QueryBuilder[T] {
 	return qb.whereNotNull(column, "OR")
 }
 
-func (qb *QueryBuilder[T]) WhereIn(pivotTableName string, pivotModelId string, pivotRelationshipId string, value any) *QueryBuilder[T] {
-	qb.whereQueryPart += "`" + qb.model.PrimaryKey + "` IN (SELECT `" + pivotModelId + "` FROM `" + pivotTableName + "` WHERE `" + pivotRelationshipId + "` = UUID_TO_BIN(?))"
-	qb.whereValues = append(qb.whereValues, value)
+func (qb *QueryBuilder[T]) WhereIn(column string, queryBuilder QueryBuilderSelectQuery) *QueryBuilder[T] {
+	query, whereValues := queryBuilder.SelectQuery(true)
+	qb.whereQueryPart += "`" + qb.model.PrimaryKey + "` IN (" + query + ")"
+	qb.whereValues = append(qb.whereValues, whereValues...)
 	return qb
 }
 
@@ -177,20 +188,34 @@ func (qb *QueryBuilder[T]) Count() int64 {
 	return count
 }
 
-func (qb *QueryBuilder[T]) Get() []T {
-	// Build select query string
+func (qb *QueryBuilder[T]) SelectQuery(whereInQuery bool) (string, []any) {
 	selectQuery := "SELECT "
 	index := 0
-	for _, column := range qb.model.Columns {
-		if column.Type == "uuid" {
-			selectQuery += "BIN_TO_UUID(" + qb.FormatColumn(column.Column) + ")"
-		} else {
-			selectQuery += qb.FormatColumn(column.Column)
+	if len(qb.selectColumns) > 0 {
+		for _, columnName := range qb.selectColumns {
+			column := qb.model.ColumnsLookup[columnName]
+			if !whereInQuery && column.Type == "uuid" {
+				selectQuery += "BIN_TO_UUID(" + qb.FormatColumn(column.ColumnName) + ")"
+			} else {
+				selectQuery += qb.FormatColumn(column.ColumnName)
+			}
+			if index != len(qb.selectColumns)-1 {
+				selectQuery += ", "
+			}
+			index++
 		}
-		if index != len(qb.model.Columns)-1 {
-			selectQuery += ", "
+	} else {
+		for _, column := range qb.model.Columns {
+			if !whereInQuery && column.Type == "uuid" {
+				selectQuery += "BIN_TO_UUID(" + qb.FormatColumn(column.ColumnName) + ")"
+			} else {
+				selectQuery += qb.FormatColumn(column.ColumnName)
+			}
+			if index != len(qb.model.Columns)-1 {
+				selectQuery += ", "
+			}
+			index++
 		}
-		index++
 	}
 	selectQuery += " FROM `" + qb.model.TableName + "`"
 	if qb.joinQueryPart != "" {
@@ -209,16 +234,22 @@ func (qb *QueryBuilder[T]) Get() []T {
 			selectQuery += " LIMIT " + strconv.FormatInt(qb.limit, 10)
 		}
 	}
+	return selectQuery, qb.whereValues
+}
+
+func (qb *QueryBuilder[T]) Get() []T {
+	// Build select query string
+	selectQuery, whereValues := qb.SelectQuery(false)
 
 	// Execute query and read models
-	query := Query(selectQuery, qb.whereValues...)
+	query := Query(selectQuery, whereValues...)
 	models := []T{}
 	for query.Next() {
 		var model T
 		modelValue := reflect.ValueOf(&model).Elem()
 		ptrs := []any{}
 		for _, column := range qb.model.Columns {
-			ptrs = append(ptrs, modelValue.FieldByName(column.Name).Addr().Interface())
+			ptrs = append(ptrs, modelValue.FieldByName(column.FieldName).Addr().Interface())
 		}
 		_ = query.Scan(ptrs...)
 		models = append(models, model)
@@ -244,12 +275,12 @@ func (qb *QueryBuilder[T]) Update(values Map) {
 	updateQuery := "UPDATE `" + qb.model.TableName + "` SET "
 	index := 0
 	queryValues := []any{}
-	for column, value := range values {
-		columnInfo := qb.model.ColumnsLookup[column]
-		if columnInfo.Type == "uuid" {
-			updateQuery += qb.FormatColumn(column) + " = UUID_TO_BIN(?)"
+	for columnName, value := range values {
+		column := qb.model.ColumnsLookup[columnName]
+		if column.Type == "uuid" {
+			updateQuery += qb.FormatColumn(columnName) + " = UUID_TO_BIN(?)"
 		} else {
-			updateQuery += qb.FormatColumn(column) + " = ?"
+			updateQuery += qb.FormatColumn(columnName) + " = ?"
 		}
 		queryValues = append(queryValues, value)
 		if index != len(values)-1 {
