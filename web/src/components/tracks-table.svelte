@@ -257,7 +257,7 @@
                 </tr>
             {/if}
 
-            {#if displayMax == null || (index < displayMax)}
+            {#if displayMax === null || (index < displayMax)}
                 <tr
                     id={isAlbum ? `${track.disk}-${track.position}` : null}
                     class="track-container"
