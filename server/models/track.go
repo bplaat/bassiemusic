@@ -54,7 +54,8 @@ func init() {
 				track.Album = AlbumModel.With("genres", "artists").Find(track.AlbumID)
 			},
 			"artists": func(track *Track, args []any) {
-				artists := ArtistModel.WhereIn("id", TrackArtistModel.Select("artist_id").Where("track_id", track.ID).OrderBy("position")).Get()
+				artists := ArtistModel.Join("INNER JOIN `track_artist` ON `artists`.`id` = `track_artist`.`artist_id`").
+					WhereRaw("`track_artist`.`track_id` = UUID_TO_BIN(?)", track.ID).OrderByRaw("`track_artist`.`position`").Get()
 				track.Artists = &artists
 			},
 		},

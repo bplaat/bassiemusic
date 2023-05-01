@@ -66,7 +66,8 @@ func init() {
 				}
 			},
 			"artists": func(album *Album, args []any) {
-				artists := ArtistModel.WhereIn("id", AlbumArtistModel.Select("artist_id").Where("album_id", album.ID).OrderBy("position")).Get()
+				artists := ArtistModel.Join("INNER JOIN `album_artist` ON `artists`.`id` = `album_artist`.`artist_id`").
+					WhereRaw("`album_artist`.`album_id` = UUID_TO_BIN(?)", album.ID).OrderByRaw("`album_artist`.`position`").Get()
 				album.Artists = &artists
 			},
 			"genres": func(album *Album, args []any) {
