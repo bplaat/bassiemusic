@@ -143,19 +143,19 @@ func PlaylistsUpdate(c *fiber.Ctx) error {
 		updates["public"] = *body.Public == "true"
 	}
 	if imageFile, err := c.FormFile("image"); err == nil {
-		// Remove old image file
-		if playlist.ImageID.Valid {
-			_ = os.Remove(fmt.Sprintf("storage/playlists/original/%s", playlist.ImageID.String))
-			_ = os.Remove(fmt.Sprintf("storage/playlists/small/%s.jpg", playlist.ImageID.String))
-			_ = os.Remove(fmt.Sprintf("storage/playlists/medium/%s.jpg", playlist.ImageID.String))
-		}
-
 		// Store new image
 		imageID := uuid.New()
 		if err := utils.StoreUploadedImage(c, "playlists", imageID.String(), imageFile, false); err != nil {
 			return err
 		}
 		updates["image"] = imageID.String()
+
+		// Remove old image file
+		if playlist.ImageID.Valid {
+			_ = os.Remove(fmt.Sprintf("storage/playlists/original/%s", playlist.ImageID.String))
+			_ = os.Remove(fmt.Sprintf("storage/playlists/small/%s.jpg", playlist.ImageID.String))
+			_ = os.Remove(fmt.Sprintf("storage/playlists/medium/%s.jpg", playlist.ImageID.String))
+		}
 	}
 	if body.Image != nil && *body.Image == "" {
 		if playlist.ImageID.Valid {

@@ -32,6 +32,7 @@ a:focus {
     text-decoration: underline;
 }
 
+a.button,
 a.card,
 .card .title > a,
 .tabs a,
