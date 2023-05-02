@@ -50,7 +50,7 @@
     function editImage() {
         const imageInput = document.createElement('input');
         imageInput.type = 'file';
-        imageInput.accept = '*.jpg,*.jpeg,*.png';
+        imageInput.accept = 'image/jpeg,image/png,.jpg,.jpeg,.png';
         imageInput.addEventListener('change', async () => {
             const body = new FormData();
             if (itemRoute === 'artists' || itemRoute === 'genres' || itemRoute === 'playlists') {

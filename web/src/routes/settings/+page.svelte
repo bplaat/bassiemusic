@@ -292,7 +292,7 @@
             <div class="field">
                 <label class="label" for="avatar">{t('avatar_file')}</label>
                 <div class="control">
-                    <input class="input" type="file" id="avatar" accept="*.jpg,*.jpeg,*.png" bind:this={avatarInput} />
+                    <input class="input" type="file" id="avatar" accept="image/jpeg,image/png,.jpg,.jpeg,.png" bind:this={avatarInput} />
                     <p class="help">{t('avatar_file_help')}</p>
                 </div>
             </div>
