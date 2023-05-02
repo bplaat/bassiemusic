@@ -134,6 +134,9 @@ func (qb *QueryBuilder[T]) WhereOrNotNull(column string) *QueryBuilder[T] {
 
 func (qb *QueryBuilder[T]) WhereIn(column string, queryBuilder QueryBuilderSelectQuery) *QueryBuilder[T] {
 	query, whereValues := queryBuilder.SelectQuery(true)
+	if qb.whereQueryPart != "" {
+		qb.whereQueryPart += " AND "
+	}
 	qb.whereQueryPart += "`" + qb.model.PrimaryKey + "` IN (" + query + ")"
 	qb.whereValues = append(qb.whereValues, whereValues...)
 	return qb
@@ -190,33 +193,30 @@ func (qb *QueryBuilder[T]) Count() int64 {
 
 func (qb *QueryBuilder[T]) SelectQuery(whereInQuery bool) (string, []any) {
 	selectQuery := "SELECT "
-	index := 0
+
+	// Add selected columns to the query
+	var selectColumns []*ModelColumn
 	if len(qb.selectColumns) > 0 {
 		for _, columnName := range qb.selectColumns {
-			column := qb.model.ColumnsLookup[columnName]
-			if !whereInQuery && column.Type == "uuid" {
-				selectQuery += "BIN_TO_UUID(" + qb.FormatColumn(column.ColumnName) + ")"
-			} else {
-				selectQuery += qb.FormatColumn(column.ColumnName)
-			}
-			if index != len(qb.selectColumns)-1 {
-				selectQuery += ", "
-			}
-			index++
+			selectColumns = append(selectColumns, qb.model.ColumnsLookup[columnName])
 		}
 	} else {
-		for _, column := range qb.model.Columns {
-			if !whereInQuery && column.Type == "uuid" {
-				selectQuery += "BIN_TO_UUID(" + qb.FormatColumn(column.ColumnName) + ")"
-			} else {
-				selectQuery += qb.FormatColumn(column.ColumnName)
-			}
-			if index != len(qb.model.Columns)-1 {
-				selectQuery += ", "
-			}
-			index++
-		}
+		selectColumns = qb.model.Columns
 	}
+	index := 0
+	for _, column := range selectColumns {
+		if !whereInQuery && column.Type == "uuid" {
+			selectQuery += "BIN_TO_UUID(" + qb.FormatColumn(column.ColumnName) + ")"
+		} else {
+			selectQuery += qb.FormatColumn(column.ColumnName)
+		}
+		if index != len(selectColumns)-1 {
+			selectQuery += ", "
+		}
+		index++
+	}
+
+	// Add rest of the stuff to the query
 	selectQuery += " FROM `" + qb.model.TableName + "`"
 	if qb.joinQueryPart != "" {
 		selectQuery += " " + qb.joinQueryPart
@@ -269,9 +269,12 @@ func (qb *QueryBuilder[T]) Get() []T {
 }
 
 func (qb *QueryBuilder[T]) Update(values Map) {
+	// Check if we want to update something
 	if len(values) == 0 {
 		return
 	}
+
+	// Create update SQL query
 	updateQuery := "UPDATE `" + qb.model.TableName + "` SET "
 	index := 0
 	queryValues := []any{}
@@ -299,10 +302,13 @@ func (qb *QueryBuilder[T]) Update(values Map) {
 			updateQuery += " LIMIT " + strconv.FormatInt(qb.limit, 10)
 		}
 	}
+
+	// Execute update query
 	Exec(updateQuery, queryValues...)
 }
 
 func (qb *QueryBuilder[T]) Delete() {
+	// Create delete SQL query
 	deleteQuery := "DELETE FROM `" + qb.model.TableName + "` "
 	if qb.joinQueryPart != "" {
 		deleteQuery += " " + qb.joinQueryPart
@@ -317,6 +323,8 @@ func (qb *QueryBuilder[T]) Delete() {
 			deleteQuery += " LIMIT " + strconv.FormatInt(qb.limit, 10)
 		}
 	}
+
+	// Execute delete query
 	Exec(deleteQuery, qb.whereValues...)
 }
 

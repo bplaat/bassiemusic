@@ -8,9 +8,9 @@ CREATE TABLE `users` (
     `password` VARCHAR(255) NOT NULL,
     `avatar` BINARY(16) NULL,
     `allow_explicit` TINYINT(1) UNSIGNED NOT NULL,
-    `role` TINYINT UNSIGNED NOT NULL,
+    `role` TINYINT UNSIGNED NOT NULL, -- Enum: normal, admin
     `language` CHAR(2) NOT NULL,
-    `theme` TINYINT UNSIGNED NOT NULL,
+    `theme` TINYINT UNSIGNED NOT NULL, -- Enum: system, light, dark
     `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
@@ -88,7 +88,7 @@ CREATE TABLE `genre_likes` (
 -- Albums
 CREATE TABLE `albums` (
     `id` BINARY(16) NOT NULL,
-    `type` TINYINT UNSIGNED NOT NULL,
+    `type` TINYINT UNSIGNED NOT NULL, -- Enum: album, ep, single
     `title` VARCHAR(255) NOT NULL,
     `released_at` DATE NOT NULL,
     `explicit` TINYINT(1) UNSIGNED NOT NULL,
@@ -217,10 +217,10 @@ CREATE TABLE `playlist_likes` (
 -- Download tasks
 CREATE TABLE `download_tasks` (
     `id` BINARY(16) NOT NULL,
-    `type` TINYINT UNSIGNED NOT NULL,
+    `type` TINYINT UNSIGNED NOT NULL, -- Enum: deezer_artist, deezer_album
     `deezer_id` BIGINT UNSIGNED NOT NULL,
     `display_name` VARCHAR(255) NOT NULL,
-    `status` TINYINT UNSIGNED NOT NULL,
+    `status` TINYINT UNSIGNED NOT NULL, -- Enum: pending, downloading
     `progress` FLOAT NOT NULL,
     `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

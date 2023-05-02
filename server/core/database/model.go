@@ -54,10 +54,15 @@ func (m *Model[T]) Init() *Model[T] {
 }
 
 func (m *Model[T]) Create(values Map) *T {
+	// Create uuid id when it is not given
 	if _, ok := values[m.PrimaryKey]; !ok {
-		values[m.PrimaryKey] = uuid.New().String()
+		column := m.ColumnsLookup[m.PrimaryKey]
+		if column.Type == "uuid" {
+			values[m.PrimaryKey] = uuid.New().String()
+		}
 	}
 
+	// Create insert SQL query
 	insertQuery := "INSERT INTO `" + m.TableName + "` ("
 	valuesQueryPart := ""
 	queryValues := []any{}
@@ -82,7 +87,10 @@ func (m *Model[T]) Create(values Map) *T {
 	}
 	insertQuery += ") VALUES (" + valuesQueryPart + ")"
 
+	// Run insert SQL query
 	Exec(insertQuery, queryValues...)
+
+	// Fetch newly created model
 	return m.Find(values[m.PrimaryKey])
 }
 
