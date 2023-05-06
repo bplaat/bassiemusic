@@ -137,7 +137,7 @@ func (qb *QueryBuilder[T]) WhereIn(column string, queryBuilder QueryBuilderSelec
 	if qb.whereQueryPart != "" {
 		qb.whereQueryPart += " AND "
 	}
-	qb.whereQueryPart += "`" + qb.model.PrimaryKey + "` IN (" + query + ")"
+	qb.whereQueryPart += qb.FormatColumn(column) + " IN (" + query + ")"
 	qb.whereValues = append(qb.whereValues, whereValues...)
 	return qb
 }
