@@ -98,8 +98,8 @@ func (m *Model[T]) query() *QueryBuilder[T] {
 	return &QueryBuilder[T]{model: m, withs: map[string][]any{}}
 }
 
-func (m *Model[T]) Select(columns ...string) *QueryBuilder[T] {
-	return m.query().Select(columns...)
+func (m *Model[T]) Select(columnNames ...string) *QueryBuilder[T] {
+	return m.query().Select(columnNames...)
 }
 
 func (m *Model[T]) Join(join string) *QueryBuilder[T] {
@@ -114,11 +114,11 @@ func (m *Model[T]) WithArgs(relationship string, args ...any) *QueryBuilder[T] {
 	return m.query().WithArgs(relationship, args...)
 }
 
-func (m *Model[T]) Where(column string, value any) *QueryBuilder[T] {
-	return m.query().Where(column, value)
+func (m *Model[T]) Where(columnName string, value any) *QueryBuilder[T] {
+	return m.query().Where(columnName, value)
 }
-func (m *Model[T]) WhereOr(column string, value any) *QueryBuilder[T] {
-	return m.query().WhereOr(column, value)
+func (m *Model[T]) WhereOr(columnName string, value any) *QueryBuilder[T] {
+	return m.query().WhereOr(columnName, value)
 }
 
 func (m *Model[T]) WhereRaw(whereRaw string, value any) *QueryBuilder[T] {
@@ -128,30 +128,30 @@ func (m *Model[T]) WhereOrRaw(whereRaw string, value any) *QueryBuilder[T] {
 	return m.query().WhereOrRaw(whereRaw, value)
 }
 
-func (m *Model[T]) WhereNull(column string) *QueryBuilder[T] {
-	return m.query().WhereNull(column)
+func (m *Model[T]) WhereNull(columnName string) *QueryBuilder[T] {
+	return m.query().WhereNull(columnName)
 }
-func (m *Model[T]) WhereOrNull(column string) *QueryBuilder[T] {
-	return m.query().WhereOrNull(column)
-}
-
-func (m *Model[T]) WhereNotNull(column string) *QueryBuilder[T] {
-	return m.query().WhereNotNull(column)
-}
-func (m *Model[T]) WhereOrNotNull(column string) *QueryBuilder[T] {
-	return m.query().WhereOrNotNull(column)
+func (m *Model[T]) WhereOrNull(columnName string) *QueryBuilder[T] {
+	return m.query().WhereOrNull(columnName)
 }
 
-func (m *Model[T]) WhereIn(column string, queryBuilder QueryBuilderSelectQuery) *QueryBuilder[T] {
-	return m.query().WhereIn(column, queryBuilder)
+func (m *Model[T]) WhereNotNull(columnName string) *QueryBuilder[T] {
+	return m.query().WhereNotNull(columnName)
+}
+func (m *Model[T]) WhereOrNotNull(columnName string) *QueryBuilder[T] {
+	return m.query().WhereOrNotNull(columnName)
 }
 
-func (m *Model[T]) OrderBy(column string) *QueryBuilder[T] {
-	return m.query().OrderBy(column)
+func (m *Model[T]) WhereIn(columnName string, queryBuilder QueryBuilderSelectQuery) *QueryBuilder[T] {
+	return m.query().WhereIn(columnName, queryBuilder)
 }
 
-func (m *Model[T]) OrderByDesc(column string) *QueryBuilder[T] {
-	return m.query().OrderByDesc(column)
+func (m *Model[T]) OrderBy(columnName string) *QueryBuilder[T] {
+	return m.query().OrderBy(columnName)
+}
+
+func (m *Model[T]) OrderByDesc(columnName string) *QueryBuilder[T] {
+	return m.query().OrderByDesc(columnName)
 }
 
 func (m *Model[T]) OrderByRaw(orderByRaw string) *QueryBuilder[T] {

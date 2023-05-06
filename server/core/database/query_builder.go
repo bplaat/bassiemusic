@@ -7,15 +7,15 @@ import (
 )
 
 type QueryBuilder[T any] struct {
-	model          *Model[T]
-	selectColumns  []string
-	joinQueryPart  string
-	withs          map[string][]any
-	whereQueryPart string
-	whereValues    []any
-	orderBy        string
-	offset         int64
-	limit          int64
+	model             *Model[T]
+	selectColumnNames []string
+	joinQueryPart     string
+	withs             map[string][]any
+	whereQueryPart    string
+	whereValues       []any
+	orderBy           string
+	offset            int64
+	limit             int64
 }
 
 type QueryBuilderSelectQuery interface {
@@ -31,8 +31,8 @@ type QueryBuilderPaginated[T any] struct {
 	} `json:"pagination"`
 }
 
-func (qb *QueryBuilder[T]) Select(columns ...string) *QueryBuilder[T] {
-	qb.selectColumns = append(qb.selectColumns, columns...)
+func (qb *QueryBuilder[T]) Select(columnNames ...string) *QueryBuilder[T] {
+	qb.selectColumnNames = append(qb.selectColumnNames, columnNames...)
 	return qb
 }
 
@@ -61,11 +61,11 @@ func (qb *QueryBuilder[T]) WithArgs(relationship string, args ...any) *QueryBuil
 	return qb
 }
 
-func (qb *QueryBuilder[T]) FormatColumn(column string) string {
+func (qb *QueryBuilder[T]) FormatColumn(columnName string) string {
 	if qb.joinQueryPart != "" {
-		return "`" + qb.model.TableName + "`.`" + column + "`"
+		return "`" + qb.model.TableName + "`.`" + columnName + "`"
 	} else {
-		return "`" + column + "`"
+		return "`" + columnName + "`"
 	}
 }
 
@@ -82,11 +82,11 @@ func (qb *QueryBuilder[T]) where(columnName string, value any, operator string) 
 	qb.whereValues = append(qb.whereValues, value)
 	return qb
 }
-func (qb *QueryBuilder[T]) Where(column string, value any) *QueryBuilder[T] {
-	return qb.where(column, value, "AND")
+func (qb *QueryBuilder[T]) Where(columnName string, value any) *QueryBuilder[T] {
+	return qb.where(columnName, value, "AND")
 }
-func (qb *QueryBuilder[T]) WhereOr(column string, value any) *QueryBuilder[T] {
-	return qb.where(column, value, "OR")
+func (qb *QueryBuilder[T]) WhereOr(columnName string, value any) *QueryBuilder[T] {
+	return qb.where(columnName, value, "OR")
 }
 
 func (qb *QueryBuilder[T]) whereRaw(whereRaw string, value any, operator string) *QueryBuilder[T] {
@@ -104,51 +104,51 @@ func (qb *QueryBuilder[T]) WhereOrRaw(whereRaw string, value any) *QueryBuilder[
 	return qb.whereRaw(whereRaw, value, "OR")
 }
 
-func (qb *QueryBuilder[T]) whereNull(column string, operator string) *QueryBuilder[T] {
+func (qb *QueryBuilder[T]) whereNull(columnName string, operator string) *QueryBuilder[T] {
 	if qb.whereQueryPart != "" {
 		qb.whereQueryPart += " " + operator + " "
 	}
-	qb.whereQueryPart += qb.FormatColumn(column) + " IS NULL"
+	qb.whereQueryPart += qb.FormatColumn(columnName) + " IS NULL"
 	return qb
 }
-func (qb *QueryBuilder[T]) WhereNull(column string) *QueryBuilder[T] {
-	return qb.whereNull(column, "AND")
+func (qb *QueryBuilder[T]) WhereNull(columnName string) *QueryBuilder[T] {
+	return qb.whereNull(columnName, "AND")
 }
-func (qb *QueryBuilder[T]) WhereOrNull(column string) *QueryBuilder[T] {
-	return qb.whereNull(column, "OR")
+func (qb *QueryBuilder[T]) WhereOrNull(columnName string) *QueryBuilder[T] {
+	return qb.whereNull(columnName, "OR")
 }
 
-func (qb *QueryBuilder[T]) whereNotNull(column string, operator string) *QueryBuilder[T] {
+func (qb *QueryBuilder[T]) whereNotNull(columnName string, operator string) *QueryBuilder[T] {
 	if qb.whereQueryPart != "" {
 		qb.whereQueryPart += " " + operator + " "
 	}
-	qb.whereQueryPart += qb.FormatColumn(column) + " IS NOT NULL"
+	qb.whereQueryPart += qb.FormatColumn(columnName) + " IS NOT NULL"
 	return qb
 }
-func (qb *QueryBuilder[T]) WhereNotNull(column string) *QueryBuilder[T] {
-	return qb.whereNotNull(column, "AND")
+func (qb *QueryBuilder[T]) WhereNotNull(columnName string) *QueryBuilder[T] {
+	return qb.whereNotNull(columnName, "AND")
 }
-func (qb *QueryBuilder[T]) WhereOrNotNull(column string) *QueryBuilder[T] {
-	return qb.whereNotNull(column, "OR")
+func (qb *QueryBuilder[T]) WhereOrNotNull(columnName string) *QueryBuilder[T] {
+	return qb.whereNotNull(columnName, "OR")
 }
 
-func (qb *QueryBuilder[T]) WhereIn(column string, queryBuilder QueryBuilderSelectQuery) *QueryBuilder[T] {
-	query, whereValues := queryBuilder.SelectQuery(true)
+func (qb *QueryBuilder[T]) WhereIn(columnName string, queryBuilder QueryBuilderSelectQuery) *QueryBuilder[T] {
 	if qb.whereQueryPart != "" {
 		qb.whereQueryPart += " AND "
 	}
-	qb.whereQueryPart += qb.FormatColumn(column) + " IN (" + query + ")"
+	query, whereValues := queryBuilder.SelectQuery(true)
+	qb.whereQueryPart += qb.FormatColumn(columnName) + " IN (" + query + ")"
 	qb.whereValues = append(qb.whereValues, whereValues...)
 	return qb
 }
 
-func (qb *QueryBuilder[T]) OrderBy(column string) *QueryBuilder[T] {
-	qb.orderBy = qb.FormatColumn(column)
+func (qb *QueryBuilder[T]) OrderBy(columnName string) *QueryBuilder[T] {
+	qb.orderBy = qb.FormatColumn(columnName)
 	return qb
 }
 
-func (qb *QueryBuilder[T]) OrderByDesc(column string) *QueryBuilder[T] {
-	qb.orderBy = qb.FormatColumn(column) + " DESC"
+func (qb *QueryBuilder[T]) OrderByDesc(columnName string) *QueryBuilder[T] {
+	qb.orderBy = qb.FormatColumn(columnName) + " DESC"
 	return qb
 }
 
@@ -196,8 +196,8 @@ func (qb *QueryBuilder[T]) SelectQuery(whereInQuery bool) (string, []any) {
 
 	// Add selected columns to the query
 	var selectColumns []*ModelColumn
-	if len(qb.selectColumns) > 0 {
-		for _, columnName := range qb.selectColumns {
+	if len(qb.selectColumnNames) > 0 {
+		for _, columnName := range qb.selectColumnNames {
 			selectColumns = append(selectColumns, qb.model.ColumnsLookup[columnName])
 		}
 	} else {
