@@ -4,12 +4,12 @@ go 1.18
 
 require (
 	github.com/disintegration/imaging v1.6.2
-	github.com/fasthttp/websocket v1.5.2
+	github.com/fasthttp/websocket v1.5.3
 	github.com/go-sql-driver/mysql v1.7.1
-	github.com/gofiber/fiber/v2 v2.44.0
+	github.com/gofiber/fiber/v2 v2.45.0
 	github.com/mileusna/useragent v1.3.2
-	github.com/valyala/fasthttp v1.46.0
-	golang.org/x/crypto v0.8.0
+	github.com/valyala/fasthttp v1.47.0
+	golang.org/x/crypto v0.9.0
 )
 
 require (
@@ -27,5 +27,7 @@ require (
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/tcplisten v1.0.0 // indirect
 	golang.org/x/image v0.7.0 // indirect
-	golang.org/x/sys v0.7.0 // indirect
+	golang.org/x/mod v0.8.0 // indirect
+	golang.org/x/sys v0.8.0 // indirect
+	golang.org/x/tools v0.6.0 // indirect
 )
