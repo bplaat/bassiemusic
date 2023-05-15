@@ -11,8 +11,9 @@ import (
 )
 
 func TestHome(t *testing.T) {
+	api := routes.Api()
 	request := httptest.NewRequest("GET", "/", nil)
-	response, _ := routes.Api.Test(request)
+	response, _ := api.Test(request)
 
 	if response.StatusCode != fiber.StatusOK {
 		t.Errorf("TestHome(): response status is not OK")

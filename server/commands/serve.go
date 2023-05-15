@@ -4,8 +4,8 @@ import (
 	"log"
 	"os"
 
-	"github.com/bplaat/bassiemusic/tasks"
 	"github.com/bplaat/bassiemusic/routes"
+	"github.com/bplaat/bassiemusic/tasks"
 )
 
 func Serve() {
@@ -13,5 +13,6 @@ func Serve() {
 	go tasks.DownloadTask()
 
 	// Start server with api routes
-	log.Fatal(routes.Api.Listen(":" + os.Getenv("SERVER_PORT")))
+	api := routes.Api()
+	log.Fatal(api.Listen(":" + os.Getenv("SERVER_PORT")))
 }
