@@ -128,7 +128,6 @@ func SearchAndDownloadTrackMusic(track *models.Track) error {
 	log.Println(searchCommand.String())
 
 	stdout, err := searchCommand.StdoutPipe()
-
 	if err != nil {
 		return err
 	}
@@ -177,6 +176,10 @@ func SearchAndDownloadTrackMusic(track *models.Track) error {
 			"duration":   youtubeDuration,
 			"youtube_id": youtubeID,
 		})
+	}
+
+	if err := stdout.Close(); err != nil {
+		log.Fatalln(err)
 	}
 	return nil
 }
