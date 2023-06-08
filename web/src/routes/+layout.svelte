@@ -1,12 +1,16 @@
 <script>
-    import { sidebar, musicPlayer } from '../stores.js';
+    import { setContext } from 'svelte';
     import { afterNavigate } from '$app/navigation';
     import Sidebar from '../components/sidebar.svelte';
     import MusicPlayer from '../components/music-player.svelte';
-    import { language } from '../stores.js';
+    import { sidebar, musicPlayer, language } from '../stores.js';
+    import '../app.css';
 
     export let data;
     const { token, authUser, agent, lastTrack, lastTrackPosition, lastPlaylists } = data;
+
+    setContext('token', data.token);
+    setContext('authUser', data.authUser);
 
     // Language
     if (authUser) {
@@ -76,7 +80,6 @@
         <link rel="stylesheet" href="/css/bulma-light.min.css" media="(prefers-color-scheme: light)" />
         <link rel="stylesheet" href="/css/bulma-dark.min.css" media="(prefers-color-scheme: dark)" />
     {/if}
-    <link rel="stylesheet" href="/css/app.css" />
 </svelte:head>
 
 <div

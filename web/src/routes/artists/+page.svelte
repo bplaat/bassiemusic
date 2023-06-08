@@ -1,7 +1,8 @@
 <script>
+    import { getContext } from 'svelte';
     import SortByDropdown from '../../components/buttons/sort-by-dropdown.svelte';
     import ArtistCard from '../../components/cards/artist-card.svelte';
-    import { lazyLoader } from '../../utils.js';
+    import { newLazyLoader } from '../../utils.js';
     import { language } from '../../stores.js';
 
     // Language strings
@@ -33,27 +34,33 @@
 
     // State
     export let data;
+    const token = getContext('token');
+    const authUser = getContext('authUser');
 
     // Lazy loader
-    lazyLoader(
-        data.total,
-        () => data.artists.length,
-        async (page) => {
+    const limit = 20;
+    let artists = new Array(limit).fill(null);
+    let total = null;
+    newLazyLoader({
+        getTotal: () => total,
+        getCount: () => artists.length,
+        async loadPage(page) {
+            if (page == 1 && artists.length > 0) artists = new Array(limit).fill(null);
+            if (page != 1) artists = [...artists, ...new Array(limit).fill(null)];
             const response = await fetch(
-                `${import.meta.env.VITE_API_URL}/artists?${new URLSearchParams({
-                    page,
-                    sort_by: data.sortBy,
-                })}`,
+                `${import.meta.env.VITE_API_URL}/artists?${new URLSearchParams({ page, limit, sort_by: data.sortBy })}`,
                 {
                     headers: {
-                        Authorization: `Bearer ${data.token}`,
+                        Authorization: `Bearer ${token}`,
                     },
-                }
+                },
             );
-            const { data: newArtists } = await response.json();
-            data.artists = [...data.artists, ...newArtists];
-        }
-    );
+            const { data: newArtists, pagination } = await response.json();
+            if (page == 1) total = pagination.total;
+            artists.splice((page - 1) * limit, limit, ...newArtists);
+            artists = artists;
+        },
+    });
 </script>
 
 <svelte:head>
@@ -79,11 +86,11 @@
     </div>
 </div>
 
-{#if data.artists.length > 0}
+{#if artists.length > 0}
     <div class="columns is-multiline is-mobile">
-        {#each data.artists as artist}
+        {#each artists as artist}
             <div class="column is-half-mobile is-one-third-tablet is-one-quarter-desktop is-one-fifth-widescreen">
-                <ArtistCard {artist} token={data.token} authUser={data.authUser} />
+                <ArtistCard {artist} {token} {authUser} />
             </div>
         {/each}
     </div>

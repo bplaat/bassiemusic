@@ -24,12 +24,12 @@ body {
 }
 
 a {
-    color: currentColor;
+    color: currentColor!important;
 }
 
 a:hover,
 a:focus {
-    text-decoration: underline;
+    text-decoration: underline!important;
 }
 
 a.button,
