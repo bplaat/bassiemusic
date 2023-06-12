@@ -22,7 +22,9 @@ func Api() *fiber.App {
 		AppName: os.Getenv("APP_NAME"),
 	})
 	api.Use(compress.New())
-	api.Use(cors.New())
+	api.Use(cors.New(cors.Config{
+		MaxAge: 60 * 60,
+	}))
 	api.Use(favicon.New())
 	api.Use(logger.New())
 
