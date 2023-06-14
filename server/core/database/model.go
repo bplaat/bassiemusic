@@ -142,8 +142,12 @@ func (m *Model[T]) WhereOrNotNull(columnName string) *QueryBuilder[T] {
 	return m.query().WhereOrNotNull(columnName)
 }
 
-func (m *Model[T]) WhereIn(columnName string, queryBuilder QueryBuilderSelectQuery) *QueryBuilder[T] {
-	return m.query().WhereIn(columnName, queryBuilder)
+func (m *Model[T]) WhereIn(columnName string, list []any) *QueryBuilder[T] {
+	return m.query().WhereIn(columnName, list)
+}
+
+func (m *Model[T]) WhereInQuery(columnName string, queryBuilder QueryBuilderSelectQuery) *QueryBuilder[T] {
+	return m.query().WhereInQuery(columnName, queryBuilder)
 }
 
 func (m *Model[T]) OrderBy(columnName string) *QueryBuilder[T] {

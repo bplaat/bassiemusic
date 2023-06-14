@@ -42,7 +42,7 @@ func init() {
 			"liked": func(track *Track, args []any) {
 				if len(args) > 0 {
 					authUser := args[0].(*User)
-					liked := TrackLikeModel.Where("track_id", track.ID).Where("user_id", authUser.ID).First() != nil
+					liked := TrackLikeModel.Where("track_id", track.ID).Where("user_id", authUser.ID).Count() != 0
 					track.Liked = &liked
 				}
 			},
@@ -54,9 +54,28 @@ func init() {
 				track.Album = AlbumModel.With("genres", "artists").Find(track.AlbumID)
 			},
 			"artists": func(track *Track, args []any) {
-				artists := ArtistModel.Join("INNER JOIN `track_artist` ON `artists`.`id` = `track_artist`.`artist_id`").
-					WhereRaw("`track_artist`.`track_id` = UUID_TO_BIN(?)", track.ID).OrderByRaw("`track_artist`.`position`").Get()
-				track.Artists = &artists
+				trackArtists := TrackArtistModel.Select("artist_id").Where("track_id", track.ID).OrderBy("position").Get()
+				if len(trackArtists) == 0 {
+					emptyArtists := []Artist{}
+					track.Artists = &emptyArtists
+					return
+				}
+				var artistIds []any
+				for _, trackArtist := range trackArtists {
+					artistIds = append(artistIds, trackArtist.ArtistID)
+				}
+				artists := ArtistModel.WhereIn("id", artistIds).Get()
+
+				var orderedArtists []Artist
+				for _, trackArtist := range trackArtists {
+					for _, artist := range artists {
+						if artist.ID == trackArtist.ArtistID {
+							orderedArtists = append(orderedArtists, artist)
+							break
+						}
+					}
+				}
+				track.Artists = &orderedArtists
 			},
 		},
 	}).Init()

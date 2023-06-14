@@ -43,7 +43,7 @@ func init() {
 			"liked": func(playlist *Playlist, args []any) {
 				if len(args) > 0 {
 					authUser := args[0].(*User)
-					liked := PlaylistLikeModel.Where("playlist_id", playlist.ID).Where("user_id", authUser.ID).First() != nil
+					liked := PlaylistLikeModel.Where("playlist_id", playlist.ID).Where("user_id", authUser.ID).Count() != 0
 					playlist.Liked = &liked
 				}
 			},
@@ -51,14 +51,33 @@ func init() {
 				playlist.User = UserModel.Find(playlist.UserID)
 			},
 			"tracks": func(playlist *Playlist, args []any) {
-				tracksQuery := TrackModel.Join("INNER JOIN `playlist_track` ON `tracks`.`id` = `playlist_track`.`track_id`")
+				playlistTracks := PlaylistTrackModel.Select("track_id").Where("playlist_id", playlist.ID).OrderBy("position").Get()
+				if len(playlistTracks) == 0 {
+					emptyTracks := []Track{}
+					playlist.Tracks = &emptyTracks
+					return
+				}
+				var trackIds []any
+				for _, playlistTrack := range playlistTracks {
+					trackIds = append(trackIds, playlistTrack.TrackID)
+				}
+				tracksQuery := TrackModel.With("artists", "album").WhereIn("id", trackIds)
 				if len(args) > 0 {
 					authUser := args[0].(*User)
 					tracksQuery = tracksQuery.WithArgs("liked", authUser)
 				}
-				tracks := tracksQuery.With("artists", "album").WhereRaw("`playlist_track`.`playlist_id` = UUID_TO_BIN(?)", playlist.ID).
-					OrderByRaw("`playlist_track`.`position`").Get()
-				playlist.Tracks = &tracks
+				tracks := tracksQuery.Get()
+
+				var orderedTracks []Track
+				for _, playlistTrack := range playlistTracks {
+					for _, track := range tracks {
+						if track.ID == playlistTrack.TrackID {
+							orderedTracks = append(orderedTracks, track)
+							break
+						}
+					}
+				}
+				playlist.Tracks = &orderedTracks
 			},
 		},
 	}).Init()

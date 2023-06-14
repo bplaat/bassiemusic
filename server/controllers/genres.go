@@ -148,7 +148,7 @@ func GenresAlbums(c *fiber.Ctx) error {
 
 	// Get genre albums
 	query, page, limit := utils.ParseIndexVars(c)
-	return c.JSON(models.AlbumModel.With("artists", "genres").WhereIn("id", models.AlbumGenreModel.Select("album_id").Where("genre_id", genre.ID)).
+	return c.JSON(models.AlbumModel.With("artists", "genres").WhereInQuery("id", models.AlbumGenreModel.Select("album_id").Where("genre_id", genre.ID)).
 		WhereRaw("`title` LIKE ?", "%"+query+"%").OrderByDesc("released_at").Paginate(page, limit))
 }
 

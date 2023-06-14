@@ -2,6 +2,7 @@ package database
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -29,18 +30,47 @@ func Connect() {
 }
 
 // Database queries
+var logFile *os.File
+
+type QueryLogLine struct {
+	Query string `json:"query"`
+	Args  []any  `json:"args"`
+	Time  int64  `json:"time"`
+}
+
+func logQuery(query string, args []any, start time.Time) {
+	if logFile == nil {
+		var err error
+		logFile, err = os.OpenFile("queries.log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
+		if err != nil {
+			log.Fatalln(err)
+		}
+	}
+	bytes, _ := json.Marshal(QueryLogLine{query, args, time.Since(start).Microseconds()})
+	logFile.Write(bytes)
+	logFile.WriteString("\n")
+}
+
 func Query(query string, args ...any) *sql.Rows {
+	start := time.Now()
 	rows, err := db.Query(query, args...)
 	if err != nil {
 		log.Fatalln(err)
+	}
+	if os.Getenv("DATABASE_LOG") == "YES" {
+		logQuery(query, args, start)
 	}
 	return rows
 }
 
 func Exec(query string, args ...any) sql.Result {
+	start := time.Now()
 	result, err := db.Exec(query, args...)
 	if err != nil {
 		log.Fatalln(err)
+	}
+	if os.Getenv("DATABASE_LOG") == "YES" {
+		logQuery(query, args, start)
 	}
 	return result
 }

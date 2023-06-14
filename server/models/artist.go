@@ -42,12 +42,12 @@ func init() {
 			"liked": func(artist *Artist, args []any) {
 				if len(args) > 0 {
 					authUser := args[0].(*User)
-					liked := ArtistLikeModel.Where("artist_id", artist.ID).Where("user_id", authUser.ID).First() != nil
+					liked := ArtistLikeModel.Where("artist_id", artist.ID).Where("user_id", authUser.ID).Count() != 0
 					artist.Liked = &liked
 				}
 			},
 			"albums": func(artist *Artist, args []any) {
-				albums := AlbumModel.With("artists", "genres").WhereIn("id", AlbumArtistModel.Select("album_id").Where("artist_id", artist.ID)).OrderByDesc("released_at").Get()
+				albums := AlbumModel.With("artists", "genres").WhereInQuery("id", AlbumArtistModel.Select("album_id").Where("artist_id", artist.ID)).OrderByDesc("released_at").Get()
 				artist.Albums = &albums
 			},
 			"top_tracks": func(artist *Artist, args []any) {
@@ -56,7 +56,7 @@ func init() {
 					authUser := args[0].(*User)
 					topTracksQuery = topTracksQuery.WithArgs("liked", authUser)
 				}
-				topTracks := topTracksQuery.WhereIn("id", TrackArtistModel.Select("track_id").Where("artist_id", artist.ID)).OrderByDesc("plays").Limit(25).Get()
+				topTracks := topTracksQuery.WhereInQuery("id", TrackArtistModel.Select("track_id").Where("artist_id", artist.ID)).OrderByDesc("plays").Limit(25).Get()
 				artist.TopTracks = &topTracks
 			},
 		},

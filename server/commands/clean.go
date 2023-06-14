@@ -35,7 +35,7 @@ func cleanPlaylistImages() {
 		parts := strings.Split(filepath.Base(path), ".")
 		if len(parts) == 2 {
 			imageID := parts[0]
-			if models.PlaylistModel.Where("image_id", imageID) == nil {
+			if models.PlaylistModel.Where("image", imageID) == nil {
 				_ = os.Remove(fmt.Sprintf("storage/playlists/original/%s", imageID))
 				_ = os.Remove(fmt.Sprintf("storage/playlists/small/%s.jpg", imageID))
 				_ = os.Remove(fmt.Sprintf("storage/playlists/medium/%s.jpg", imageID))

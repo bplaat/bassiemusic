@@ -61,17 +61,36 @@ func init() {
 			"liked": func(album *Album, args []any) {
 				if len(args) > 0 {
 					authUser := args[0].(*User)
-					liked := AlbumLikeModel.Where("album_id", album.ID).Where("user_id", authUser.ID).First() != nil
+					liked := AlbumLikeModel.Where("album_id", album.ID).Where("user_id", authUser.ID).Count() != 0
 					album.Liked = &liked
 				}
 			},
 			"artists": func(album *Album, args []any) {
-				artists := ArtistModel.Join("INNER JOIN `album_artist` ON `artists`.`id` = `album_artist`.`artist_id`").
-					WhereRaw("`album_artist`.`album_id` = UUID_TO_BIN(?)", album.ID).OrderByRaw("`album_artist`.`position`").Get()
-				album.Artists = &artists
+				albumArtists := AlbumArtistModel.Select("artist_id").Where("album_id", album.ID).OrderBy("position").Get()
+				if len(albumArtists) == 0 {
+					emptyArtists := []Artist{}
+					album.Artists = &emptyArtists
+					return
+				}
+				var artistIds []any
+				for _, albumArtist := range albumArtists {
+					artistIds = append(artistIds, albumArtist.ArtistID)
+				}
+				artists := ArtistModel.WhereIn("id", artistIds).Get()
+
+				var orderedArtists []Artist
+				for _, albumArtist := range albumArtists {
+					for _, artist := range artists {
+						if artist.ID == albumArtist.ArtistID {
+							orderedArtists = append(orderedArtists, artist)
+							break
+						}
+					}
+				}
+				album.Artists = &orderedArtists
 			},
 			"genres": func(album *Album, args []any) {
-				genres := GenreModel.WhereIn("id", AlbumGenreModel.Select("genre_id").Where("album_id", album.ID)).OrderByRaw("LOWER(`name`)").Get()
+				genres := GenreModel.WhereInQuery("id", AlbumGenreModel.Select("genre_id").Where("album_id", album.ID)).OrderByRaw("LOWER(`name`)").Get()
 				album.Genres = &genres
 			},
 			"tracks": func(album *Album, args []any) {

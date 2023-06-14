@@ -36,7 +36,7 @@ var GenreModel *database.Model[Genre] = (&database.Model[Genre]{
 		"liked": func(genre *Genre, args []any) {
 			if len(args) > 0 {
 				authUser := args[0].(*User)
-				liked := GenreLikeModel.Where("genre_id", genre.ID).Where("user_id", authUser.ID).First() != nil
+				liked := GenreLikeModel.Where("genre_id", genre.ID).Where("user_id", authUser.ID).Count() != 0
 				genre.Liked = &liked
 			}
 		},

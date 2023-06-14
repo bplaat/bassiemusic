@@ -132,7 +132,32 @@ func (qb *QueryBuilder[T]) WhereOrNotNull(columnName string) *QueryBuilder[T] {
 	return qb.whereNotNull(columnName, "OR")
 }
 
-func (qb *QueryBuilder[T]) WhereIn(columnName string, queryBuilder QueryBuilderSelectQuery) *QueryBuilder[T] {
+func (qb *QueryBuilder[T]) WhereIn(columnName string, list []any) *QueryBuilder[T] {
+	if len(list) == 1 {
+		return qb.Where(columnName, list[0])
+	}
+
+	if qb.whereQueryPart != "" {
+		qb.whereQueryPart += " AND "
+	}
+	inQueryPart := ""
+	column := qb.model.ColumnsLookup[columnName]
+	for i := 0; i < len(list); i++ {
+		if column.Type == "uuid" {
+			inQueryPart += "UUID_TO_BIN(?)"
+		} else {
+			inQueryPart += "?"
+		}
+		if i != len(list)-1 {
+			inQueryPart += ", "
+		}
+	}
+	qb.whereQueryPart += qb.FormatColumn(columnName) + " IN (" + inQueryPart + ")"
+	qb.whereValues = append(qb.whereValues, list...)
+	return qb
+}
+
+func (qb *QueryBuilder[T]) WhereInQuery(columnName string, queryBuilder QueryBuilderSelectQuery) *QueryBuilder[T] {
 	if qb.whereQueryPart != "" {
 		qb.whereQueryPart += " AND "
 	}
@@ -191,10 +216,7 @@ func (qb *QueryBuilder[T]) Count() int64 {
 	return count
 }
 
-func (qb *QueryBuilder[T]) SelectQuery(whereInQuery bool) (string, []any) {
-	selectQuery := "SELECT "
-
-	// Add selected columns to the query
+func (qb *QueryBuilder[T]) selectColumns() []*ModelColumn {
 	var selectColumns []*ModelColumn
 	if len(qb.selectColumnNames) > 0 {
 		for _, columnName := range qb.selectColumnNames {
@@ -203,6 +225,14 @@ func (qb *QueryBuilder[T]) SelectQuery(whereInQuery bool) (string, []any) {
 	} else {
 		selectColumns = qb.model.Columns
 	}
+	return selectColumns
+}
+
+func (qb *QueryBuilder[T]) SelectQuery(whereInQuery bool) (string, []any) {
+	selectQuery := "SELECT "
+
+	// Add selected columns to the query
+	selectColumns := qb.selectColumns()
 	index := 0
 	for _, column := range selectColumns {
 		if !whereInQuery && column.Type == "uuid" {
@@ -242,13 +272,14 @@ func (qb *QueryBuilder[T]) Get() []T {
 	selectQuery, whereValues := qb.SelectQuery(false)
 
 	// Execute query and read models
+	selectColumns := qb.selectColumns()
 	query := Query(selectQuery, whereValues...)
 	models := []T{}
 	for query.Next() {
 		var model T
 		modelValue := reflect.ValueOf(&model).Elem()
 		ptrs := []any{}
-		for _, column := range qb.model.Columns {
+		for _, column := range selectColumns {
 			ptrs = append(ptrs, modelValue.FieldByName(column.FieldName).Addr().Interface())
 		}
 		_ = query.Scan(ptrs...)
