@@ -19,10 +19,15 @@ static void app_activate(GtkApplication *app) {
     gtk_window_set_icon_name(GTK_WINDOW(window), "bassiemusic");
     gtk_window_set_default_size(GTK_WINDOW(window), 1280, 720);
 
+    // Creat header bar
     GtkWidget *header_bar = gtk_header_bar_new();
     gtk_header_bar_set_title(GTK_HEADER_BAR(header_bar), "BassieMusic");
     gtk_header_bar_set_show_close_button(GTK_HEADER_BAR(header_bar), TRUE);
     gtk_window_set_titlebar(GTK_WINDOW(window), header_bar);
+
+    GtkWidget *app_icon = gtk_image_new_from_icon_name("nl.plaatsoft.BassieMusic", GTK_ICON_SIZE_LARGE_TOOLBAR);
+    gtk_widget_set_margin_start(app_icon, 4);
+    gtk_header_bar_pack_start(GTK_HEADER_BAR(header_bar), app_icon);
 
     // Create webview
     WebKitSettings *settings = webkit_settings_new();
