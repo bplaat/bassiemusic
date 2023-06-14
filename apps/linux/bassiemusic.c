@@ -1,5 +1,5 @@
-#include <sys/stat.h>
 #include <gtk/gtk.h>
+#include <sys/stat.h>
 #include <webkit2/webkit2.h>
 
 static void app_activate(GtkApplication *app) {
@@ -10,6 +10,9 @@ static void app_activate(GtkApplication *app) {
     if (!(stat(storage_path, &sb) == 0 && S_ISDIR(sb.st_mode))) {
         mkdir(storage_path, 0755);
     }
+
+    // Force GTK dark theme
+    g_object_set(gtk_settings_get_default(), "gtk-application-prefer-dark-theme", TRUE, NULL);
 
     // Create window
     GtkWidget *window = gtk_application_window_new(app);
@@ -31,6 +34,8 @@ static void app_activate(GtkApplication *app) {
     char cookies_path[512];
     sprintf(cookies_path, "%s/cookies", storage_path);
     webkit_cookie_manager_set_persistent_storage(cookie_manager, cookies_path, WEBKIT_COOKIE_PERSISTENT_STORAGE_TEXT);
+    GdkRGBA background_color = {.red = 0, .blue = 0, .green = 0, .alpha = 0};
+    webkit_web_view_set_background_color(WEBKIT_WEB_VIEW(webview), &background_color);
     webkit_web_view_load_uri(WEBKIT_WEB_VIEW(webview), "https://bassiemusic.plaatsoft.nl/");
     gtk_widget_grab_focus(webview);
 
