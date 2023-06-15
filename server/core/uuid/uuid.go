@@ -81,7 +81,9 @@ type NullUuid struct {
 
 func (uuid *NullUuid) Scan(value any) error {
 	if value != nil {
-		uuid.Uuid.Scan(value)
+		if err := uuid.Uuid.Scan(value); err != nil {
+			return err
+		}
 		uuid.Valid = true
 	}
 	return nil

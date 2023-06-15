@@ -47,8 +47,12 @@ func logQuery(query string, args []any, start time.Time) {
 		}
 	}
 	bytes, _ := json.Marshal(QueryLogLine{query, args, time.Since(start).Microseconds()})
-	logFile.Write(bytes)
-	logFile.WriteString("\n")
+	if _, err := logFile.Write(bytes); err != nil {
+		log.Fatalln(err)
+	}
+	if _, err := logFile.WriteString("\n"); err != nil {
+		log.Fatalln(err)
+	}
 }
 
 func Query(query string, args ...any) *sql.Rows {

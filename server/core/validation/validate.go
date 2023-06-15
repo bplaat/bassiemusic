@@ -171,7 +171,7 @@ func ValidateStructUpdates(c *fiber.Ctx, target any, data any) error {
 							errors[formName] = append(errors[formName], rule)
 						}
 					} else {
-						log.Fatalln("Validate: rule '" + ruleName + "' doesn't exists")
+						log.Fatalf("Validate: rule '%s' doesn't exists\n", ruleName)
 					}
 				}
 			}
