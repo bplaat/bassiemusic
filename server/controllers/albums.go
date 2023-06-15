@@ -35,14 +35,15 @@ func AlbumsIndex(c *fiber.Ctx) error {
 }
 
 func AlbumsShow(c *fiber.Ctx) error {
-	// Check if album id is valid uuid
-	if !uuid.IsValid(c.Params("albumID")) {
+	// Parse album id uuid
+	albumID, err := uuid.Parse(c.Params("albumID"))
+	if err != nil {
 		return fiber.ErrBadRequest
 	}
 
 	// Check if album exists
 	album := models.AlbumModel.WithArgs("liked", c.Locals("authUser")).With("artists", "genres").
-		WithArgs("tracks", c.Locals("authUser")).Find(c.Params("albumID"))
+		WithArgs("tracks", c.Locals("authUser")).Find(albumID)
 	if album == nil {
 		return fiber.ErrNotFound
 	}
@@ -60,13 +61,14 @@ type AlbumsUpdateBody struct {
 }
 
 func AlbumsUpdate(c *fiber.Ctx) error {
-	// Check if album id is valid uuid
-	if !uuid.IsValid(c.Params("albumID")) {
+	// Parse album id uuid
+	albumID, err := uuid.Parse(c.Params("albumID"))
+	if err != nil {
 		return fiber.ErrBadRequest
 	}
 
 	// Check if album exists
-	album := models.AlbumModel.Find(c.Params("albumID"))
+	album := models.AlbumModel.Find(albumID)
 	if album == nil {
 		return fiber.ErrNotFound
 	}
@@ -139,13 +141,14 @@ func AlbumsUpdate(c *fiber.Ctx) error {
 }
 
 func AlbumsDelete(c *fiber.Ctx) error {
-	// Check if album id is valid uuid
-	if !uuid.IsValid(c.Params("albumID")) {
+	// Parse album id uuid
+	albumID, err := uuid.Parse(c.Params("albumID"))
+	if err != nil {
 		return fiber.ErrBadRequest
 	}
 
 	// Check if album exists
-	album := models.AlbumModel.With("tracks").Find(c.Params("albumID"))
+	album := models.AlbumModel.With("tracks").Find(albumID)
 	if album == nil {
 		return fiber.ErrNotFound
 	}
@@ -172,13 +175,14 @@ func AlbumsDelete(c *fiber.Ctx) error {
 func AlbumsLike(c *fiber.Ctx) error {
 	authUser := c.Locals("authUser").(*models.User)
 
-	// Check if album id is valid uuid
-	if !uuid.IsValid(c.Params("albumID")) {
+	// Parse album id uuid
+	albumID, err := uuid.Parse(c.Params("albumID"))
+	if err != nil {
 		return fiber.ErrBadRequest
 	}
 
 	// Check if album exists
-	album := models.AlbumModel.Find(c.Params("albumID"))
+	album := models.AlbumModel.Find(albumID)
 	if album == nil {
 		return fiber.ErrNotFound
 	}
@@ -201,13 +205,14 @@ func AlbumsLike(c *fiber.Ctx) error {
 func AlbumsLikeDelete(c *fiber.Ctx) error {
 	authUser := c.Locals("authUser").(*models.User)
 
-	// Check if album id is valid uuid
-	if !uuid.IsValid(c.Params("albumID")) {
+	// Parse album id uuid
+	albumID, err := uuid.Parse(c.Params("albumID"))
+	if err != nil {
 		return fiber.ErrBadRequest
 	}
 
 	// Check if album exists
-	album := models.AlbumModel.Find(c.Params("albumID"))
+	album := models.AlbumModel.Find(albumID)
 	if album == nil {
 		return fiber.ErrNotFound
 	}

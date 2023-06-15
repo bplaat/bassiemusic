@@ -32,6 +32,13 @@ type QueryBuilderPaginated[T any] struct {
 }
 
 func (qb *QueryBuilder[T]) Select(columnNames ...string) *QueryBuilder[T] {
+	// Check if columns exist
+	for _, columnName := range columnNames {
+		if _, ok := qb.model.ColumnsLookup[columnName]; !ok {
+			log.Fatalf("QueryBuilder: column '%s' doesn't exist on model '%s'\n", columnName, qb.model.TableName)
+		}
+	}
+
 	qb.selectColumnNames = append(qb.selectColumnNames, columnNames...)
 	return qb
 }
@@ -46,7 +53,7 @@ func (qb *QueryBuilder[T]) With(relationships ...string) *QueryBuilder[T] {
 		if _, ok := qb.model.Relationships[relationship]; ok {
 			qb.withs[relationship] = []any{}
 		} else {
-			log.Fatalln("QueryBuilder: relationship '" + relationship + "' doesn't exists")
+			log.Fatalf("QueryBuilder: relationship '%s' doesn't exists on model '%s'\n", relationship, qb.model.TableName)
 		}
 	}
 	return qb
@@ -56,12 +63,17 @@ func (qb *QueryBuilder[T]) WithArgs(relationship string, args ...any) *QueryBuil
 	if _, ok := qb.model.Relationships[relationship]; ok {
 		qb.withs[relationship] = append(qb.withs[relationship], args...)
 	} else {
-		log.Fatalln("QueryBuilder: relationship '" + relationship + "' doesn't exists")
+		log.Fatalf("QueryBuilder: relationship '%s' doesn't exists on model '%s'\n", relationship, qb.model.TableName)
 	}
 	return qb
 }
 
 func (qb *QueryBuilder[T]) FormatColumn(columnName string) string {
+	// Check if columns exist
+	if _, ok := qb.model.ColumnsLookup[columnName]; !ok {
+		log.Fatalf("QueryBuilder: column '%s' doesn't exist on model '%s'\n", columnName, qb.model.TableName)
+	}
+
 	if qb.joinQueryPart != "" {
 		return "`" + qb.model.TableName + "`.`" + columnName + "`"
 	} else {
@@ -73,12 +85,7 @@ func (qb *QueryBuilder[T]) where(columnName string, value any, operator string) 
 	if qb.whereQueryPart != "" {
 		qb.whereQueryPart += " " + operator + " "
 	}
-	column := qb.model.ColumnsLookup[columnName]
-	if column.Type == "uuid" {
-		qb.whereQueryPart += qb.FormatColumn(columnName) + " = UUID_TO_BIN(?)"
-	} else {
-		qb.whereQueryPart += qb.FormatColumn(columnName) + " = ?"
-	}
+	qb.whereQueryPart += qb.FormatColumn(columnName) + " = ?"
 	qb.whereValues = append(qb.whereValues, value)
 	return qb
 }
@@ -141,13 +148,8 @@ func (qb *QueryBuilder[T]) WhereIn(columnName string, list []any) *QueryBuilder[
 		qb.whereQueryPart += " AND "
 	}
 	inQueryPart := ""
-	column := qb.model.ColumnsLookup[columnName]
 	for i := 0; i < len(list); i++ {
-		if column.Type == "uuid" {
-			inQueryPart += "UUID_TO_BIN(?)"
-		} else {
-			inQueryPart += "?"
-		}
+		inQueryPart += "?"
 		if i != len(list)-1 {
 			inQueryPart += ", "
 		}
@@ -235,11 +237,7 @@ func (qb *QueryBuilder[T]) SelectQuery(whereInQuery bool) (string, []any) {
 	selectColumns := qb.selectColumns()
 	index := 0
 	for _, column := range selectColumns {
-		if !whereInQuery && column.Type == "uuid" {
-			selectQuery += "BIN_TO_UUID(" + qb.FormatColumn(column.ColumnName) + ")"
-		} else {
-			selectQuery += qb.FormatColumn(column.ColumnName)
-		}
+		selectQuery += qb.FormatColumn(column.ColumnName)
 		if index != len(selectColumns)-1 {
 			selectQuery += ", "
 		}
@@ -305,17 +303,19 @@ func (qb *QueryBuilder[T]) Update(values Map) {
 		return
 	}
 
+	// Check if columns exists
+	for columnName := range values {
+		if _, ok := qb.model.ColumnsLookup[columnName]; !ok {
+			log.Fatalf("QueryBuilder: column '%s' doesn't exist on model '%s'\n", columnName, qb.model.TableName)
+		}
+	}
+
 	// Create update SQL query
 	updateQuery := "UPDATE `" + qb.model.TableName + "` SET "
 	index := 0
 	queryValues := []any{}
 	for columnName, value := range values {
-		column := qb.model.ColumnsLookup[columnName]
-		if column.Type == "uuid" {
-			updateQuery += qb.FormatColumn(columnName) + " = UUID_TO_BIN(?)"
-		} else {
-			updateQuery += qb.FormatColumn(columnName) + " = ?"
-		}
+		updateQuery += qb.FormatColumn(columnName) + " = ?"
 		queryValues = append(queryValues, value)
 		if index != len(values)-1 {
 			updateQuery += ", "

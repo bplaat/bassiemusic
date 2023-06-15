@@ -6,15 +6,16 @@ import (
 	"time"
 
 	"github.com/bplaat/bassiemusic/core/database"
+	"github.com/bplaat/bassiemusic/core/uuid"
 )
 
 // Artist
 type Artist struct {
-	ID          string    `column:"id,uuid" json:"id"`
-	Name        string    `column:"name,string" json:"name"`
-	Sync        bool      `column:"sync,bool" json:"sync"`
-	DeezerID    int64     `column:"deezer_id,bigint" json:"deezer_id"`
-	CreatedAt   time.Time `column:"created_at,timestamp" json:"created_at"`
+	ID          uuid.Uuid `column:"id" json:"id"`
+	Name        string    `column:"name" json:"name"`
+	Sync        bool      `column:"sync" json:"sync"`
+	DeezerID    int64     `column:"deezer_id" json:"deezer_id"`
+	CreatedAt   time.Time `column:"created_at" json:"created_at"`
 	SmallImage  *string   `json:"small_image"`
 	MediumImage *string   `json:"medium_image"`
 	LargeImage  *string   `json:"large_image"`
@@ -65,10 +66,10 @@ func init() {
 
 // Artist Like
 type ArtistLike struct {
-	ID        string    `column:"id,uuid"`
-	ArtistID  string    `column:"artist_id,uuid"`
-	UserID    string    `column:"user_id,uuid"`
-	CreatedAt time.Time `column:"created_at,timestamp"`
+	ID        uuid.Uuid `column:"id"`
+	ArtistID  uuid.Uuid `column:"artist_id"`
+	UserID    uuid.Uuid `column:"user_id"`
+	CreatedAt time.Time `column:"created_at"`
 }
 
 var ArtistLikeModel *database.Model[ArtistLike] = (&database.Model[ArtistLike]{

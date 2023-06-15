@@ -19,7 +19,7 @@ CREATE TABLE `users` (
 );
 
 INSERT INTO `users` (`id`, `username`, `email`, `password`, `allow_explicit`, `role`, `language`, `theme`) VALUES
-    (UUID_TO_BIN(UUID()), 'admin', 'admin@plaatsoft.nl', '$2a$10$GwDKz/4HjEklaq3FtdMYo.p3ildTU36iX1.29rdDRIIi9qgIlT7n2', 1, 1, 'en', 0);
+    (0x377e4a3e370f4faf8e99875566e6c2f7, 'admin', 'admin@plaatsoft.nl', '$2a$10$GwDKz/4HjEklaq3FtdMYo.p3ildTU36iX1.29rdDRIIi9qgIlT7n2', 1, 1, 'en', 0);
 
 -- Sessions
 CREATE TABLE `sessions` (

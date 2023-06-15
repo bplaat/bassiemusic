@@ -1,6 +1,7 @@
 package validation
 
 import (
+	"database/sql"
 	"log"
 	"reflect"
 	"regexp"
@@ -78,13 +79,14 @@ func init() {
 
 		// Database rules
 		"exists": func(args []string, target any, value string) bool {
-			selectQuery := "SELECT COUNT(`id`) FROM `" + args[0] + "` WHERE `" + args[1] + "` = "
+			selectQuery := "SELECT COUNT(`id`) FROM `" + args[0] + "` WHERE `" + args[1] + "` = ?"
+			var query *sql.Rows
 			if strings.HasSuffix(args[1], "id") {
-				selectQuery += "UUID_TO_BIN(?)"
+				uuid, _ := uuid.Parse(value)
+				query = database.Query(selectQuery, uuid)
 			} else {
-				selectQuery += "?"
+				query = database.Query(selectQuery, value)
 			}
-			query := database.Query(selectQuery, value)
 			defer query.Close()
 			query.Next()
 			var count int64
@@ -98,13 +100,14 @@ func init() {
 				}
 			}
 
-			selectQuery := "SELECT COUNT(`id`) FROM `" + args[0] + "` WHERE `" + args[1] + "` = "
+			selectQuery := "SELECT COUNT(`id`) FROM `" + args[0] + "` WHERE `" + args[1] + "` = ?"
+			var query *sql.Rows
 			if strings.HasSuffix(args[1], "id") {
-				selectQuery += "UUID_TO_BIN(?)"
+				uuid, _ := uuid.Parse(value)
+				query = database.Query(selectQuery, uuid)
 			} else {
-				selectQuery += "?"
+				query = database.Query(selectQuery, value)
 			}
-			query := database.Query(selectQuery, value)
 			defer query.Close()
 			query.Next()
 			var count int64

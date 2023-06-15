@@ -57,22 +57,23 @@ func UsersCreate(c *fiber.Ctx) error {
 	if avatarFile, err := c.FormFile("avatar"); err == nil {
 		// Store avatar when given
 		avatarID := uuid.New()
-		if err := utils.StoreUploadedImage(c, "avatars", avatarID.String(), avatarFile, false); err != nil {
+		if err := utils.StoreUploadedImage(c, "avatars", avatarID, avatarFile, false); err != nil {
 			return err
 		}
-		fields["avatar"] = avatarID.String()
+		fields["avatar"] = avatarID
 	}
 	return c.JSON(models.UserModel.Create(fields))
 }
 
 func UsersShow(c *fiber.Ctx) error {
-	// Check if user id is valid uuid
-	if !uuid.IsValid(c.Params("userID")) {
+	// Parse user id uuid
+	userID, err := uuid.Parse(c.Params("userID"))
+	if err != nil {
 		return fiber.ErrBadRequest
 	}
 
 	// Check if user exists
-	user := models.UserModel.Find(c.Params("userID"))
+	user := models.UserModel.Find(userID)
 	if user == nil {
 		return fiber.ErrNotFound
 	}
@@ -92,13 +93,14 @@ type UsersUpdateBody struct {
 }
 
 func UsersUpdate(c *fiber.Ctx) error {
-	// Check if user id is valid uuid
-	if !uuid.IsValid(c.Params("userID")) {
+	// Parse user id uuid
+	userID, err := uuid.Parse(c.Params("userID"))
+	if err != nil {
 		return fiber.ErrBadRequest
 	}
 
 	// Check if user exists
-	user := models.UserModel.Find(c.Params("userID"))
+	user := models.UserModel.Find(userID)
 	if user == nil {
 		return fiber.ErrNotFound
 	}
@@ -159,24 +161,26 @@ func UsersUpdate(c *fiber.Ctx) error {
 	if avatarFile, err := c.FormFile("avatar"); err == nil {
 		// Store new avatar
 		avatarID := uuid.New()
-		if err := utils.StoreUploadedImage(c, "avatars", avatarID.String(), avatarFile, false); err != nil {
+		if err := utils.StoreUploadedImage(c, "avatars", avatarID, avatarFile, false); err != nil {
 			return err
 		}
-		updates["avatar"] = avatarID.String()
+		updates["avatar"] = avatarID
 
 		// Remove old avatar file
 		if user.AvatarID.Valid {
-			_ = os.Remove(fmt.Sprintf("storage/avatars/original/%s", user.AvatarID.String))
-			_ = os.Remove(fmt.Sprintf("storage/avatars/small/%s.jpg", user.AvatarID.String))
-			_ = os.Remove(fmt.Sprintf("storage/avatars/medium/%s.jpg", user.AvatarID.String))
+			avatarIDString := user.AvatarID.Uuid.String()
+			_ = os.Remove(fmt.Sprintf("storage/avatars/original/%s", avatarIDString))
+			_ = os.Remove(fmt.Sprintf("storage/avatars/small/%s.jpg", avatarIDString))
+			_ = os.Remove(fmt.Sprintf("storage/avatars/medium/%s.jpg", avatarIDString))
 		}
 	}
 	if body.Avatar != nil && *body.Avatar == "" {
 		if user.AvatarID.Valid {
 			// Remove old avatar file
-			_ = os.Remove(fmt.Sprintf("storage/avatars/original/%s", user.AvatarID.String))
-			_ = os.Remove(fmt.Sprintf("storage/avatars/small/%s.jpg", user.AvatarID.String))
-			_ = os.Remove(fmt.Sprintf("storage/avatars/medium/%s.jpg", user.AvatarID.String))
+			avatarIDString := user.AvatarID.Uuid.String()
+			_ = os.Remove(fmt.Sprintf("storage/avatars/original/%s", avatarIDString))
+			_ = os.Remove(fmt.Sprintf("storage/avatars/small/%s.jpg", avatarIDString))
+			_ = os.Remove(fmt.Sprintf("storage/avatars/medium/%s.jpg", avatarIDString))
 
 			updates["avatar"] = nil
 		}
@@ -188,13 +192,14 @@ func UsersUpdate(c *fiber.Ctx) error {
 }
 
 func UsersDelete(c *fiber.Ctx) error {
-	// Check if user id is valid uuid
-	if !uuid.IsValid(c.Params("userID")) {
+	// Parse user id uuid
+	userID, err := uuid.Parse(c.Params("userID"))
+	if err != nil {
 		return fiber.ErrBadRequest
 	}
 
 	// Check if user exists
-	user := models.UserModel.Find(c.Params("userID"))
+	user := models.UserModel.Find(userID)
 	if user == nil {
 		return fiber.ErrNotFound
 	}
@@ -213,13 +218,14 @@ func UsersDelete(c *fiber.Ctx) error {
 func UsersLikedArtists(c *fiber.Ctx) error {
 	query, page, limit := utils.ParseIndexVars(c)
 
-	// Check if user id is valid uuid
-	if !uuid.IsValid(c.Params("userID")) {
+	// Parse user id uuid
+	userID, err := uuid.Parse(c.Params("userID"))
+	if err != nil {
 		return fiber.ErrBadRequest
 	}
 
 	// Check if user exists
-	user := models.UserModel.Find(c.Params("userID"))
+	user := models.UserModel.Find(userID)
 	if user == nil {
 		return fiber.ErrNotFound
 	}
@@ -232,7 +238,7 @@ func UsersLikedArtists(c *fiber.Ctx) error {
 
 	// Get liked artists
 	q := models.ArtistModel.Join("INNER JOIN `artist_likes` ON `artists`.`id` = `artist_likes`.`artist_id`").
-		WhereRaw("`artist_likes`.`user_id` = UUID_TO_BIN(?)", authUser.ID).WhereRaw("`artists`.`name` LIKE ?", "%"+query+"%")
+		WhereRaw("`artist_likes`.`user_id` = ?", authUser.ID).WhereRaw("`artists`.`name` LIKE ?", "%"+query+"%")
 	if c.Query("sort_by") == "name" {
 		q = q.OrderByRaw("LOWER(`artists`.`name`)")
 	} else if c.Query("sort_by") == "name_desc" {
@@ -256,13 +262,14 @@ func UsersLikedArtists(c *fiber.Ctx) error {
 func UsersLikedGenres(c *fiber.Ctx) error {
 	query, page, limit := utils.ParseIndexVars(c)
 
-	// Check if user id is valid uuid
-	if !uuid.IsValid(c.Params("userID")) {
+	// Parse user id uuid
+	userID, err := uuid.Parse(c.Params("userID"))
+	if err != nil {
 		return fiber.ErrBadRequest
 	}
 
 	// Check if user exists
-	user := models.UserModel.Find(c.Params("userID"))
+	user := models.UserModel.Find(userID)
 	if user == nil {
 		return fiber.ErrNotFound
 	}
@@ -275,7 +282,7 @@ func UsersLikedGenres(c *fiber.Ctx) error {
 
 	// Get liked genres
 	q := models.GenreModel.Join("INNER JOIN `genre_likes` ON `genres`.`id` = `genre_likes`.`genre_id`").
-		WhereRaw("`genre_likes`.`user_id` = UUID_TO_BIN(?)", authUser.ID).WhereRaw("`genres`.`name` LIKE ?", "%"+query+"%")
+		WhereRaw("`genre_likes`.`user_id` = ?", authUser.ID).WhereRaw("`genres`.`name` LIKE ?", "%"+query+"%")
 	if c.Query("sort_by") == "name" {
 		q = q.OrderByRaw("LOWER(`genres`.`name`)")
 	} else if c.Query("sort_by") == "name_desc" {
@@ -295,13 +302,14 @@ func UsersLikedGenres(c *fiber.Ctx) error {
 func UsersLikedAlbums(c *fiber.Ctx) error {
 	query, page, limit := utils.ParseIndexVars(c)
 
-	// Check if user id is valid uuid
-	if !uuid.IsValid(c.Params("userID")) {
+	// Parse user id uuid
+	userID, err := uuid.Parse(c.Params("userID"))
+	if err != nil {
 		return fiber.ErrBadRequest
 	}
 
 	// Check if user exists
-	user := models.UserModel.Find(c.Params("userID"))
+	user := models.UserModel.Find(userID)
 	if user == nil {
 		return fiber.ErrNotFound
 	}
@@ -314,7 +322,7 @@ func UsersLikedAlbums(c *fiber.Ctx) error {
 
 	// Get liked albums
 	q := models.AlbumModel.Join("INNER JOIN `album_likes` ON `albums`.`id` = `album_likes`.`album_id`").
-		With("artists", "genres").WhereRaw("`album_likes`.`user_id` = UUID_TO_BIN(?)", authUser.ID).
+		With("artists", "genres").WhereRaw("`album_likes`.`user_id` = ?", authUser.ID).
 		WhereRaw("`albums`.`title` LIKE ?", "%"+query+"%")
 	if c.Query("sort_by") == "title" {
 		q = q.OrderByRaw("LOWER(`albums`.`title`)")
@@ -339,13 +347,14 @@ func UsersLikedAlbums(c *fiber.Ctx) error {
 func UsersLikedTracks(c *fiber.Ctx) error {
 	query, page, limit := utils.ParseIndexVars(c)
 
-	// Check if user id is valid uuid
-	if !uuid.IsValid(c.Params("userID")) {
+	// Parse user id uuid
+	userID, err := uuid.Parse(c.Params("userID"))
+	if err != nil {
 		return fiber.ErrBadRequest
 	}
 
 	// Check if user exists
-	user := models.UserModel.Find(c.Params("userID"))
+	user := models.UserModel.Find(userID)
 	if user == nil {
 		return fiber.ErrNotFound
 	}
@@ -358,7 +367,7 @@ func UsersLikedTracks(c *fiber.Ctx) error {
 
 	// Get liked tracks
 	q := models.TrackModel.Join("INNER JOIN `track_likes` ON `tracks`.`id` = `track_likes`.`track_id`").
-		With("liked_true", "artists", "album").WhereRaw("`track_likes`.`user_id` = UUID_TO_BIN(?)", authUser.ID).
+		With("liked_true", "artists", "album").WhereRaw("`track_likes`.`user_id` = ?", authUser.ID).
 		WhereRaw("`tracks`.`title` LIKE ?", "%"+query+"%")
 	if c.Query("sort_by") == "title" {
 		q = q.OrderByRaw("LOWER(`tracks`.`title`)")
@@ -383,13 +392,14 @@ func UsersLikedTracks(c *fiber.Ctx) error {
 func UsersLikedPlaylists(c *fiber.Ctx) error {
 	query, page, limit := utils.ParseIndexVars(c)
 
-	// Check if user id is valid uuid
-	if !uuid.IsValid(c.Params("userID")) {
+	// Parse user id uuid
+	userID, err := uuid.Parse(c.Params("userID"))
+	if err != nil {
 		return fiber.ErrBadRequest
 	}
 
 	// Check if user exists
-	user := models.UserModel.Find(c.Params("userID"))
+	user := models.UserModel.Find(userID)
 	if user == nil {
 		return fiber.ErrNotFound
 	}
@@ -402,7 +412,7 @@ func UsersLikedPlaylists(c *fiber.Ctx) error {
 
 	// Get liked playlists
 	q := models.PlaylistModel.Join("INNER JOIN `playlist_likes` ON `playlists`.`id` = `playlist_likes`.`playlist_id`").
-		WhereRaw("`playlist_likes`.`user_id` = UUID_TO_BIN(?)", authUser.ID).
+		WhereRaw("`playlist_likes`.`user_id` = ?", authUser.ID).
 		WhereRaw("`playlists`.`name` LIKE ?", "%"+query+"%")
 	if c.Query("sort_by") == "name" {
 		q = q.OrderByRaw("LOWER(`playlists`.`name`)")
@@ -431,13 +441,14 @@ func UsersLikedPlaylists(c *fiber.Ctx) error {
 func UsersPlayedTracks(c *fiber.Ctx) error {
 	query, page, limit := utils.ParseIndexVars(c)
 
-	// Check if user id is valid uuid
-	if !uuid.IsValid(c.Params("userID")) {
+	// Parse user id uuid
+	userID, err := uuid.Parse(c.Params("userID"))
+	if err != nil {
 		return fiber.ErrBadRequest
 	}
 
 	// Check if user exists
-	user := models.UserModel.Find(c.Params("userID"))
+	user := models.UserModel.Find(userID)
 	if user == nil {
 		return fiber.ErrNotFound
 	}
@@ -450,7 +461,7 @@ func UsersPlayedTracks(c *fiber.Ctx) error {
 
 	// Get played tracks
 	playedTracks := models.TrackModel.Join("INNER JOIN `track_plays` ON `tracks`.`id` = `track_plays`.`track_id`").
-		WithArgs("liked", c.Locals("authUser")).With("artists", "album").WhereRaw("`track_plays`.`user_id` = UUID_TO_BIN(?)", authUser.ID).
+		WithArgs("liked", c.Locals("authUser")).With("artists", "album").WhereRaw("`track_plays`.`user_id` = ?", authUser.ID).
 		WhereRaw("`tracks`.`title` LIKE ?", "%"+query+"%").OrderByRaw("`track_plays`.`updated_at` DESC").Paginate(page, limit)
 	return c.JSON(playedTracks)
 }
@@ -458,13 +469,14 @@ func UsersPlayedTracks(c *fiber.Ctx) error {
 func UsersSessions(c *fiber.Ctx) error {
 	_, page, limit := utils.ParseIndexVars(c)
 
-	// Check if user id is valid uuid
-	if !uuid.IsValid(c.Params("userID")) {
+	// Parse user id uuid
+	userID, err := uuid.Parse(c.Params("userID"))
+	if err != nil {
 		return fiber.ErrBadRequest
 	}
 
 	// Check if user exists
-	user := models.UserModel.Find(c.Params("userID"))
+	user := models.UserModel.Find(userID)
 	if user == nil {
 		return fiber.ErrNotFound
 	}
@@ -483,13 +495,14 @@ func UsersSessions(c *fiber.Ctx) error {
 func UsersActiveSessions(c *fiber.Ctx) error {
 	_, page, limit := utils.ParseIndexVars(c)
 
-	// Check if user id is valid uuid
-	if !uuid.IsValid(c.Params("userID")) {
+	// Parse user id uuid
+	userID, err := uuid.Parse(c.Params("userID"))
+	if err != nil {
 		return fiber.ErrBadRequest
 	}
 
 	// Check if user exists
-	user := models.UserModel.Find(c.Params("userID"))
+	user := models.UserModel.Find(userID)
 	if user == nil {
 		return fiber.ErrNotFound
 	}
@@ -509,13 +522,14 @@ func UsersActiveSessions(c *fiber.Ctx) error {
 func UsersPlaylists(c *fiber.Ctx) error {
 	query, page, limit := utils.ParseIndexVars(c)
 
-	// Check if user id is valid uuid
-	if !uuid.IsValid(c.Params("userID")) {
+	// Parse user id uuid
+	userID, err := uuid.Parse(c.Params("userID"))
+	if err != nil {
 		return fiber.ErrBadRequest
 	}
 
 	// Check if user exists
-	user := models.UserModel.Find(c.Params("userID"))
+	user := models.UserModel.Find(userID)
 	if user == nil {
 		return fiber.ErrNotFound
 	}

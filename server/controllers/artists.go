@@ -33,18 +33,18 @@ func ArtistsIndex(c *fiber.Ctx) error {
 }
 
 func ArtistsShow(c *fiber.Ctx) error {
-	// Check if artist id is valid uuid
-	if !uuid.IsValid(c.Params("artistID")) {
+	// Parse artist id uuid
+	artistID, err := uuid.Parse(c.Params("artistID"))
+	if err != nil {
 		return fiber.ErrBadRequest
 	}
 
 	// Check if artist exists
 	artist := models.ArtistModel.WithArgs("liked", c.Locals("authUser")).With("albums").
-		WithArgs("top_tracks", c.Locals("authUser")).Find(c.Params("artistID"))
+		WithArgs("top_tracks", c.Locals("authUser")).Find(artistID)
 	if artist == nil {
 		return fiber.ErrNotFound
 	}
-
 	return c.JSON(artist)
 }
 
@@ -56,13 +56,14 @@ type ArtistsUpdateBody struct {
 }
 
 func ArtistsUpdate(c *fiber.Ctx) error {
-	// Check if artist id is valid uuid
-	if !uuid.IsValid(c.Params("artistID")) {
+	// Parse artist id uuid
+	artistID, err := uuid.Parse(c.Params("artistID"))
+	if err != nil {
 		return fiber.ErrBadRequest
 	}
 
 	// Check if artist exists
-	artist := models.ArtistModel.Find(c.Params("artistID"))
+	artist := models.ArtistModel.Find(artistID)
 	if artist == nil {
 		return fiber.ErrNotFound
 	}
@@ -120,13 +121,14 @@ func ArtistsUpdate(c *fiber.Ctx) error {
 }
 
 func ArtistsDelete(c *fiber.Ctx) error {
-	// Check if artist id is valid uuid
-	if !uuid.IsValid(c.Params("artistID")) {
+	// Parse artist id uuid
+	artistID, err := uuid.Parse(c.Params("artistID"))
+	if err != nil {
 		return fiber.ErrBadRequest
 	}
 
 	// Check if artist exists
-	artist := models.ArtistModel.Find(c.Params("artistID"))
+	artist := models.ArtistModel.Find(artistID)
 	if artist == nil {
 		return fiber.ErrNotFound
 	}
@@ -146,13 +148,14 @@ func ArtistsDelete(c *fiber.Ctx) error {
 func ArtistsLike(c *fiber.Ctx) error {
 	authUser := c.Locals("authUser").(*models.User)
 
-	// Check if artist id is valid uuid
-	if !uuid.IsValid(c.Params("artistID")) {
+	// Parse artist id uuid
+	artistID, err := uuid.Parse(c.Params("artistID"))
+	if err != nil {
 		return fiber.ErrBadRequest
 	}
 
 	// Check if artist exists
-	artist := models.ArtistModel.Find(c.Params("artistID"))
+	artist := models.ArtistModel.Find(artistID)
 	if artist == nil {
 		return fiber.ErrNotFound
 	}
@@ -175,13 +178,14 @@ func ArtistsLike(c *fiber.Ctx) error {
 func ArtistsLikeDelete(c *fiber.Ctx) error {
 	authUser := c.Locals("authUser").(*models.User)
 
-	// Check if artist id is valid uuid
-	if !uuid.IsValid(c.Params("artistID")) {
+	// Parse artist id uuid
+	artistID, err := uuid.Parse(c.Params("artistID"))
+	if err != nil {
 		return fiber.ErrBadRequest
 	}
 
 	// Check if artist exists
-	artist := models.ArtistModel.Find(c.Params("artistID"))
+	artist := models.ArtistModel.Find(artistID)
 	if artist == nil {
 		return fiber.ErrNotFound
 	}
@@ -200,13 +204,14 @@ func ArtistsLikeDelete(c *fiber.Ctx) error {
 func ArtistsTracks(c *fiber.Ctx) error {
 	_, page, limit := utils.ParseIndexVars(c)
 
-	// Check if artist id is valid uuid
-	if !uuid.IsValid(c.Params("artistID")) {
+	// Parse artist id uuid
+	artistID, err := uuid.Parse(c.Params("artistID"))
+	if err != nil {
 		return fiber.ErrBadRequest
 	}
 
 	// Check if artist exists
-	artist := models.ArtistModel.Find(c.Params("artistID"))
+	artist := models.ArtistModel.Find(artistID)
 	if artist == nil {
 		return fiber.ErrNotFound
 	}

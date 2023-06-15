@@ -2,7 +2,7 @@ package utils
 
 import (
 	"encoding/json"
-	"errors"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -61,7 +61,7 @@ func DeezerFetch(url string, data any) error {
 			var deezerError structs.DeezerError
 			err = json.Unmarshal(body, &deezerError)
 			if deezerError.Error.Code != 0 {
-				err = errors.New("Api Rate limit")
+				err = fmt.Errorf("api rate limit")
 			}
 		}
 

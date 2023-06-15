@@ -6,17 +6,18 @@ import (
 	"time"
 
 	"github.com/bplaat/bassiemusic/core/database"
+	"github.com/bplaat/bassiemusic/core/uuid"
 )
 
 type Album struct {
-	ID          string    `column:"id,uuid" json:"id"`
-	Type        AlbumType `column:"type,int" json:"-"`
+	ID          uuid.Uuid `column:"id" json:"id"`
+	Type        AlbumType `column:"type" json:"-"`
 	TypeString  string    `json:"type"`
-	Title       string    `column:"title,string" json:"title"`
-	ReleasedAt  time.Time `column:"released_at,date" json:"released_at"`
-	Explicit    bool      `column:"explicit,bool" json:"explicit"`
-	DeezerID    int64     `column:"deezer_id,bigint" json:"deezer_id"`
-	CreatedAt   time.Time `column:"created_at,timestamp" json:"created_at"`
+	Title       string    `column:"title" json:"title"`
+	ReleasedAt  time.Time `column:"released_at" json:"released_at"`
+	Explicit    bool      `column:"explicit" json:"explicit"`
+	DeezerID    int64     `column:"deezer_id" json:"deezer_id"`
+	CreatedAt   time.Time `column:"created_at" json:"created_at"`
 	SmallCover  *string   `json:"small_cover"`
 	MediumCover *string   `json:"medium_cover"`
 	LargeCover  *string   `json:"large_cover"`
@@ -81,7 +82,7 @@ func init() {
 				var orderedArtists []Artist
 				for _, albumArtist := range albumArtists {
 					for _, artist := range artists {
-						if artist.ID == albumArtist.ArtistID {
+						if artist.ID.Equals(albumArtist.ArtistID) {
 							orderedArtists = append(orderedArtists, artist)
 							break
 						}
@@ -108,10 +109,10 @@ func init() {
 
 // Album artist
 type AlbumArtist struct {
-	ID       string `column:"id,uuid"`
-	AlbumID  string `column:"album_id,uuid"`
-	ArtistID string `column:"artist_id,uuid"`
-	Position int    `column:"position,int"`
+	ID       uuid.Uuid `column:"id"`
+	AlbumID  uuid.Uuid `column:"album_id"`
+	ArtistID uuid.Uuid `column:"artist_id"`
+	Position int       `column:"position"`
 }
 
 var AlbumArtistModel *database.Model[AlbumArtist] = (&database.Model[AlbumArtist]{
@@ -120,9 +121,9 @@ var AlbumArtistModel *database.Model[AlbumArtist] = (&database.Model[AlbumArtist
 
 // Album genre
 type AlbumGenre struct {
-	ID      string `column:"id,uuid"`
-	AlbumID string `column:"album_id,uuid"`
-	GenreID string `column:"genre_id,uuid"`
+	ID      uuid.Uuid `column:"id"`
+	AlbumID uuid.Uuid `column:"album_id"`
+	GenreID uuid.Uuid `column:"genre_id"`
 }
 
 var AlbumGenreModel *database.Model[AlbumGenre] = (&database.Model[AlbumGenre]{
@@ -131,10 +132,10 @@ var AlbumGenreModel *database.Model[AlbumGenre] = (&database.Model[AlbumGenre]{
 
 // Album Like
 type AlbumLike struct {
-	ID        string    `column:"id,uuid"`
-	AlbumID   string    `column:"album_id,uuid"`
-	UserID    string    `column:"user_id,uuid"`
-	CreatedAt time.Time `column:"created_at,timestamp"`
+	ID        uuid.Uuid `column:"id"`
+	AlbumID   uuid.Uuid `column:"album_id"`
+	UserID    uuid.Uuid `column:"user_id"`
+	CreatedAt time.Time `column:"created_at"`
 }
 
 var AlbumLikeModel *database.Model[AlbumLike] = (&database.Model[AlbumLike]{

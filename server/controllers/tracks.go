@@ -33,13 +33,14 @@ func TracksIndex(c *fiber.Ctx) error {
 }
 
 func TracksShow(c *fiber.Ctx) error {
-	// Check if track id is valid uuid
-	if !uuid.IsValid(c.Params("trackID")) {
+	// Parse track id uuid
+	trackID, err := uuid.Parse(c.Params("trackID"))
+	if err != nil {
 		return fiber.ErrBadRequest
 	}
 
 	// Check if track exists
-	track := models.TrackModel.WithArgs("liked", c.Locals("authUser")).With("artists", "album").Find(c.Params("trackID"))
+	track := models.TrackModel.WithArgs("liked", c.Locals("authUser")).With("artists", "album").Find(trackID)
 	if track == nil {
 		return fiber.ErrNotFound
 	}
@@ -58,13 +59,14 @@ type TracksUpdateBody struct {
 }
 
 func TracksUpdate(c *fiber.Ctx) error {
-	// Check if track id is valid uuid
-	if !uuid.IsValid(c.Params("trackID")) {
+	// Parse track id uuid
+	trackID, err := uuid.Parse(c.Params("trackID"))
+	if err != nil {
 		return fiber.ErrBadRequest
 	}
 
 	// Check if track exists
-	track := models.TrackModel.Find(c.Params("trackID"))
+	track := models.TrackModel.Find(trackID)
 	if track == nil {
 		return fiber.ErrNotFound
 	}
@@ -117,13 +119,14 @@ func TracksUpdate(c *fiber.Ctx) error {
 }
 
 func TracksDelete(c *fiber.Ctx) error {
-	// Check if track id is valid uuid
-	if !uuid.IsValid(c.Params("trackID")) {
+	// Parse track id uuid
+	trackID, err := uuid.Parse(c.Params("trackID"))
+	if err != nil {
 		return fiber.ErrBadRequest
 	}
 
 	// Check if track exists
-	track := models.TrackModel.Find(c.Params("trackID"))
+	track := models.TrackModel.Find(trackID)
 	if track == nil {
 		return fiber.ErrNotFound
 	}
@@ -142,7 +145,8 @@ func TracksPlay(c *fiber.Ctx) error {
 	authUser := c.Locals("authUser").(*models.User)
 
 	// Check if track id is valid uuid
-	if !uuid.IsValid(c.Params("trackID")) {
+	trackID, err := uuid.Parse(c.Params("trackID"))
+	if err != nil {
 		return fiber.ErrBadRequest
 	}
 
@@ -153,20 +157,21 @@ func TracksPlay(c *fiber.Ctx) error {
 	}
 
 	// Handle track play
-	models.HandleTrackPlay(authUser, c.Params("trackID"), float32(position))
+	models.HandleTrackPlay(authUser, trackID, float32(position))
 	return c.JSON(fiber.Map{"success": true})
 }
 
 func TracksLike(c *fiber.Ctx) error {
 	authUser := c.Locals("authUser").(*models.User)
 
-	// Check if track id is valid uuid
-	if !uuid.IsValid(c.Params("trackID")) {
+	// Parse track id uuid
+	trackID, err := uuid.Parse(c.Params("trackID"))
+	if err != nil {
 		return fiber.ErrBadRequest
 	}
 
 	// Check if track exists
-	track := models.TrackModel.Find(c.Params("trackID"))
+	track := models.TrackModel.Find(trackID)
 	if track == nil {
 		return fiber.ErrNotFound
 	}
@@ -189,13 +194,14 @@ func TracksLike(c *fiber.Ctx) error {
 func TracksLikeDelete(c *fiber.Ctx) error {
 	authUser := c.Locals("authUser").(*models.User)
 
-	// Check if track id is valid uuid
-	if !uuid.IsValid(c.Params("trackID")) {
+	// Parse track id uuid
+	trackID, err := uuid.Parse(c.Params("trackID"))
+	if err != nil {
 		return fiber.ErrBadRequest
 	}
 
 	// Check if track exists
-	track := models.TrackModel.Find(c.Params("trackID"))
+	track := models.TrackModel.Find(trackID)
 	if track == nil {
 		return fiber.ErrNotFound
 	}

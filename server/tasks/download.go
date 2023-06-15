@@ -19,7 +19,7 @@ import (
 	"github.com/bplaat/bassiemusic/utils"
 )
 
-func createArtist(deezerID int, name string, sync bool) string {
+func createArtist(deezerID int, name string, sync bool) uuid.Uuid {
 	// Check if artist already exists
 	artist := models.ArtistModel.Where("name", name).First()
 	if artist != nil {
@@ -40,21 +40,22 @@ func createArtist(deezerID int, name string, sync bool) string {
 	// Create artist
 	artistID := uuid.New()
 	models.ArtistModel.Create(database.Map{
-		"id":        artistID.String(),
+		"id":        artistID,
 		"name":      name,
 		"deezer_id": deezerID,
 		"sync":      sync,
 	})
 
 	if deezerArtist.PictureMedium != "https://e-cdns-images.dzcdn.net/images/artist//250x250-000000-80-0-0.jpg" {
-		utils.DeezerFetchFile(deezerArtist.PictureMedium, fmt.Sprintf("storage/artists/small/%s.jpg", artistID.String()))
-		utils.DeezerFetchFile(deezerArtist.PictureBig, fmt.Sprintf("storage/artists/medium/%s.jpg", artistID.String()))
-		utils.DeezerFetchFile(deezerArtist.PictureXl, fmt.Sprintf("storage/artists/large/%s.jpg", artistID.String()))
+		avatarIDString := artistID.String()
+		utils.DeezerFetchFile(deezerArtist.PictureMedium, fmt.Sprintf("storage/artists/small/%s.jpg", avatarIDString))
+		utils.DeezerFetchFile(deezerArtist.PictureBig, fmt.Sprintf("storage/artists/medium/%s.jpg", avatarIDString))
+		utils.DeezerFetchFile(deezerArtist.PictureXl, fmt.Sprintf("storage/artists/large/%s.jpg", avatarIDString))
 	}
-	return artistID.String()
+	return artistID
 }
 
-func createGenre(deezerID int, name string) string {
+func createGenre(deezerID int, name string) uuid.Uuid {
 	// Check if genre already exists
 	genre := models.GenreModel.Where("name", name).First()
 	if genre != nil {
@@ -70,19 +71,20 @@ func createGenre(deezerID int, name string) string {
 	// Create genre
 	genreID := uuid.New()
 	models.GenreModel.Create(database.Map{
-		"id":        genreID.String(),
+		"id":        genreID,
 		"name":      name,
 		"deezer_id": deezerID,
 	})
 	if deezerGenre.PictureMedium != "https://e-cdns-images.dzcdn.net/images/misc//250x250-000000-80-0-0.jpg" {
-		utils.DeezerFetchFile(deezerGenre.PictureMedium, fmt.Sprintf("storage/genres/small/%s.jpg", genreID.String()))
-		utils.DeezerFetchFile(deezerGenre.PictureBig, fmt.Sprintf("storage/genres/medium/%s.jpg", genreID.String()))
-		utils.DeezerFetchFile(deezerGenre.PictureXl, fmt.Sprintf("storage/genres/large/%s.jpg", genreID.String()))
+		genreIDString := genreID.String()
+		utils.DeezerFetchFile(deezerGenre.PictureMedium, fmt.Sprintf("storage/genres/small/%s.jpg", genreIDString))
+		utils.DeezerFetchFile(deezerGenre.PictureBig, fmt.Sprintf("storage/genres/medium/%s.jpg", genreIDString))
+		utils.DeezerFetchFile(deezerGenre.PictureXl, fmt.Sprintf("storage/genres/large/%s.jpg", genreIDString))
 	}
-	return genreID.String()
+	return genreID
 }
 
-func CreateTrack(albumID string, deezerID int64) {
+func CreateTrack(albumID uuid.Uuid, deezerID int64) {
 	// Get Deezer track info
 	var deezerTrack structs.DeezerTrack
 	if err := utils.DeezerFetch(fmt.Sprintf("https://api.deezer.com/track/%d", deezerID), &deezerTrack); err != nil {
@@ -92,7 +94,7 @@ func CreateTrack(albumID string, deezerID int64) {
 	// Create track
 	trackID := uuid.New()
 	models.TrackModel.Create(database.Map{
-		"id":         trackID.String(),
+		"id":         trackID,
 		"album_id":   albumID,
 		"title":      deezerTrack.Title,
 		"disk":       deezerTrack.DiskNumber,
@@ -108,7 +110,7 @@ func CreateTrack(albumID string, deezerID int64) {
 	for index, artist := range deezerTrack.Contributors {
 		artistID := createArtist(artist.ID, artist.Name, false)
 		models.TrackArtistModel.Create(database.Map{
-			"track_id":  trackID.String(),
+			"track_id":  trackID,
 			"artist_id": artistID,
 			"position":  index + 1,
 		})
@@ -124,7 +126,6 @@ func SearchAndDownloadTrackMusic(track *models.Track) error {
 		searchQuery = fmt.Sprintf("%s - %s", track.Album.Title, track.Title)
 	}
 	searchCommand := exec.Command("yt-dlp", "--dump-json", "ytsearch10:"+searchQuery)
-
 	log.Println(searchCommand.String())
 
 	stdout, err := searchCommand.StdoutPipe()
@@ -201,7 +202,7 @@ func DownloadAlbum(deezerAlbum structs.DeezerAlbum, downloadTask *models.Downloa
 	}
 	albumID := uuid.New()
 	models.AlbumModel.Create(database.Map{
-		"id":          albumID.String(),
+		"id":          albumID,
 		"type":        albumType,
 		"title":       deezerAlbum.Title,
 		"released_at": deezerAlbum.ReleaseDate,
@@ -209,15 +210,16 @@ func DownloadAlbum(deezerAlbum structs.DeezerAlbum, downloadTask *models.Downloa
 		"deezer_id":   deezerAlbum.ID,
 	})
 
-	utils.DeezerFetchFile(deezerAlbum.CoverMedium, fmt.Sprintf("storage/albums/small/%s.jpg", albumID.String()))
-	utils.DeezerFetchFile(deezerAlbum.CoverBig, fmt.Sprintf("storage/albums/medium/%s.jpg", albumID.String()))
-	utils.DeezerFetchFile(deezerAlbum.CoverXl, fmt.Sprintf("storage/albums/large/%s.jpg", albumID.String()))
+	albumIDString := albumID.String()
+	utils.DeezerFetchFile(deezerAlbum.CoverMedium, fmt.Sprintf("storage/albums/small/%s.jpg", albumIDString))
+	utils.DeezerFetchFile(deezerAlbum.CoverBig, fmt.Sprintf("storage/albums/medium/%s.jpg", albumIDString))
+	utils.DeezerFetchFile(deezerAlbum.CoverXl, fmt.Sprintf("storage/albums/large/%s.jpg", albumIDString))
 
 	// Create album genre bindings
 	for _, genre := range deezerAlbum.Genres.Data {
 		genreID := createGenre(genre.ID, genre.Name)
 		models.AlbumGenreModel.Create(database.Map{
-			"album_id": albumID.String(),
+			"album_id": albumID,
 			"genre_id": genreID,
 		})
 	}
@@ -226,7 +228,7 @@ func DownloadAlbum(deezerAlbum structs.DeezerAlbum, downloadTask *models.Downloa
 	for index, artist := range deezerAlbum.Contributors {
 		artistID := createArtist(artist.ID, artist.Name, false)
 		models.AlbumArtistModel.Create(database.Map{
-			"album_id":  albumID.String(),
+			"album_id":  albumID,
 			"artist_id": artistID,
 			"position":  index + 1,
 		})
@@ -234,12 +236,12 @@ func DownloadAlbum(deezerAlbum structs.DeezerAlbum, downloadTask *models.Downloa
 
 	// Create album tracks
 	for _, incompleteTrack := range deezerAlbum.Tracks.Data {
-		CreateTrack(albumID.String(), incompleteTrack.ID)
+		CreateTrack(albumID, incompleteTrack.ID)
 	}
 
 	// Download album tracks music
 	for _, deezerTrack := range deezerAlbum.Tracks.Data {
-		track := models.TrackModel.With("album", "artists").Where("album_id", albumID.String()).Where("title", deezerTrack.Title).First()
+		track := models.TrackModel.With("album", "artists").Where("album_id", albumID).Where("title", deezerTrack.Title).First()
 		if err := SearchAndDownloadTrackMusic(track); err != nil && err != io.EOF {
 			log.Fatalln(err)
 		}
