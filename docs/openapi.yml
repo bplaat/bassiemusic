@@ -329,7 +329,7 @@ paths:
           description: User not found
   /artists/{id}/tracks:
     get:
-      tags: [Tracks]
+      tags: [Artists]
       description: Get a list of tracks from artist
       security:
         - TokenAuth: []
