@@ -3,6 +3,7 @@ package websocket
 import (
 	"encoding/json"
 
+	"github.com/bplaat/bassiemusic/core/uuid"
 	"github.com/bplaat/bassiemusic/models"
 )
 
@@ -23,7 +24,11 @@ func HandleTracksMessages(connection *Connection, messageType string, messageByt
 		}
 
 		// Update tracks counter
-		models.HandleTrackPlay(connection.AuthUser, message.Data.TrackID, message.Data.Position)
+		TrackID, err := uuid.Parse(message.Data.TrackID)
+		if err != nil {
+			return err
+		}
+		models.HandleTrackPlay(connection.AuthUser, TrackID, message.Data.Position)
 		return nil
 	}
 

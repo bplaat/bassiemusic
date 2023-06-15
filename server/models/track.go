@@ -6,21 +6,22 @@ import (
 	"time"
 
 	"github.com/bplaat/bassiemusic/core/database"
+	"github.com/bplaat/bassiemusic/core/uuid"
 )
 
 // Track
 type Track struct {
-	ID        string              `column:"id,uuid" json:"id"`
-	AlbumID   string              `column:"album_id,uuid" json:"-"`
-	Title     string              `column:"title,string" json:"title"`
-	Disk      int                 `column:"disk,int" json:"disk"`
-	Position  int                 `column:"position,int" json:"position"`
-	Duration  float32             `column:"duration,float" json:"duration"`
-	Explicit  bool                `column:"explicit,bool" json:"explicit"`
-	DeezerID  int64               `column:"deezer_id,bigint" json:"deezer_id"`
-	YoutubeID database.NullString `column:"youtube_id,string" json:"youtube_id"`
-	Plays     int64               `column:"plays,bigint" json:"plays"`
-	CreatedAt time.Time           `column:"created_at,timestamp" json:"created_at"`
+	ID        uuid.Uuid           `column:"id" json:"id"`
+	AlbumID   uuid.Uuid           `column:"album_id" json:"-"`
+	Title     string              `column:"title" json:"title"`
+	Disk      int                 `column:"disk" json:"disk"`
+	Position  int                 `column:"position" json:"position"`
+	Duration  float32             `column:"duration" json:"duration"`
+	Explicit  bool                `column:"explicit" json:"explicit"`
+	DeezerID  int64               `column:"deezer_id" json:"deezer_id"`
+	YoutubeID database.NullString `column:"youtube_id" json:"youtube_id"`
+	Plays     int64               `column:"plays" json:"plays"`
+	CreatedAt time.Time           `column:"created_at" json:"created_at"`
 	Music     *string             `json:"music"`
 	Liked     *bool               `json:"liked,omitempty"`
 	Album     *Album              `json:"album,omitempty"`
@@ -42,7 +43,7 @@ func init() {
 			"liked": func(track *Track, args []any) {
 				if len(args) > 0 {
 					authUser := args[0].(*User)
-					liked := TrackLikeModel.Where("track_id", track.ID).Where("user_id", authUser.ID).First() != nil
+					liked := TrackLikeModel.Where("track_id", track.ID).Where("user_id", authUser.ID).Count() != 0
 					track.Liked = &liked
 				}
 			},
@@ -54,9 +55,28 @@ func init() {
 				track.Album = AlbumModel.With("genres", "artists").Find(track.AlbumID)
 			},
 			"artists": func(track *Track, args []any) {
-				artists := ArtistModel.Join("INNER JOIN `track_artist` ON `artists`.`id` = `track_artist`.`artist_id`").
-					WhereRaw("`track_artist`.`track_id` = UUID_TO_BIN(?)", track.ID).OrderByRaw("`track_artist`.`position`").Get()
-				track.Artists = &artists
+				trackArtists := TrackArtistModel.Select("artist_id").Where("track_id", track.ID).OrderBy("position").Get()
+				if len(trackArtists) == 0 {
+					emptyArtists := []Artist{}
+					track.Artists = &emptyArtists
+					return
+				}
+				var artistIds []any
+				for _, trackArtist := range trackArtists {
+					artistIds = append(artistIds, trackArtist.ArtistID)
+				}
+				artists := ArtistModel.WhereIn("id", artistIds).Get()
+
+				var orderedArtists []Artist
+				for _, trackArtist := range trackArtists {
+					for _, artist := range artists {
+						if artist.ID.Equals(trackArtist.ArtistID) {
+							orderedArtists = append(orderedArtists, artist)
+							break
+						}
+					}
+				}
+				track.Artists = &orderedArtists
 			},
 		},
 	}).Init()
@@ -64,10 +84,10 @@ func init() {
 
 // Track artist
 type TrackArtist struct {
-	ID       string `column:"id,uuid"`
-	TrackID  string `column:"track_id,uuid"`
-	ArtistID string `column:"artist_id,uuid"`
-	Position int    `column:"position,int"`
+	ID       uuid.Uuid `column:"id"`
+	TrackID  uuid.Uuid `column:"track_id"`
+	ArtistID uuid.Uuid `column:"artist_id"`
+	Position int       `column:"position"`
 }
 
 var TrackArtistModel *database.Model[TrackArtist] = (&database.Model[TrackArtist]{
@@ -76,10 +96,10 @@ var TrackArtistModel *database.Model[TrackArtist] = (&database.Model[TrackArtist
 
 // Track Like
 type TrackLike struct {
-	ID        string    `column:"id,uuid"`
-	TrackID   string    `column:"track_id,uuid"`
-	UserID    string    `column:"user_id,uuid"`
-	CreatedAt time.Time `column:"created_at,timestamp"`
+	ID        uuid.Uuid `column:"id"`
+	TrackID   uuid.Uuid `column:"track_id"`
+	UserID    uuid.Uuid `column:"user_id"`
+	CreatedAt time.Time `column:"created_at"`
 }
 
 var TrackLikeModel *database.Model[TrackLike] = (&database.Model[TrackLike]{
@@ -88,18 +108,18 @@ var TrackLikeModel *database.Model[TrackLike] = (&database.Model[TrackLike]{
 
 // Track Play
 type TrackPlay struct {
-	ID        string    `column:"id,uuid"`
-	TrackID   string    `column:"track_id,uuid"`
-	UserID    string    `column:"user_id,uuid"`
-	Position  float32   `column:"position,float"`
-	CreatedAt time.Time `column:"created_at,timestamp"`
+	ID        uuid.Uuid `column:"id"`
+	TrackID   uuid.Uuid `column:"track_id"`
+	UserID    uuid.Uuid `column:"user_id"`
+	Position  float32   `column:"position"`
+	CreatedAt time.Time `column:"created_at"`
 }
 
 var TrackPlayModel *database.Model[TrackPlay] = (&database.Model[TrackPlay]{
 	TableName: "track_plays",
 }).Init()
 
-func HandleTrackPlay(authUser *User, trackID string, position float32) bool {
+func HandleTrackPlay(authUser *User, trackID uuid.Uuid, position float32) bool {
 	// Check if track exists
 	track := TrackModel.Find(trackID)
 	if track == nil {
@@ -109,7 +129,7 @@ func HandleTrackPlay(authUser *User, trackID string, position float32) bool {
 	// Get user last track play and update if latest
 	trackPlay := TrackPlayModel.Where("user_id", authUser.ID).OrderByDesc("created_at").First()
 	if trackPlay != nil {
-		if track.ID == trackPlay.TrackID {
+		if track.ID.Equals(trackPlay.TrackID) {
 			TrackPlayModel.Where("id", trackPlay.ID).Update(database.Map{
 				"position": position,
 			})

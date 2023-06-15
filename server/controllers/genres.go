@@ -29,13 +29,14 @@ func GenresIndex(c *fiber.Ctx) error {
 }
 
 func GenresShow(c *fiber.Ctx) error {
-	// Check if genre id is valid uuid
-	if !uuid.IsValid(c.Params("genreID")) {
+	// Parse genre id uuid
+	genreID, err := uuid.Parse(c.Params("genreID"))
+	if err != nil {
 		return fiber.ErrBadRequest
 	}
 
 	// Check if genre exists
-	genre := models.GenreModel.WithArgs("liked", c.Locals("authUser")).Find(c.Params("genreID"))
+	genre := models.GenreModel.WithArgs("liked", c.Locals("authUser")).Find(genreID)
 	if genre == nil {
 		return fiber.ErrNotFound
 	}
@@ -50,13 +51,14 @@ type GenresUpdateBody struct {
 }
 
 func GenresUpdate(c *fiber.Ctx) error {
-	// Check if genre id is valid uuid
-	if !uuid.IsValid(c.Params("genreID")) {
+	// Parse genre id uuid
+	genreID, err := uuid.Parse(c.Params("genreID"))
+	if err != nil {
 		return fiber.ErrBadRequest
 	}
 
 	// Check if genre exists
-	genre := models.GenreModel.Find(c.Params("genreID"))
+	genre := models.GenreModel.Find(genreID)
 	if genre == nil {
 		return fiber.ErrNotFound
 	}
@@ -111,13 +113,14 @@ func GenresUpdate(c *fiber.Ctx) error {
 }
 
 func GenresDelete(c *fiber.Ctx) error {
-	// Check if genre id is valid uuid
-	if !uuid.IsValid(c.Params("genreID")) {
+	// Parse genre id uuid
+	genreID, err := uuid.Parse(c.Params("genreID"))
+	if err != nil {
 		return fiber.ErrBadRequest
 	}
 
 	// Check if genre exists
-	genre := models.GenreModel.Find(c.Params("genreID"))
+	genre := models.GenreModel.Find(genreID)
 	if genre == nil {
 		return fiber.ErrNotFound
 	}
@@ -135,33 +138,35 @@ func GenresDelete(c *fiber.Ctx) error {
 }
 
 func GenresAlbums(c *fiber.Ctx) error {
-	// Check if genre id is valid uuid
-	if !uuid.IsValid(c.Params("genreID")) {
+	// Parse genre id uuid
+	genreID, err := uuid.Parse(c.Params("genreID"))
+	if err != nil {
 		return fiber.ErrBadRequest
 	}
 
 	// Check if genre exists
-	genre := models.GenreModel.Find(c.Params("genreID"))
+	genre := models.GenreModel.Find(genreID)
 	if genre == nil {
 		return fiber.ErrNotFound
 	}
 
 	// Get genre albums
 	query, page, limit := utils.ParseIndexVars(c)
-	return c.JSON(models.AlbumModel.With("artists", "genres").WhereIn("id", models.AlbumGenreModel.Select("album_id").Where("genre_id", genre.ID)).
+	return c.JSON(models.AlbumModel.With("artists", "genres").WhereInQuery("id", models.AlbumGenreModel.Select("album_id").Where("genre_id", genre.ID)).
 		WhereRaw("`title` LIKE ?", "%"+query+"%").OrderByDesc("released_at").Paginate(page, limit))
 }
 
 func GenresLike(c *fiber.Ctx) error {
 	authUser := c.Locals("authUser").(*models.User)
 
-	// Check if genre id is valid uuid
-	if !uuid.IsValid(c.Params("genreID")) {
+	// Parse genre id uuid
+	genreID, err := uuid.Parse(c.Params("genreID"))
+	if err != nil {
 		return fiber.ErrBadRequest
 	}
 
 	// Check if genre exists
-	genre := models.GenreModel.Find(c.Params("genreID"))
+	genre := models.GenreModel.Find(genreID)
 	if genre == nil {
 		return fiber.ErrNotFound
 	}
@@ -184,13 +189,14 @@ func GenresLike(c *fiber.Ctx) error {
 func GenresLikeDelete(c *fiber.Ctx) error {
 	authUser := c.Locals("authUser").(*models.User)
 
-	// Check if genre id is valid uuid
-	if !uuid.IsValid(c.Params("genreID")) {
+	// Parse genre id uuid
+	genreID, err := uuid.Parse(c.Params("genreID"))
+	if err != nil {
 		return fiber.ErrBadRequest
 	}
 
 	// Check if genre exists
-	genre := models.GenreModel.Find(c.Params("genreID"))
+	genre := models.GenreModel.Find(genreID)
 	if genre == nil {
 		return fiber.ErrNotFound
 	}

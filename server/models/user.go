@@ -5,23 +5,24 @@ import (
 	"os"
 
 	"github.com/bplaat/bassiemusic/core/database"
+	"github.com/bplaat/bassiemusic/core/uuid"
 )
 
 type User struct {
-	ID            string              `column:"id,uuid" json:"id"`
-	Username      string              `column:"username,string" json:"username"`
-	Email         string              `column:"email,string" json:"email"`
-	Password      string              `column:"password,string" json:"-"`
-	AvatarID      database.NullString `column:"avatar,uuid" json:"-"`
-	AllowExplicit bool                `column:"allow_explicit,bool" json:"allow_explicit"`
-	Role          UserRole            `column:"role,int" json:"-"`
-	RoleString    string              `json:"role"`
-	Language      string              `column:"language,string" json:"language"`
-	Theme         UserTheme           `column:"theme,int" json:"-"`
-	ThemeString   string              `json:"theme"`
-	CreatedAt     string              `column:"created_at,timestamp" json:"created_at"`
-	SmallAvatar   *string             `json:"small_avatar"`
-	MediumAvatar  *string             `json:"medium_avatar"`
+	ID            uuid.Uuid     `column:"id" json:"id"`
+	Username      string        `column:"username" json:"username"`
+	Email         string        `column:"email" json:"email"`
+	Password      string        `column:"password" json:"-"`
+	AvatarID      uuid.NullUuid `column:"avatar" json:"-"`
+	AllowExplicit bool          `column:"allow_explicit" json:"allow_explicit"`
+	Role          UserRole      `column:"role" json:"-"`
+	RoleString    string        `json:"role"`
+	Language      string        `column:"language" json:"language"`
+	Theme         UserTheme     `column:"theme" json:"-"`
+	ThemeString   string        `json:"theme"`
+	CreatedAt     string        `column:"created_at" json:"created_at"`
+	SmallAvatar   *string       `json:"small_avatar"`
+	MediumAvatar  *string       `json:"medium_avatar"`
 }
 
 type UserRole int
@@ -56,10 +57,11 @@ var UserModel *database.Model[User] = (&database.Model[User]{
 		}
 
 		if user.AvatarID.Valid {
-			if _, err := os.Stat(fmt.Sprintf("storage/avatars/original/%s", user.AvatarID.String)); err == nil {
-				smallAvatar := fmt.Sprintf("%s/avatars/small/%s.jpg", os.Getenv("STORAGE_URL"), user.AvatarID.String)
+			avatarIDString := user.AvatarID.Uuid.String()
+			if _, err := os.Stat(fmt.Sprintf("storage/avatars/original/%s", avatarIDString)); err == nil {
+				smallAvatar := fmt.Sprintf("%s/avatars/small/%s.jpg", os.Getenv("STORAGE_URL"), avatarIDString)
 				user.SmallAvatar = &smallAvatar
-				mediumAvatar := fmt.Sprintf("%s/avatars/medium/%s.jpg", os.Getenv("STORAGE_URL"), user.AvatarID.String)
+				mediumAvatar := fmt.Sprintf("%s/avatars/medium/%s.jpg", os.Getenv("STORAGE_URL"), avatarIDString)
 				user.MediumAvatar = &mediumAvatar
 			}
 		}

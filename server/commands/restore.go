@@ -17,10 +17,12 @@ func removeOldUserAvatarIDs() {
 	index := 0
 	models.UserModel.WhereNotNull("avatar").Chunk(50, func(users []models.User) {
 		for _, user := range users {
-			if _, err := os.Stat(fmt.Sprintf("storage/avatars/original/%s", user.AvatarID.String)); os.IsNotExist(err) {
-				models.UserModel.Where("id", user.ID).Update(database.Map{
-					"avatar": nil,
-				})
+			if user.AvatarID.Valid {
+				if _, err := os.Stat(fmt.Sprintf("storage/avatars/original/%s", user.AvatarID.Uuid.String())); os.IsNotExist(err) {
+					models.UserModel.Where("id", user.ID).Update(database.Map{
+						"avatar": nil,
+					})
+				}
 			}
 			log.Printf("User avatars %.2f%%\n", float32(index+1)/float32(total)*100.0)
 			index++
@@ -33,10 +35,12 @@ func removeOldPlaylistImageIDs() {
 	index := 0
 	models.PlaylistModel.WhereNotNull("image").Chunk(50, func(playlists []models.Playlist) {
 		for _, playlist := range playlists {
-			if _, err := os.Stat(fmt.Sprintf("storage/playlists/original/%s", playlist.ImageID.String)); os.IsNotExist(err) {
-				models.PlaylistModel.Where("id", playlist.ID).Update(database.Map{
-					"image": nil,
-				})
+			if playlist.ImageID.Valid {
+				if _, err := os.Stat(fmt.Sprintf("storage/playlists/original/%s", playlist.ImageID.Uuid.String())); os.IsNotExist(err) {
+					models.PlaylistModel.Where("id", playlist.ID).Update(database.Map{
+						"image": nil,
+					})
+				}
 			}
 			log.Printf("Playlist images %.2f%%\n", float32(index+1)/float32(total)*100.0)
 			index++

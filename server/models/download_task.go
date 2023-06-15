@@ -4,18 +4,19 @@ import (
 	"time"
 
 	"github.com/bplaat/bassiemusic/core/database"
+	"github.com/bplaat/bassiemusic/core/uuid"
 )
 
 type DownloadTask struct {
-	ID           string             `column:"id,uuid" json:"id"`
-	Type         DownloadTaskType   `column:"type,int" json:"-"`
+	ID           uuid.Uuid          `column:"id" json:"id"`
+	Type         DownloadTaskType   `column:"type" json:"-"`
 	TypeString   string             `json:"type"`
-	DeezerID     int64              `column:"deezer_id,bigint" json:"deezer_id"`
-	DisplayName  string             `column:"display_name,string" json:"display_name"`
-	Status       DownloadTaskStatus `column:"status,int" json:"-"`
+	DeezerID     int64              `column:"deezer_id" json:"deezer_id"`
+	DisplayName  string             `column:"display_name" json:"display_name"`
+	Status       DownloadTaskStatus `column:"status" json:"-"`
 	StatusString string             `json:"status"`
-	Progress     float32            `column:"progress,float" json:"progress"`
-	CreatedAt    time.Time          `column:"created_at,timestamp" json:"created_at"`
+	Progress     float32            `column:"progress" json:"progress"`
+	CreatedAt    time.Time          `column:"created_at" json:"created_at"`
 }
 
 type DownloadTaskType int

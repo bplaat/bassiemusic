@@ -16,13 +16,14 @@ func SessionsIndex(c *fiber.Ctx) error {
 }
 
 func SessionsShow(c *fiber.Ctx) error {
-	// Check if session id is valid uuid
-	if !uuid.IsValid(c.Params("sessionID")) {
+	// Parse session id uuid
+	sessionID, err := uuid.Parse(c.Params("sessionID"))
+	if err != nil {
 		return fiber.ErrBadRequest
 	}
 
 	// Check if session exists
-	session := models.SessionModel.With("user").Find(c.Params("sessionID"))
+	session := models.SessionModel.With("user").Find(sessionID)
 	if session == nil {
 		return fiber.ErrNotFound
 	}
@@ -31,13 +32,14 @@ func SessionsShow(c *fiber.Ctx) error {
 }
 
 func SessionsRevoke(c *fiber.Ctx) error {
-	// Check if session id is valid uuid
-	if !uuid.IsValid(c.Params("sessionID")) {
+	// Parse session id uuid
+	sessionID, err := uuid.Parse(c.Params("sessionID"))
+	if err != nil {
 		return fiber.ErrBadRequest
 	}
 
 	// Check if session exists
-	session := models.SessionModel.Find(c.Params("sessionID"))
+	session := models.SessionModel.Find(sessionID)
 	if session == nil {
 		return fiber.ErrNotFound
 	}

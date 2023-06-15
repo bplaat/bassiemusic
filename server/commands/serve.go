@@ -14,5 +14,5 @@ func Serve() {
 
 	// Start server with api routes
 	api := routes.Api()
-	log.Fatal(api.Listen(":" + os.Getenv("SERVER_PORT")))
+	log.Fatalln(api.Listen(":" + os.Getenv("SERVER_PORT")))
 }

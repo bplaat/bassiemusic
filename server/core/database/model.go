@@ -1,8 +1,8 @@
 package database
 
 import (
+	"log"
 	"reflect"
-	"strings"
 
 	"github.com/bplaat/bassiemusic/core/uuid"
 )
@@ -12,7 +12,6 @@ type Map map[string]any
 type ModelColumn struct {
 	FieldName  string
 	ColumnName string
-	Type       string
 }
 
 type ModelProcessFunc[T any] func(model *T)
@@ -40,12 +39,7 @@ func (m *Model[T]) Init() *Model[T] {
 		field := modelType.Field(i)
 		tag := field.Tag.Get("column")
 		if tag != "" {
-			parts := strings.Split(tag, ",")
-			column := ModelColumn{
-				FieldName:  field.Name,
-				ColumnName: parts[0],
-				Type:       parts[1],
-			}
+			column := ModelColumn{FieldName: field.Name, ColumnName: tag}
 			m.Columns = append(m.Columns, &column)
 			m.ColumnsLookup[column.ColumnName] = &column
 		}
@@ -56,9 +50,13 @@ func (m *Model[T]) Init() *Model[T] {
 func (m *Model[T]) Create(values Map) *T {
 	// Create uuid id when it is not given
 	if _, ok := values[m.PrimaryKey]; !ok {
-		column := m.ColumnsLookup[m.PrimaryKey]
-		if column.Type == "uuid" {
-			values[m.PrimaryKey] = uuid.New().String()
+		values[m.PrimaryKey] = uuid.New()
+	}
+
+	// Check if columns exists
+	for columnName := range values {
+		if _, ok := m.ColumnsLookup[columnName]; !ok {
+			log.Fatalf("Model: column '%s' doesn't exist on model '%s'\n", columnName, m.TableName)
 		}
 	}
 
@@ -73,12 +71,7 @@ func (m *Model[T]) Create(values Map) *T {
 			insertQuery += ", "
 		}
 
-		column := m.ColumnsLookup[columnName]
-		if column.Type == "uuid" {
-			valuesQueryPart += "UUID_TO_BIN(?)"
-		} else {
-			valuesQueryPart += "?"
-		}
+		valuesQueryPart += "?"
 		queryValues = append(queryValues, value)
 		if index != len(values)-1 {
 			valuesQueryPart += ", "
@@ -142,8 +135,12 @@ func (m *Model[T]) WhereOrNotNull(columnName string) *QueryBuilder[T] {
 	return m.query().WhereOrNotNull(columnName)
 }
 
-func (m *Model[T]) WhereIn(columnName string, queryBuilder QueryBuilderSelectQuery) *QueryBuilder[T] {
-	return m.query().WhereIn(columnName, queryBuilder)
+func (m *Model[T]) WhereIn(columnName string, list []any) *QueryBuilder[T] {
+	return m.query().WhereIn(columnName, list)
+}
+
+func (m *Model[T]) WhereInQuery(columnName string, queryBuilder QueryBuilderSelectQuery) *QueryBuilder[T] {
+	return m.query().WhereInQuery(columnName, queryBuilder)
 }
 
 func (m *Model[T]) OrderBy(columnName string) *QueryBuilder[T] {
