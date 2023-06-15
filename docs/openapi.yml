@@ -1517,3 +1517,18 @@ paths:
           description: Bad Request
         "401":
           description: Authorization error
+  /download/{id}/:
+    delete:
+      tags: [Downloader]
+      description: Delete a task that is pending
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ArtistID"
+      responses:
+        "200":
+          description: Successfull response
+        "401":
+          description: Bad Request
+        "404":
+          description: Task not found
