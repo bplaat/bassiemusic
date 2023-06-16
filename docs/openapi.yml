@@ -100,6 +100,14 @@ components:
       schema:
         type: string
         format: uuid
+    DownloadTaskID:
+      name: id
+      in: path
+      description: Download Task ID
+      required: true
+      schema:
+        type: string
+        format: uuid
 
 paths:
   # BassieMusic
@@ -1517,18 +1525,18 @@ paths:
           description: Bad Request
         "401":
           description: Authorization error
-  /download/{id}/:
+  /download/{id}:
     delete:
       tags: [Downloader]
-      description: Delete a task that is pending
+      description: Delete a download task that is pending
       security:
         - TokenAuth: []
       parameters:
-        - $ref: "#/components/parameters/ArtistID"
+        - $ref: "#/components/parameters/DownloadTaskID"
       responses:
         "200":
           description: Successfull response
         "401":
           description: Bad Request
         "404":
-          description: Task not found
+          description: Download Task not found

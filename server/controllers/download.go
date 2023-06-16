@@ -98,7 +98,7 @@ func DownloadDelete(c *fiber.Ctx) error {
 	}
 
 	// Check if task is pending
-	if downloadTask.Status != 0 {
+	if downloadTask.Status != models.DownloadTaskStatusPending {
 		return fiber.ErrBadRequest
 	}
 

@@ -26,7 +26,7 @@
             download_tasks_status: 'Status',
             download_tasks_status_pending: 'Pending',
             download_tasks_empty: 'There are no current download tasks',
-            download_task_cancel: 'Cancel download task',
+            download_task_delete: 'Delete download task',
 
             search_header: 'Search and download albums and artists',
             query_placeholder: 'Find an album or artist...',
@@ -58,7 +58,7 @@
             download_tasks_status: 'Status',
             download_tasks_status_pending: 'Wachtend',
             download_tasks_empty: 'Er zijn geen huidige download taken',
-            download_task_cancel: 'Annuleer donwload opdracht',
+            download_task_delete: 'Verwijder download opdracht',
 
             search_header: 'Zoek en download albums en artisten',
             query_placeholder: 'Vind een album of artist...',
@@ -233,21 +233,20 @@
                                 <span class="ellipsis">{t('download_tasks_status_pending')}</span>
                             {/if}
                         </td>
-                        <td class="px-0 is-hidden-mobile">
-                            <button 
-                                on:click={async () => {
+                        <td>
+                            <button
+                                class="button"
+                                on:click={() => {
                                     selectedTask = task;
-                                    deleteModal.open()
+                                    deleteModal.open();
                                 }}
-                                class="button is-danger" 
-                                disabled={task.status === 'downloading'}
-                                title={t('download_task_cancel')}
-                                >
-                                <svg class="icon is-colored" viewBox="0 0 24 24">
-                                    <path 
-                                        fill="#fff"
-                                        d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z" 
-                                        />
+                                title={t('download_task_delete')}
+                                disabled={task.status !== 'pending'}
+                            >
+                                <svg class="icon" viewBox="0 0 24 24">
+                                    <path
+                                        d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"
+                                    />
                                 </svg>
                             </button>
                         </td>
@@ -334,7 +333,4 @@
     item={selectedTask}
     itemRoute="download"
     itemLabel={t('download_task_label')}
-    on:delete={() => {
-        goto('/admin/downloader');
-    }}
 />
