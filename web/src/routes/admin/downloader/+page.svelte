@@ -1,5 +1,4 @@
 <script>
-    import { goto } from '$app/navigation';
     import { onMount, onDestroy } from 'svelte';
     import { WEBSOCKET_RECONNECT_TIMEOUT } from '../../../consts.js';
     import { formatBytes } from '../../../filters.js';
