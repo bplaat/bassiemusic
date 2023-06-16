@@ -22,15 +22,15 @@ export async function load({ locals, url, fetch, cookies, params }) {
     });
 
     // Sort albums by album, ep, single
-    function score(album){
-        if(album.type === 'album') return 0
-        if(album.type === 'ep') return 1
-        if(album.type === 'single') return 2
+    function score(album) {
+        if (album.type === 'album') return 0;
+        if (album.type === 'ep') return 1;
+        if (album.type === 'single') return 2;
     }
 
-    filteredAlbums.sort(function(a, b){
-        return score(a) - score(b)
-    }); 
+    filteredAlbums.sort(function (a, b) {
+        return score(a) - score(b);
+    });
 
     // Return values
     return {

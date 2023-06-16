@@ -3,6 +3,7 @@
     import { WEBSOCKET_RECONNECT_TIMEOUT } from '../../../consts.js';
     import { formatBytes } from '../../../filters.js';
     import { language } from '../../../stores.js';
+    import DeleteModal from '../../../components/modals/delete-modal.svelte';
 
     // Language strings
     const lang = {
@@ -14,6 +15,7 @@
             storage_used: 'Used: $1',
             storage_max: 'Max: $1',
 
+            download_task_label: 'download task',
             download_tasks: 'Current download tasks',
             download_tasks_index: '#',
             download_tasks_type: 'Type',
@@ -23,6 +25,7 @@
             download_tasks_status: 'Status',
             download_tasks_status_pending: 'Pending',
             download_tasks_empty: 'There are no current download tasks',
+            download_task_delete: 'Delete download task',
 
             search_header: 'Search and download albums and artists',
             query_placeholder: 'Find an album or artist...',
@@ -44,6 +47,7 @@
             storage_used: 'Gebruikt: $1',
             storage_max: 'Max: $1',
 
+            download_task_label: 'download taak',
             download_tasks: 'Huidge download taken',
             download_tasks_index: '#',
             download_tasks_type: 'Type',
@@ -53,6 +57,7 @@
             download_tasks_status: 'Status',
             download_tasks_status_pending: 'Wachtend',
             download_tasks_empty: 'Er zijn geen huidige download taken',
+            download_task_delete: 'Verwijder download opdracht',
 
             search_header: 'Zoek en download albums en artisten',
             query_placeholder: 'Vind een album of artist...',
@@ -76,6 +81,8 @@
     let results = false;
     let albums = [];
     let artists = [];
+    let deleteModal;
+    let selectedTask;
 
     // Methods
     async function search() {
@@ -201,6 +208,7 @@
                 <th style="width: 35%;">{t('download_tasks_type')}</th>
                 <th style="width: 35%;">{t('download_tasks_display_name')}</th>
                 <th style="width: 30%;">{t('download_tasks_status')}</th>
+                <th style="width: calc(40px + .75em);" />
             </thead>
             <tbody>
                 {#each tasks as task, index}
@@ -223,6 +231,23 @@
                             {:else}
                                 <span class="ellipsis">{t('download_tasks_status_pending')}</span>
                             {/if}
+                        </td>
+                        <td>
+                            <button
+                                class="button"
+                                on:click={() => {
+                                    selectedTask = task;
+                                    deleteModal.open();
+                                }}
+                                title={t('download_task_delete')}
+                                disabled={task.status !== 'pending'}
+                            >
+                                <svg class="icon" viewBox="0 0 24 24">
+                                    <path
+                                        d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"
+                                    />
+                                </svg>
+                            </button>
                         </td>
                     </tr>
                 {/each}
@@ -300,3 +325,11 @@
         </div>
     {/if}
 </div>
+
+<DeleteModal
+    bind:this={deleteModal}
+    token={data.token}
+    item={selectedTask}
+    itemRoute="download"
+    itemLabel={t('download_task_label')}
+/>

@@ -6,6 +6,7 @@ import (
 
 	"github.com/bplaat/bassiemusic/controllers/websocket"
 	"github.com/bplaat/bassiemusic/core/database"
+	"github.com/bplaat/bassiemusic/core/uuid"
 	"github.com/bplaat/bassiemusic/core/validation"
 	"github.com/bplaat/bassiemusic/models"
 	"github.com/gofiber/fiber/v2"
@@ -80,5 +81,33 @@ func DownloadAlbum(c *fiber.Ctx) error {
 	}
 
 	// Return success response
+	return c.JSON(fiber.Map{"success": true})
+}
+
+func DownloadDelete(c *fiber.Ctx) error {
+	// Parse download task id uuid
+	downloadTaskID, err := uuid.Parse(c.Params("downloadTaskID"))
+	if err != nil {
+		return fiber.ErrBadRequest
+	}
+
+	// Check if task exists
+	downloadTask := models.DownloadTaskModel.Find(downloadTaskID)
+	if downloadTask == nil {
+		return fiber.ErrNotFound
+	}
+
+	// Check if task is pending
+	if downloadTask.Status != models.DownloadTaskStatusPending {
+		return fiber.ErrBadRequest
+	}
+
+	// Broadcast delete task message to all admins
+	if err := websocket.BroadcastAdmin("download_tasks.delete", downloadTask); err != nil {
+		log.Println(err)
+	}
+
+	// Delete download task
+	models.DownloadTaskModel.Where("id", downloadTaskID).Delete()
 	return c.JSON(fiber.Map{"success": true})
 }
