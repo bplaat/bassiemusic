@@ -16,7 +16,7 @@ func cleanUserAvatars() {
 		parts := strings.Split(filepath.Base(path), ".")
 		if len(parts) == 2 {
 			avatarID := parts[0]
-			if models.UserModel.Where("avatar_id", avatarID) == nil {
+			if models.UserModel.Where("avatar", avatarID) == nil {
 				_ = os.Remove(fmt.Sprintf("storage/avatars/original/%s", avatarID))
 				_ = os.Remove(fmt.Sprintf("storage/avatars/small/%s.jpg", avatarID))
 				_ = os.Remove(fmt.Sprintf("storage/avatars/medium/%s.jpg", avatarID))
