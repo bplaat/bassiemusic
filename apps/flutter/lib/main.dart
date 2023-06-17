@@ -15,7 +15,7 @@ class BassieMusicApp extends StatelessWidget {
         theme: ThemeData(
           brightness: Brightness.light,
           primarySwatch: Colors.blue,
-          accentColor: Colors.blue,
+          // accentColor: Colors.blue,
           appBarTheme: const AppBarTheme(
             foregroundColor: Color(0xff121212),
             backgroundColor: Colors.white,
@@ -27,7 +27,7 @@ class BassieMusicApp extends StatelessWidget {
         darkTheme: ThemeData(
           brightness: Brightness.dark,
           primarySwatch: Colors.blue,
-          accentColor: Colors.blue,
+          // accentColor: Colors.blue,
           scaffoldBackgroundColor: const Color(0xff0a0a0a),
           appBarTheme: const AppBarTheme(
             foregroundColor: Colors.white,
