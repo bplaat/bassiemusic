@@ -218,7 +218,7 @@ CREATE TABLE `playlist_likes` (
 CREATE TABLE `download_tasks` (
     `id` BINARY(16) NOT NULL,
     `type` TINYINT UNSIGNED NOT NULL, -- Enum: deezer_artist, deezer_album
-    `deezer_id` BIGINT UNSIGNED NOT NULL,
+    `data` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`data`)),
     `display_name` VARCHAR(255) NOT NULL,
     `status` TINYINT UNSIGNED NOT NULL, -- Enum: pending, downloading
     `progress` FLOAT NOT NULL,

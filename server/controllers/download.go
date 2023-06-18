@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"encoding/json"
 	"log"
 	"strconv"
 
@@ -17,6 +18,11 @@ type DownloadArtistBody struct {
 	DisplayName string `form:"display_name" validate:"required"`
 }
 
+type Data struct {
+	DeezerID  int64  `json:"deezer_id"`
+	YoutubeID string `json:"youtube_id"`
+}
+
 func DownloadArtist(c *fiber.Ctx) error {
 	// Parse body
 	var body DownloadArtistBody
@@ -31,9 +37,13 @@ func DownloadArtist(c *fiber.Ctx) error {
 
 	// Create download task
 	deezerID, _ := strconv.ParseInt(body.DeezerID, 10, 64)
+	data := Data{
+		DeezerID: deezerID,
+	}
+	jsonData, _ := json.Marshal(data)
 	downloadTask := models.DownloadTaskModel.Create(database.Map{
 		"type":         models.DownloadTaskTypeDeezerArtist,
-		"deezer_id":    deezerID,
+		"data":         jsonData,
 		"display_name": body.DisplayName,
 		"status":       models.DownloadTaskStatusPending,
 		"progress":     0,
@@ -67,9 +77,13 @@ func DownloadAlbum(c *fiber.Ctx) error {
 
 	// Create download task
 	deezerID, _ := strconv.ParseInt(body.DeezerID, 10, 64)
+	data := Data{
+		DeezerID: deezerID,
+	}
+	jsonData, _ := json.Marshal(data)
 	downloadTask := models.DownloadTaskModel.Create(database.Map{
 		"type":         models.DownloadTaskTypeDeezerAlbum,
-		"deezer_id":    deezerID,
+		"data":         jsonData,
 		"display_name": body.DisplayName,
 		"status":       models.DownloadTaskStatusPending,
 		"progress":     0,

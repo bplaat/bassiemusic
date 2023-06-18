@@ -307,6 +307,8 @@ func DownloadTask() {
 			continue
 		}
 
+		continue
+
 		//  Execute current download task
 		if downloadTask.Type == models.DownloadTaskTypeDeezerArtist {
 			// Update download task status

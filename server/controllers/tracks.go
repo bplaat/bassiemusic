@@ -1,10 +1,13 @@
 package controllers
 
 import (
+	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"strconv"
 
+	"github.com/bplaat/bassiemusic/controllers/websocket"
 	"github.com/bplaat/bassiemusic/core/database"
 	"github.com/bplaat/bassiemusic/core/uuid"
 	"github.com/bplaat/bassiemusic/core/validation"
@@ -105,13 +108,27 @@ func TracksUpdate(c *fiber.Ctx) error {
 		deezerID, _ := strconv.ParseInt(*body.DeezerID, 10, 64)
 		updates["deezer_id"] = deezerID
 	}
-	if body.YoutubeID != nil {
-		if *body.YoutubeID != "" {
-			updates["youtube_id"] = *body.YoutubeID
-		} else {
-			updates["youtube_id"] = nil
+
+	// Checks if youtube id has been updated
+	if body.YoutubeID != nil && track.YoutubeID.String != *body.YoutubeID {
+		data := Data{
+			YoutubeID: *body.YoutubeID,
+		}
+		jsonData, _ := json.Marshal(data)
+		downloadTask := models.DownloadTaskModel.Create(database.Map{
+			"type":         models.DownloadTaskTypeYoutubeTrack,
+			"data":         jsonData,
+			"display_name": *body.Title,
+			"status":       models.DownloadTaskStatusPending,
+			"progress":     0,
+		})
+
+		// Broadcast new task message to all listening admins
+		if err := websocket.BroadcastAdmin("download_tasks.create", downloadTask); err != nil {
+			log.Println(err)
 		}
 	}
+
 	models.TrackModel.Where("id", track.ID).Update(updates)
 
 	// Get updated track
