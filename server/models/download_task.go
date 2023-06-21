@@ -2,6 +2,7 @@ package models
 
 import (
 	"encoding/json"
+	"log"
 	"time"
 
 	"github.com/bplaat/bassiemusic/core/database"
@@ -44,7 +45,11 @@ var DownloadTaskModel *database.Model[DownloadTask] = (&database.Model[DownloadT
 	TableName: "download_tasks",
 	Process: func(downloadTask *DownloadTask) {
 		var data Data
-		json.Unmarshal([]byte(downloadTask.JsonData), &data)
+		if err := json.Unmarshal([]byte(downloadTask.JsonData), &data); err != nil {
+			log.Println(err)
+			return
+		}
+
 		downloadTask.YoutubeID = data.YoutubeID
 		downloadTask.DeezerID = data.DeezerID
 

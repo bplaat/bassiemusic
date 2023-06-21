@@ -316,7 +316,10 @@ func DownloadTask() {
 
 			track := models.TrackModel.Find(downloadTask.TrackID)
 			os.Remove(fmt.Sprintf("storage/tracks/%s.m4a", downloadTask.TrackID))
-			SearchAndDownloadTrackMusic(track, downloadTask.YoutubeID, false)
+
+			if err := SearchAndDownloadTrackMusic(track, downloadTask.YoutubeID, false); err != nil && err != io.EOF {
+				log.Fatalln(err)
+			}
 		}
 
 		if downloadTask.Type == models.DownloadTaskTypeDeezerArtist {
