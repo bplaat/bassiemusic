@@ -450,6 +450,42 @@ paths:
           description: Successful response
         "401":
           description: Authorization error
+    post:
+      tags: [Genres]
+      description: Create genre
+      security:
+        - TokenAuth: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                deezer_id:
+                  type: integer
+                  format: int64
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                deezer_id:
+                  type: integer
+                  format: int64
+                image:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: Successful response
+        "400":
+          description: Bad Request
+        "401":
+          description: Authorization error
   /genres/{id}:
     get:
       tags: [Genres]

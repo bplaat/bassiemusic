@@ -28,6 +28,43 @@ func GenresIndex(c *fiber.Ctx) error {
 	return c.JSON(q.Paginate(page, limit))
 }
 
+type GenresCreateBody struct {
+	Name     *string `form:"name" validate:"min:2"`
+	DeezerID *string `form:"deezer_id" validate:"integer"`
+	Image    *string `form:"image" validate:"nullable"`
+}
+
+func GenresCreate(c *fiber.Ctx) error {
+	// Parse body
+	var body GenresUpdateBody
+	if err := c.BodyParser(&body); err != nil {
+		return fiber.ErrBadRequest
+	}
+
+	// Validate body
+	if err := validation.ValidateStructUpdates(c, nil, &body); err != nil {
+		return nil
+	}
+
+	// Create genre
+	genreID := uuid.New()
+	models.GenreModel.Create(database.Map{
+		"id":        genreID,
+		"name":      body.Name,
+		"deezer_id": body.DeezerID,
+	})
+
+	// Store new genre image
+	if imageFile, err := c.FormFile("image"); err == nil {
+		if err := utils.StoreUploadedImage(c, "genres", genreID, imageFile, true); err != nil {
+			return err
+		}
+	}
+
+	// Get new genre
+	return c.JSON(models.GenreModel.Find(genreID))
+}
+
 func GenresShow(c *fiber.Ctx) error {
 	// Parse genre id uuid
 	genreID, err := uuid.Parse(c.Params("genreID"))
