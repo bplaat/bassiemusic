@@ -62,6 +62,9 @@
             item={data.playlist}
             itemRoute="playlists"
             editable={isOwner}
+            on:update={(event) => {
+                $sidebar.updateLastPlaylists();
+            }}
         />
     </div>
 

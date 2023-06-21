@@ -554,12 +554,12 @@ func UsersPlaylists(c *fiber.Ctx) error {
 		q = q.OrderByDesc("created_at")
 	} else if c.Query("sort_by") == "updated_at" {
 		q = q.OrderBy("updated_at")
-	} else if c.Query("sort_by") == "updated_at_desc" {
-		q = q.OrderByDesc("updated_at")
+	} else if c.Query("sort_by") == "name" {
+		q = q.OrderByRaw("LOWER(`name`)")
 	} else if c.Query("sort_by") == "name_desc" {
 		q = q.OrderByRaw("LOWER(`name`) DESC")
 	} else {
-		q = q.OrderByRaw("LOWER(`name`)")
+		q = q.OrderByDesc("updated_at")
 	}
 	return c.JSON(q.Paginate(page, limit))
 }

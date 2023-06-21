@@ -1,6 +1,6 @@
 export async function load({ locals, url, fetch, cookies }) {
     // Fetch user playlists first page
-    const sortBy = url.searchParams.get('sort_by') || 'name';
+    const sortBy = url.searchParams.get('sort_by') || 'updated_at_desc';
     const response = await fetch(
         `${import.meta.env.VITE_API_URL}/users/${locals.authUser.id}/playlists?${new URLSearchParams({
             sort_by: sortBy,
