@@ -142,6 +142,7 @@ func Api() *fiber.App {
 	api.Post("/download/album", controllers.DownloadAlbum)
 	api.Delete("/download/:downloadTaskID", controllers.DownloadDelete)
 
+	api.Post("/artists", controllers.ArtistsCreate)
 	api.Put("/artists/:artistID", controllers.ArtistsUpdate)
 	api.Delete("/artists/:artistID", controllers.ArtistsDelete)
 

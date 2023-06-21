@@ -32,6 +32,44 @@ func ArtistsIndex(c *fiber.Ctx) error {
 	return c.JSON(q.Paginate(page, limit))
 }
 
+type ArtistsCreateBody struct {
+	Name     *string `form:"name" validate:"min:2"`
+	Sync     *string `form:"sync" validate:"boolean"`
+	DeezerID *string `form:"deezer_id" validate:"integer"`
+	Image    *string `form:"image" validate:"nullable"`
+}
+
+func ArtistsCreate(c *fiber.Ctx) error {
+	// Parse body
+	var body ArtistsUpdateBody
+	if err := c.BodyParser(&body); err != nil {
+		return fiber.ErrBadRequest
+	}
+
+	// Validate body
+	if err := validation.ValidateStructUpdates(c, nil, &body); err != nil {
+		return nil
+	}
+
+	// Create artist
+	artistID := uuid.New()
+	models.ArtistModel.Create(database.Map{
+		"id":   artistID,
+		"name": body.Name,
+		"sync": body.Sync,
+	})
+
+	// Store new artist image
+	if imageFile, err := c.FormFile("image"); err == nil {
+		if err := utils.StoreUploadedImage(c, "artists", artistID, imageFile, true); err != nil {
+			return err
+		}
+	}
+
+	// Get new artist
+	return c.JSON(models.ArtistModel.Find(artistID))
+}
+
 func ArtistsShow(c *fiber.Ctx) error {
 	// Parse artist id uuid
 	artistID, err := uuid.Parse(c.Params("artistID"))

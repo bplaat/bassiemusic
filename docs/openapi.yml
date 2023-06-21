@@ -185,7 +185,7 @@ paths:
                 - password
       responses:
         "200":
-          description: Successfull response
+          description: Successful response
         "400":
           description: Bad Request
   /auth/validate:
@@ -196,7 +196,7 @@ paths:
         - TokenAuth: []
       responses:
         "200":
-          description: Successfull response
+          description: Successful response
         "401":
           description: Authorization error
   /auth/logout:
@@ -207,7 +207,7 @@ paths:
         - TokenAuth: []
       responses:
         "200":
-          description: Successfull response
+          description: Successful response
         "401":
           description: Authorization error
 
@@ -222,7 +222,7 @@ paths:
         - $ref: "#/components/parameters/QueryRequired"
       responses:
         "200":
-          description: Successfull response
+          description: Successful response
         "401":
           description: Authorization error
   /deezer_search:
@@ -235,7 +235,7 @@ paths:
         - $ref: "#/components/parameters/QueryRequired"
       responses:
         "200":
-          description: Successfull response
+          description: Successful response
         "401":
           description: Authorization error
 
@@ -259,7 +259,47 @@ paths:
             enum: ['name', 'name_desc', 'sync', 'sync_desc', 'created_at', 'created_at_desc']
       responses:
         "200":
-          description: Successfull response
+          description: Successful response
+        "401":
+          description: Authorization error
+    post:
+      tags: [Artists]
+      description: Create artist
+      security:
+        - TokenAuth: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                sync:
+                  type: boolean
+                deezer_id:
+                  type: integer
+                  format: int64
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                sync:
+                  type: boolean
+                deezer_id:
+                  type: integer
+                  format: int64
+                image:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: Successful response
+        "400":
+          description: Bad Request
         "401":
           description: Authorization error
   /artists/{id}:
@@ -272,7 +312,7 @@ paths:
         - $ref: "#/components/parameters/ArtistID"
       responses:
         "200":
-          description: Successfull response
+          description: Successful response
         "401":
           description: Authorization error
         "404":
@@ -314,7 +354,7 @@ paths:
                   format: binary
       responses:
         "200":
-          description: Successfull response
+          description: Successful response
         "400":
           description: Bad Request
         "401":
@@ -330,7 +370,7 @@ paths:
         - $ref: "#/components/parameters/ArtistID"
       responses:
         "200":
-          description: Successfull response
+          description: Successful response
         "401":
           description: Authorization error
         "404":
@@ -342,6 +382,7 @@ paths:
       security:
         - TokenAuth: []
       parameters:
+        - $ref: "#/components/parameters/ArtistID"
         - $ref: "#/components/parameters/Page"
         - $ref: "#/components/parameters/Limit"
         - name: sort_by
@@ -353,7 +394,7 @@ paths:
             enum: ['plays', 'plays_desc', 'title', 'title_desc', 'created_at', 'created_at_desc']
       responses:
         "200":
-          description: Successfull response
+          description: Successful response
         "401":
           description: Authorization error
   /artists/{id}/like:
@@ -366,7 +407,7 @@ paths:
         - $ref: "#/components/parameters/ArtistID"
       responses:
         "200":
-          description: Successfull response
+          description: Successful response
         "401":
           description: Authorization error
         "404":
@@ -380,7 +421,7 @@ paths:
         - $ref: "#/components/parameters/ArtistID"
       responses:
         "200":
-          description: Successfull response
+          description: Successful response
         "401":
           description: Authorization error
         "404":
@@ -406,7 +447,7 @@ paths:
             enum: ['name', 'name_desc', 'created_at', 'created_at_desc']
       responses:
         "200":
-          description: Successfull response
+          description: Successful response
         "401":
           description: Authorization error
   /genres/{id}:
@@ -419,7 +460,7 @@ paths:
         - $ref: "#/components/parameters/GenreID"
       responses:
         "200":
-          description: Successfull response
+          description: Successful response
         "401":
           description: Authorization error
         "404":
@@ -457,7 +498,7 @@ paths:
                   format: binary
       responses:
         "200":
-          description: Successfull response
+          description: Successful response
         "400":
           description: Bad Request
         "401":
@@ -473,7 +514,7 @@ paths:
         - $ref: "#/components/parameters/GenreID"
       responses:
         "200":
-          description: Successfull response
+          description: Successful response
         "401":
           description: Authorization error
         "404":
@@ -488,7 +529,7 @@ paths:
         - $ref: "#/components/parameters/GenreID"
       responses:
         "200":
-          description: Successfull response
+          description: Successful response
         "401":
           description: Authorization error
         "404":
@@ -503,7 +544,7 @@ paths:
         - $ref: "#/components/parameters/GenreID"
       responses:
         "200":
-          description: Successfull response
+          description: Successful response
         "401":
           description: Authorization error
         "404":
@@ -517,7 +558,7 @@ paths:
         - $ref: "#/components/parameters/GenreID"
       responses:
         "200":
-          description: Successfull response
+          description: Successful response
         "401":
           description: Authorization error
         "404":
@@ -543,7 +584,7 @@ paths:
             enum: ['title', 'title_desc', 'released_at', 'released_at_desc', 'created_at', 'created_at_desc']
       responses:
         "200":
-          description: Successfull response
+          description: Successful response
         "401":
           description: Authorization error
   /albums/{id}:
@@ -556,7 +597,7 @@ paths:
         - $ref: "#/components/parameters/AlbumID"
       responses:
         "200":
-          description: Successfull response
+          description: Successful response
         "401":
           description: Authorization error
         "404":
@@ -610,7 +651,7 @@ paths:
                   format: binary
       responses:
         "200":
-          description: Successfull response
+          description: Successful response
         "400":
           description: Bad Request
         "401":
@@ -626,7 +667,7 @@ paths:
         - $ref: "#/components/parameters/AlbumID"
       responses:
         "200":
-          description: Successfull response
+          description: Successful response
         "401":
           description: Authorization error
         "404":
@@ -641,7 +682,7 @@ paths:
         - $ref: "#/components/parameters/AlbumID"
       responses:
         "200":
-          description: Successfull response
+          description: Successful response
         "401":
           description: Authorization error
         "404":
@@ -655,7 +696,7 @@ paths:
         - $ref: "#/components/parameters/AlbumID"
       responses:
         "200":
-          description: Successfull response
+          description: Successful response
         "401":
           description: Authorization error
         "404":
@@ -681,7 +722,7 @@ paths:
             enum: ['plays', 'plays_desc', 'title', 'title_desc', 'created_at', 'created_at_desc']
       responses:
         "200":
-          description: Successfull response
+          description: Successful response
         "401":
           description: Authorization error
   /tracks/{id}:
@@ -694,7 +735,7 @@ paths:
         - $ref: "#/components/parameters/TrackID"
       responses:
         "200":
-          description: Successfull response
+          description: Successful response
         "401":
           description: Authorization error
         "404":
@@ -733,7 +774,7 @@ paths:
                   type: string
       responses:
         "200":
-          description: Successfull response
+          description: Successful response
         "400":
           description: Bad Request
         "401":
@@ -749,7 +790,7 @@ paths:
         - $ref: "#/components/parameters/TrackID"
       responses:
         "200":
-          description: Successfull response
+          description: Successful response
         "401":
           description: Authorization error
         "404":
@@ -764,7 +805,7 @@ paths:
         - $ref: "#/components/parameters/TrackID"
       responses:
         "200":
-          description: Successfull response
+          description: Successful response
         "401":
           description: Authorization error
         "404":
@@ -779,7 +820,7 @@ paths:
         - $ref: "#/components/parameters/TrackID"
       responses:
         "200":
-          description: Successfull response
+          description: Successful response
         "401":
           description: Authorization error
         "404":
@@ -793,7 +834,7 @@ paths:
         - $ref: "#/components/parameters/TrackID"
       responses:
         "200":
-          description: Successfull response
+          description: Successful response
         "401":
           description: Authorization error
         "404":
@@ -819,7 +860,7 @@ paths:
             enum: ['name', 'name_desc', 'public', 'public_desc', 'created_at', 'created_at_desc', 'updated_at', 'updated_at_desc']
       responses:
         "200":
-          description: Successfull response
+          description: Successful response
         "401":
           description: Authorization error
     post:
@@ -857,7 +898,7 @@ paths:
                 - public
       responses:
         "200":
-          description: Successfull response
+          description: Successful response
         "400":
           description: Bad Request
         "401":
@@ -872,7 +913,7 @@ paths:
         - $ref: "#/components/parameters/PlaylistID"
       responses:
         "200":
-          description: Successfull response
+          description: Successful response
         "401":
           description: Authorization error
         "404":
@@ -908,7 +949,7 @@ paths:
                   format: binary
       responses:
         "200":
-          description: Successfull response
+          description: Successful response
         "400":
           description: Bad Request
         "401":
@@ -924,7 +965,7 @@ paths:
         - $ref: "#/components/parameters/PlaylistID"
       responses:
         "200":
-          description: Successfull response
+          description: Successful response
         "401":
           description: Authorization error
         "404":
@@ -951,7 +992,7 @@ paths:
                 - track_id
       responses:
         "200":
-          description: Successfull response
+          description: Successful response
         "400":
           description: Bad Request
         "401":
@@ -986,7 +1027,7 @@ paths:
                 - track_id
       responses:
         "200":
-          description: Successfull response
+          description: Successful response
         "400":
           description: Bad Request
         "401":
@@ -1008,7 +1049,7 @@ paths:
             type: integer
       responses:
         "200":
-          description: Successfull response
+          description: Successful response
         "400":
           description: Bad Request
         "401":
@@ -1025,7 +1066,7 @@ paths:
         - $ref: "#/components/parameters/PlaylistID"
       responses:
         "200":
-          description: Successfull response
+          description: Successful response
         "401":
           description: Authorization error
         "404":
@@ -1039,7 +1080,7 @@ paths:
         - $ref: "#/components/parameters/PlaylistID"
       responses:
         "200":
-          description: Successfull response
+          description: Successful response
         "401":
           description: Authorization error
         "404":
@@ -1058,7 +1099,7 @@ paths:
         - $ref: "#/components/parameters/Limit"
       responses:
         "200":
-          description: Successfull response
+          description: Successful response
         "400":
           description: Bad Request
         "401":
@@ -1120,7 +1161,7 @@ paths:
                 - role
       responses:
         "200":
-          description: Successfull response
+          description: Successful response
         "400":
           description: Bad Request
         "401":
@@ -1135,7 +1176,7 @@ paths:
         - $ref: "#/components/parameters/UserID"
       responses:
         "200":
-          description: Successfull response
+          description: Successful response
         "401":
           description: Authorization error
         "404":
@@ -1199,7 +1240,7 @@ paths:
                   format: binary
       responses:
         "200":
-          description: Successfull response
+          description: Successful response
         "400":
           description: Bad Request
         "401":
@@ -1215,7 +1256,7 @@ paths:
         - $ref: "#/components/parameters/UserID"
       responses:
         "200":
-          description: Successfull response
+          description: Successful response
         "401":
           description: Authorization error
         "404":
@@ -1240,7 +1281,7 @@ paths:
             enum: ['liked_at', 'liked_at_desc', 'name', 'name_desc', 'sync', 'sync_desc', 'created_at', 'created_at_desc']
       responses:
         "200":
-          description: Successfull response
+          description: Successful response
         "401":
           description: Authorization error
         "404":
@@ -1265,7 +1306,7 @@ paths:
             enum: ['liked_at', 'liked_at_desc', 'title', 'title_desc', 'released_at', 'released_at_desc', 'created_at', 'created_at_desc']
       responses:
         "200":
-          description: Successfull response
+          description: Successful response
         "401":
           description: Authorization error
         "404":
@@ -1290,7 +1331,7 @@ paths:
             enum: ['liked_at', 'liked_at_desc', 'name', 'name_desc', 'created_at', 'created_at_desc']
       responses:
         "200":
-          description: Successfull response
+          description: Successful response
         "401":
           description: Authorization error
         "404":
@@ -1315,7 +1356,7 @@ paths:
             enum: ['liked_at', 'liked_at_desc', 'title', 'title_desc', 'plays', 'plays_desc', 'created_at', 'created_at_desc']
       responses:
         "200":
-          description: Successfull response
+          description: Successful response
         "401":
           description: Authorization error
         "404":
@@ -1340,7 +1381,7 @@ paths:
             enum: ['liked_at', 'liked_at_desc', 'name', 'name_desc', 'public', 'public_desc', 'created_at', 'created_at_desc', 'updated_at', 'updated_at_desc']
       responses:
         "200":
-          description: Successfull response
+          description: Successful response
         "401":
           description: Authorization error
         "404":
@@ -1358,7 +1399,7 @@ paths:
         - $ref: "#/components/parameters/Limit"
       responses:
         "200":
-          description: Successfull response
+          description: Successful response
         "401":
           description: Authorization error
         "404":
@@ -1375,7 +1416,7 @@ paths:
         - $ref: "#/components/parameters/Limit"
       responses:
         "200":
-          description: Successfull response
+          description: Successful response
         "401":
           description: Authorization error
         "404":
@@ -1392,7 +1433,7 @@ paths:
         - $ref: "#/components/parameters/Limit"
       responses:
         "200":
-          description: Successfull response
+          description: Successful response
         "401":
           description: Authorization error
         "404":
@@ -1417,7 +1458,7 @@ paths:
             enum: ['name', 'name_desc', 'public', 'public_desc', 'created_at', 'created_at_desc', 'updated_at', 'updated_at_desc']
       responses:
         "200":
-          description: Successfull response
+          description: Successful response
         "401":
           description: Authorization error
         "404":
@@ -1432,7 +1473,7 @@ paths:
         - TokenAuth: []
       responses:
         "200":
-          description: Successfull response
+          description: Successful response
         "400":
           description: Bad Request
         "401":
@@ -1447,7 +1488,7 @@ paths:
         - $ref: "#/components/parameters/SessionID"
       responses:
         "200":
-          description: Successfull response
+          description: Successful response
         "401":
           description: Authorization error
         "404":
@@ -1462,7 +1503,7 @@ paths:
         - $ref: "#/components/parameters/SessionID"
       responses:
         "200":
-          description: Successfull response
+          description: Successful response
         "401":
           description: Authorization error
         "404":
@@ -1492,7 +1533,7 @@ paths:
                 - display_name
       responses:
         "200":
-          description: Successfull response
+          description: Successful response
         "400":
           description: Bad Request
         "401":
@@ -1520,7 +1561,7 @@ paths:
                 - display_name
       responses:
         "200":
-          description: Successfull response
+          description: Successful response
         "400":
           description: Bad Request
         "401":
@@ -1535,7 +1576,7 @@ paths:
         - $ref: "#/components/parameters/DownloadTaskID"
       responses:
         "200":
-          description: Successfull response
+          description: Successful response
         "401":
           description: Bad Request
         "404":
