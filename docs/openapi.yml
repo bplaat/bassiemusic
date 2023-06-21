@@ -813,6 +813,43 @@ paths:
           description: Successful response
         "401":
           description: Authorization error
+    post:
+      tags: [Tracks]
+      description: Create track
+      security:
+        - TokenAuth: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                album_id:
+                  type: string
+                  format: uuid
+                disk:
+                  type: integer
+                  format: int32
+                position:
+                  type: integer
+                  format: int32
+                explicit:
+                  type: boolean
+                deezer_id:
+                  type: integer
+                  format: int64
+                youtube_id:
+                  type: string
+      responses:
+        "200":
+          description: Successful response
+        "400":
+          description: Bad Request
+        "401":
+          description: Authorization error
   /tracks/{id}:
     get:
       tags: [Tracks]
@@ -868,7 +905,7 @@ paths:
         "401":
           description: Authorization error
         "404":
-          description: Album not found
+          description: Track not found
     delete:
       tags: [Tracks]
       description: Delete track

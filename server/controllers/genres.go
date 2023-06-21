@@ -36,13 +36,13 @@ type GenresCreateBody struct {
 
 func GenresCreate(c *fiber.Ctx) error {
 	// Parse body
-	var body GenresUpdateBody
+	var body GenresCreateBody
 	if err := c.BodyParser(&body); err != nil {
 		return fiber.ErrBadRequest
 	}
 
 	// Validate body
-	if err := validation.ValidateStructUpdates(c, nil, &body); err != nil {
+	if err := validation.ValidateStruct(c, &body); err != nil {
 		return nil
 	}
 
