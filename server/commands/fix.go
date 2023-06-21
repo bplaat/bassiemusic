@@ -45,7 +45,7 @@ func searchAndDownloadMissingTrackMusic() {
 	models.TrackModel.With("album", "artists").WhereNull("youtube_id").Chunk(50, func(tracks []models.Track) {
 		for _, track := range tracks {
 			log.Printf("Redownloading track %s - %d-%d - %s\n", track.Album.Title, track.Disk, track.Position, track.Title)
-			if err := tasks.SearchAndDownloadTrackMusic(&track); err != nil && err != io.EOF {
+			if err := tasks.SearchAndDownloadTrackMusic(&track, "", true); err != nil && err != io.EOF {
 				log.Fatalln(err)
 			}
 		}

@@ -19,8 +19,9 @@ type DownloadArtistBody struct {
 }
 
 type Data struct {
-	DeezerID  int64  `json:"deezer_id"`
-	YoutubeID string `json:"youtube_id"`
+	DeezerID  int64     `json:"deezer_id"`
+	TrackID   uuid.Uuid `json:"track_id"`
+	YoutubeID string    `json:"youtube_id"`
 }
 
 func DownloadArtist(c *fiber.Ctx) error {

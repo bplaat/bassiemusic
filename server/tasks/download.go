@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"math"
+	"os"
 	"os/exec"
 	"strings"
 	"time"
@@ -117,49 +118,50 @@ func CreateTrack(albumID uuid.Uuid, deezerID int64) {
 	}
 }
 
-func SearchAndDownloadTrackMusic(track *models.Track) error {
-	// Search for youtube video
-	var searchQuery string
-	if len(*track.Artists) > 0 {
-		searchQuery = fmt.Sprintf("%s - %s", (*track.Artists)[0].Name, track.Title)
-	} else {
-		searchQuery = fmt.Sprintf("%s - %s", track.Album.Title, track.Title)
-	}
-	searchCommand := exec.Command("yt-dlp", "--dump-json", "ytsearch10:"+searchQuery)
-	log.Println(searchCommand.String())
-
-	stdout, err := searchCommand.StdoutPipe()
-	if err != nil {
-		return err
-	}
-
-	if err := searchCommand.Start(); err != nil {
-		return err
-	}
-
-	fallPoints := 0
-
-	lowestScore := 1000000.0
-	youtubeID := ""
+func SearchAndDownloadTrackMusic(track *models.Track, youtubeID string, findYoutubeID bool) error {
 	youtubeDuration := 0
 
-	for {
-		var youtubeVideo structs.YoutubeVideo
-		if err := json.NewDecoder(stdout).Decode(&youtubeVideo); err != nil {
-			break
+	if findYoutubeID {
+		// Search for youtube video
+		var searchQuery string
+		if len(*track.Artists) > 0 {
+			searchQuery = fmt.Sprintf("%s - %s", (*track.Artists)[0].Name, track.Title)
+		} else {
+			searchQuery = fmt.Sprintf("%s - %s", track.Album.Title, track.Title)
+		}
+		searchCommand := exec.Command("yt-dlp", "--dump-json", "ytsearch10:"+searchQuery)
+		log.Println(searchCommand.String())
+
+		stdout, err := searchCommand.StdoutPipe()
+		if err != nil {
+			return err
 		}
 
-		score := float32(youtubeVideo.Duration) - track.Duration
-		if score < 0 {
-			score = score - score - score
-		}
-		if score+float32(fallPoints) < float32(lowestScore) {
-			lowestScore = float64(score) + float64(fallPoints)
-			youtubeID = youtubeVideo.ID
-			youtubeDuration = youtubeVideo.Duration
+		if err := searchCommand.Start(); err != nil {
+			return err
 		}
 
-		fallPoints += consts.PUNISHMENT_POINTS
+		fallPoints := 0
+		lowestScore := 1000000.0
+
+		for {
+			var youtubeVideo structs.YoutubeVideo
+			if err := json.NewDecoder(stdout).Decode(&youtubeVideo); err != nil {
+				break
+			}
+
+			score := float32(youtubeVideo.Duration) - track.Duration
+			if score < 0 {
+				score = score - score - score
+			}
+			if score+float32(fallPoints) < float32(lowestScore) {
+				lowestScore = float64(score) + float64(fallPoints)
+				youtubeID = youtubeVideo.ID
+				youtubeDuration = youtubeVideo.Duration
+			}
+
+			fallPoints += consts.PUNISHMENT_POINTS
+		}
 	}
 
 	if youtubeID != "" {
@@ -179,9 +181,6 @@ func SearchAndDownloadTrackMusic(track *models.Track) error {
 		})
 	}
 
-	if err := stdout.Close(); err != nil {
-		log.Fatalln(err)
-	}
 	return nil
 }
 
@@ -242,7 +241,7 @@ func DownloadAlbum(deezerAlbum structs.DeezerAlbum, downloadTask *models.Downloa
 	// Download album tracks music
 	for _, deezerTrack := range deezerAlbum.Tracks.Data {
 		track := models.TrackModel.With("album", "artists").Where("album_id", albumID).Where("title", deezerTrack.Title).First()
-		if err := SearchAndDownloadTrackMusic(track); err != nil && err != io.EOF {
+		if err := SearchAndDownloadTrackMusic(track, "", true); err != nil && err != io.EOF {
 			log.Fatalln(err)
 		}
 		log.Printf("[DOWNLOAD] %s - %d-%d - %s\n", deezerAlbum.Title, track.Disk, track.Position, track.Title)
@@ -307,9 +306,19 @@ func DownloadTask() {
 			continue
 		}
 
-		continue
-
 		//  Execute current download task
+		if downloadTask.Type == models.DownloadTaskTypeYoutubeTrack {
+			// Update download task status
+			downloadTask.StatusString = "downloading"
+			models.DownloadTaskModel.Where("id", downloadTask.ID).Update(database.Map{
+				"status": downloadTask.Status,
+			})
+
+			track := models.TrackModel.Find(downloadTask.TrackID)
+			os.Remove(fmt.Sprintf("storage/tracks/%s.m4a", downloadTask.TrackID))
+			SearchAndDownloadTrackMusic(track, downloadTask.YoutubeID, false)
+		}
+
 		if downloadTask.Type == models.DownloadTaskTypeDeezerArtist {
 			// Update download task status
 			downloadTask.Status = models.DownloadTaskStatusDownloading

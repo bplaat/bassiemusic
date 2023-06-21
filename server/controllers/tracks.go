@@ -113,6 +113,7 @@ func TracksUpdate(c *fiber.Ctx) error {
 	if body.YoutubeID != nil && track.YoutubeID.String != *body.YoutubeID {
 		data := Data{
 			YoutubeID: *body.YoutubeID,
+			TrackID:   track.ID,
 		}
 		jsonData, _ := json.Marshal(data)
 		downloadTask := models.DownloadTaskModel.Create(database.Map{

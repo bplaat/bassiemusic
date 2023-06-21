@@ -11,6 +11,7 @@ import (
 type Data struct {
 	DeezerID  int64  `json:"deezer_id"`
 	YoutubeID string `json:"youtube_id"`
+	TrackID   string `json:"track_id"`
 }
 
 type DownloadTask struct {
@@ -20,6 +21,7 @@ type DownloadTask struct {
 	JsonData     string             `column:"data" json:"-"`
 	DeezerID     int64              `json:"deezer_id"`
 	YoutubeID    string             `json:"youtube_id"`
+	TrackID      uuid.Uuid          `json:"track_id"`
 	DisplayName  string             `column:"display_name" json:"display_name"`
 	Status       DownloadTaskStatus `column:"status" json:"-"`
 	StatusString string             `json:"status"`
@@ -45,6 +47,9 @@ var DownloadTaskModel *database.Model[DownloadTask] = (&database.Model[DownloadT
 		json.Unmarshal([]byte(downloadTask.JsonData), &data)
 		downloadTask.YoutubeID = data.YoutubeID
 		downloadTask.DeezerID = data.DeezerID
+
+		trackID, _ := uuid.Parse(data.TrackID)
+		downloadTask.TrackID = trackID
 
 		if downloadTask.Type == DownloadTaskTypeDeezerArtist {
 			downloadTask.TypeString = "deezer_artist"
