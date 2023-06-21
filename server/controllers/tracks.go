@@ -32,6 +32,62 @@ func TracksIndex(c *fiber.Ctx) error {
 	return c.JSON(q.Paginate(page, limit))
 }
 
+type TracksCreateBody struct {
+	Title     *string `form:"title" validate:"min:2"`
+	AlbumID   *string `form:"album_id" validate:"uuid|exists:albums,id"`
+	Disk      *string `form:"disk" validate:"integer"`
+	Position  *string `form:"position" validate:"integer"`
+	Explicit  *string `form:"explicit" validate:"boolean"`
+	DeezerID  *string `form:"deezer_id" validate:"integer"`
+	YoutubeID *string `form:"youtube_id" validate:"nullable|min:11"`
+}
+
+func TracksCreate(c *fiber.Ctx) error {
+	// Parse body
+	var body TracksCreateBody
+	if err := c.BodyParser(&body); err != nil {
+		return fiber.ErrBadRequest
+	}
+
+	// Validate body
+	if err := validation.ValidateStruct(c, &body); err != nil {
+		return nil
+	}
+
+	// Create track
+	trackID := uuid.New()
+	albumID, _ := uuid.Parse(*body.AlbumID)
+	disk, _ := strconv.ParseInt(*body.Disk, 10, 32)
+	position, _ := strconv.ParseInt(*body.Position, 10, 32)
+	deezerID, _ := strconv.ParseInt(*body.DeezerID, 10, 64)
+	var youtubeID *string
+	if *body.YoutubeID != "" {
+		youtubeID = body.YoutubeID
+	} else {
+		youtubeID = nil
+	}
+	models.TrackModel.Create(database.Map{
+		"id":         trackID,
+		"title":      *body.Title,
+		"album_id":   albumID,
+		"disk":       int32(disk),
+		"position":   int32(position),
+		"explicit":   *body.Explicit == "true",
+		"youtube_id": youtubeID,
+		"deezer_id":  deezerID,
+	})
+
+	// Store new track image
+	if imageFile, err := c.FormFile("image"); err == nil {
+		if err := utils.StoreUploadedImage(c, "tracks", trackID, imageFile, true); err != nil {
+			return err
+		}
+	}
+
+	// Get new track
+	return c.JSON(models.TrackModel.Find(trackID))
+}
+
 func TracksShow(c *fiber.Ctx) error {
 	// Parse track id uuid
 	trackID, err := uuid.Parse(c.Params("trackID"))
@@ -88,7 +144,8 @@ func TracksUpdate(c *fiber.Ctx) error {
 		updates["title"] = *body.Title
 	}
 	if body.AlbumID != nil {
-		updates["album_id"] = *body.AlbumID
+		albumID, _ := uuid.Parse(*body.AlbumID)
+		updates["album_id"] = albumID
 	}
 	if body.Disk != nil {
 		disk, _ := strconv.ParseInt(*body.Disk, 10, 32)
