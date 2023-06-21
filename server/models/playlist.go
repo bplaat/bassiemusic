@@ -20,7 +20,7 @@ type Playlist struct {
 	SmallImage  *string             `json:"small_image"`
 	MediumImage *string             `json:"medium_image"`
 	Liked       *bool               `json:"liked,omitempty"`
-	Owners      *[]PlaylistUserItem `json:"owners,omitempty"`
+	Owners      *[]User             `json:"owners,omitempty"`
 	Users       *[]PlaylistUserItem `json:"users,omitempty"`
 	Tracks      *[]Track            `json:"tracks,omitempty"`
 }
@@ -55,18 +55,13 @@ func init() {
 				}
 			},
 			"owners": func(playlist *Playlist, args []any) {
-				playlistOwners := PlaylistUserModel.Select("owner_id", "role").Where("playlist_id", playlist.ID).Where("role", PlaylistUserRoleOwner).OrderBy("created_at").Get()
+				playlistOwners := PlaylistUserModel.Select("user_id", "role").Where("playlist_id", playlist.ID).Where("role", PlaylistUserRoleOwner).OrderBy("created_at").Get()
 				var ownerIds []any
 				for _, playlistOwner := range playlistOwners {
 					ownerIds = append(ownerIds, playlistOwner.UserID)
 				}
 				owners := UserModel.WhereIn("id", ownerIds).Get()
-
-				playlistOwnerItems := []PlaylistUserItem{}
-				for index, owner := range owners {
-					playlistOwnerItems = append(playlistOwnerItems, PlaylistUserItem{User: owner, Role: playlistOwners[index].RoleString})
-				}
-				playlist.Owners = &playlistOwnerItems
+				playlist.Owners = &owners
 			},
 			"users": func(playlist *Playlist, args []any) {
 				playlistUsers := PlaylistUserModel.Select("user_id", "role").Where("playlist_id", playlist.ID).OrderByRaw("`role`, `created_at`").Get()

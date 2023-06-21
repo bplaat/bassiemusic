@@ -12,7 +12,7 @@
         en: {
             title: '$1 - Playlists - BassieMusic',
             back: 'Go back one page',
-            made_by: 'Made by $1',
+            made_by: 'Made by',
             play: 'Play playlist tracks',
             playlist: 'playlist',
             edit: 'Edit playlist',
@@ -23,7 +23,7 @@
         nl: {
             title: '$1 - Afspeellijsten - BassieMusic',
             back: 'Ga een pagina terug',
-            made_by: 'Gemaakt door $1',
+            made_by: 'Gemaakt door',
             play: 'Speel afspeellijst tracks',
             playlist: 'afspeellijst',
             edit: 'Verander afspeellijst',
@@ -39,6 +39,8 @@
     let tracksTable;
     let editModal;
     let deleteModal;
+
+    $: isOwner = data.authUser.role === 'admin' || data.playlist.owners.map(owner => owner.username).indexOf(authUser.username) != -1;
 </script>
 
 <svelte:head>
@@ -59,13 +61,17 @@
             token={data.token}
             item={data.playlist}
             itemRoute="playlists"
-            editable={data.playlist.user.id === data.authUser.id || data.authUser.role === 'admin'}
+            editable={isOwner}
         />
     </div>
 
     <div class="column" style="display: flex; flex-direction: column; justify-content: center;">
         <h2 class="title">{data.playlist.name}</h2>
-        <p class="mb-5">{t('made_by', data.playlist.user.username)}</p>
+        <p class="mb-5">{t('made_by')}
+            {#each data.playlist.owners as owner}
+                <span class="mr-2">{owner.username}</span>
+            {/each}
+        </p>
 
         <div class="buttons">
             <button class="button is-large" on:click={tracksTable.playFirstTrack} title={t('play')}>
@@ -82,7 +88,7 @@
                 isLarge={true}
             />
 
-            {#if data.playlist.user.id === data.authUser.id || data.authUser.role === 'admin'}
+            {#if isOwner}
                 <button class="button is-large" on:click={() => editModal.open()} title={t('edit')}>
                     <svg class="icon" viewBox="0 0 24 24">
                         <path
@@ -114,7 +120,7 @@
     <p><i>{t('tracks_empty')}</i></p>
 {/if}
 
-{#if data.playlist.user.id === data.authUser.id || data.authUser.role === 'admin'}
+{#if isOwner}
     <EditModal
         bind:this={editModal}
         token={data.token}
