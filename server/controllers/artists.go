@@ -53,11 +53,12 @@ func ArtistsCreate(c *fiber.Ctx) error {
 
 	// Create artist
 	artistID := uuid.New()
+	deezerID, _ := strconv.ParseInt(*body.DeezerID, 10, 64)
 	models.ArtistModel.Create(database.Map{
 		"id":        artistID,
-		"name":      body.Name,
-		"sync":      body.Sync,
-		"deezer_id": body.DeezerID,
+		"name":      *body.Name,
+		"sync":      *body.Sync == "true",
+		"deezer_id": deezerID,
 	})
 
 	// Store new artist image

@@ -34,6 +34,63 @@ func AlbumsIndex(c *fiber.Ctx) error {
 	return c.JSON(q.Paginate(page, limit))
 }
 
+type AlbumsCreateBody struct {
+	Title      *string `form:"title" validate:"min:2"`
+	Type       *string `form:"type" validate:"enum:album,ep,single"`
+	ReleasedAt *string `form:"released_at" validate:"date"`
+	Explicit   *string `form:"explicit" validate:"boolean"`
+	DeezerID   *string `form:"deezer_id" validate:"integer"`
+	Cover      *string `form:"cover" validate:"nullable"`
+}
+
+func AlbumsCreate(c *fiber.Ctx) error {
+	// Parse body
+	var body AlbumsUpdateBody
+	if err := c.BodyParser(&body); err != nil {
+		return fiber.ErrBadRequest
+	}
+
+	// Validate body
+	if err := validation.ValidateStructUpdates(c, nil, &body); err != nil {
+		return nil
+	}
+
+	// Create album
+	albumID := uuid.New()
+	var albumType models.AlbumType
+	if body.Type != nil {
+		if *body.Type == "album" {
+			albumType = models.AlbumTypeAlbum
+		}
+		if *body.Type == "ep" {
+			albumType = models.AlbumTypeEP
+		}
+		if *body.Type == "single" {
+			albumType = models.AlbumTypeSingle
+		}
+	}
+	releasedAt, _ := time.Parse("2006-01-02T15:04:05Z", *body.ReleasedAt)
+	deezerID, _ := strconv.ParseInt(*body.DeezerID, 10, 64)
+	models.AlbumModel.Create(database.Map{
+		"id":          albumID,
+		"title":       *body.Title,
+		"type":        albumType,
+		"released_at": releasedAt,
+		"explicit":    *body.Explicit == "true",
+		"deezer_id":   deezerID,
+	})
+
+	// Store new album image
+	if imageFile, err := c.FormFile("image"); err == nil {
+		if err := utils.StoreUploadedImage(c, "albums", albumID, imageFile, true); err != nil {
+			return err
+		}
+	}
+
+	// Get new album
+	return c.JSON(models.AlbumModel.Find(albumID))
+}
+
 func AlbumsShow(c *fiber.Ctx) error {
 	// Parse album id uuid
 	albumID, err := uuid.Parse(c.Params("albumID"))

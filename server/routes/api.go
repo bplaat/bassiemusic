@@ -150,6 +150,7 @@ func Api() *fiber.App {
 	api.Put("/genres/:genreID", controllers.GenresUpdate)
 	api.Delete("/genres/:genreID", controllers.GenresDelete)
 
+	api.Post("/albums", controllers.AlbumsCreate)
 	api.Put("/albums/:albumID", controllers.AlbumsUpdate)
 	api.Delete("/albums/:albumID", controllers.AlbumsDelete)
 
