@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"encoding/json"
 	"log"
 	"strconv"
 
@@ -26,14 +27,18 @@ func DownloadArtist(c *fiber.Ctx) error {
 
 	// Validate body
 	if err := validation.ValidateStruct(c, &body); err != nil {
-		return nil
+		return fiber.ErrBadRequest
 	}
 
 	// Create download task
 	deezerID, _ := strconv.ParseInt(body.DeezerID, 10, 64)
+	jsonData, err := json.Marshal(models.DownloadTaskData{DeezerID: deezerID})
+	if err != nil {
+		log.Fatalln(err)
+	}
 	downloadTask := models.DownloadTaskModel.Create(database.Map{
 		"type":         models.DownloadTaskTypeDeezerArtist,
-		"deezer_id":    deezerID,
+		"data":         jsonData,
 		"display_name": body.DisplayName,
 		"status":       models.DownloadTaskStatusPending,
 		"progress":     0,
@@ -67,9 +72,13 @@ func DownloadAlbum(c *fiber.Ctx) error {
 
 	// Create download task
 	deezerID, _ := strconv.ParseInt(body.DeezerID, 10, 64)
+	jsonData, err := json.Marshal(models.DownloadTaskData{DeezerID: deezerID})
+	if err != nil {
+		log.Fatalln(err)
+	}
 	downloadTask := models.DownloadTaskModel.Create(database.Map{
 		"type":         models.DownloadTaskTypeDeezerAlbum,
-		"deezer_id":    deezerID,
+		"data":         jsonData,
 		"display_name": body.DisplayName,
 		"status":       models.DownloadTaskStatusPending,
 		"progress":     0,

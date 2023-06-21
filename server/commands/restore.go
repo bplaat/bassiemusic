@@ -18,7 +18,7 @@ func removeOldUserAvatarIDs() {
 	models.UserModel.WhereNotNull("avatar").Chunk(50, func(users []models.User) {
 		for _, user := range users {
 			if user.AvatarID.Valid {
-				if _, err := os.Stat(fmt.Sprintf("storage/avatars/original/%s", user.AvatarID.Uuid.String())); os.IsNotExist(err) {
+				if _, err := os.Stat(fmt.Sprintf("storage/avatars/original/%s", user.AvatarID.Uuid)); os.IsNotExist(err) {
 					models.UserModel.Where("id", user.ID).Update(database.Map{
 						"avatar": nil,
 					})
@@ -36,7 +36,7 @@ func removeOldPlaylistImageIDs() {
 	models.PlaylistModel.WhereNotNull("image").Chunk(50, func(playlists []models.Playlist) {
 		for _, playlist := range playlists {
 			if playlist.ImageID.Valid {
-				if _, err := os.Stat(fmt.Sprintf("storage/playlists/original/%s", playlist.ImageID.Uuid.String())); os.IsNotExist(err) {
+				if _, err := os.Stat(fmt.Sprintf("storage/playlists/original/%s", playlist.ImageID.Uuid)); os.IsNotExist(err) {
 					models.PlaylistModel.Where("id", playlist.ID).Update(database.Map{
 						"image": nil,
 					})

@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"math"
+	"os"
 	"os/exec"
 	"strings"
 	"time"
@@ -47,10 +48,9 @@ func createArtist(deezerID int, name string, sync bool) uuid.Uuid {
 	})
 
 	if deezerArtist.PictureMedium != "https://e-cdns-images.dzcdn.net/images/artist//250x250-000000-80-0-0.jpg" {
-		avatarIDString := artistID.String()
-		utils.DeezerFetchFile(deezerArtist.PictureMedium, fmt.Sprintf("storage/artists/small/%s.jpg", avatarIDString))
-		utils.DeezerFetchFile(deezerArtist.PictureBig, fmt.Sprintf("storage/artists/medium/%s.jpg", avatarIDString))
-		utils.DeezerFetchFile(deezerArtist.PictureXl, fmt.Sprintf("storage/artists/large/%s.jpg", avatarIDString))
+		utils.DeezerFetchFile(deezerArtist.PictureMedium, fmt.Sprintf("storage/artists/small/%s.jpg", artistID))
+		utils.DeezerFetchFile(deezerArtist.PictureBig, fmt.Sprintf("storage/artists/medium/%s.jpg", artistID))
+		utils.DeezerFetchFile(deezerArtist.PictureXl, fmt.Sprintf("storage/artists/large/%s.jpg", artistID))
 	}
 	return artistID
 }
@@ -76,10 +76,9 @@ func createGenre(deezerID int, name string) uuid.Uuid {
 		"deezer_id": deezerID,
 	})
 	if deezerGenre.PictureMedium != "https://e-cdns-images.dzcdn.net/images/misc//250x250-000000-80-0-0.jpg" {
-		genreIDString := genreID.String()
-		utils.DeezerFetchFile(deezerGenre.PictureMedium, fmt.Sprintf("storage/genres/small/%s.jpg", genreIDString))
-		utils.DeezerFetchFile(deezerGenre.PictureBig, fmt.Sprintf("storage/genres/medium/%s.jpg", genreIDString))
-		utils.DeezerFetchFile(deezerGenre.PictureXl, fmt.Sprintf("storage/genres/large/%s.jpg", genreIDString))
+		utils.DeezerFetchFile(deezerGenre.PictureMedium, fmt.Sprintf("storage/genres/small/%s.jpg", genreID))
+		utils.DeezerFetchFile(deezerGenre.PictureBig, fmt.Sprintf("storage/genres/medium/%s.jpg", genreID))
+		utils.DeezerFetchFile(deezerGenre.PictureXl, fmt.Sprintf("storage/genres/large/%s.jpg", genreID))
 	}
 	return genreID
 }
@@ -117,49 +116,50 @@ func CreateTrack(albumID uuid.Uuid, deezerID int64) {
 	}
 }
 
-func SearchAndDownloadTrackMusic(track *models.Track) error {
-	// Search for youtube video
-	var searchQuery string
-	if len(*track.Artists) > 0 {
-		searchQuery = fmt.Sprintf("%s - %s", (*track.Artists)[0].Name, track.Title)
-	} else {
-		searchQuery = fmt.Sprintf("%s - %s", track.Album.Title, track.Title)
-	}
-	searchCommand := exec.Command("yt-dlp", "--dump-json", "ytsearch10:"+searchQuery)
-	log.Println(searchCommand.String())
-
-	stdout, err := searchCommand.StdoutPipe()
-	if err != nil {
-		return err
-	}
-
-	if err := searchCommand.Start(); err != nil {
-		return err
-	}
-
-	fallPoints := 0
-
-	lowestScore := 1000000.0
-	youtubeID := ""
+func SearchAndDownloadTrackMusic(track *models.Track, youtubeID string, findYoutubeID bool) error {
 	youtubeDuration := 0
 
-	for {
-		var youtubeVideo structs.YoutubeVideo
-		if err := json.NewDecoder(stdout).Decode(&youtubeVideo); err != nil {
-			break
+	if findYoutubeID {
+		// Search for youtube video
+		var searchQuery string
+		if len(*track.Artists) > 0 {
+			searchQuery = fmt.Sprintf("%s - %s", (*track.Artists)[0].Name, track.Title)
+		} else {
+			searchQuery = fmt.Sprintf("%s - %s", track.Album.Title, track.Title)
+		}
+		searchCommand := exec.Command("yt-dlp", "--dump-json", "ytsearch10:"+searchQuery)
+		log.Println(searchCommand.String())
+
+		stdout, err := searchCommand.StdoutPipe()
+		if err != nil {
+			return err
 		}
 
-		score := float32(youtubeVideo.Duration) - track.Duration
-		if score < 0 {
-			score = score - score - score
-		}
-		if score+float32(fallPoints) < float32(lowestScore) {
-			lowestScore = float64(score) + float64(fallPoints)
-			youtubeID = youtubeVideo.ID
-			youtubeDuration = youtubeVideo.Duration
+		if err := searchCommand.Start(); err != nil {
+			return err
 		}
 
-		fallPoints += consts.PUNISHMENT_POINTS
+		fallPoints := 0
+		lowestScore := 1000000.0
+
+		for {
+			var youtubeVideo structs.YoutubeVideo
+			if err := json.NewDecoder(stdout).Decode(&youtubeVideo); err != nil {
+				break
+			}
+
+			score := float32(youtubeVideo.Duration) - track.Duration
+			if score < 0 {
+				score = score - score - score
+			}
+			if score+float32(fallPoints) < float32(lowestScore) {
+				lowestScore = float64(score) + float64(fallPoints)
+				youtubeID = youtubeVideo.ID
+				youtubeDuration = youtubeVideo.Duration
+			}
+
+			fallPoints += consts.PUNISHMENT_POINTS
+		}
 	}
 
 	if youtubeID != "" {
@@ -179,9 +179,6 @@ func SearchAndDownloadTrackMusic(track *models.Track) error {
 		})
 	}
 
-	if err := stdout.Close(); err != nil {
-		log.Fatalln(err)
-	}
 	return nil
 }
 
@@ -210,10 +207,9 @@ func DownloadAlbum(deezerAlbum structs.DeezerAlbum, downloadTask *models.Downloa
 		"deezer_id":   deezerAlbum.ID,
 	})
 
-	albumIDString := albumID.String()
-	utils.DeezerFetchFile(deezerAlbum.CoverMedium, fmt.Sprintf("storage/albums/small/%s.jpg", albumIDString))
-	utils.DeezerFetchFile(deezerAlbum.CoverBig, fmt.Sprintf("storage/albums/medium/%s.jpg", albumIDString))
-	utils.DeezerFetchFile(deezerAlbum.CoverXl, fmt.Sprintf("storage/albums/large/%s.jpg", albumIDString))
+	utils.DeezerFetchFile(deezerAlbum.CoverMedium, fmt.Sprintf("storage/albums/small/%s.jpg", albumID))
+	utils.DeezerFetchFile(deezerAlbum.CoverBig, fmt.Sprintf("storage/albums/medium/%s.jpg", albumID))
+	utils.DeezerFetchFile(deezerAlbum.CoverXl, fmt.Sprintf("storage/albums/large/%s.jpg", albumID))
 
 	// Create album genre bindings
 	for _, genre := range deezerAlbum.Genres.Data {
@@ -242,7 +238,7 @@ func DownloadAlbum(deezerAlbum structs.DeezerAlbum, downloadTask *models.Downloa
 	// Download album tracks music
 	for _, deezerTrack := range deezerAlbum.Tracks.Data {
 		track := models.TrackModel.With("album", "artists").Where("album_id", albumID).Where("title", deezerTrack.Title).First()
-		if err := SearchAndDownloadTrackMusic(track); err != nil && err != io.EOF {
+		if err := SearchAndDownloadTrackMusic(track, "", true); err != nil && err != io.EOF {
 			log.Fatalln(err)
 		}
 		log.Printf("[DOWNLOAD] %s - %d-%d - %s\n", deezerAlbum.Title, track.Disk, track.Position, track.Title)
@@ -308,6 +304,21 @@ func DownloadTask() {
 		}
 
 		//  Execute current download task
+		if downloadTask.Type == models.DownloadTaskTypeYoutubeTrack {
+			// Update download task status
+			downloadTask.StatusString = "downloading"
+			models.DownloadTaskModel.Where("id", downloadTask.ID).Update(database.Map{
+				"status": downloadTask.Status,
+			})
+
+			track := models.TrackModel.Find(*downloadTask.TrackID)
+			os.Remove(fmt.Sprintf("storage/tracks/%s.m4a", downloadTask.TrackID))
+
+			if err := SearchAndDownloadTrackMusic(track, *downloadTask.YoutubeID, false); err != nil && err != io.EOF {
+				log.Fatalln(err)
+			}
+		}
+
 		if downloadTask.Type == models.DownloadTaskTypeDeezerArtist {
 			// Update download task status
 			downloadTask.Status = models.DownloadTaskStatusDownloading
@@ -329,7 +340,7 @@ func DownloadTask() {
 			createArtist(deezerArtist.ID, deezerArtist.Name, true)
 
 			// Download artist albums
-			artistAlbums, totalTracks := fetchAlbums(downloadTask.DeezerID)
+			artistAlbums, totalTracks := fetchAlbums(*downloadTask.DeezerID)
 			downloadedTracks := 0
 
 			if err := websocket.BroadcastAdmin("download_tasks.update", downloadTask); err != nil {

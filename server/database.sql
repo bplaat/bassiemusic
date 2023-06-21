@@ -229,7 +229,7 @@ CREATE TABLE `playlist_likes` (
 CREATE TABLE `download_tasks` (
     `id` BINARY(16) NOT NULL,
     `type` TINYINT UNSIGNED NOT NULL, -- Enum: deezer_artist, deezer_album
-    `deezer_id` BIGINT UNSIGNED NOT NULL,
+    `data` TEXT NOT NULL,
     `display_name` VARCHAR(255) NOT NULL,
     `status` TINYINT UNSIGNED NOT NULL, -- Enum: pending, downloading
     `progress` FLOAT NOT NULL,

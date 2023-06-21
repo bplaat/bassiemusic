@@ -37,11 +37,10 @@ func init() {
 		TableName: "playlists",
 		Process: func(playlist *Playlist) {
 			if playlist.ImageID.Valid {
-				imageIDString := playlist.ImageID.Uuid.String()
-				if _, err := os.Stat(fmt.Sprintf("storage/playlists/original/%s", imageIDString)); err == nil {
-					smallImage := fmt.Sprintf("%s/playlists/small/%s.jpg", os.Getenv("STORAGE_URL"), imageIDString)
+				if _, err := os.Stat(fmt.Sprintf("storage/playlists/original/%s", playlist.ImageID.Uuid)); err == nil {
+					smallImage := fmt.Sprintf("%s/playlists/small/%s.jpg", os.Getenv("STORAGE_URL"), playlist.ImageID.Uuid)
 					playlist.SmallImage = &smallImage
-					mediumImage := fmt.Sprintf("%s/playlists/medium/%s.jpg", os.Getenv("STORAGE_URL"), imageIDString)
+					mediumImage := fmt.Sprintf("%s/playlists/medium/%s.jpg", os.Getenv("STORAGE_URL"), playlist.ImageID.Uuid)
 					playlist.MediumImage = &mediumImage
 				}
 			}
