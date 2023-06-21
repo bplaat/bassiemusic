@@ -144,7 +144,8 @@ func TracksUpdate(c *fiber.Ctx) error {
 		updates["title"] = *body.Title
 	}
 	if body.AlbumID != nil {
-		updates["album_id"] = *body.AlbumID
+		albumID, _ := uuid.Parse(*body.AlbumID)
+		updates["album_id"] = albumID
 	}
 	if body.Disk != nil {
 		disk, _ := strconv.ParseInt(*body.Disk, 10, 32)
