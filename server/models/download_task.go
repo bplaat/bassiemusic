@@ -9,7 +9,7 @@ import (
 	"github.com/bplaat/bassiemusic/core/uuid"
 )
 
-type Data struct {
+type DownloadTaskData struct {
 	DeezerID  int64  `json:"deezer_id"`
 	YoutubeID string `json:"youtube_id"`
 	TrackID   string `json:"track_id"`
@@ -19,15 +19,15 @@ type DownloadTask struct {
 	ID           uuid.Uuid          `column:"id" json:"id"`
 	Type         DownloadTaskType   `column:"type" json:"-"`
 	TypeString   string             `json:"type"`
-	JsonData     string             `column:"data" json:"-"`
-	DeezerID     int64              `json:"deezer_id"`
-	YoutubeID    string             `json:"youtube_id"`
-	TrackID      uuid.Uuid          `json:"track_id"`
+	Data         string             `column:"data" json:"-"`
 	DisplayName  string             `column:"display_name" json:"display_name"`
 	Status       DownloadTaskStatus `column:"status" json:"-"`
 	StatusString string             `json:"status"`
 	Progress     float32            `column:"progress" json:"progress"`
 	CreatedAt    time.Time          `column:"created_at" json:"created_at"`
+	DeezerID     *int64             `json:"deezer_id,omitempty"`
+	YoutubeID    *string            `json:"youtube_id,omitempty"`
+	TrackID      *uuid.Uuid         `json:"track_id,omitempty"`
 }
 
 type DownloadTaskType int
@@ -44,18 +44,6 @@ const DownloadTaskStatusDownloading DownloadTaskStatus = 1
 var DownloadTaskModel *database.Model[DownloadTask] = (&database.Model[DownloadTask]{
 	TableName: "download_tasks",
 	Process: func(downloadTask *DownloadTask) {
-		var data Data
-		if err := json.Unmarshal([]byte(downloadTask.JsonData), &data); err != nil {
-			log.Println(err)
-			return
-		}
-
-		downloadTask.YoutubeID = data.YoutubeID
-		downloadTask.DeezerID = data.DeezerID
-
-		trackID, _ := uuid.Parse(data.TrackID)
-		downloadTask.TrackID = trackID
-
 		if downloadTask.Type == DownloadTaskTypeDeezerArtist {
 			downloadTask.TypeString = "deezer_artist"
 		}
@@ -71,6 +59,22 @@ var DownloadTaskModel *database.Model[DownloadTask] = (&database.Model[DownloadT
 		}
 		if downloadTask.Status == DownloadTaskStatusDownloading {
 			downloadTask.StatusString = "downloading"
+		}
+
+		// Parse download task data
+		var data DownloadTaskData
+		if err := json.Unmarshal([]byte(downloadTask.Data), &data); err != nil {
+			log.Fatalln(err)
+		}
+		if data.DeezerID != 0 {
+			downloadTask.DeezerID = &data.DeezerID
+		}
+		if data.YoutubeID != "" {
+			downloadTask.YoutubeID = &data.YoutubeID
+		}
+		if data.TrackID != "" {
+			trackID, _ := uuid.Parse(data.TrackID)
+			downloadTask.TrackID = &trackID
 		}
 	},
 }).Init()

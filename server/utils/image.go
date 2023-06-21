@@ -14,15 +14,13 @@ import (
 )
 
 func StoreUploadedImage(c *fiber.Ctx, storageDir string, id uuid.Uuid, file *multipart.FileHeader, saveLarge bool) error {
-	idString := id.String()
-
 	// Save uploaded image file
-	if err := c.SaveFile(file, fmt.Sprintf("storage/%s/original/%s", storageDir, idString)); err != nil {
+	if err := c.SaveFile(file, fmt.Sprintf("storage/%s/original/%s", storageDir, id)); err != nil {
 		log.Fatalln(err)
 	}
 
 	// Open uploaded image
-	originalFile, err := os.Open(fmt.Sprintf("storage/%s/original/%s", storageDir, idString))
+	originalFile, err := os.Open(fmt.Sprintf("storage/%s/original/%s", storageDir, id))
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -33,14 +31,14 @@ func StoreUploadedImage(c *fiber.Ctx, storageDir string, id uuid.Uuid, file *mul
 	var originalImage image.Image
 	originalImage, _, err = image.Decode(originalFile)
 	if err != nil {
-		if err := os.Remove(fmt.Sprintf("storage/%s/original/%s", storageDir, idString)); err != nil {
+		if err := os.Remove(fmt.Sprintf("storage/%s/original/%s", storageDir, id)); err != nil {
 			log.Fatalln(err)
 		}
 		return fiber.ErrBadRequest
 	}
 
 	// Save small resize
-	smallFile, err := os.Create(fmt.Sprintf("storage/%s/small/%s.jpg", storageDir, idString))
+	smallFile, err := os.Create(fmt.Sprintf("storage/%s/small/%s.jpg", storageDir, id))
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -52,7 +50,7 @@ func StoreUploadedImage(c *fiber.Ctx, storageDir string, id uuid.Uuid, file *mul
 	}
 
 	// Save medium resize
-	mediumFile, err := os.Create(fmt.Sprintf("storage/%s/medium/%s.jpg", storageDir, idString))
+	mediumFile, err := os.Create(fmt.Sprintf("storage/%s/medium/%s.jpg", storageDir, id))
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -65,7 +63,7 @@ func StoreUploadedImage(c *fiber.Ctx, storageDir string, id uuid.Uuid, file *mul
 
 	// Save large resize
 	if saveLarge {
-		largeFile, err := os.Create(fmt.Sprintf("storage/%s/large/%s.jpg", storageDir, idString))
+		largeFile, err := os.Create(fmt.Sprintf("storage/%s/large/%s.jpg", storageDir, id))
 		if err != nil {
 			log.Fatalln(err)
 		}

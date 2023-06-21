@@ -154,19 +154,17 @@ func PlaylistsUpdate(c *fiber.Ctx) error {
 
 		// Remove old image file
 		if playlist.ImageID.Valid {
-			imageIDString := playlist.ImageID.Uuid.String()
-			_ = os.Remove(fmt.Sprintf("storage/playlists/original/%s", imageIDString))
-			_ = os.Remove(fmt.Sprintf("storage/playlists/small/%s.jpg", imageIDString))
-			_ = os.Remove(fmt.Sprintf("storage/playlists/medium/%s.jpg", imageIDString))
+			_ = os.Remove(fmt.Sprintf("storage/playlists/original/%s", playlist.ImageID.Uuid))
+			_ = os.Remove(fmt.Sprintf("storage/playlists/small/%s.jpg", playlist.ImageID.Uuid))
+			_ = os.Remove(fmt.Sprintf("storage/playlists/medium/%s.jpg", playlist.ImageID.Uuid))
 		}
 	}
 	if body.Image != nil && *body.Image == "" {
 		if playlist.ImageID.Valid {
 			// Remove old image file
-			imageIDString := playlist.ImageID.Uuid.String()
-			_ = os.Remove(fmt.Sprintf("storage/playlists/original/%s", imageIDString))
-			_ = os.Remove(fmt.Sprintf("storage/playlists/small/%s.jpg", imageIDString))
-			_ = os.Remove(fmt.Sprintf("storage/playlists/medium/%s.jpg", imageIDString))
+			_ = os.Remove(fmt.Sprintf("storage/playlists/original/%s", playlist.ImageID.Uuid))
+			_ = os.Remove(fmt.Sprintf("storage/playlists/small/%s.jpg", playlist.ImageID.Uuid))
+			_ = os.Remove(fmt.Sprintf("storage/playlists/medium/%s.jpg", playlist.ImageID.Uuid))
 
 			updates["image"] = nil
 		}

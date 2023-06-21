@@ -54,7 +54,7 @@
             download_tasks_type: 'Type',
             download_tasks_deezer_artist: 'Deezer Artiest',
             download_tasks_deezer_album: 'Deezer Album',
-            download_tasks_youtube_track: 'Youtube Nummer',
+            download_tasks_youtube_track: 'Youtube Track',
             download_tasks_display_name: 'Naam',
             download_tasks_status: 'Status',
             download_tasks_status_pending: 'Wachtend',

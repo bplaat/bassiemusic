@@ -111,11 +111,13 @@ func TracksUpdate(c *fiber.Ctx) error {
 
 	// Checks if youtube id has been updated
 	if body.YoutubeID != nil && track.YoutubeID.String != *body.YoutubeID {
-		data := Data{
+		jsonData, err := json.Marshal(models.DownloadTaskData{
 			YoutubeID: *body.YoutubeID,
-			TrackID:   track.ID,
+			TrackID:   track.ID.String(),
+		})
+		if err != nil {
+			log.Fatalln(err)
 		}
-		jsonData, _ := json.Marshal(data)
 		downloadTask := models.DownloadTaskModel.Create(database.Map{
 			"type":         models.DownloadTaskTypeYoutubeTrack,
 			"data":         jsonData,

@@ -168,19 +168,17 @@ func UsersUpdate(c *fiber.Ctx) error {
 
 		// Remove old avatar file
 		if user.AvatarID.Valid {
-			avatarIDString := user.AvatarID.Uuid.String()
-			_ = os.Remove(fmt.Sprintf("storage/avatars/original/%s", avatarIDString))
-			_ = os.Remove(fmt.Sprintf("storage/avatars/small/%s.jpg", avatarIDString))
-			_ = os.Remove(fmt.Sprintf("storage/avatars/medium/%s.jpg", avatarIDString))
+			_ = os.Remove(fmt.Sprintf("storage/avatars/original/%s", user.AvatarID.Uuid))
+			_ = os.Remove(fmt.Sprintf("storage/avatars/small/%s.jpg", user.AvatarID.Uuid))
+			_ = os.Remove(fmt.Sprintf("storage/avatars/medium/%s.jpg", user.AvatarID.Uuid))
 		}
 	}
 	if body.Avatar != nil && *body.Avatar == "" {
 		if user.AvatarID.Valid {
 			// Remove old avatar file
-			avatarIDString := user.AvatarID.Uuid.String()
-			_ = os.Remove(fmt.Sprintf("storage/avatars/original/%s", avatarIDString))
-			_ = os.Remove(fmt.Sprintf("storage/avatars/small/%s.jpg", avatarIDString))
-			_ = os.Remove(fmt.Sprintf("storage/avatars/medium/%s.jpg", avatarIDString))
+			_ = os.Remove(fmt.Sprintf("storage/avatars/original/%s", user.AvatarID.Uuid))
+			_ = os.Remove(fmt.Sprintf("storage/avatars/small/%s.jpg", user.AvatarID.Uuid))
+			_ = os.Remove(fmt.Sprintf("storage/avatars/medium/%s.jpg", user.AvatarID.Uuid))
 
 			updates["avatar"] = nil
 		}

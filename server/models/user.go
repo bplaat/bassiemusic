@@ -57,11 +57,10 @@ var UserModel *database.Model[User] = (&database.Model[User]{
 		}
 
 		if user.AvatarID.Valid {
-			avatarIDString := user.AvatarID.Uuid.String()
-			if _, err := os.Stat(fmt.Sprintf("storage/avatars/original/%s", avatarIDString)); err == nil {
-				smallAvatar := fmt.Sprintf("%s/avatars/small/%s.jpg", os.Getenv("STORAGE_URL"), avatarIDString)
+			if _, err := os.Stat(fmt.Sprintf("storage/avatars/original/%s", user.AvatarID.Uuid)); err == nil {
+				smallAvatar := fmt.Sprintf("%s/avatars/small/%s.jpg", os.Getenv("STORAGE_URL"), user.AvatarID.Uuid)
 				user.SmallAvatar = &smallAvatar
-				mediumAvatar := fmt.Sprintf("%s/avatars/medium/%s.jpg", os.Getenv("STORAGE_URL"), avatarIDString)
+				mediumAvatar := fmt.Sprintf("%s/avatars/medium/%s.jpg", os.Getenv("STORAGE_URL"), user.AvatarID.Uuid)
 				user.MediumAvatar = &mediumAvatar
 			}
 		}

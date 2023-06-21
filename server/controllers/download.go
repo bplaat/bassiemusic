@@ -18,12 +18,6 @@ type DownloadArtistBody struct {
 	DisplayName string `form:"display_name" validate:"required"`
 }
 
-type Data struct {
-	DeezerID  int64     `json:"deezer_id"`
-	TrackID   uuid.Uuid `json:"track_id"`
-	YoutubeID string    `json:"youtube_id"`
-}
-
 func DownloadArtist(c *fiber.Ctx) error {
 	// Parse body
 	var body DownloadArtistBody
@@ -33,15 +27,15 @@ func DownloadArtist(c *fiber.Ctx) error {
 
 	// Validate body
 	if err := validation.ValidateStruct(c, &body); err != nil {
-		return nil
+		return fiber.ErrBadRequest
 	}
 
 	// Create download task
 	deezerID, _ := strconv.ParseInt(body.DeezerID, 10, 64)
-	data := Data{
-		DeezerID: deezerID,
+	jsonData, err := json.Marshal(models.DownloadTaskData{DeezerID: deezerID})
+	if err != nil {
+		log.Fatalln(err)
 	}
-	jsonData, _ := json.Marshal(data)
 	downloadTask := models.DownloadTaskModel.Create(database.Map{
 		"type":         models.DownloadTaskTypeDeezerArtist,
 		"data":         jsonData,
@@ -78,10 +72,10 @@ func DownloadAlbum(c *fiber.Ctx) error {
 
 	// Create download task
 	deezerID, _ := strconv.ParseInt(body.DeezerID, 10, 64)
-	data := Data{
-		DeezerID: deezerID,
+	jsonData, err := json.Marshal(models.DownloadTaskData{DeezerID: deezerID})
+	if err != nil {
+		log.Fatalln(err)
 	}
-	jsonData, _ := json.Marshal(data)
 	downloadTask := models.DownloadTaskModel.Create(database.Map{
 		"type":         models.DownloadTaskTypeDeezerAlbum,
 		"data":         jsonData,
