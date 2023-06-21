@@ -54,7 +54,7 @@ func ArtistsCreate(c *fiber.Ctx) error {
 	// Create artist
 	artistID := uuid.New()
 	deezerID, _ := strconv.ParseInt(*body.DeezerID, 10, 64)
-	models.ArtistModel.Create(database.Map{
+	artist := models.ArtistModel.Create(database.Map{
 		"id":        artistID,
 		"name":      *body.Name,
 		"sync":      *body.Sync == "true",
@@ -68,8 +68,7 @@ func ArtistsCreate(c *fiber.Ctx) error {
 		}
 	}
 
-	// Get new artist
-	return c.JSON(models.ArtistModel.Find(artistID))
+	return c.JSON(artist)
 }
 
 func ArtistsShow(c *fiber.Ctx) error {

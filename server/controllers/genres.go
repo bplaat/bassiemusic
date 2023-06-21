@@ -49,7 +49,7 @@ func GenresCreate(c *fiber.Ctx) error {
 	// Create genre
 	genreID := uuid.New()
 	deezerID, _ := strconv.ParseInt(*body.DeezerID, 10, 64)
-	models.GenreModel.Create(database.Map{
+	genre := models.GenreModel.Create(database.Map{
 		"id":        genreID,
 		"name":      *body.Name,
 		"deezer_id": deezerID,
@@ -62,8 +62,7 @@ func GenresCreate(c *fiber.Ctx) error {
 		}
 	}
 
-	// Get new genre
-	return c.JSON(models.GenreModel.Find(genreID))
+	return c.JSON(genre)
 }
 
 func GenresShow(c *fiber.Ctx) error {

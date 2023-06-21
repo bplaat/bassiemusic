@@ -9,6 +9,7 @@ import (
 	"github.com/bplaat/bassiemusic/core/database"
 	"github.com/bplaat/bassiemusic/core/uuid"
 	"github.com/bplaat/bassiemusic/core/validation"
+	"github.com/bplaat/bassiemusic/middlewares"
 	"github.com/bplaat/bassiemusic/models"
 	"github.com/bplaat/bassiemusic/utils"
 	"github.com/gofiber/fiber/v2"
@@ -17,7 +18,7 @@ import (
 func PlaylistsIndex(c *fiber.Ctx) error {
 	authUser := c.Locals("authUser").(*models.User)
 	query, page, limit := utils.ParseIndexVars(c)
-	q := models.PlaylistModel.WithArgs("liked", c.Locals("authUser")).With("user").WhereRaw("`name` LIKE ?", "%"+query+"%")
+	q := models.PlaylistModel.WithArgs("liked", c.Locals("authUser")).With("owners").WhereRaw("`name` LIKE ?", "%"+query+"%")
 	if authUser.Role != models.UserRoleAdmin {
 		q = q.Where("public", true)
 	}
@@ -62,19 +63,27 @@ func PlaylistsCreate(c *fiber.Ctx) error {
 
 	// Create playlist
 	fields := database.Map{
-		"user_id": authUser.ID,
-		"name":    body.Name,
-		"public":  body.Public == "true",
+		"name":   body.Name,
+		"public": body.Public == "true",
 	}
+	playlist := models.PlaylistModel.Create(fields)
+
+	models.PlaylistUserModel.Create(database.Map{
+		"playlist_id": playlist.ID,
+		"user_id":     authUser.ID,
+		"role":        models.PlaylistUserRoleOwner,
+	})
+
+	// Store new playlist image
 	if imageFile, err := c.FormFile("image"); err == nil {
-		// Store image when given
 		imageID := uuid.New()
 		if err := utils.StoreUploadedImage(c, "playlists", imageID, imageFile, false); err != nil {
 			return err
 		}
 		fields["image"] = imageID
 	}
-	return c.JSON(models.PlaylistModel.Create(fields))
+
+	return c.JSON(playlist)
 }
 
 func PlaylistsShow(c *fiber.Ctx) error {
@@ -85,7 +94,7 @@ func PlaylistsShow(c *fiber.Ctx) error {
 	}
 
 	// Check if playlist exists
-	playlist := models.PlaylistModel.WithArgs("liked", c.Locals("authUser")).With("user").
+	playlist := models.PlaylistModel.WithArgs("liked", c.Locals("authUser")).With("owners").
 		WithArgs("tracks", c.Locals("authUser")).Find(playlistID)
 	if playlist == nil {
 		return fiber.ErrNotFound
@@ -93,7 +102,7 @@ func PlaylistsShow(c *fiber.Ctx) error {
 
 	// Check auth
 	authUser := c.Locals("authUser").(*models.User)
-	if !(playlist.Public || authUser.Role == models.UserRoleAdmin || playlist.UserID == authUser.ID) {
+	if !middlewares.IsPlaylistViewer(playlist, authUser) {
 		return fiber.ErrUnauthorized
 	}
 
@@ -121,7 +130,7 @@ func PlaylistsUpdate(c *fiber.Ctx) error {
 
 	// Check auth
 	authUser := c.Locals("authUser").(*models.User)
-	if !(authUser.Role == models.UserRoleAdmin || playlist.UserID == authUser.ID) {
+	if !middlewares.IsPlaylistOwner(playlist, authUser) {
 		return fiber.ErrUnauthorized
 	}
 
@@ -192,7 +201,7 @@ func PlaylistsDelete(c *fiber.Ctx) error {
 
 	// Check auth
 	authUser := c.Locals("authUser").(*models.User)
-	if !(authUser.Role == models.UserRoleAdmin || playlist.UserID == authUser.ID) {
+	if !middlewares.IsPlaylistOwner(playlist, authUser) {
 		return fiber.ErrUnauthorized
 	}
 
@@ -220,7 +229,7 @@ func PlaylistsAppendTrack(c *fiber.Ctx) error {
 
 	// Check auth
 	authUser := c.Locals("authUser").(*models.User)
-	if !(authUser.Role == models.UserRoleAdmin || playlist.UserID == authUser.ID) {
+	if !middlewares.IsPlaylistEditor(playlist, authUser) {
 		return fiber.ErrUnauthorized
 	}
 
@@ -273,7 +282,7 @@ func PlaylistsInsertTrack(c *fiber.Ctx) error {
 
 	// Check auth
 	authUser := c.Locals("authUser").(*models.User)
-	if !(authUser.Role == models.UserRoleAdmin || playlist.UserID == authUser.ID) {
+	if !middlewares.IsPlaylistEditor(playlist, authUser) {
 		return fiber.ErrUnauthorized
 	}
 
@@ -339,7 +348,7 @@ func PlaylistsRemoveTrack(c *fiber.Ctx) error {
 
 	// Check auth
 	authUser := c.Locals("authUser").(*models.User)
-	if !(authUser.Role == models.UserRoleAdmin || playlist.UserID == authUser.ID) {
+	if !middlewares.IsPlaylistEditor(playlist, authUser) {
 		return fiber.ErrUnauthorized
 	}
 
@@ -389,7 +398,7 @@ func PlaylistsLike(c *fiber.Ctx) error {
 
 	// Check auth
 	authUser := c.Locals("authUser").(*models.User)
-	if !(playlist.Public || authUser.Role == models.UserRoleAdmin || playlist.UserID == authUser.ID) {
+	if !middlewares.IsPlaylistViewer(playlist, authUser) {
 		return fiber.ErrUnauthorized
 	}
 
@@ -423,7 +432,7 @@ func PlaylistsLikeDelete(c *fiber.Ctx) error {
 
 	// Check auth
 	authUser := c.Locals("authUser").(*models.User)
-	if !(playlist.Public || authUser.Role == models.UserRoleAdmin || playlist.UserID == authUser.ID) {
+	if !middlewares.IsPlaylistViewer(playlist, authUser) {
 		return fiber.ErrUnauthorized
 	}
 

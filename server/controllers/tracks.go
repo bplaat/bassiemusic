@@ -66,7 +66,7 @@ func TracksCreate(c *fiber.Ctx) error {
 	} else {
 		youtubeID = nil
 	}
-	models.TrackModel.Create(database.Map{
+	track := models.TrackModel.Create(database.Map{
 		"id":         trackID,
 		"title":      *body.Title,
 		"album_id":   albumID,
@@ -85,7 +85,7 @@ func TracksCreate(c *fiber.Ctx) error {
 	}
 
 	// Get new track
-	return c.JSON(models.TrackModel.Find(trackID))
+	return c.JSON(track)
 }
 
 func TracksShow(c *fiber.Ctx) error {

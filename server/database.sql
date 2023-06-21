@@ -182,13 +182,24 @@ CREATE TABLE `track_plays` (
 -- Playlists
 CREATE TABLE `playlists` (
     `id` BINARY(16) NOT NULL,
-    `user_id` BINARY(16) NOT NULL,
     `name` VARCHAR(255) NOT NULL,
     `image` BINARY(16) NULL,
     `public` TINYINT(1) UNSIGNED NOT NULL,
     `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`)
+);
+
+CREATE TABLE `playlist_user` (
+    `id` BINARY(16) NOT NULL,
+    `playlist_id` BINARY(16) NOT NULL,
+    `user_id` BINARY(16) NOT NULL,
+    `role` TINYINT UNSIGNED NOT NULL, -- Enum: owner, editor, viewer
+    `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    FOREIGN KEY (`playlist_id`) REFERENCES `playlists`(`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
 );
 
 CREATE TABLE `playlist_track` (

@@ -541,6 +541,7 @@ func UsersPlaylists(c *fiber.Ctx) error {
 	}
 
 	// Get user playlists
+	// TODO
 	q := models.PlaylistModel.WithArgs("liked", c.Locals("authUser")).Where("user_id", user.ID).WhereRaw("`name` LIKE ?", "%"+query+"%")
 	if c.Query("sort_by") == "public" {
 		q = q.OrderByRaw("`public` DESC, LOWER(`name`)")
