@@ -40,7 +40,9 @@
     let editModal;
     let deleteModal;
 
-    $: isOwner = data.authUser.role === 'admin' || data.playlist.owners.map(owner => owner.username).indexOf(authUser.username) != -1;
+    $: isOwner =
+        data.authUser.role === 'admin' ||
+        data.playlist.owners.map((owner) => owner.username).indexOf(data.authUser.username) !== -1;
 </script>
 
 <svelte:head>
@@ -62,7 +64,7 @@
             item={data.playlist}
             itemRoute="playlists"
             editable={isOwner}
-            on:update={(event) => {
+            on:update={() => {
                 $sidebar.updateLastPlaylists();
             }}
         />
@@ -70,7 +72,8 @@
 
     <div class="column" style="display: flex; flex-direction: column; justify-content: center;">
         <h2 class="title">{data.playlist.name}</h2>
-        <p class="mb-5">{t('made_by')}
+        <p class="mb-5">
+            {t('made_by')}
             {#each data.playlist.owners as owner}
                 <span class="mr-2">{owner.username}</span>
             {/each}
