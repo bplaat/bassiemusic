@@ -60,6 +60,11 @@
         </button>
     </div>
     <div class="card-content">
-        <h3 class="title is-6 ellipsis">{playlist.name}</h3>
+        <h3 class="title is-6 mb-2 ellipsis">{playlist.name}</h3>
+        <p class="ellipsis">
+            {#each playlist.owners as owner}
+                <span class="mr-2">{owner.username}</span>
+            {/each}
+        </p>
     </div>
 </a>

@@ -412,7 +412,7 @@ func UsersLikedPlaylists(c *fiber.Ctx) error {
 
 	// Get liked playlists
 	q := models.PlaylistModel.Join("INNER JOIN `playlist_likes` ON `playlists`.`id` = `playlist_likes`.`playlist_id`").
-		WhereRaw("`playlist_likes`.`user_id` = ?", authUser.ID).
+		With("owners").WhereRaw("`playlist_likes`.`user_id` = ?", authUser.ID).
 		WhereRaw("`playlists`.`name` LIKE ?", "%"+query+"%")
 	if c.Query("sort_by") == "name" {
 		q = q.OrderByRaw("LOWER(`playlists`.`name`)")
@@ -541,7 +541,9 @@ func UsersPlaylists(c *fiber.Ctx) error {
 	}
 
 	// Get user playlists
-	q := models.PlaylistModel.WithArgs("liked", c.Locals("authUser")).Where("user_id", user.ID).WhereRaw("`name` LIKE ?", "%"+query+"%")
+	q := models.PlaylistModel.Join("INNER JOIN `playlist_user` ON `playlists`.`id` = `playlist_user`.`playlist_id`").
+		WithArgs("liked", c.Locals("authUser")).With("owners").WhereRaw("`playlist_user`.`user_id` = ?", authUser.ID).
+		WhereRaw("`name` LIKE ?", "%"+query+"%")
 	if c.Query("sort_by") == "public" {
 		q = q.OrderByRaw("`public` DESC, LOWER(`name`)")
 	} else if c.Query("sort_by") == "public_desc" {
@@ -552,12 +554,12 @@ func UsersPlaylists(c *fiber.Ctx) error {
 		q = q.OrderByDesc("created_at")
 	} else if c.Query("sort_by") == "updated_at" {
 		q = q.OrderBy("updated_at")
-	} else if c.Query("sort_by") == "updated_at_desc" {
-		q = q.OrderByDesc("updated_at")
+	} else if c.Query("sort_by") == "name" {
+		q = q.OrderByRaw("LOWER(`name`)")
 	} else if c.Query("sort_by") == "name_desc" {
 		q = q.OrderByRaw("LOWER(`name`) DESC")
 	} else {
-		q = q.OrderByRaw("LOWER(`name`)")
+		q = q.OrderByDesc("updated_at")
 	}
 	return c.JSON(q.Paginate(page, limit))
 }

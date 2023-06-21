@@ -71,7 +71,7 @@ func AlbumsCreate(c *fiber.Ctx) error {
 	}
 	releasedAt, _ := time.Parse("2006-01-02T15:04:05Z", *body.ReleasedAt)
 	deezerID, _ := strconv.ParseInt(*body.DeezerID, 10, 64)
-	models.AlbumModel.Create(database.Map{
+	album := models.AlbumModel.Create(database.Map{
 		"id":          albumID,
 		"title":       *body.Title,
 		"type":        albumType,
@@ -87,8 +87,7 @@ func AlbumsCreate(c *fiber.Ctx) error {
 		}
 	}
 
-	// Get new album
-	return c.JSON(models.AlbumModel.Find(albumID))
+	return c.JSON(album)
 }
 
 func AlbumsShow(c *fiber.Ctx) error {

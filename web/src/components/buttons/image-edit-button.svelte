@@ -1,4 +1,5 @@
 <script>
+    import { createEventDispatcher } from 'svelte';
     import { language } from '../../stores.js';
 
     // Language strings
@@ -47,6 +48,7 @@
     export let editable;
 
     // Methods
+    const dispatch = createEventDispatcher();
     function editImage() {
         const imageInput = document.createElement('input');
         imageInput.type = 'file';
@@ -80,6 +82,7 @@
                     item.medium_cover = updatedItem.medium_cover;
                     item.large_cover = updatedItem.large_cover;
                 }
+                dispatch('update');
             }
         });
         imageInput.dispatchEvent(new MouseEvent('click'));
