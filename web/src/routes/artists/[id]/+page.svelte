@@ -17,6 +17,7 @@
             edit: 'Edit artist',
             artist: 'artist',
             delete: 'Delete artist',
+            update: 'Update tracks',
             top_tracks: 'Top Tracks',
             top_tracks_empty: "This artist doesn't have any top tracks",
             albums: 'Albums',
@@ -35,6 +36,7 @@
             edit: 'Verander artiest',
             artist: 'artiest',
             delete: 'Verwijder artiest',
+            update: 'Vernieuw nummers',
             top_tracks: 'Top Tracks',
             top_tracks_empty: 'Deze artiest heeft geen topnummers',
             albums: 'Albums',
@@ -48,6 +50,16 @@
         },
     };
     const t = (key, p1) => lang[$language][key].replace('$1', p1);
+
+    // Methods
+    async function updateArtist() {
+        await fetch(`${import.meta.env.VITE_API_URL}/artists/${data.artist.id}/update`, {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${data.token}`,
+            },
+        });
+    }
 
     // State
     export let data;
@@ -108,6 +120,14 @@
                 <button class="button is-large" on:click={() => deleteModal.open()} title={t('delete')}>
                     <svg class="icon" viewBox="0 0 24 24">
                         <path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z" />
+                    </svg>
+                </button>
+
+                <button class="button is-large" on:click={updateArtist} title={t('update')}>
+                    <svg class="icon" viewBox="0 0 24 24">
+                        <path
+                            d="M12,18A6,6 0 0,1 6,12C6,11 6.25,10.03 6.7,9.2L5.24,7.74C4.46,8.97 4,10.43 4,12A8,8 0 0,0 12,20V23L16,19L12,15M12,4V1L8,5L12,9V6A6,6 0 0,1 18,12C18,13 17.75,13.97 17.3,14.8L18.76,16.26C19.54,15.03 20,13.57 20,12A8,8 0 0,0 12,4Z"
+                        />
                     </svg>
                 </button>
             {/if}

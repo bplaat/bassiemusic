@@ -8,6 +8,7 @@ import (
 	"math"
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
 	"time"
 
@@ -316,6 +317,64 @@ func DownloadTask() {
 
 			if err := SearchAndDownloadTrackMusic(track, *downloadTask.YoutubeID, false); err != nil && err != io.EOF {
 				log.Fatalln(err)
+			}
+		}
+
+		if downloadTask.Type == models.DownloadTaskTypeUpdateDeezerArtist {
+			// Update download task status
+			downloadTask.StatusString = "downloading"
+			models.DownloadTaskModel.Where("id", downloadTask.ID).Update(database.Map{
+				"status": downloadTask.Status,
+			})
+
+			// Broadcast download tasks update message to admins
+			if err := websocket.BroadcastAdmin("download_tasks.update", downloadTask); err != nil {
+				log.Println(err)
+			}
+
+			// Check if all tracks are downloaded
+			artistAlbums, totalTracks := fetchAlbums(*downloadTask.DeezerID)
+			downloadedTracks := 0
+			for _, album := range artistAlbums {
+				if strings.Contains(album.Title, "Deezer") {
+					continue
+				}
+
+				// Check for each track if it exist and it already downloaded
+				fullAlbum := models.AlbumModel.WhereRaw("`deezer_id` LIKE ?", "%"+strconv.FormatInt(int64(album.ID), 10)+"%").First()
+				if fullAlbum == nil {
+					// Download missing album
+					downloadedTracks = DownloadAlbum(album, downloadTask, &downloadedTracks, &totalTracks)
+				} else {
+					// Walk over each track to see if a track is not downloaded
+					for _, deezerTrack := range album.Tracks.Data {
+						fullTrack := models.TrackModel.With("album", "artists").Where("album_id", fullAlbum.ID).Where("title", deezerTrack.Title).First()
+
+						if fullTrack == nil {
+							// Todo: Download track with new database entry
+						} else {
+							var music string
+							if _, err := os.Stat(fmt.Sprintf("storage/tracks/%s.m4a", fullTrack.ID)); err == nil {
+								music = fmt.Sprintf("%s/tracks/%s.m4a", os.Getenv("STORAGE_URL"), fullTrack.ID)
+							}
+							if music == "" {
+								SearchAndDownloadTrackMusic(fullTrack, "", true)
+							}
+							downloadedTracks++
+						}
+					}
+				}
+
+				// Update download task progress
+				downloadTask.Progress = float32(math.Round((float64(downloadedTracks) / float64(totalTracks)) * 100))
+				models.DownloadTaskModel.Where("id", downloadTask.ID).Update(database.Map{
+					"progress": downloadTask.Progress,
+				})
+
+				// Broadcast download tasks update message to admins
+				if err := websocket.BroadcastAdmin("download_tasks.update", downloadTask); err != nil {
+					log.Println(err)
+				}
 			}
 		}
 

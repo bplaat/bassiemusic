@@ -1,10 +1,13 @@
 package controllers
 
 import (
+	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"strconv"
 
+	"github.com/bplaat/bassiemusic/controllers/websocket"
 	"github.com/bplaat/bassiemusic/core/database"
 	"github.com/bplaat/bassiemusic/core/uuid"
 	"github.com/bplaat/bassiemusic/core/validation"
@@ -85,6 +88,45 @@ func ArtistsShow(c *fiber.Ctx) error {
 		return fiber.ErrNotFound
 	}
 	return c.JSON(artist)
+}
+
+func ArtistsTracksUpdate(c *fiber.Ctx) error {
+	// Parse artist id uuid
+	artistID, err := uuid.Parse(c.Params("artistID"))
+	if err != nil {
+		return fiber.ErrBadRequest
+	}
+
+	// Check if artist exists
+	artist := models.ArtistModel.Find(artistID)
+	if artist == nil {
+		return fiber.ErrNotFound
+	}
+
+	// Generate update task
+	jsonData, err := json.Marshal(models.DownloadTaskData{
+		ArtistID: artistID.String(),
+		DeezerID: artist.DeezerID,
+	})
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	downloadTask := models.DownloadTaskModel.Create(database.Map{
+		"type":         models.DownloadTaskTypeUpdateDeezerArtist,
+		"data":         jsonData,
+		"display_name": artist.Name,
+		"status":       models.DownloadTaskStatusPending,
+		"progress":     0,
+	})
+
+	// Broadcast new task message to all listening admins
+	if err := websocket.BroadcastAdmin("download_tasks.create", downloadTask); err != nil {
+		log.Println(err)
+	}
+
+	// Return success response
+	return c.JSON(fiber.Map{"success": true})
 }
 
 type ArtistsUpdateBody struct {

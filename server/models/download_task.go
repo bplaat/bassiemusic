@@ -13,6 +13,7 @@ type DownloadTaskData struct {
 	DeezerID  int64  `json:"deezer_id"`
 	YoutubeID string `json:"youtube_id"`
 	TrackID   string `json:"track_id"`
+	ArtistID  string `json:"artist_id"`
 }
 
 type DownloadTask struct {
@@ -28,6 +29,7 @@ type DownloadTask struct {
 	DeezerID     *int64             `json:"deezer_id,omitempty"`
 	YoutubeID    *string            `json:"youtube_id,omitempty"`
 	TrackID      *uuid.Uuid         `json:"track_id,omitempty"`
+	ArtistID     *uuid.Uuid         `json:"artist_id,omitempty"`
 }
 
 type DownloadTaskType int
@@ -35,6 +37,7 @@ type DownloadTaskType int
 const DownloadTaskTypeDeezerArtist DownloadTaskType = 0
 const DownloadTaskTypeDeezerAlbum DownloadTaskType = 1
 const DownloadTaskTypeYoutubeTrack DownloadTaskType = 2
+const DownloadTaskTypeUpdateDeezerArtist DownloadTaskType = 3
 
 type DownloadTaskStatus int
 
@@ -53,7 +56,9 @@ var DownloadTaskModel *database.Model[DownloadTask] = (&database.Model[DownloadT
 		if downloadTask.Type == DownloadTaskTypeYoutubeTrack {
 			downloadTask.TypeString = "youtube_track"
 		}
-
+		if downloadTask.Type == DownloadTaskTypeUpdateDeezerArtist {
+			downloadTask.TypeString = "update_deezer_artist"
+		}
 		if downloadTask.Status == DownloadTaskStatusPending {
 			downloadTask.StatusString = "pending"
 		}
@@ -75,6 +80,10 @@ var DownloadTaskModel *database.Model[DownloadTask] = (&database.Model[DownloadT
 		if data.TrackID != "" {
 			trackID, _ := uuid.Parse(data.TrackID)
 			downloadTask.TrackID = &trackID
+		}
+		if data.TrackID != "" {
+			ArtistID, _ := uuid.Parse(data.ArtistID)
+			downloadTask.ArtistID = &ArtistID
 		}
 	},
 }).Init()
