@@ -312,7 +312,7 @@ func DownloadTask() {
 			})
 
 			track := models.TrackModel.Find(*downloadTask.TrackID)
-			os.Remove(fmt.Sprintf("storage/tracks/%s.m4a", downloadTask.TrackID))
+			os.Remove(fmt.Sprintf("storage/tracks/%s.m4a", *downloadTask.TrackID))
 
 			if err := SearchAndDownloadTrackMusic(track, *downloadTask.YoutubeID, false); err != nil && err != io.EOF {
 				log.Fatalln(err)
@@ -334,7 +334,7 @@ func DownloadTask() {
 
 			// Create artist
 			var deezerArtist structs.DeezerArtist
-			if err := utils.DeezerFetch(fmt.Sprintf("https://api.deezer.com/artist/%d", downloadTask.DeezerID), &deezerArtist); err != nil {
+			if err := utils.DeezerFetch(fmt.Sprintf("https://api.deezer.com/artist/%d", *downloadTask.DeezerID), &deezerArtist); err != nil {
 				log.Fatalln(err)
 			}
 			createArtist(deezerArtist.ID, deezerArtist.Name, true)
@@ -368,7 +368,7 @@ func DownloadTask() {
 		if downloadTask.Type == models.DownloadTaskTypeDeezerAlbum {
 			// Fetch album data
 			var deezerAlbum structs.DeezerAlbum
-			if err := utils.DeezerFetch(fmt.Sprintf("https://api.deezer.com/album/%d", downloadTask.DeezerID), &deezerAlbum); err != nil {
+			if err := utils.DeezerFetch(fmt.Sprintf("https://api.deezer.com/album/%d", *downloadTask.DeezerID), &deezerAlbum); err != nil {
 				log.Fatalln(err)
 			}
 
