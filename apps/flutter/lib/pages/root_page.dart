@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -29,6 +30,9 @@ class _RootPageState extends State<RootPage> {
             'User-Agent': userAgent(),
             'Authorization': 'Bearer ${prefs.getString('token')}'
           });
+      if (response.statusCode != HttpStatus.ok) {
+        return false;
+      }
       final data = json.decode(response.body);
       if (data.containsKey('user')) {
         _user = User.fromJson(data['user']);
