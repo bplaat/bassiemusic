@@ -310,7 +310,9 @@ func updateAlbum(album structs.DeezerAlbum, downloadTask *models.DownloadTask, d
 					music = fmt.Sprintf("%s/tracks/%s.m4a", os.Getenv("STORAGE_URL"), fullTrack.ID)
 				}
 				if music == "" {
-					SearchAndDownloadTrackMusic(fullTrack, "", true)
+					if err := SearchAndDownloadTrackMusic(fullTrack, "", true); err != nil {
+						log.Fatalln(err)
+					}
 					*downloadedTracks++
 				}
 			}
