@@ -426,6 +426,19 @@ paths:
           description: Authorization error
         "404":
           description: Artist not found
+  /artists/{id}/update:
+    post:
+      tags: [Artists]
+      description: Update all tracks from the artist
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ArtistID"
+      responses:
+        "200":
+          description: Successful response
+        "401":
+          description: Authorization error
 
   # Genres
   /genres:
@@ -789,6 +802,20 @@ paths:
           description: Authorization error
         "404":
           description: Album not found
+  /albums/{id}/update:
+    post:
+      tags: [Albums]
+      description: Update all tracks from the album
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ArtistID"
+      responses:
+        "200":
+          description: Successful response
+        "401":
+          description: Authorization error
+
 
   # Tracks
   /tracks:
