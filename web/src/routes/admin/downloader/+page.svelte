@@ -23,6 +23,7 @@
             download_tasks_deezer_album: 'Deezer Album',
             download_tasks_youtube_track: 'Youtube Track',
             download_tasks_update_deezer_artist: 'Update artist tracks',
+            download_tasks_update_deezer_album: 'Update album tracks',
             download_tasks_display_name: 'Name',
             download_tasks_status: 'Status',
             download_tasks_status_pending: 'Pending',
@@ -57,6 +58,7 @@
             download_tasks_deezer_album: 'Deezer Album',
             download_tasks_youtube_track: 'Youtube Track',
             download_tasks_update_deezer_artist: 'Update artiest nummers',
+            download_tasks_update_deezer_album: 'Update album nummers',
             download_tasks_display_name: 'Naam',
             download_tasks_status: 'Status',
             download_tasks_status_pending: 'Wachtend',
@@ -230,6 +232,9 @@
                             {/if}
                             {#if task.type === 'update_deezer_artist'}
                                 {t('download_tasks_update_deezer_artist')}
+                            {/if}
+                            {#if task.type === 'update_deezer_album'}
+                                {t('download_tasks_update_deezer_album')}
                             {/if}
                         </td>
                         <td class="ellipsis" style="font-weight: 500;">{task.display_name}</td>

@@ -293,6 +293,32 @@ func fetchAlbums(DeezerID int64) ([]structs.DeezerAlbum, int) {
 	return fullAlbums, totalTracks
 }
 
+func updateAlbum(album structs.DeezerAlbum, downloadTask *models.DownloadTask, downloadedTracks *int, totalTracks *int) int {
+	// Check for each track if it exist and it already downloaded
+	fullAlbum := models.AlbumModel.WhereRaw("`deezer_id` LIKE ?", "%"+strconv.FormatInt(int64(album.ID), 10)+"%").First()
+	if fullAlbum == nil {
+		// Download missing album
+		*downloadedTracks += DownloadAlbum(album, downloadTask, downloadedTracks, totalTracks)
+	} else {
+		// Walk over each track to see if a track is not downloaded
+		for _, deezerTrack := range album.Tracks.Data {
+			fullTrack := models.TrackModel.With("album", "artists").Where("album_id", fullAlbum.ID).Where("title", deezerTrack.Title).First()
+
+			if fullTrack != nil {
+				var music string
+				if _, err := os.Stat(fmt.Sprintf("storage/tracks/%s.m4a", fullTrack.ID)); err == nil {
+					music = fmt.Sprintf("%s/tracks/%s.m4a", os.Getenv("STORAGE_URL"), fullTrack.ID)
+				}
+				if music == "" {
+					SearchAndDownloadTrackMusic(fullTrack, "", true)
+					*downloadedTracks++
+				}
+			}
+		}
+	}
+	return *downloadedTracks
+}
+
 func DownloadTask() {
 	for {
 		// Wait a little while
@@ -320,8 +346,33 @@ func DownloadTask() {
 			}
 		}
 
+		if downloadTask.Type == models.DownloadTaskTypeUpdateDeezerAlbum {
+			// Update download task status
+			downloadTask.Status = models.DownloadTaskStatusDownloading
+			downloadTask.StatusString = "downloading"
+			models.DownloadTaskModel.Where("id", downloadTask.ID).Update(database.Map{
+				"status": downloadTask.Status,
+			})
+
+			// Broadcast download tasks update message to admins
+			if err := websocket.BroadcastAdmin("download_tasks.update", downloadTask); err != nil {
+				log.Println(err)
+			}
+
+			// Update track from album
+			var deezerAlbum structs.DeezerAlbum
+			if err := utils.DeezerFetch(fmt.Sprintf("https://api.deezer.com/album/%d", *downloadTask.DeezerID), &deezerAlbum); err != nil {
+				log.Fatalln(err)
+			}
+
+			downloadedTracks := 0
+			totalTracks := len(deezerAlbum.Tracks.Data)
+			updateAlbum(deezerAlbum, downloadTask, &downloadedTracks, &totalTracks)
+		}
+
 		if downloadTask.Type == models.DownloadTaskTypeUpdateDeezerArtist {
 			// Update download task status
+			downloadTask.Status = models.DownloadTaskStatusDownloading
 			downloadTask.StatusString = "downloading"
 			models.DownloadTaskModel.Where("id", downloadTask.ID).Update(database.Map{
 				"status": downloadTask.Status,
@@ -340,30 +391,7 @@ func DownloadTask() {
 					continue
 				}
 
-				// Check for each track if it exist and it already downloaded
-				fullAlbum := models.AlbumModel.WhereRaw("`deezer_id` LIKE ?", "%"+strconv.FormatInt(int64(album.ID), 10)+"%").First()
-				if fullAlbum == nil {
-					// Download missing album
-					downloadedTracks = DownloadAlbum(album, downloadTask, &downloadedTracks, &totalTracks)
-				} else {
-					// Walk over each track to see if a track is not downloaded
-					for _, deezerTrack := range album.Tracks.Data {
-						fullTrack := models.TrackModel.With("album", "artists").Where("album_id", fullAlbum.ID).Where("title", deezerTrack.Title).First()
-
-						if fullTrack == nil {
-							// Todo: Download track with new database entry
-						} else {
-							var music string
-							if _, err := os.Stat(fmt.Sprintf("storage/tracks/%s.m4a", fullTrack.ID)); err == nil {
-								music = fmt.Sprintf("%s/tracks/%s.m4a", os.Getenv("STORAGE_URL"), fullTrack.ID)
-							}
-							if music == "" {
-								SearchAndDownloadTrackMusic(fullTrack, "", true)
-							}
-							downloadedTracks++
-						}
-					}
-				}
+				downloadedTracks = updateAlbum(album, downloadTask, &downloadedTracks, &totalTracks)
 
 				// Update download task progress
 				downloadTask.Progress = float32(math.Round((float64(downloadedTracks) / float64(totalTracks)) * 100))

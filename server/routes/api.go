@@ -154,6 +154,7 @@ func Api() *fiber.App {
 	api.Post("/albums", controllers.AlbumsCreate)
 	api.Put("/albums/:albumID", controllers.AlbumsUpdate)
 	api.Delete("/albums/:albumID", controllers.AlbumsDelete)
+	api.Post("/albums/:albumID/update", controllers.AlbumsTracksUpdate)
 
 	api.Post("/tracks", controllers.TracksCreate)
 	api.Put("/tracks/:trackID", controllers.TracksUpdate)

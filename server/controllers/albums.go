@@ -1,11 +1,14 @@
 package controllers
 
 import (
+	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"strconv"
 	"time"
 
+	"github.com/bplaat/bassiemusic/controllers/websocket"
 	"github.com/bplaat/bassiemusic/core/database"
 	"github.com/bplaat/bassiemusic/core/uuid"
 	"github.com/bplaat/bassiemusic/core/validation"
@@ -105,6 +108,45 @@ func AlbumsShow(c *fiber.Ctx) error {
 	}
 
 	return c.JSON(album)
+}
+
+func AlbumsTracksUpdate(c *fiber.Ctx) error {
+	// Parse album id uuid
+	albumID, err := uuid.Parse(c.Params("albumID"))
+	if err != nil {
+		return fiber.ErrBadRequest
+	}
+
+	// Check if album exists
+	album := models.AlbumModel.Find(albumID)
+	if album == nil {
+		return fiber.ErrNotFound
+	}
+
+	// Generate update task
+	jsonData, err := json.Marshal(models.DownloadTaskData{
+		AlbumID:  albumID.String(),
+		DeezerID: album.DeezerID,
+	})
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	downloadTask := models.DownloadTaskModel.Create(database.Map{
+		"type":         models.DownloadTaskTypeUpdateDeezerAlbum,
+		"data":         jsonData,
+		"display_name": album.Title,
+		"status":       models.DownloadTaskStatusPending,
+		"progress":     0,
+	})
+
+	// Broadcast new task message to all listening admins
+	if err := websocket.BroadcastAdmin("download_tasks.create", downloadTask); err != nil {
+		log.Println(err)
+	}
+
+	// Return success response
+	return c.JSON(fiber.Map{"success": true})
 }
 
 type AlbumsUpdateBody struct {
