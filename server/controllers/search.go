@@ -65,9 +65,17 @@ func DeezerSearchIndex(c *fiber.Ctx) error {
 		}
 	}
 
+	// Search for artist that already been downloaded
+	deezerArtists := []structs.DeezerArtistSearchItem{}
+	for _, deezerArtist := range deezerArtistSearch.Data {
+		if models.ArtistModel.Where("deezer_id", deezerArtist.ID).Count() == 0 {
+			deezerArtists = append(deezerArtists, deezerArtist)
+		}
+	}
+
 	// Return response
 	return c.JSON(fiber.Map{
-		"artists": deezerArtistSearch.Data,
+		"artists": deezerArtists,
 		"albums":  deezerAlbums,
 	})
 }
