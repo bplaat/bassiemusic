@@ -9,7 +9,7 @@ require (
 	github.com/gofiber/fiber/v2 v2.49.2
 	github.com/mileusna/useragent v1.3.2
 	github.com/valyala/fasthttp v1.49.0
-	golang.org/x/crypto v0.9.0
+	golang.org/x/crypto v0.17.0
 )
 
 require (
@@ -24,5 +24,5 @@ require (
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/tcplisten v1.0.0 // indirect
 	golang.org/x/image v0.7.0 // indirect
-	golang.org/x/sys v0.12.0 // indirect
+	golang.org/x/sys v0.15.0 // indirect
 )
